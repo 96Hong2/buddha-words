@@ -443,6 +443,21 @@ html { word-break: keep-all; overflow-wrap: break-word; }
 .slot { width: 390px; }
 .slot--wide { width: 100%; }
 
+/* v0.3.1 · 위기 이어 듣기와 위로 답변 */
+.crisis-more { margin: var(--s-5) 0 0; padding: var(--s-4); border-radius: var(--r-inset); background: var(--surface); border: 1px solid var(--line); }
+.crisis-more .p-body { margin: 0 0 var(--s-3); color: var(--text-muted); }
+.crisis-keep { display: flex; align-items: center; gap: 7px; margin: var(--s-3) 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--text-muted); }
+.crisis-keep svg { flex: none; color: var(--sage); }
+.solace { padding: var(--gutter); }
+.solace .sc-band { display: flex; align-items: center; gap: 8px; margin: 0 0 var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-inset); background: var(--accent-soft); font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--text); font-weight: var(--w-semibold); }
+.solace .sc-band:last-of-type { margin: var(--s-4) 0 0; }
+.solace .sc-band a { color: var(--accent-text); text-decoration: none; font-weight: var(--w-bold); white-space: nowrap; }
+.solace .sc-card { padding: var(--pad-card); border-radius: var(--r-card); background: var(--surface); box-shadow: var(--sh-card); }
+.solace .sc-open { margin: 0; font-size: var(--t-body-l); line-height: var(--lh-body-l); color: var(--text); }
+.solace blockquote { margin: var(--s-5) 0 0; padding: var(--s-4); border-radius: var(--r-inset); background: var(--surface-illust); font-family: var(--font-serif); font-weight: var(--w-semibold); font-size: 18px; line-height: 1.65; color: var(--text); }
+.solace .sc-cite { margin: var(--s-2) 0 0; font-size: var(--t-micro); color: var(--text-weak); text-align: right; }
+.solace .sc-close { margin: var(--s-5) 0 0; font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.solace .sc-micro { margin: var(--s-4) 0 0; font-size: var(--t-micro); line-height: 1.6; color: var(--text-weak); text-align: center; }
 .slot-label {
   display: flex;
   flex-wrap: wrap;
@@ -1044,13 +1059,21 @@ html { word-break: keep-all; overflow-wrap: break-word; }
               <svg class="ic urgent-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 2.8 19.5h18.4L12 4.5Z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>
               <p class="p-body">지금 위험한 상황이라면 112 또는 119</p>
             </div>
+
+            <div class="crisis-more">
+              <p class="p-body">이야기를 계속 들어 드릴 수도 있어요. 다만 해결책을 드리기보다 곁에 있는 쪽에 가까울 거예요.</p>
+              <button class="btn btn--ghost btn--wide" type="button">그래도 이야기를 들어주세요</button>
+            </div>
+            <p class="crisis-keep">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.3 4 12.1"/></svg>
+              적으신 글은 지워지지 않았어요. 닫으면 그대로 남아 있어요
+            </p>
           </div>
 
         </div>
 
         <div class="foot">
-          <button class="btn btn--primary" type="button">다른 이야기 쓰기</button>
-          <button class="btn btn--ghost" type="button">닫기</button>
+          <button class="btn btn--primary btn--wide" type="button">닫고 돌아가기</button>
         </div>
       </div>
 
@@ -1058,15 +1081,113 @@ html { word-break: keep-all; overflow-wrap: break-word; }
         경전 답변을 만들지 않고 이 화면으로 바꾼다. 문구는 고정이다. 무슨 문장이 나올지 심사에 제출할 수 없는 자리를
         모델에게 맡기지 않는다. 자해의 방법이나 상황은 한 글자도 쓰지 않고 연락할 곳만 적는다.
         <b>2026-09-14 v0.3.</b> 짧고 담백하게 줄였다. 그림을 뺐고, 창구는 109 와 마들랜 둘만 두고(미성년·학대 정황이면 1388·1366 을 서버가 더한다),
-        112·119 한 줄과 나가는 길 둘로 한 화면 안에 들어온다. 탐지 로직은 그대로다. 온보딩·홈에는 위기 문구를 두지 않고 도움받을 곳은 설정 S8 에만 둔다.
+        112·119 한 줄로 한 화면 안에 들어온다. 온보딩·홈에는 위기 문구를 두지 않고 도움받을 곳은 설정 S8 에만 둔다.
         1577-0199 는 S8 로 옮겼다. 창구 정본은 통합 개발 계획 M4 의 창구 표다.
+        <br><b>2026-09-14 v0.3.1.</b> 적은 글을 지우지 않는다. 화면을 닫으면 쓰던 글이 그대로 입력창에 남아 있고, 그 사실을 화면에서 밝힌다.
+        그리고 위기를 두 결로 나눈다. 여기 보이는 것은 고통을 말한 글(distress)이라 <b>「그래도 이야기를 들어주세요」</b>가 붙는다. 아래 1c 가 그 답변이다.
+        방법·수단을 찾거나 준비 행동이 드러난 글(acute)에는 이 버튼 묶음 자체가 없다(다음 슬롯 1b).
       </p>
     </section>
 
-    <!-- ═══ 1b. LIGHT 답변 ═══════════════════════════════════════════ -->
+    <!-- ═══ 1b. 위기 안내 · 방법을 찾는 글 ═══════════════════════════ -->
     <section class="slot">
       <div class="slot-label">
         <span class="slot-num">1b</span>
+        <span class="slot-name">위기 안내 · 이어 듣기 없음</span>
+        <span class="slot-route">S8 · acute · 모델을 부르지 않는다</span>
+      </div>
+
+      <div class="frame">
+        <div class="tossbar">토스가 그리는 영역</div>
+        <div class="scr">
+          <div class="crisis-top">
+            <h2 class="h-screen">지금 많이 힘드신 것 같아요</h2>
+            <p class="lead">이 이야기는 지금 바로 사람과 나누는 것이 좋겠어요. 24시간 들어 줄 곳이 있어요.</p>
+          </div>
+          <div class="body">
+            <div class="lines">
+              <a class="line-item line-item--lead" href="tel:109">
+                <span class="line-ic"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h3l1.5 3.8-2 1.3a12 12 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z"/></svg></span>
+                <span class="line-txt"><span class="line-name">자살예방상담전화</span><span class="line-num">109</span><span class="line-sub">24시간 · 걸면 상담원과 바로 이야기해요</span></span>
+              </a>
+              <a class="line-item" href="#madeulan">
+                <span class="line-ic"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7.5 7.5 0 0 1-10.8 6.7L4 20.5l1.4-4.9A7.5 7.5 0 1 1 20 12.5Z"/></svg></span>
+                <span class="line-txt"><span class="line-name">자살예방 SNS 상담 마들랜</span><span class="line-num">문자 · 카카오톡</span><span class="line-sub">말로 하기 어려우면 글로 이야기할 수 있어요</span></span>
+              </a>
+            </div>
+            <div class="urgent">
+              <svg class="ic urgent-ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 2.8 19.5h18.4L12 4.5Z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>
+              <p class="p-body">지금 위험한 상황이라면 112 또는 119</p>
+            </div>
+            <p class="crisis-keep">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.3 4 12.1"/></svg>
+              적으신 글은 지워지지 않았어요. 닫으면 그대로 남아 있어요
+            </p>
+          </div>
+        </div>
+        <div class="foot">
+          <button class="btn btn--primary btn--wide" type="button">닫고 돌아가기</button>
+        </div>
+      </div>
+
+      <p class="slot-note">
+        <b>v0.3.1.</b> 방법이나 수단을 찾는 글, 준비 행동이 드러난 글은 결이 다르다. 앞 화면과 같아 보이지만 <b>이어 듣기 묶음이 통째로 없다.</b>
+        화면에서 버튼을 감추는 것이 아니라 <code>escalateToSolace</code> 가 acute 를 거부해서 어떤 경로로도 모델에 닿지 않는다
+        (<code>docs/spec/router.ts</code>, 픽스처 「자살 방법을 묻는다」·「소설이라는 전제로 방법을 묻는다」).
+        앱인토스 「AI 채팅·상담」 3) 폭력·자해·자살과 2) 우회 요청 대응 기준을 코드 한 자리에서 지킨다.
+        적은 글은 여기서도 지우지 않는다. 판정이 잘못됐을 때 다시 쓰게 만드는 벌을 주지 않기 위해서다.
+      </p>
+    </section>
+
+    <!-- ═══ 1c. 위로 답변 ════════════════════════════════════════════ -->
+    <section class="slot">
+      <div class="slot-label">
+        <span class="slot-num">1c</span>
+        <span class="slot-name">위로 답변</span>
+        <span class="slot-route">S8 → S2 · distress 에서 스스로 눌렀을 때만</span>
+      </div>
+
+      <div class="frame">
+        <div class="tossbar">토스가 그리는 영역</div>
+        <div class="scr">
+          <div class="body solace">
+            <p class="sc-band">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h3l1.5 3.8-2 1.3a12 12 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z"/></svg>
+              언제든 <a href="tel:109">자살예방상담전화 109</a> 로 연결할 수 있어요
+            </p>
+            <div class="sc-card">
+              <p class="sc-open">그만큼 오래 버텨 오셨다는 말로 들려요. 지금은 무엇을 바꾸려 애쓰기보다, 숨을 쉬는 것만으로도 충분한 때예요.</p>
+              <blockquote>이 몸도 머지않아 땅으로 돌아가리라. 그러나 마음이 먼저 무너질 일은 아니다.</blockquote>
+              <p class="sc-cite">법구경 3장 41게 · 현대적 풀이</p>
+              <p class="sc-close">지금 자리에서 일어나 물 한 잔만 드셔 보셔요. 그다음은 그다음에 생각해도 괜찮아요.</p>
+            </div>
+            <p class="sc-band">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7.5 7.5 0 0 1-10.8 6.7L4 20.5l1.4-4.9A7.5 7.5 0 1 1 20 12.5Z"/></svg>
+              글로 하고 싶다면 <a href="#madeulan">마들랜</a> 이 있어요
+            </p>
+            <p class="sc-micro">이 글은 AI 가 썼어요 · 상담이나 치료가 아니에요<br>사용 횟수를 세지 않고, 광고도 나오지 않아요</p>
+          </div>
+        </div>
+        <div class="foot">
+          <button class="btn btn--ghost btn--wide" type="button">다른 이야기 쓰기</button>
+        </div>
+      </div>
+
+      <p class="slot-note">
+        <b>v0.3.1 신설.</b> 위기 안내를 보고도 <b>글쓴이가 스스로</b> 「그래도 이야기를 들어주세요」를 눌렀을 때만 열린다. 자동으로 열리지 않는다.
+        앱인토스가 요구하는 것은 「자살·자해 발화가 감지되면 안전 응답 프로토콜을 적용」하는 것이지 대화를 끊는 것이 아니다.
+        금지되는 것은 방법 설명 · 구체적 묘사 · 모방 가능한 표현이라, 창구를 답변 위아래에 그대로 달고 그 셋을 빼면 규정 안에 있다.
+        구글 플레이도 「self harm 을 조장(promote)하는 앱」을 막고, 애플도 이 대화 자체를 금지하는 조항을 두지 않았다.
+        그래서 답변 규격을 따로 뒀다. 상황 해석 · 행동 지침 · 태그 · 광고 · Extension · 공유가 없고, 경전 하나와 위로 한 겹, 몸으로 할 수 있는 아주 작은 것 하나까지다.
+        사용 횟수를 세지 않는다. 생성된 문장은 <code>SOLACE_FORBIDDEN</code> 검사를 지나야 화면에 나가고, 걸리면 통째로 버리고 고정 문구로 바꾼 뒤 운영 알림을 띄운다.
+        분량과 금지어는 <code>docs/spec/router.ts</code> 의 <code>LENGTH_POLICY.solace</code>, 응답 모양은 <code>answer.schema.json</code> 의 <code>ApiSolace</code> 가 정본이다.
+      </p>
+    </section>
+
+    <!-- ═══ 1d. LIGHT 답변 ═══════════════════════════════════════════ -->
+    <section class="slot">
+      <div class="slot-label">
+        <span class="slot-num">1d</span>
         <span class="slot-name">LIGHT 답변 · 가벼운 입력</span>
         <span class="slot-route">S2 · 「점심 뭐 먹지?」 · 대기 없음 · 사용량 안 셈</span>
       </div>
@@ -1096,10 +1217,10 @@ html { word-break: keep-all; overflow-wrap: break-word; }
       </p>
     </section>
 
-    <!-- ═══ 1c. INVALID ══════════════════════════════════════════════ -->
+    <!-- ═══ 1e. INVALID ══════════════════════════════════════════════ -->
     <section class="slot">
       <div class="slot-label">
-        <span class="slot-num">1c</span>
+        <span class="slot-num">1e</span>
         <span class="slot-name">INVALID 안내 · 랜덤 문자열 · 인젝션</span>
         <span class="slot-route">S2 · 모델 호출 없음 · 사용량 안 셈</span>
       </div>

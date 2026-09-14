@@ -557,7 +557,27 @@ body {
   font-size: var(--t-body-l); line-height: var(--lh-body-l); font-weight: var(--w-medium);
   color: var(--text);
 }
-.field--fill { flex: 1 1 auto; min-height: 120px; overflow: hidden; }
+/* v0.3.1 · 쓰는 만큼 늘고, 한계에 닿으면 칸 안에서 스크롤한다. 화면 전체도 스크롤된다 */
+.field--fill { flex: 0 0 auto; min-height: 132px; max-height: 236px; overflow-y: auto; }
+.field--grown { min-height: 236px; }
+
+/* v0.3.1 · 진입 카드. 바텀시트가 아니라 화면 가운데 카드이고 배경에 홈이 그대로 비친다 */
+.entry-wrap { position: relative; }
+.entry-dim { position: absolute; inset: 0; background: rgba(43, 36, 29, .32); z-index: 4; }
+.entry-card {
+  position: absolute; z-index: 5; left: 16px; right: 16px; top: 50%; transform: translateY(-50%);
+  background: var(--surface); border-radius: 24px; box-shadow: 0 18px 48px rgba(43, 36, 29, .22);
+  padding: var(--s-5) var(--s-5) var(--s-4); text-align: center;
+}
+.entry-card .ec-close { position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border: 0; border-radius: 999px; background: transparent; color: var(--text-muted); display: grid; place-items: center; }
+.entry-card .ec-stage { height: 186px; margin: 2px auto var(--s-4); border-radius: 20px; overflow: hidden; display: grid; place-items: center; background: linear-gradient(180deg, var(--backdrop-dawn, #FDF1F3) 0%, var(--c-sand-50) 100%); }
+.entry-card .ec-stage img { height: 178px; width: auto; max-width: 96%; object-fit: contain; mix-blend-mode: multiply; }
+.entry-card .ec-k { margin: 0; font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold); color: var(--accent-text); }
+.entry-card .ec-verse { margin: var(--s-3) 0 0; font-family: var(--font-serif); font-weight: var(--w-bold); font-size: 21px; line-height: 1.55; color: var(--text); }
+.entry-card .ec-gloss { margin: var(--s-3) 0 0; font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.entry-card .ec-cite { margin: var(--s-3) 0 0; font-size: var(--t-micro); color: var(--text-weak); }
+.entry-card .send { margin-top: var(--s-5); }
+.entry-card .ec-foot { margin: var(--s-3) 0 0; font-size: var(--t-micro); color: var(--text-weak); }
 .field--focus {
   border-color: var(--focus);
   box-shadow: 0 0 0 1px var(--focus);
@@ -727,6 +747,41 @@ body {
 
 <div class="rack">
 
+  <!-- ⓪ 진입 카드 (v0.3.1) -->
+  <div class="slot">
+    <p class="slot-label">⓪ 진입 카드 <span>하루 첫 진입 한 번 · 출구 넷</span></p>
+    <div class="device">
+      <div class="toss-band">토스가 그리는 영역</div>
+      <div class="screen entry-wrap">
+        <div class="body body--tabs">
+          <div class="svc">
+            <p class="svc-line"><b>부처의 말</b><i>·</i>AI 가 경전을 찾아 풀어 드려요</p>
+          </div>
+          <div class="lead-row">
+            <h2 class="hero" style="margin:0">무슨 일이 있었나요?<br>편하게 이야기해 주세요</h2>
+          </div>
+          <div class="cluster">
+            <div class="field field--fill"><p class="ph">오늘 있었던 일, 요즘 드는 생각, 무엇이든 좋아요</p></div>
+          </div>
+        </div>
+        <div class="entry-dim"></div>
+        <div class="entry-card">
+          <button class="ec-close" type="button" aria-label="닫기">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div class="ec-stage"><img src="../assets/buddha2_lotus.webp" alt=""></div>
+          <p class="ec-k">오늘의 한마디</p>
+          <p class="ec-verse">앞을 놓고 뒤를 놓고<br>가운데를 놓아라</p>
+          <p class="ec-gloss">지나간 일과 오지 않은 일과 지금 쥔 것을 한꺼번에 붙들면 손이 아파요.</p>
+          <p class="ec-cite">법구경 24장 348게</p>
+          <button class="send" type="button">이야기 시작하기</button>
+          <p class="ec-foot">하루에 한 번만 보여 드려요</p>
+        </div>
+      </div>
+    </div>
+    <p class="slot-why">v0.3.1: 앱을 열면 오늘의 한마디가 카드로 먼저 온다. 부처 그림을 키워 이 앱이 무엇인지 한 장으로 보여 주는 자리다. 바텀시트가 아니라 가운데 카드라 배경에 입력창이 비치고, 닫기 버튼 · 바깥 · 뒤로가기 · 「이야기 시작하기」 넷 중 무엇으로든 닫히면서 곧장 입력창에 초점이 간다. 광고도 알림 동의도 아니고 하루 첫 진입에 한 번만 뜬다(앱인토스 소비자 UX 가이드 1번 조항 대응). 두 번째 진입부터는 아래 홈 카드로만 보인다.</p>
+  </div>
+
   <!-- ① 빈 상태 -->
   <div class="slot">
     <p class="slot-label">① 빈 상태 <span>키보드 내려감 · 전송 비활성</span></p>
@@ -833,12 +888,12 @@ body {
         </div>
       </div>
     </div>
-    <p class="slot-why">키보드가 올라오면 제목이 한 줄로 접히고 입력 묶음이 통째로 키보드 위에 붙어, 쓰는 동안 손과 눈이 같은 자리에 머문다.</p>
+    <p class="slot-why">키보드가 올라오면 제목이 한 줄로 접히고 입력 묶음이 통째로 키보드 위에 붙어, 쓰는 동안 손과 눈이 같은 자리에 머문다. <b>v0.3.1: 입력칸은 쓰는 만큼 자란다.</b> 132px 로 시작해 236px 까지 늘고, 거기서부터는 칸 안에서 스크롤한다. 칸이 다 차도 방금 친 줄이 늘 보이고, 화면 전체도 함께 스크롤되어 전송 버튼이 가려지지 않는다.</p>
   </div>
 
   <!-- ③ 깊은 풀이 준비 완료 -->
   <div class="slot">
-    <p class="slot-label">③ 충분히 이야기한 상태 <span>점 3개 · 금색 · 전송 활성</span></p>
+    <p class="slot-label">③ 충분히 이야기한 상태 <span>점 3개 · 금색 · 입력칸이 늘어난 뒤</span></p>
     <div class="device">
       <div class="toss-band">토스가 그리는 영역</div>
       <div class="screen">
@@ -857,7 +912,7 @@ body {
           </div>
 
           <div class="cluster">
-            <div class="field field--fill field--focus">
+            <div class="field field--fill field--focus field--grown">
               <p>요즘 회사에서 같은 실수를 자꾸 반복해요. 어제는 보고서 숫자를 잘못 적어서 지적을 받았는데, 그 자리에선 괜찮은 척했지만 집에 오는 내내 그 장면만 떠올랐어요. 다들 나를 일 못하는 사람으로 볼까 봐 무서워요. 이런 마음이 든 지 벌써 몇 달째예요<span class="caret"></span></p>
             </div>
 
