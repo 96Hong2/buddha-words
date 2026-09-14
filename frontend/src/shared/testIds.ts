@@ -1,0 +1,101 @@
+/**
+ * 화면 셀렉터 정본. 제품 코드와 e2e 가 이 상수를 같이 import 한다.
+ * e2e 가 문자열을 손으로 적으면 이름이 바뀔 때 조용히 못 찾는다.
+ */
+
+export const TEST_IDS = {
+  // 홈 · 입력
+  home: 'home',
+  entryCard: 'entry-card',
+  entryCardClose: 'entry-card-close',
+  entryCardCta: 'entry-card-cta',
+  concernField: 'concern-field',
+  depthDots: 'depth-dots',
+  depthLabel: 'depth-label',
+  exampleChip: 'example-chip',
+  submit: 'submit',
+  draftCard: 'draft-card',
+  returnCard: 'return-card',
+  recallCard: 'recall-card',
+  dailyCard: 'daily-card',
+  dailySheet: 'daily-sheet',
+
+  // 대기
+  loading: 'loading',
+  loadingLabel: 'loading-label',
+
+  // 답변
+  answer: 'answer',
+  answerTags: 'answer-tags',
+  buddhaMessage: 'buddha-message',
+  scriptureCard: 'scripture-card',
+  scriptureText: 'scripture-text',
+  scriptureCitation: 'scripture-citation',
+  explanation: 'explanation',
+  analysis: 'analysis',
+  actions: 'actions',
+  closing: 'closing',
+  extensionCard: 'extension-card',
+  extensionCta: 'extension-cta',
+  extensionResult: 'extension-result',
+  termChip: 'term-chip',
+  termSheet: 'term-sheet',
+  bottomBar: 'bottom-bar',
+  shareButton: 'share-button',
+  saveButton: 'save-button',
+  againButton: 'again-button',
+  reportLink: 'report-link',
+
+  // LIGHT · INVALID
+  light: 'light',
+  lightCta: 'light-cta',
+  invalid: 'invalid',
+  invalidRetry: 'invalid-retry',
+
+  // 위기 · 위로
+  crisis: 'crisis',
+  crisisChannel: 'crisis-channel',
+  crisisContinue: 'crisis-continue',
+  crisisClose: 'crisis-close',
+  solace: 'solace',
+  solaceOpening: 'solace-opening',
+  solaceClosing: 'solace-closing',
+
+  // 광고 · 사용량
+  adBadge: 'ad-badge',
+  continueSheet: 'continue-sheet',
+  continueWatch: 'continue-watch',
+  exhausted: 'exhausted',
+
+  // 공유 · 보관
+  shareSheet: 'share-sheet',
+  shareCard: 'share-card',
+  shareLink: 'share-link',
+  shareImage: 'share-image',
+  landing: 'landing',
+  archive: 'archive',
+  archiveItem: 'archive-item',
+  paywall: 'paywall',
+  paywallBuy: 'paywall-buy',
+
+  // 설정
+  settingsButton: 'settings-button',
+  settings: 'settings',
+  appInfo: 'app-info',
+  privacy: 'privacy',
+  helpLines: 'help-lines',
+  adOptOut: 'ad-opt-out',
+
+  // 공통
+  sheetClose: 'sheet-close',
+  sheetDim: 'sheet-dim',
+  errorState: 'error-state',
+  retry: 'retry',
+} as const;
+
+export type TestId = (typeof TEST_IDS)[keyof typeof TEST_IDS];
+
+/** JSX 에 그대로 펼친다: `<div {...testId(TEST_IDS.home)}>` */
+export function testId(id: TestId) {
+  return { 'data-testid': id };
+}

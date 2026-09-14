@@ -1,0 +1,115 @@
+{
+  "_note": "개발·e2e 전용 씨앗 데이터다. 감수 산출물이 아니다. M2 에서 감수한 120구절이 들어오면 이 파일은 버린다.",
+  "reviewed": false,
+  "items": [
+    {
+      "id": "dhp.001",
+      "citation": "법구경 1장 쌍의 장 1게",
+      "text": "모든 것은 마음이 앞서가고, 마음이 주인이 되어 마음으로 이루어진다.",
+      "modern_gloss": "지금 보이는 상황보다 그 상황을 보는 내 마음이 먼저다.",
+      "themes": ["choice", "confusion"],
+      "daily_ok": true,
+      "daily_line": "마음이 먼저 가고 일이 뒤따라온다",
+      "terms": [{ "word": "마음이 앞서간다", "gloss": "일이 벌어지기 전에 마음이 먼저 방향을 정한다는 뜻이에요" }]
+    },
+    {
+      "id": "dhp.005",
+      "citation": "법구경 1장 쌍의 장 5게",
+      "text": "미움은 미움으로 결코 가라앉지 않는다. 미움을 내려놓을 때 비로소 가라앉는다.",
+      "modern_gloss": "되갚아 주는 것으로는 끝나지 않는다.",
+      "themes": ["anger", "relationship"],
+      "daily_ok": true,
+      "daily_line": "되갚는 마음으로는 끝나지 않는다"
+    },
+    {
+      "id": "dhp.033",
+      "citation": "법구경 3장 마음의 장 33게",
+      "text": "마음은 흔들리고 요동치며 지키기 어렵고 다스리기 어렵다. 지혜로운 이는 그 마음을 곧게 편다.",
+      "modern_gloss": "마음이 흔들리는 것은 내가 약해서가 아니다.",
+      "themes": ["anxiety", "sleepless"],
+      "daily_ok": true,
+      "daily_line": "흔들리는 마음은 약한 마음이 아니다"
+    },
+    {
+      "id": "dhp.050",
+      "citation": "법구경 4장 꽃의 장 50게",
+      "text": "남이 한 일과 하지 않은 일을 보지 말고, 내가 한 일과 하지 않은 일을 보라.",
+      "modern_gloss": "남의 속도는 내가 어쩌지 못한다.",
+      "themes": ["comparison", "approval"],
+      "daily_ok": true,
+      "daily_line": "남의 걸음이 아니라 내 걸음을 본다"
+    },
+    {
+      "id": "dhp.081",
+      "citation": "법구경 6장 지혜로운 이의 장 81게",
+      "text": "단단한 바위가 바람에 흔들리지 않듯, 지혜로운 이는 칭찬과 비난에 흔들리지 않는다.",
+      "modern_gloss": "남의 말 한마디에 내 자리가 바뀌지는 않는다.",
+      "themes": ["approval", "comparison"],
+      "daily_ok": true,
+      "daily_line": "칭찬도 비난도 나를 옮기지 못한다"
+    },
+    {
+      "id": "dhp.103",
+      "citation": "법구경 8장 천의 장 103게",
+      "text": "전쟁터에서 천만 명을 이기는 것보다, 자기 하나를 이기는 이가 참으로 뛰어난 승자다.",
+      "modern_gloss": "가장 어려운 상대는 늘 나 자신이다.",
+      "themes": ["choice", "fatigue"],
+      "daily_ok": true,
+      "daily_line": "가장 어려운 상대는 늘 나 자신이다"
+    },
+    {
+      "id": "dhp.121",
+      "citation": "법구경 9장 악의 장 121게",
+      "text": "작은 악이라 가볍게 여기지 마라. 물방울이 떨어져 항아리를 채운다.",
+      "modern_gloss": "작은 일이 쌓여 지금이 된다.",
+      "themes": ["regret", "choice"],
+      "daily_ok": true,
+      "daily_line": "물방울이 떨어져 항아리를 채운다"
+    },
+    {
+      "id": "dhp.183",
+      "citation": "법구경 14장 깨달은 이의 장 183게",
+      "text": "모든 악을 짓지 말고, 선을 두루 행하며, 제 마음을 맑게 하라.",
+      "modern_gloss": "복잡할수록 할 일은 단순해진다.",
+      "themes": ["confusion", "choice"],
+      "daily_ok": true,
+      "daily_line": "복잡할수록 할 일은 단순해진다"
+    },
+    {
+      "id": "dhp.204",
+      "citation": "법구경 15장 안락의 장 204게",
+      "text": "건강이 가장 큰 이익이고, 만족이 가장 큰 재산이며, 믿음이 가장 가까운 이웃이다.",
+      "modern_gloss": "이미 가진 것이 먼저 보이면 부족함이 작아진다.",
+      "themes": ["fatigue", "emptiness"],
+      "daily_ok": true,
+      "daily_line": "만족이 가장 큰 재산이다"
+    },
+    {
+      "id": "dhp.223",
+      "citation": "법구경 17장 분노의 장 223게",
+      "text": "분노는 온화함으로 이기고, 악은 선으로 이기며, 인색함은 베풂으로 이기고, 거짓은 참으로 이긴다.",
+      "modern_gloss": "같은 방식으로 맞서면 같은 자리에 남는다.",
+      "themes": ["anger", "relationship"],
+      "daily_ok": true,
+      "daily_line": "같은 방식으로 맞서면 같은 자리에 남는다"
+    },
+    {
+      "id": "dhp.277",
+      "citation": "법구경 20장 길의 장 277게",
+      "text": "모든 지어진 것은 덧없다. 이것을 지혜로 볼 때 괴로움에서 벗어난다.",
+      "modern_gloss": "지금 이 상태도 그대로 머물지 않는다.",
+      "themes": ["loss", "attachment"],
+      "daily_ok": true,
+      "daily_line": "지금 이 상태도 그대로 머물지 않는다"
+    },
+    {
+      "id": "dhp.348",
+      "citation": "법구경 24장 애욕의 장 348게",
+      "text": "앞도 놓고 뒤도 놓고 그 가운데도 놓아라. 그러면 건너편에 이른다.",
+      "modern_gloss": "붙잡은 손을 펴야 다음으로 간다.",
+      "themes": ["attachment", "loss"],
+      "daily_ok": true,
+      "daily_line": "붙잡은 손을 펴야 다음으로 간다"
+    }
+  ]
+}

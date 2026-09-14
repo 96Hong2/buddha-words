@@ -14,3 +14,10 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# 프론트 빌드 산출물
+frontend/dist/
+frontend/node_modules/
+frontend/playwright-report/
+frontend/test-results/
+frontend/*.ait
