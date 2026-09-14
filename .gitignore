@@ -1,0 +1,16 @@
+# 생성물. tools/inline_assets.py 로 다시 만든다
+design-inline/
+
+# 검증 코드는 제품 저장소 안에 두되 커밋하지 않는다 (개발 계획 6.5절)
+e2e-local/
+
+# 환경
+.env
+.env.*
+!.env.example
+node_modules/
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
