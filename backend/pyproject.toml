@@ -1,0 +1,26 @@
+[project]
+name = "buddha-words-backend"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.15.0",
+    "python-json-logger>=4.2.0",
+    "regex>=2026.1.15",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[dependency-groups]
+dev = ["jsonschema>=4.26.0", "pytest>=9.1.1", "ruff>=0.16.5"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
