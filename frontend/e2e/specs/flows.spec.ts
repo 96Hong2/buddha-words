@@ -118,6 +118,9 @@ test('간직: 셋까지 쌓이고 네 번째에 보관 안내가 뜬다', async 
   await revealBottomBar(page);
   await page.getByTestId('save-button').click();
   await expect(page.getByTestId('paywall')).toBeVisible();
+  // 시트가 다 올라와 구매 버튼이 화면 안에 들어와야 한다. 올라오는 중에 재면 늘 통과한다
+  const buy = page.getByTestId('paywall-buy');
+  await expect(buy).toBeInViewport();
   await page.screenshot({ path: `${SHOTS}/15-paywall.png` });
 
   // 「무료」라는 말을 쓰지 않는다

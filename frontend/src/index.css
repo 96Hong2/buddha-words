@@ -36,6 +36,18 @@ img {
   display: block;
 }
 
+/* 포커스 링. 시안이 정한 금색이다. 브라우저 기본 파란 링이 나오면 화면이 시안과 달라진다 */
+:is(button, a, [role='button'], input, textarea, select):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 시트 판처럼 코드가 초점을 옮겨 두는 자리에는 링을 두지 않는다. 사람이 이동한 것이 아니다 */
+[tabindex='-1']:focus,
+[tabindex='-1']:focus-visible {
+  outline: none;
+}
+
 /* 플랫폼이 상단바를 그린다. 위쪽 인셋을 더하면 54px 이 비어 보인다(실측) */
 .app {
   min-height: 100%;
