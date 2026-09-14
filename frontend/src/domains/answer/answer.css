@@ -1,0 +1,1311 @@
+/* 답변·대기 화면.
+   시안 design/screens/s2-loading.html · s3-answer.html · s4-safety-errors.html 의
+   화면 안쪽 CSS 를 옮겼다. 클래스 이름이 일반적이라 전부 화면 루트 .ans 아래로 묶는다. */
+
+.ans {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  /* 한글이 어절 중간에서 끊기지 않게 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.ans :is(a, button):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── 공통 조각 ───────────────────────────────────────────────────────── */
+
+.ans .card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--pad-card);
+  box-shadow: var(--sh-card);
+}
+
+.ans .btn {
+  flex: 1;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-button);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+  cursor: pointer;
+}
+.ans .btn--ghost {
+  background: var(--surface);
+  border-color: var(--btn-ghost-line);
+  color: var(--text);
+}
+.ans .btn--ghost:active {
+  background: var(--surface-pressed);
+}
+.ans .btn--solid {
+  background: var(--btn);
+  color: var(--on-btn);
+}
+.ans .btn--solid:active {
+  background: var(--btn-pressed);
+}
+.ans .btn--wide {
+  width: 100%;
+  margin-top: var(--s-2);
+}
+
+.ans .sec-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+.ans .sec-head h2 {
+  margin: 0;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+.ans .sec-head .ico {
+  color: var(--accent);
+  flex: 0 0 auto;
+  display: flex;
+}
+
+.ans p.body {
+  margin: 0 0 var(--gap-para);
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  letter-spacing: var(--ls-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+.ans p.body:last-child {
+  margin-bottom: 0;
+}
+
+.ans .p-micro {
+  margin: var(--s-3) 0 0;
+  text-align: center;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--text-weak);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   대기 화면 (s2)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ans .wait {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 var(--gutter);
+}
+.ans .wait__top {
+  flex: 0 0 40px;
+}
+.ans .wait__bottom {
+  flex: 1 1 auto;
+  min-height: 24px;
+}
+
+.ans .buddha-frame {
+  width: 230px;
+  height: 230px;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(ellipse 60% 56% at 50% 46%, #000 52%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 56% at 50% 46%, #000 52%, transparent 100%);
+  animation: ans-breathe 3.2s ease-in-out infinite;
+}
+.ans .buddha-frame img {
+  width: 230px;
+  height: 230px;
+  object-fit: cover;
+  mix-blend-mode: multiply;
+}
+
+@keyframes ans-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+.ans .wait__title {
+  margin: 10px 0 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  color: var(--text);
+  text-align: center;
+  white-space: pre-line;
+  animation: ans-line-in var(--dur-section) var(--ease-out) both;
+}
+
+@keyframes ans-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 단계 목록 ─────────────────────────────────────────────────────── */
+
+.ans .steps {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  width: 100%;
+  max-width: 286px;
+  position: relative;
+}
+.ans .steps::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 14px;
+  bottom: 14px;
+  width: 1px;
+  background: var(--line);
+}
+.ans .step {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 9px 0;
+  position: relative;
+}
+.ans .step__dot {
+  position: relative;
+  flex: 0 0 23px;
+  width: 23px;
+  height: 23px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-text);
+}
+.ans .step__dot svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+.ans .step__text {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-weak);
+}
+.ans .step__core {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+
+.ans .step--done .step__dot {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.ans .step--done .step__text {
+  color: var(--text-muted);
+}
+
+.ans .step--now .step__dot {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+.ans .step--now .step__dot::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent);
+  animation: ans-pulse 2.8s var(--ease-out) infinite;
+}
+.ans .step--now .step__text {
+  color: var(--text);
+  font-weight: var(--w-semibold);
+}
+
+@keyframes ans-pulse {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+.ans .step--todo .step__core {
+  width: 7px;
+  height: 7px;
+  background: var(--line-strong);
+}
+
+.ans .wait__quote {
+  margin: 0 0 18px;
+  font-family: var(--font-serif);
+  font-size: var(--t-caption);
+  line-height: 1.7;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* 가로 반복 띠. 위쪽에 페이드를 걸어 이음매가 선으로 읽히지 않게 한다 */
+.ans .ripple-band {
+  height: 64px;
+  flex: 0 0 auto;
+  background-image: url('/assets/pattern_ripple.webp');
+  background-repeat: repeat-x;
+  background-size: auto 64px;
+  background-position: center bottom;
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 62%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 62%, #000 100%);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   실패·타임아웃·오프라인 (s4)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ans .net-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px var(--gutter);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+}
+
+.ans .state {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--s-8) var(--gutter) var(--s-10);
+}
+.ans .state-art {
+  width: 108px;
+  height: 108px;
+  margin-bottom: var(--s-6);
+  color: var(--accent);
+}
+.ans .state-art svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.ans .h-screen {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  color: var(--text);
+}
+.ans .lead {
+  margin: var(--s-3) 0 0;
+  max-width: 26ch;
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+.ans .state-note {
+  margin-top: var(--s-6);
+}
+.ans .chip-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  color: var(--sage);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+}
+.ans .chip-note .ic {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.ans .foot {
+  flex: 0 0 auto;
+  padding: var(--s-4) var(--gutter) var(--s-6);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border-top: 1px solid var(--line);
+}
+.ans .foot .btn {
+  width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   답변 화면 (s3)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── 진행선 + AI 생성 배지 (스크롤과 무관하게 늘 보인다) ─────────────── */
+
+.ans .topline {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 2px;
+  background: var(--line);
+}
+.ans .topline .bar {
+  position: relative;
+  z-index: 2;
+  height: 2px;
+  background: var(--sage);
+  transition: width 120ms linear;
+}
+/* 배지가 본문 글자를 덮지 않게, 스크롤이 시작되면 그 줄을 위로 흐려 보낸다 */
+.ans .topline .scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 52px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-fade) var(--ease-out);
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 46%, rgba(237, 228, 211, 0) 100%);
+}
+.ans .topline.scrolled .scrim {
+  opacity: 1;
+}
+
+.ans .ai-badge {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: var(--gutter);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--sh-card);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.ans .ai-badge svg {
+  color: var(--accent);
+}
+
+/* ── 부처 이미지 띠 ─────────────────────────────────────────────────── */
+
+.ans .illust {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  background: var(--surface-illust);
+}
+.ans .illust .main {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  max-width: 62%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.ans .illust::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44px;
+  /* transparent 를 쓰면 일부 브라우저가 검정으로 보간해 띠 아래가 잿빛으로 뜬다 */
+  background: linear-gradient(to bottom, rgba(237, 228, 211, 0), var(--bg));
+  pointer-events: none;
+}
+
+/* ── 본문 뼈대 ─────────────────────────────────────────────────────── */
+
+.ans .doc {
+  padding: 0 var(--gutter) 140px;
+}
+.ans .block {
+  margin-top: var(--gap-section);
+}
+.ans .block:first-child {
+  margin-top: 0;
+}
+.ans .block--tight {
+  margin-top: var(--gap-card);
+}
+
+/* ── ① 마음 태그 ───────────────────────────────────────────────────── */
+
+.ans .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+.ans .tag {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+.ans .tag--neutral {
+  background: var(--surface-chip);
+  color: var(--text);
+}
+.ans .tag--sage {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+.ans .tag--lotus {
+  background: var(--lotus-soft);
+  color: var(--lotus);
+}
+
+.ans .tag-line {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+/* ── Deep 안내 줄 ──────────────────────────────────────────────────── */
+
+.ans .deep-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: var(--s-6) 0 var(--s-3);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+.ans .deep-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* ── ② 오늘의 부처의 말 (짙은 면) ───────────────────────────────────
+   C-2: 이 면 위에 --btn 을 올리지 않는다. 배지는 --accent-on-deep 바닥에
+   --surface-deep 글자다. */
+
+.ans .today {
+  background: var(--surface-deep);
+  border-radius: var(--r-card);
+  padding: var(--s-6) var(--pad-card);
+  box-shadow: var(--sh-raised);
+}
+.ans .today .eyebrow {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  letter-spacing: 0.02em;
+  color: var(--text-on-deep-muted);
+}
+.ans .today blockquote {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-verse);
+  line-height: var(--lh-verse);
+  letter-spacing: var(--ls-display-l);
+  color: var(--text-on-deep);
+  white-space: pre-line;
+}
+.ans .today .sub-note {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-on-deep-muted);
+}
+.ans .today .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: var(--s-5);
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  background: var(--accent-on-deep);
+  color: var(--surface-deep);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+}
+
+/* ── ③ 경전 ────────────────────────────────────────────────────────── */
+
+.ans .scripture {
+  background: var(--surface-scripture);
+  border: 1px solid var(--accent-rule);
+  border-radius: var(--r-inset);
+  padding: var(--pad-card);
+}
+.ans .scripture .sec-head .ico {
+  color: var(--accent-text);
+}
+.ans .scripture .text {
+  margin: 0;
+  padding-left: var(--s-4);
+  border-left: 3px solid var(--accent-rule);
+  font-family: var(--font-serif);
+  font-weight: var(--w-regular);
+  font-size: var(--t-scripture);
+  line-height: var(--lh-scripture);
+  letter-spacing: var(--ls-scripture);
+  color: var(--text);
+}
+.ans .scripture .cite {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+.ans .src-btn {
+  margin-top: var(--s-4);
+  width: 100%;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--accent-rule);
+  background: transparent;
+  border-radius: var(--r-button);
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--accent-text);
+  cursor: pointer;
+}
+.ans .src-btn:active {
+  background: var(--surface);
+}
+
+/* 경전 면이 카드 위쪽을 통째로 덮는다 */
+.ans .card .scripture--inset {
+  margin: calc(var(--pad-card) * -1) calc(var(--pad-card) * -1) 0;
+  border-radius: var(--r-card) var(--r-card) 0 0;
+  border-width: 0 0 1px;
+}
+
+/* ── ④ 용어 점선 밑줄 ──────────────────────────────────────────────── */
+
+.ans .term {
+  border: 0;
+  padding: 0 1px;
+  background: transparent;
+  font: inherit;
+  color: var(--accent-text);
+  font-weight: var(--w-bold);
+  border-bottom: 1.5px dotted var(--accent);
+  cursor: pointer;
+}
+.ans .term:focus-visible {
+  outline-offset: 1px;
+  border-radius: var(--r-xs);
+}
+
+/* ── ⑤ 소제목 ──────────────────────────────────────────────────────── */
+
+.ans .sub {
+  margin-top: var(--s-6);
+}
+.ans .sub:first-of-type {
+  margin-top: var(--s-5);
+}
+.ans .sub h3 {
+  margin: 0 0 var(--s-3);
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+  font-size: var(--t-body-l);
+  line-height: 1.4;
+  font-weight: var(--w-bold);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* ── ⑥ 지금 할 수 있는 것 ──────────────────────────────────────────── */
+
+.ans .acts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ans .acts li {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-4) 0;
+  border-top: 1px solid var(--line);
+}
+.ans .acts li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.ans .acts li:last-child {
+  padding-bottom: 0;
+}
+.ans .acts .n {
+  flex: 0 0 26px;
+  height: 26px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--t-caption);
+  font-weight: var(--w-bold);
+}
+.ans .acts p {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+.ans .acts p b {
+  font-weight: var(--w-bold);
+}
+.ans .acts .why {
+  display: block;
+  color: var(--text-muted);
+  font-weight: var(--w-medium);
+}
+
+/* ── 연꽃 패턴 띠 ──────────────────────────────────────────────────── */
+
+.ans .pattern-band {
+  height: 55px;
+  margin: var(--s-5) calc(var(--pad-card) * -1) 0;
+  /* 366px 짜리 띠를 한 장만 가운데 놓는다. 반복하면 390px 안에서 이음매가 한 번 생긴다 */
+  background-image: url('/assets/pattern_lotus.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: auto 55px;
+  opacity: 0.5;
+  /* 네 변을 흐리게 지워 띠가 잘린 사각형이 아니라 번진 장식으로 읽히게 한다 */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
+    linear-gradient(to bottom, transparent, #000 42%, #000 58%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 18%, #000 82%, transparent),
+    linear-gradient(to bottom, transparent, #000 42%, #000 58%, transparent);
+  mask-composite: intersect;
+}
+
+/* ── ⑦ 마지막 한마디 ───────────────────────────────────────────────── */
+
+.ans .closing {
+  padding: var(--s-4) 0 0;
+  text-align: center;
+}
+.ans .closing .ico {
+  color: var(--accent);
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--s-3);
+}
+.ans .closing p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  color: var(--text);
+}
+
+/* ── Deep Extension ────────────────────────────────────────────────── */
+
+.ans .ext-card {
+  margin-top: var(--gap-section);
+  padding: var(--pad-card);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  border: 1.5px dashed var(--ext-border);
+}
+.ans .ext-card .eyebrow {
+  margin: 0 0 6px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+.ans .ext-card > p {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+.ans .ad-btn {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-bold);
+  cursor: pointer;
+}
+.ans .ad-btn[disabled] {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text-weak);
+  cursor: default;
+}
+.ans .ad-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--accent-on-deep);
+  color: var(--surface-deep);
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+}
+.ans .ext-result {
+  margin-top: var(--s-5);
+}
+.ans .ext-result .scripture {
+  margin-bottom: var(--s-5);
+}
+
+/* ── 피드백 ────────────────────────────────────────────────────────── */
+
+.ans .feedback {
+  margin-top: var(--gap-section);
+  text-align: center;
+}
+.ans .feedback .q {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+.ans .fb-row {
+  display: flex;
+  gap: var(--s-2);
+}
+.ans .fb-btn {
+  flex: 1;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--btn-ghost-line);
+  background: var(--surface);
+  border-radius: var(--r-button);
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+  cursor: pointer;
+}
+.ans .fb-btn:active {
+  background: var(--surface-pressed);
+}
+.ans .fb-btn .h {
+  color: var(--lotus);
+}
+.ans .fb-btn .q2 {
+  color: var(--text-muted);
+}
+.ans .fb-btn[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ans .report {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--s-3);
+  margin-top: var(--s-2);
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-weak);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ── 문서 흐름의 공유·간직 ─────────────────────────────────────────── */
+
+.ans .actions-inline {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--gap-section);
+}
+
+/* 공유하기·간직하기와 다시 이야기하기 사이에 숨 쉴 자리를 둔다 */
+.ans .again {
+  margin-top: var(--s-8);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.ans .again p {
+  margin: 0 0 var(--s-4);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* ── AI 고지 ───────────────────────────────────────────────────────── */
+
+.ans .notice {
+  margin-top: var(--gap-section);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+.ans .notice p {
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+.ans .notice a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  margin-top: var(--s-1);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── 요청2 진행: 아래를 채우는 중 (s2) ─────────────────────────────── */
+
+.ans .pending {
+  margin-top: var(--gap-section);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+  text-align: center;
+}
+.ans .pending__lotus {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto var(--s-4);
+  color: var(--accent);
+  animation: ans-breathe 3.2s ease-in-out infinite;
+}
+.ans .pending__lotus svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.ans .pending__line {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  color: var(--text);
+  white-space: pre-line;
+  animation: ans-line-in var(--dur-section) var(--ease-out) both;
+}
+.ans .pending__note {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+/* 20초를 넘겼을 때. 진행 막대도 퍼센트도 그리지 않는다.
+   남은 시간을 모르면서 막대를 그리면 거짓말이 된다 */
+.ans .pending--late .pending__note {
+  color: var(--accent-text);
+}
+
+.ans .dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: var(--s-4);
+}
+.ans .dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  opacity: 0.3;
+  animation: ans-dot 1.5s ease-in-out infinite;
+}
+.ans .dots i:nth-child(2) {
+  animation-delay: 0.22s;
+}
+.ans .dots i:nth-child(3) {
+  animation-delay: 0.44s;
+}
+@keyframes ans-dot {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+.ans .pending .steps {
+  margin: var(--s-6) auto 0;
+  max-width: 250px;
+  text-align: left;
+}
+
+.ans .skel {
+  margin-top: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.ans .skel span {
+  height: 12px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  animation: ans-shimmer 1.8s var(--ease-out) infinite;
+}
+.ans .skel span:nth-child(1) {
+  width: 100%;
+}
+.ans .skel span:nth-child(2) {
+  width: 92%;
+}
+.ans .skel span:nth-child(3) {
+  width: 64%;
+}
+
+@keyframes ans-shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ── 2차 응답 실패: 상단 3블록은 남기고 아래에 한 줄 + 다시 시도 ──── */
+
+.ans .failed {
+  margin-top: var(--gap-section);
+}
+.ans .failed .card {
+  text-align: center;
+}
+.ans .failed .line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+.ans .failed .line svg {
+  color: var(--danger);
+  flex: 0 0 auto;
+}
+.ans .failed .sub-line {
+  margin: 0 0 var(--s-4);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+/* ── 하단 고정 바 (⑦ 도달 시 등장) ─────────────────────────────────── */
+
+.ans .bottombar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--gutter) calc(var(--s-5) + var(--safe-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: var(--sh-sheet);
+  transform: translateY(110%);
+  transition: transform var(--dur-section) var(--ease-sheet);
+}
+.ans .bottombar.on {
+  transform: translateY(0);
+}
+
+/* ── 바텀시트 (O1 경전 원문 · O2 용어 풀이) ────────────────────────── */
+
+.ans .dim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--dim);
+}
+
+.ans .sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  max-height: 76%;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--sh-sheet);
+  padding: var(--s-3) var(--gutter) calc(var(--s-6) + var(--safe-bottom, 0px));
+  animation: ans-sheet-up var(--dur-sheet) var(--ease-sheet) both;
+}
+@keyframes ans-sheet-up {
+  from {
+    transform: translateY(102%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.ans .grip {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  margin: 0 auto var(--s-5);
+}
+.ans .sheet h3 {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+}
+.ans .sheet .cite {
+  margin: 0 0 var(--s-5);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+.ans .sheet .orig {
+  background: var(--surface-scripture);
+  border: 1px solid var(--accent-rule);
+  border-radius: var(--r-inset);
+  padding: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+.ans .sheet .orig p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-regular);
+  font-size: var(--t-scripture);
+  line-height: var(--lh-scripture);
+  letter-spacing: var(--ls-scripture);
+  color: var(--text);
+}
+.ans .sheet .lab {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  color: var(--text-weak);
+}
+.ans .sheet .meta {
+  margin: 0 0 var(--s-6);
+  padding: var(--s-4);
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  font-size: var(--t-caption);
+  line-height: 1.7;
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+.ans .sheet .meta b {
+  color: var(--text);
+  font-weight: var(--w-semibold);
+}
+.ans .sheet .gloss {
+  margin: 0 0 var(--s-6);
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+.ans .sheet .close-hint {
+  margin: var(--s-4) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LIGHT · INVALID (s4)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ans .simple {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--gutter);
+}
+.ans .light-card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--pad-card);
+  box-shadow: var(--sh-card);
+  margin-top: var(--s-6);
+}
+.ans .light-card img {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-image);
+  display: block;
+  margin: 0 auto var(--s-4);
+  background: var(--surface-illust);
+  object-fit: cover;
+  mix-blend-mode: multiply;
+}
+.ans .light-card p {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  color: var(--text);
+}
+.ans .light-card p:last-of-type {
+  margin-bottom: 0;
+}
+.ans .light-cta {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--accent-soft);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+
+/* ── 접근성: 모션 정지 ─────────────────────────────────────────────
+   호흡·맥동은 끄고 문구 등장만 남긴다. 대기 화면에서 모션을 전부 끄면
+   「멈춘 것」과 「고장난 것」이 구분되지 않는다. */
+
+@media (prefers-reduced-motion: reduce) {
+  .ans .buddha-frame,
+  .ans .step--now .step__dot::after,
+  .ans .pending__lotus,
+  .ans .dots i,
+  .ans .skel span {
+    animation: none;
+  }
+  .ans .dots i {
+    opacity: 0.55;
+  }
+  .ans .bottombar,
+  .ans .topline .bar,
+  .ans .topline .scrim {
+    transition: none;
+  }
+  .ans .sheet {
+    animation-duration: 0.01ms;
+  }
+}

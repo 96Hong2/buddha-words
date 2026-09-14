@@ -53,3 +53,4 @@ export const test = base.extend<Fixtures>({
 });
 
 export { expect };
+export type { Page } from '@playwright/test';

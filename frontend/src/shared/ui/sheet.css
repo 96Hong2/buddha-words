@@ -1,0 +1,82 @@
+/*
+  바텀시트 판. 값은 공유 시트(domains/share/share.css)와 같은 토큰을 쓴다.
+  시트 안의 글과 버튼은 그 시트를 만든 도메인이 자기 css 에서 그린다.
+*/
+
+.pk-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.pk-sheet-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+}
+
+.pk-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 92%;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--sh-sheet);
+  padding: 10px var(--gutter) calc(28px + var(--safe-bottom, 0px));
+  transition: transform 0.18s ease-out;
+}
+
+/* 고칠 것이 많은 시트. 늘 같은 높이로 열어 아래 버튼이 접힌 아래로 밀리지 않게 한다 */
+.pk-sheet--tall {
+  height: 88%;
+  max-height: 88%;
+}
+
+/* 손가락을 따라가는 동안에는 애니메이션을 끈다. 따라오지 않으면 끌리는 느낌이 죽는다 */
+.pk-sheet--dragging {
+  transition: none;
+}
+
+/* 손잡이가 곧 닫기다. 막대는 그대로 두고 손가락이 닿는 넓이만 넓힌다 */
+.pk-sheet__handle {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+
+.pk-sheet__handle--hit::before {
+  content: '';
+  position: absolute;
+  inset: -20px 0;
+}
+
+.pk-sheet__grip {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+.pk-sheet__header {
+  margin: 0 0 var(--s-3);
+}
+
+.pk-sheet__title {
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}

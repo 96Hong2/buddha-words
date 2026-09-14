@@ -1,0 +1,491 @@
+/* 보관함과 이용권 시트. 색·간격·글꼴은 tokens.css 의 의미 토큰만 쓴다. */
+
+.arch-screen {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  /* 한글은 어절 안에서 끊기면 읽는 속도가 떨어진다 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.arch-pad {
+  padding: 0 var(--gutter);
+}
+
+.arch-title {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  margin: var(--s-6) 0 var(--s-2);
+}
+
+.arch-sub {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-5);
+}
+
+/* ── 섹션 헤더 ─────────────────────────────────────────────────────────── */
+
+.arch-sec {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin: var(--s-8) 0 var(--s-3);
+}
+
+.arch-sec--first {
+  margin-top: 0;
+}
+
+.arch-sec-title {
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  margin: 0;
+}
+
+.arch-sec-count {
+  font-size: var(--t-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-semibold);
+}
+
+/* ── 카드 ─────────────────────────────────────────────────────────────── */
+
+.arch-card {
+  display: flex;
+  gap: var(--s-4);
+  align-items: flex-start;
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--s-4);
+  box-shadow: var(--sh-card);
+  margin-bottom: var(--gap-card);
+}
+
+.arch-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.arch-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+
+.arch-date {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-medium);
+}
+
+.arch-badge-today {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  padding: 3px 8px;
+}
+
+/* 두 줄까지만 보이고 나머지는 접는다. 보관함은 훑는 자리다 */
+.arch-line {
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-body-l);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s-3);
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.arch-thumb {
+  flex: 0 0 auto;
+  display: block;
+  width: 68px;
+  height: 68px;
+  border-radius: var(--r-image);
+  overflow: hidden;
+}
+
+.arch-thumb img {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── 마음 태그 칩 ─────────────────────────────────────────────────────── */
+
+.arch-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.arch-tag {
+  font-size: var(--t-caption);
+  line-height: 1;
+  font-weight: var(--w-semibold);
+  border-radius: var(--r-pill);
+  padding: 6px 10px;
+  background: var(--surface-chip);
+  color: var(--text-muted);
+}
+
+.arch-tag--fear {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+.arch-tag--bond {
+  background: var(--lotus-soft);
+  color: var(--lotus);
+}
+
+/* ── 지난 이야기 · 흐린 영역 ──────────────────────────────────────────── */
+
+.arch-past {
+  display: block;
+  width: 100%;
+  text-align: center;
+  border-radius: var(--r-card);
+  border: 1px dashed var(--line-strong);
+  padding: var(--s-4);
+  background: var(--surface-2);
+}
+
+.arch-past:active {
+  background: var(--surface-pressed);
+}
+
+.arch-past:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.arch-past-inner {
+  display: block;
+  opacity: 0.34;
+  filter: blur(1.1px);
+}
+
+.arch-past-row {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-3) 0;
+}
+
+.arch-past-row + .arch-past-row {
+  border-top: 1px solid var(--line);
+}
+
+.arch-past-sq {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: var(--r-sm);
+  background: var(--surface-illust);
+}
+
+.arch-past-lines {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.arch-past-bar {
+  display: block;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+.arch-past-note {
+  display: block;
+  margin-top: var(--s-3);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+/* 목록이 끝났다는 신호. 연꽃 패턴 띠 */
+.arch-pattern {
+  height: 26px;
+  margin: var(--s-6) 0 var(--s-2);
+  background-image: url('/assets/pattern_lotus.webp');
+  background-repeat: repeat-x;
+  background-size: auto 26px;
+  background-position: center;
+  opacity: 0.5;
+}
+
+/* ── 빈 상태 ──────────────────────────────────────────────────────────── */
+
+.arch-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--s-12) var(--s-2) 0;
+}
+
+/* 원형으로 잘라 액자 느낌을 없앤다 */
+.arch-empty-art {
+  display: block;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: var(--s-6);
+}
+
+.arch-empty-art img {
+  width: 100%;
+  height: 100%;
+}
+
+.arch-empty-title {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  margin: 0 0 var(--s-3);
+}
+
+.arch-empty-desc {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-2);
+  max-width: 26ch;
+}
+
+.arch-empty-how {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+  margin: 0 0 var(--s-8);
+}
+
+.arch-empty-cta {
+  width: 100%;
+  max-width: 300px;
+}
+
+/* ── 버튼 ─────────────────────────────────────────────────────────────── */
+
+.arch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  border-radius: var(--r-button);
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.arch-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.arch-btn--primary {
+  background: var(--btn);
+  color: var(--on-btn);
+}
+
+.arch-btn--primary:active {
+  background: var(--btn-pressed);
+}
+
+.arch-btn--plain {
+  color: var(--text-muted);
+}
+
+.arch-btn--lg {
+  min-height: 52px;
+  font-size: 15px;
+}
+
+.arch-btn:disabled {
+  opacity: 0.45;
+}
+
+/* ── 탭바 (SDK·TDS 가 주지 않아 직접 그린다) ──────────────────────────── */
+
+.arch-bottom-space {
+  height: 108px;
+}
+
+.arch-tabbar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(20px + var(--safe-bottom, 0px));
+  height: 64px;
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-tabbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 var(--s-2);
+  z-index: 4;
+}
+
+.arch-tab {
+  flex: 0 0 120px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-pill);
+  color: var(--text-muted);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.arch-tab svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+
+.arch-tab--on {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* ── O5 이용권 시트 ───────────────────────────────────────────────────── */
+
+.pw-dim {
+  position: fixed;
+  inset: 0;
+  background: var(--dim);
+  /* 답변 화면의 하단 고정 바(40) 위로 올라와야 한다. 간직하기를 거기서 누른다 */
+  z-index: 50;
+}
+
+.pw-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  background: var(--surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--sh-sheet);
+  padding: var(--s-3) var(--gutter) calc(var(--s-8) + var(--safe-bottom, 0px));
+  animation: pw-rise var(--dur-sheet) var(--ease-sheet);
+}
+
+@keyframes pw-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.pw-grabber {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  margin: 0 auto var(--s-5);
+}
+
+.pw-title {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  margin: 0 0 var(--s-2);
+}
+
+.pw-sub {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-6);
+}
+
+.pw-benefits {
+  margin: 0 0 var(--s-2);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+
+.pw-benefits li {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  padding-left: 14px;
+  position: relative;
+}
+
+.pw-benefits li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.pw-price {
+  margin: var(--s-3) 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.pw-price small {
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.pw-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}

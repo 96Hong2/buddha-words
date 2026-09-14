@@ -1,0 +1,125 @@
+/* 이어가기 시트와 천장 안내. 값은 시안(design/screens/s5-archive-settings.html) 그대로다. */
+
+.continue-sheet__title {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.continue-sheet__sub {
+  margin: 0 0 var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.continue-sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* 광고 버튼. 배지 말고는 어디에도 광고라는 글자를 두지 않는다 */
+.continue-sheet__ad {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-bold);
+}
+
+.continue-sheet__ad[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.continue-sheet__ad svg {
+  flex: none;
+}
+
+.continue-sheet__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  margin-right: var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--ad-tag-bg);
+  color: var(--ad-tag-text);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+}
+
+.continue-sheet__note {
+  margin: var(--s-2) 0 var(--s-3);
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.continue-sheet__ghost,
+.continue-sheet__plain {
+  min-height: var(--tap-min);
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  border-radius: var(--r-button);
+  font-family: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.continue-sheet__ghost {
+  background: var(--surface);
+  border: 1px solid var(--btn-ghost-line);
+  color: var(--text);
+}
+
+.continue-sheet__plain {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+}
+
+.continue-sheet__hint {
+  margin: var(--s-3) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+/* 천장. 짙은 면 위에는 --text-on-deep 만 올린다 */
+.quota-exhausted {
+  width: fit-content;
+  max-width: 100%;
+  margin: var(--s-3) auto 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-deep);
+  color: var(--text-on-deep);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  text-align: center;
+  box-shadow: var(--sh-raised);
+}

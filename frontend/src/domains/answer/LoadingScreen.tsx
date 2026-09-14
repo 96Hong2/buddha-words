@@ -1,0 +1,332 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
+
+import { ApiFailure, messageFor, type ErrorCode } from '../../shared/api';
+import { useApiClient } from '../../shared/api';
+import { useAnalytics } from '../../shared/analytics';
+import { useSession } from '../../shared/session';
+import { sceneForScreen } from '../../shared/visual/scene';
+import { TEST_IDS, testId } from '../../shared/testIds';
+import { ROUTES } from '../../app/router';
+
+import { elapsedBucket } from './buckets';
+import './answer.css';
+
+/** 네 단계는 실제 진행에 묶여 있다. 앞 둘이 요청1, 뒤 둘은 답변 화면의 스켈레톤 자리다 */
+export const PROGRESS_STEPS = [
+  '이야기를 읽고 있어요',
+  '마음의 핵심을 살펴보고 있어요',
+  '닿아 있는 가르침을 찾고 있어요',
+  '지금 상황에 맞게 풀고 있어요',
+] as const;
+
+const TITLES = ['이야기를\n읽고 있어요', '마음의 핵심을\n살펴보고 있어요'] as const;
+
+const QUOTES = ['기다리는 동안 숨을 한 번 길게 쉬어 보세요', '서두르지 않아도 괜찮습니다'] as const;
+
+/** 1 → 2 는 요청1 안에서 시간표로 넘어간다. 2 → 3 은 요청1 완료라는 실제 신호로 넘어간다 */
+const STEP_TWO_MS = 2000;
+/** 멈춘 화면을 만들지 않으려고 이 간격으로 하단 한 문장을 바꾼다 */
+const QUOTE_TURN_MS = 4000;
+
+function codeOf(reason: ApiFailure['reason']): ErrorCode {
+  if (reason === 'timeout') return 'TIMEOUT';
+  if (reason === 'offline') return 'OFFLINE';
+  if (reason === 'budget') return 'BUDGET';
+  return 'SERVER';
+}
+
+/** 지나온 단계에 체크가 남아 앞으로 나아간 것이 보인다. 대기 화면과 답변 화면이 같이 쓴다 */
+export function StepList({ steps, current }: { steps: readonly string[]; current: number }) {
+  return (
+    <ol className="steps" role="list">
+      {steps.map((label, index) => {
+        const state = index < current ? 'done' : index === current ? 'now' : 'todo';
+        return (
+          <li
+            key={label}
+            className={`step step--${state}`}
+            aria-current={state === 'now' ? 'step' : undefined}
+          >
+            <span className="step__dot">
+              {state === 'done' ? <CheckIcon /> : <span className="step__core" />}
+            </span>
+            <span className="step__text">{label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M3.6 8.4l2.9 2.9 5.9-6.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function LotusMark() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden="true" fill="currentColor">
+      <path d="M10 3.4c1.7 1.8 2.5 3.6 2.5 5.5 0 1.4-.8 2.8-2.5 4.1-1.7-1.3-2.5-2.7-2.5-4.1 0-1.9.8-3.7 2.5-5.5z" />
+      <path d="M4.9 6.8c2 .6 3.4 1.7 4.2 3.3.6 1.2.5 2.6-.2 4.2-2-.5-3.4-1.4-4.1-2.6-1-1.6-.9-3.3.1-4.9z" />
+      <path d="M15.1 6.8c1 1.6 1.1 3.3.1 4.9-.7 1.2-2.1 2.1-4.1 2.6-.7-1.6-.8-3-.2-4.2.8-1.6 2.2-2.7 4.2-3.3z" />
+    </svg>
+  );
+}
+
+/**
+ * 답변을 만드는 동안 보는 화면.
+ *
+ * 여기서 요청1을 부르고, 종류에 따라 갈라 보낸다. 요청2는 답변 화면으로 넘어간 뒤에
+ * 이어서 부른다. 이 화면에는 광고를 두지 않는다.
+ */
+export function LoadingScreen() {
+  const client = useApiClient();
+  const analytics = useAnalytics();
+  const navigate = useNavigate();
+  const { sent, idempotencyKey, setResponse } = useSession();
+
+  const [stage, setStage] = useState(0);
+  const [quote, setQuote] = useState(0);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
+
+  /** StrictMode 가 효과를 두 번 돌려도 같은 멱등키로 두 번 보내지 않는다 */
+  const submittedKey = useRef<string | null>(null);
+  const scene = sceneForScreen('loading');
+
+  const submit = useCallback(async () => {
+    const startedAt = Date.now();
+    try {
+      const response = await client.submitConcern({
+        text: sent,
+        idempotencyKey,
+      });
+      setResponse(response);
+
+      if (response.responseType === 'crisis') {
+        navigate(ROUTES.crisis, { replace: true });
+        return;
+      }
+
+      if (response.responseType === 'light') {
+        analytics.log('answer_generated', {
+          answer_id: response.answerId,
+          pass: 'light',
+          elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+          regenerated: false,
+        });
+      }
+
+      if (response.responseType !== 'answer') {
+        navigate(ROUTES.answer, { replace: true });
+        return;
+      }
+
+      analytics.log('answer_generated', {
+        answer_id: response.answerId,
+        route: response.route,
+        pass: 1,
+        elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+        regenerated: false,
+      });
+      navigate(ROUTES.answer, { replace: true });
+
+      // 요청2는 화면이 넘어간 뒤에 이어서 돈다. 받는 자리는 세션이라 이 화면이 사라져도 남는다.
+      const pass2StartedAt = Date.now();
+      try {
+        const pass2 = await client.fetchPass2({
+          answerId: response.answerId,
+          idempotencyKey,
+          text: sent,
+        });
+        setResponse({ ...response, pass2 });
+        if (pass2.status === 'done') {
+          analytics.log('answer_generated', {
+            answer_id: response.answerId,
+            route: response.route,
+            pass: 2,
+            elapsed_bucket_ms: elapsedBucket(Date.now() - pass2StartedAt),
+            regenerated: false,
+          });
+        } else {
+          analytics.log('answer_failed', {
+            route: response.route,
+            pass: 2,
+            reason: 'provider',
+          });
+        }
+      } catch (error) {
+        setResponse({
+          ...response,
+          pass2: { status: 'failed', retryable: true },
+        });
+        analytics.log('answer_failed', {
+          route: response.route,
+          pass: 2,
+          reason: error instanceof ApiFailure ? error.reason : 'provider',
+        });
+      }
+    } catch (error) {
+      const failed =
+        error instanceof ApiFailure ? error : new ApiFailure('provider', '보내지 못했어요.');
+      analytics.log('answer_failed', { pass: 1, reason: failed.reason });
+      setFailure(failed);
+    }
+  }, [analytics, client, idempotencyKey, navigate, sent, setResponse]);
+
+  useEffect(() => {
+    // 적은 글 없이 이 화면에 들어올 수는 없다. 새로고침으로 들어오면 홈으로 돌린다.
+    if (sent.trim() === '' || idempotencyKey === '') {
+      navigate(ROUTES.home, { replace: true });
+      return;
+    }
+    if (submittedKey.current === idempotencyKey) return;
+    submittedKey.current = idempotencyKey;
+    void submit();
+  }, [idempotencyKey, navigate, sent, submit]);
+
+  useEffect(() => {
+    if (failure != null) return;
+    const toStepTwo = window.setTimeout(() => setStage(1), STEP_TWO_MS);
+    const turning = window.setInterval(() => setQuote((n) => n + 1), QUOTE_TURN_MS);
+    return () => {
+      window.clearTimeout(toStepTwo);
+      window.clearInterval(turning);
+    };
+  }, [failure]);
+
+  function retry() {
+    setFailure(null);
+    setStage(0);
+    setQuote(0);
+    // 같은 멱등키로 다시 부른다. 오늘 남은 횟수가 다시 줄지 않는다.
+    void submit();
+  }
+
+  if (failure != null) {
+    return (
+      <div className="ans" {...testId(TEST_IDS.loading)}>
+        {failure.reason === 'offline' && (
+          <div className="net-banner">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 4l18 16" />
+              <path d="M5.2 9.2a13 13 0 0 1 3.6-2.2" />
+              <path d="M13.4 7.1a13 13 0 0 1 5.4 2.1" />
+              <path d="M8 12.6a8.6 8.6 0 0 1 2.2-1.2" />
+              <path d="M16 12.6a8.6 8.6 0 0 0-1.6-1" />
+              <path d="M12 17.8h.01" />
+            </svg>
+            인터넷이 끊겼어요. 연결되면 이어서 할 수 있어요
+          </div>
+        )}
+
+        <div className="state" role="alert" {...testId(TEST_IDS.errorState)}>
+          <div className="state-art" aria-hidden="true">
+            <LotusMark />
+          </div>
+          <h2 className="h-screen">지금은 답을 만들지 못했어요</h2>
+          <p className="lead">{messageFor(codeOf(failure.reason))}</p>
+          <div className="state-note">
+            <span className="chip-note">
+              <span className="ic" aria-hidden="true">
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6 9.5 17 4 11.6" />
+                </svg>
+              </span>
+              쓰신 이야기는 그대로 있어요. 다시 보내도 오늘 남은 횟수는 줄지 않아요
+            </span>
+          </div>
+        </div>
+
+        <div className="foot">
+          <button
+            type="button"
+            className="btn btn--solid"
+            onClick={retry}
+            {...testId(TEST_IDS.retry)}
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 12a8 8 0 1 1-2.6-5.9" />
+              <path d="M20 4v4.4h-4.4" />
+            </svg>
+            다시 해보기
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={() => navigate(ROUTES.home, { replace: true })}
+          >
+            닫기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ans" {...testId(TEST_IDS.loading)}>
+      <div className="wait">
+        <div className="wait__top" />
+
+        <div className="buddha-frame">
+          <img src={scene?.src} alt="찻잔을 든 부처" />
+        </div>
+
+        <p
+          className="wait__title"
+          key={stage}
+          aria-live="polite"
+          {...testId(TEST_IDS.loadingLabel)}
+        >
+          {TITLES[stage]}
+        </p>
+
+        <StepList steps={PROGRESS_STEPS} current={stage} />
+
+        <div className="wait__bottom" />
+        <p className="wait__quote">{QUOTES[quote % QUOTES.length]}</p>
+      </div>
+
+      <div className="ripple-band" aria-hidden="true" />
+    </div>
+  );
+}

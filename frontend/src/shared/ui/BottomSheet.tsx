@@ -15,6 +15,9 @@ import {
   type Tracker,
 } from './sheetDrag';
 
+import './sheet.css';
+import { TEST_IDS, testId } from '../testIds';
+
 export interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
@@ -150,7 +153,11 @@ export function BottomSheet({
 
   return createPortal(
     <div className="pk-sheet-root">
-      <div className="pk-sheet-dim" onClick={dismissible ? onClose : undefined} />
+      <div
+        className="pk-sheet-dim"
+        onClick={dismissible ? onClose : undefined}
+        {...testId(TEST_IDS.sheetDim)}
+      />
       <div
         ref={sheetRef}
         className={cx(
@@ -180,6 +187,7 @@ export function BottomSheet({
             data-sheet-handle=""
             className="pk-sheet__handle pk-sheet__handle--hit"
             aria-label="닫기"
+            {...testId(TEST_IDS.sheetClose)}
             onClick={handleClick}
           >
             <span className="pk-sheet__grip" aria-hidden="true" />

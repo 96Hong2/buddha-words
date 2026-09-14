@@ -1,0 +1,20 @@
+/* 조립 화면이 쓰는 작은 조각. 값은 공유 시트의 토스트와 같은 토큰을 쓴다 */
+
+.route-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  width: 330px;
+  max-width: calc(100% - 40px);
+  background: var(--surface-deep);
+  border-radius: var(--r-button);
+  padding: 15px 18px;
+  box-shadow: var(--sh-raised);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  font-weight: var(--w-semibold);
+  color: var(--text-on-deep);
+  text-align: center;
+}

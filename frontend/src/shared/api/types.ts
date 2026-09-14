@@ -126,6 +126,15 @@ export interface ConcernRequest {
   continueToken?: string;
 }
 
+/** 공유 링크 하나가 실어 나르는 것 전부. 보낸 사람이 적은 글은 여기에 없다 */
+export interface SharedCard {
+  buddhaMessage: string;
+  scripture: Scripture;
+  emotionTags: EmotionTag[];
+  /** 「이 말씀은 이런 뜻이에요」 문단 */
+  explanation: string[];
+}
+
 /** 오늘의 한마디. LLM 을 부르지 않는다 */
 export interface DailyQuote {
   quoteId: string;

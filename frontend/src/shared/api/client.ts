@@ -11,6 +11,8 @@ import {
   buildSolace,
   dial,
   pickDaily,
+  readShared,
+  rememberShared,
   respondTo,
   sleep,
 } from './stubData';
@@ -21,6 +23,7 @@ import type {
   ConcernRequest,
   DailyQuote,
   Pass2,
+  SharedCard,
 } from './types';
 
 export class ApiFailure extends Error {
@@ -56,6 +59,10 @@ export interface ApiClient {
   fetchExtension(req: { answerId: string; text: string; usedIds: string[] }): Promise<ApiExtension>;
   /** 오늘의 한마디. 모델을 부르지 않는다 */
   fetchDailyQuote(dateISO: string): Promise<DailyQuote>;
+  /** 공유 링크를 만든다. 서버가 토큰을 내준다 */
+  createShareToken(req: { answerId: string; card: SharedCard }): Promise<string>;
+  /** 링크로 들어온 사람이 보는 카드. 보낸 사람의 고민 원문은 담기지 않는다 */
+  fetchSharedCard(token: string): Promise<SharedCard | null>;
 }
 
 /** 서버 없이 도는 구현. 라우터 판정은 정본 그대로 쓴다 */
@@ -104,6 +111,16 @@ export function createStubClient(): ApiClient {
     async fetchDailyQuote(dateISO) {
       await sleep(80);
       return pickDaily(dateISO);
+    },
+
+    async createShareToken({ answerId, card }) {
+      rememberShared(answerId, card);
+      return answerId;
+    },
+
+    async fetchSharedCard(token) {
+      await sleep(120);
+      return readShared(token);
     },
   };
 }

@@ -64,14 +64,16 @@ test('입력칸이 자란다', async ({ page }) => {
   expect(scrollable).toBe(true);
 });
 
-test('S2·S3 답변: 7블록과 하단 바', async ({ page }) => {
+test('S2·S3 답변: 7블록과 하단 바', async ({ page, stub }) => {
+  // 대기 화면은 잠깐만 보인다. 찍는 동안 답변으로 넘어가지 않게 1차 패스를 늦춘다.
+  await stub({ pass1Ms: 6000, pass2Ms: 1500 });
   await page.goto('/');
   await page.getByTestId('entry-card-cta').click();
   await page.getByTestId('concern-field').fill(DEEP);
   await page.getByTestId('submit').click();
 
   await expect(page.getByTestId('loading')).toBeVisible();
-  await shot(page, '05-loading');
+  await page.screenshot({ path: `${SHOTS}/05-loading.png` });
 
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId('buddha-message')).toBeVisible();

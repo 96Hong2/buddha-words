@@ -28,6 +28,7 @@ import type {
   DailyQuote,
   EmotionTag,
   Scripture,
+  SharedCard,
   VisualTheme,
 } from './types';
 
@@ -182,9 +183,11 @@ function actionsFor(deep: boolean): Action[] {
 
 // ── 응답 조립 ───────────────────────────────────────────────────────────────
 let answerSeq = 0;
+/** 새로고침해도 겹치지 않는 꼬리. 실제 서버가 내주는 id 처럼 매번 다르다 */
+const runTag = Math.random().toString(36).slice(2, 8);
 function newAnswerId(): string {
   answerSeq += 1;
-  return `stub-answer-${answerSeq}`;
+  return `stub-${runTag}-${answerSeq}`;
 }
 
 export function buildAnswer(text: string, route: 'normal' | 'deep', decision: RouteDecision): ApiAnswer {
@@ -297,6 +300,34 @@ export function buildExtension(text: string, answerId: string, usedIds: string[]
     },
     action: { title: '내가 이 일에서 정말 바랐던 것 한 문장으로 적기', why: '바람이 분명해지면 실망의 크기도 정확해져요' },
   };
+}
+
+// ── 공유 카드 ───────────────────────────────────────────────────────────────
+/**
+ * 링크를 연 사람이 보는 카드. 서버가 토큰으로 내주는 자리를 흉내 낸다.
+ * 고민 원문은 여기에 담기지 않는다.
+ */
+const SHARED_KEY = 'buddha.stub.share.v1';
+
+function sharedStore(): Record<string, SharedCard> {
+  try {
+    return JSON.parse(localStorage.getItem(SHARED_KEY) ?? '{}') as Record<string, SharedCard>;
+  } catch {
+    return {};
+  }
+}
+
+export function rememberShared(answerId: string, card: SharedCard): void {
+  // 서버가 할 일을 흉내 낸다. 새로고침에 살아남아야 링크가 링크 구실을 한다.
+  try {
+    localStorage.setItem(SHARED_KEY, JSON.stringify({ ...sharedStore(), [answerId]: card }));
+  } catch {
+    // 저장이 막힌 기기에서는 링크를 못 만든다. 화면이 만료 안내로 받는다.
+  }
+}
+
+export function readShared(token: string): SharedCard | null {
+  return sharedStore()[token] ?? null;
 }
 
 // ── 오늘의 한마디 ────────────────────────────────────────────────────────────
