@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부처의 말 - 공유 카드</title>
+<style>
+:root{
+  --bg:#fbf7ef;
+  --paper:#fffaf1;
+  --ink:#362c25;
+  --muted:#8a7a6c;
+  --gold:#b48a4a;
+  --line:#e9dfd1;
+  --font-display:"MaruBuri","Noto Serif KR","AppleMyungjo",serif;
+  --font-ui:"Pretendard","SUIT","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-ui);
+}
+.phone{
+  width:min(390px,100vw); min-height:100vh; margin:auto; background:var(--paper);
+  position:relative; overflow:hidden;
+}
+h1,h2,.quote{font-family:var(--font-display)}
+button{
+  font:inherit;border:0;border-radius:18px;padding:15px 18px;
+  background:#41382f;color:#fff;font-weight:700;cursor:pointer;
+}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.tag{
+  display:inline-block;padding:7px 11px;margin:3px;border-radius:999px;
+  background:#efe8dc;color:#655649;font-size:13px;
+}
+.card{
+  margin:16px;border:1px solid var(--line);background:rgba(255,255,255,.75);
+  border-radius:22px;padding:18px;
+}
+</style>
+</head>
+<body>
+<div class="phone" style="display:grid;place-items:center;padding:30px;background:#efe8dc">
+  <img src="../images/share_card.webp" style="width:100%;border-radius:26px;box-shadow:0 22px 70px #5d4a3533" alt="공유 카드">
+</div>
+</body>
+</html>

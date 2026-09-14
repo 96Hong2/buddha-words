@@ -1,0 +1,1066 @@
+<!-- @dsCard group="Screens" -->
+<!-- ============================================================================
+     부처의 말 · S0 스플래시와 첫 진입
+     정본: docs/plan/00-통합-개발-계획.md (X1·X4) · docs/plan/06-화면-IA와-카피.md (D1·C5·7.1)
+     ============================================================================ -->
+
+<!-- ============================================================================
+     부처의 말 · 웹폰트 비차단 로드 스니펫 v1.0
+     정본 파일: ~/orca/workspaces/chore/부처의-말/design/foundations/_fonts.html
+     화면 파일(design/screens/*.html, design/components/*.html)은 이 블록을
+     <head> 맨 위에 그대로 복사해 붙인다. 고쳐서 쓰지 않는다.
+
+     ■ 왜 이렇게 받나
+     CSS 파일 안의 @import 는 그 시트를 다 받을 때까지 렌더를 막는다.
+     10초 가계부에서 index.css 맨 위의 @import 하나가 첫 그림을 30초 막아 e2e 가
+     간헐 실패했다. 미니앱은 열자마자 보여야 하는 자리라 출시 문제가 된다.
+     그래서 link 를 media="print" 로 받고 onload 에서 media='all' 로 바꾼다.
+     이러면 브라우저가 이 시트를 렌더 차단 자원으로 세지 않는다.
+
+     ■ 못 받아도 읽혀야 한다
+     세 폰트가 전부 실패해도 폴백 스택(Apple SD Gothic Neo, system-ui …)으로 읽힌다.
+     _tokens.css 의 --font-sans · --font-serif 가 그 스택이다.
+
+     ■ URL 확인 (2026-09-13, curl 로 실제 응답 코드를 받아 확인함)
+       200  cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/.../pretendardvariable-dynamic-subset.css
+       200  hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-{Regular,SemiBold,Bold}.woff2
+       200  fonts.googleapis.com/css2?family=Noto+Serif+KR
+       404  cdn.jsdelivr.net/npm/sunn-web-font@1.0.1/SUIT.css  ← 그래서 SUIT 는 받지 않는다
+            SUIT 는 스택에 이름만 남긴다. 기기에 설치된 사용자만 쓰게 된다.
+     ============================================================================ -->
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- 1) Pretendard Variable · 본문과 UI 전부.
+     dynamic-subset 판이라 한글을 조각(약 34KB)으로 나눠 보내고, 브라우저는 화면에 쓴 글자가
+     들어 있는 조각만 받는다. 전체 정적판(Regular 한 벌 766KB)보다 훨씬 가볍다. -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      media="print" onload="this.media='all'">
+
+<!-- 2) Noto Serif KR · MaruBuri 가 실패했을 때 받는 명조 폴백.
+     Google Fonts 의 css2 는 font-display:swap 을 URL 파라미터로 넣어 준다. -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      media="print" onload="this.media='all'">
+
+<!-- 3) MaruBuri · 제목·경전·인용문·오늘의 한마디.
+     네이버가 주는 공식 CSS(hangeul.pstatic.net/hangeul_static/css/maru-buri.css)를 쓰지 않고
+     아래처럼 우리가 직접 @font-face 를 쓴다. 이유가 둘이다.
+       (1) 네이버 CSS 에 font-display 가 없다. 기본값 auto 는 폰트를 받는 동안 글자를 숨긴다.
+           본문이 1,600자를 넘는 앱이라 그 사이 화면이 비면 크게 튄다. swap 으로 덮는다.
+       (2) 네이버 CSS 는 굵기마다 family 이름이 다르다('MaruBuri', 'MaruBuriSemiBold',
+           'MaruBuriBold'). 그대로 두면 font-weight:700 이 가짜 굵기(synthetic bold)를 만들어
+           한글 받침이 뭉갠다. 아래에서 한 이름에 weight 를 묶어 준다.
+     woff2 한 벌이 약 440KB 다. 제목과 인용문에만 쓰므로 Regular 와 Bold 두 벌만 받는다.
+     실제 앱에서는 쓰는 글자만 남긴 서브셋으로 줄인다. -->
+<style>
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-SemiBold.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2');
+  }
+
+  /* 가짜 굵기·가짜 기울임을 끈다. 한글은 합성 굵기에서 받침이 붙어 뭉갠다. */
+  html { font-synthesis-weight: none; font-synthesis-style: none; }
+</style>
+
+<title>부처의 말 · S0 스플래시와 첫 진입</title>
+
+<style>
+/* ============================================================================
+   부처의 말 · 디자인 토큰 v1.0 (라이트 전용)
+   정본 파일: ~/orca/workspaces/chore/부처의-말/design/foundations/_tokens.css
+
+   이 파일이 색·타이포·간격의 정본이다. 화면 CSS 는 램프(--c-*)를 직접 쓰지 않고
+   의미 토큰만 쓴다. 램프를 직접 쓰면 값이 바뀔 때 그 자리만 안 바뀐다.
+
+   출처: design/assets 의 실제 이미지에서 뽑은 주조색 + 원본 HTML 의 CSS 변수.
+   대비비는 전부 python3 로 WCAG 2.x 상대휘도 공식으로 계산해 통과시킨 값이다.
+   기준: 본문 4.5 · 큰 글씨와 UI 경계 3.0 · 면 대 면 1.20.
+
+   ※ 다크 팔레트는 없다. 통합 개발 계획 X1 이 라이트 전용으로 못 박았다.
+     토스가 그리는 상단바가 라이트 고정이라 본문만 뒤집으면 화면 위아래가 갈라진다.
+   ============================================================================ */
+
+:root {
+
+  /* ── 램프 (원시 토큰) ──────────────────────────────────────────────────
+     에셋 이미지에서 실제로 뽑은 색을 기준으로 단계를 채웠다.
+     sand 는 배경·표면·잉크가 모두 나오는 뼈대다. */
+
+  --c-sand-50:  #FFFAF1;  /* 에셋 paper. 카드·입력칸 */
+  --c-sand-100: #FBF7EF;  /* 에셋 bg. 부처 이미지 매트와 같은 톤 */
+  --c-sand-150: #F6EFE2;  /* 아주 옅은 눌림 */
+  --c-sand-200: #EDE4D3;  /* 앱 배경. 카드와 1.21 로 갈린다 */
+  --c-sand-300: #E4D9C4;  /* 눌린 면 */
+  --c-sand-400: #DCCFB8;  /* 장식 구분선 */
+  --c-sand-500: #C2B096;  /* 비활성 */
+  --c-sand-600: #8A7A61;  /* UI 경계. 배경 위 3.30 */
+  --c-sand-700: #6B5C4E;  /* 보조 글자 */
+  --c-sand-800: #4C4234;  /* 짙은 중립 면 */
+  --c-sand-900: #362C25;  /* 에셋 ink. 본문 */
+
+  --c-gold-50:  #FAF2DE;  /* 아주 옅은 금색 배경 */
+  --c-gold-100: #F2E3C4;  /* 경전 인용면·금색 칩 */
+  --c-gold-200: #E3C388;  /* 짙은 면 위에 놓는 금색 */
+  --c-gold-300: #D3AC60;  /* 장식 */
+  --c-gold-400: #B48A4A;  /* 에셋 gold 원값. 아이콘·큰 글씨 */
+  --c-gold-500: #AE8340;  /* 아이콘·선. 카드 위 3.30 */
+  --c-gold-600: #9E7329;  /* 경전 세로선. 경전면 위 3.35 */
+  --c-gold-700: #8E6B26;  /* 포커스 링 */
+  --c-gold-800: #7E5C1E;  /* 금색 글자·주의 */
+  --c-gold-900: #6B4E19;  /* 금색 눌림 */
+
+  --c-sage-50:  #EFF3EA;
+  --c-sage-100: #DFE7D5;  /* 세이지 칩. 카드 위 1.22 */
+  --c-sage-200: #C3D2B6;
+  --c-sage-300: #9DB08D;
+  --c-sage-400: #7B9169;
+  --c-sage-500: #637C55;
+  --c-sage-600: #4E6543;  /* 세이지 글자·성공 */
+  --c-sage-700: #3D5135;
+  --c-sage-800: #2F3F29;
+
+  --c-lotus-50:  #FDF1F3;
+  --c-lotus-100: #F5DBE0;  /* 연꽃 칩. 카드 위 1.26 */
+  --c-lotus-200: #EDC0C8;
+  --c-lotus-300: #E09FAB;  /* 에셋 연꽃잎 핑크 */
+  --c-lotus-400: #CE7688;
+  --c-lotus-500: #B85568;
+  --c-lotus-600: #9A4356;  /* 연꽃 글자 */
+  --c-lotus-700: #7D3446;
+
+  --c-brown-700: #41382F;  /* 에셋 버튼색. 주 버튼·짙은 면 */
+  --c-brown-800: #2B241D;  /* 버튼 눌림 */
+  --c-red-600:   #A83C33;  /* 오류 */
+
+
+  /* ── 의미 토큰 · 면 ───────────────────────────────────────────────────
+     층은 두 개다. 세 번째 층을 밝기로 만들지 않는다.
+     아이보리에서 세 층을 각각 1.20 으로 벌리면 셋째 층이 흙빛이 된다.
+     층이 하나 더 필요하면 밝기가 아니라 --line 으로 나눈다. */
+
+  --bg:               var(--c-sand-200);  /* 앱 배경 (층 0) */
+  --surface:          var(--c-sand-50);   /* 카드·시트·입력칸 (층 1). 배경과 1.21 */
+  --surface-2:        var(--c-sand-200);  /* 카드 안 인셋. 배경과 같은 톤으로 파인 자리를 만든다 */
+  --surface-pressed:  var(--c-sand-300);  /* 눌림. 잠깐 보이는 상태라 1.20 요건 밖이다 */
+  --surface-chip:     var(--c-sand-200);  /* 중립 칩 */
+  --surface-scripture:var(--c-gold-100);  /* 경전 인용면. 카드와 1.22 */
+  --surface-deep:     var(--c-brown-700); /* 오늘의 한마디 짙은 면 */
+  --surface-illust:   var(--c-sand-100);  /* 부처 이미지 뒤. 이미지에 구워진 매트(#FBF8F2)와 같은 톤 */
+
+  /* ── 의미 토큰 · 글자 ─────────────────────────────────────────────── */
+
+  --text:          var(--c-sand-900);  /* 본문. 배경 10.78 · 카드 13.08 */
+  --text-muted:    var(--c-sand-700);  /* 보조. 배경 5.09 · 카드 6.18 */
+  --text-weak:     #736354;            /* 입력 안내문·비활성 라벨. 배경 4.57 · 카드 5.55 */
+  --text-on-deep:  var(--c-sand-50);   /* 짙은 면 위 글자. 11.03 */
+  --text-on-deep-muted: #D9CDBC;       /* 짙은 면 위 보조. 7.32 */
+
+  /* ── 의미 토큰 · 강조 (금색) ──────────────────────────────────────────
+     이 앱의 강조는 금색 하나다. 경전이 신뢰의 핵심이라 그 자리가 따로 서야 한다.
+     같은 금색이라도 글자용과 면·선용의 값이 다르다. 섞어 쓰면 대비가 무너진다. */
+
+  --accent:         var(--c-gold-500);  /* 아이콘·큰 글씨·선. 카드 위 3.30 */
+  --accent-text:    var(--c-gold-800);  /* 금색 글자. 카드 5.88 · 경전면 4.82 */
+  --accent-rule:    var(--c-gold-600);  /* 경전 인용면 왼쪽 세로선. 경전면 위 3.35 */
+  --accent-pressed: var(--c-gold-900);  /* 금색 눌림 */
+  --accent-soft:    var(--c-gold-100);  /* 금색 약배경. 칩·경전면과 같은 값 */
+  --accent-on-deep: var(--c-gold-200);  /* 짙은 면 위 금색 면. 그 위 글자는 --surface-deep 6.79 */
+
+  /* ── 의미 토큰 · 보조 색 ─────────────────────────────────────────────
+     감정 태그 칩의 색만 담당한다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다. */
+
+  --sage:       var(--c-sage-600);   /* 세이지 글자. 세이지 칩 위 5.06 */
+  --sage-soft:  var(--c-sage-100);   /* 두려움 계열 태그 칩 (#불안 #걱정) */
+  --lotus:      var(--c-lotus-600);  /* 연꽃 글자. 연꽃 칩 위 4.86 */
+  --lotus-soft: var(--c-lotus-100);  /* 관계·욕구 계열 태그 칩 (#집착 #인정욕구) */
+
+  /* ── 의미 토큰 · 선 ─────────────────────────────────────────────────── */
+
+  --line:        var(--c-sand-400);  /* 장식 구분선. 만질 수 없는 선에만 */
+  --line-strong: var(--c-sand-600);  /* 입력칸·토글 등 UI 경계. 배경 3.30 · 카드 4.01 */
+  --focus:       var(--c-gold-700);  /* 포커스 링. 배경 3.89 · 카드 4.72 */
+
+  /* ── 의미 토큰 · 상태 ───────────────────────────────────────────────── */
+
+  --success: var(--c-sage-600);  /* 저장 완료·수행 체크. 배경 5.09 */
+  --caution: var(--c-gold-800);  /* 개인정보 안내 등 주의. 배경 4.84 */
+  --danger:  var(--c-red-600);   /* 오류. 배경 4.95 · 카드 6.01 */
+
+  /* ── 의미 토큰 · 버튼 ───────────────────────────────────────────────── */
+
+  --btn:         var(--c-brown-700);  /* 주 버튼 바닥. 에셋의 버튼색 그대로 */
+  --btn-pressed: var(--c-brown-800);
+  --on-btn:      var(--c-sand-50);    /* 버튼 글자. 11.03 */
+  --btn-ghost-line: var(--c-sand-600);/* 보조 버튼 테두리 */
+
+  --dim: rgba(54, 44, 37, .42);  /* 바텀시트 딤 */
+
+  /* ────────────────────────────────────────────────────────────────────
+     짙은 면 사고를 막는 규칙 (10초 가계부에서 실제로 난 사고)
+
+     원문: "월간 결산을 짙은 세이지 전면으로 바꿨더니 「다음」 버튼이 사라진 것처럼 보였다.
+     버튼 바닥색이 sage-700 인데 배경도 sage-700 이라 대비가 1:1 이 됐다."
+
+     이 앱은 「오늘의 한마디」를 --surface-deep 짙은 면으로 낸다. 그리고 --btn 이
+     --surface-deep 과 **같은 값 #41382F** 이다. 아무 생각 없이 얹으면 그 사고가 그대로 난다.
+
+     C-1  면 토큰을 바꾸는 변경은 그 면 위에 놓인 모든 요소의 토큰을 세어 보고 판정한다.
+     C-2  짙은 면 위에 --btn 을 놓지 않는다. 대비 1.00 이다. 버튼이 통째로 사라진다.
+     C-3  짙은 면 위에 놓을 수 있는 것은 아래 셋뿐이다.
+            --text-on-deep       #FFFAF1  11.03  글자
+            --text-on-deep-muted #D9CDBC   7.32  보조 글자
+            --accent-on-deep     #E3C388   6.79  버튼 바닥 (그 위 글자는 --surface-deep)
+     C-4  금지 조합 (계산값)
+            --btn         #41382F  위  1.00  ← 사고가 나는 그 조합. 버튼이 통째로 사라진다
+            --accent-text #7E5C1E  위  1.88  글자로 못 쓴다
+            --text-muted  #6B5C4E  위  1.78  글자로 못 쓴다
+            --accent      #AE8340  위  3.34  큰 글씨·아이콘만 된다. 본문 글자로 쓰면 4.5 미달
+     C-5  새로 놓고 싶은 색이 생기면 눈이 아니라 계산으로 판정한다.
+          사람 눈은 아이보리 계열에서 2단계 차이를 못 본다.
+     ──────────────────────────────────────────────────────────────────── */
+
+
+  /* ── 타이포 · 스택 ────────────────────────────────────────────────────
+     웹폰트는 _fonts.html 이 비차단으로 받는다. CSS 안의 @import 는 금지다.
+     10초 가계부에서 index.css 의 @import 가 첫 그림을 30초 막은 사고가 있었다.
+     못 받아도 폴백 스택으로 읽혀야 한다. */
+
+  --font-sans: 'Pretendard Variable', 'Pretendard', 'SUIT', 'Apple SD Gothic Neo',
+               -apple-system, BlinkMacSystemFont, system-ui, 'Noto Sans KR', sans-serif;
+  --font-serif: 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
+  --font-serif-bold: 'MaruBuriBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+  --font-serif-semibold: 'MaruBuriSemiBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+
+  /* ── 타이포 · 8단 ─────────────────────────────────────────────────────
+     기준 화면 390px. 좌우 gutter 20 + 카드 padding 20 을 빼면 본문 폭 310px.
+     답변 본문은 1,600~2,500자다. 이 길이를 편하게 읽히게 하는 것이 화면의 첫 목적이다.
+
+     이름         px  행간   자간       굵기  한 줄 글자수(310px)  쓰는 곳
+     display-l    28  1.42  -0.02em    700   약 11자   오늘의 한마디 (짙은 면, serif)
+     display-m    22  1.55  -0.015em   600   약 14자   화면 제목·마지막 한 문장 (serif)
+     title        18  1.45  -0.01em    700   약 17자   답변 섹션 제목 (sans)
+     scripture    17  1.90  +0.01em    400   약 18자   경전 번역문 (serif)
+     body-l       17  1.80   0         500   약 18자   답변 본문 (sans)
+     body         15  1.65   0         500   약 20자   일반 본문·목록
+     label        14  1.20  -0.005em   600   -         칩·버튼·탭 라벨
+     caption      13  1.50   0         500   -         경전 출처·안내문
+
+     본문을 17px 로 올린 근거:
+       16px 면 한 줄 19.4자, 2,500자가 129줄 × 28px = 약 3,600px.
+       17px 면 한 줄 18.2자, 2,500자가 137줄 × 30.6px = 약 4,200px.
+       줄 수는 늘지만 글자가 커져 한 줄을 훑는 속도가 빨라진다. 모바일 390px 에서
+       한 줄 25자 이상은 어차피 불가능하니, 줄 수를 줄이는 대신 글자를 키우는 쪽을 택했다.
+     행간 1.8 근거:
+       한글은 받침이 있어 라틴보다 세로로 빽빽하다. 1,600자를 넘는 글에서 1.6 은 줄이 붙어 보인다.
+       1.8 은 30.6px 로, 문단 사이 간격 16px 과 겹쳐 보이지 않는 최소값이다.
+     굵기 400 은 경전 번역문에만 쓴다.
+       MaruBuri 는 획이 가늘어 500 이 없다. 나머지 sans 본문은 500 을 최소로 한다. */
+
+  --t-display-l: 28px;  --lh-display-l: 1.42;  --ls-display-l: -0.02em;
+  --t-display-m: 22px;  --lh-display-m: 1.55;  --ls-display-m: -0.015em;
+  --t-title:     18px;  --lh-title:     1.45;  --ls-title:     -0.01em;
+  --t-scripture: 17px;  --lh-scripture: 1.90;  --ls-scripture: 0.01em;
+  --t-body-l:    17px;  --lh-body-l:    1.80;  --ls-body-l:    0;
+  --t-body:      15px;  --lh-body:      1.65;  --ls-body:      0;
+  --t-label:     14px;  --lh-label:     1.20;  --ls-label:     -0.005em;
+  --t-caption:   13px;  --lh-caption:   1.50;  --ls-caption:   0;
+
+  /* 8단 밖의 예외 하나. 광고 'Ad' 표기와 법적 고지처럼 읽히지 않아도 되는 자리만. */
+  --t-micro: 11px;  --lh-micro: 1.3;
+
+  --w-regular:  400;  /* 경전 번역문 전용 */
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* ── 간격 (4의 배수) ────────────────────────────────────────────────── */
+
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;  --s-5: 20px;
+  --s-6: 24px;  --s-8: 32px;  --s-10: 40px; --s-12: 48px; --s-16: 64px;
+
+  --gutter: 20px;        /* 화면 좌우 기본 여백 */
+  --pad-card: 20px;      /* 카드 안쪽 */
+  --gap-card: 16px;      /* 카드와 카드 사이 */
+  --gap-section: 32px;   /* 답변 섹션 사이. 구조가 있는 답변으로 읽히게 */
+  --gap-para: 16px;      /* 문단 사이 */
+  --tap-min: 44px;       /* 최소 터치 타깃 */
+
+  /* ── 라운드 ──────────────────────────────────────────────────────────
+     부처 이미지에는 반경 약 16px 의 둥근 모서리가 이미 구워져 있다(175px 폭 기준 실측).
+     그래서 --r-image 는 그 값에 맞춘다. 더 작게 주면 구워진 아이보리 매트가 각지게 비친다. */
+
+  --r-pill:   999px;  /* 칩·탭바·게이지 */
+  --r-sheet:  24px;   /* 바텀시트 상단 */
+  --r-card:   20px;   /* 카드 */
+  --r-image:  16px;   /* 부처 일러스트 액자. 이미지에 구워진 반경과 같다 */
+  --r-inset:  16px;   /* 경전 인용면 */
+  --r-button: 14px;   /* 버튼·입력칸 */
+  --r-sm:     10px;
+  --r-xs:     8px;
+  /* 앱 아이콘만 반경 0 이다. 콘솔 규격이 "라운드 모서리 사용 불가"다.
+     우리가 둥글게 만들면 플랫폼 마스킹과 겹쳐 두 번 깎인다. */
+
+  /* ── 그림자 ──────────────────────────────────────────────────────────
+     순검정을 쓰지 않는다. 아이보리 배경 위에서 회색 그림자는 차갑게 뜬다. */
+
+  --sh-card:   0 1px 3px rgba(54, 44, 37, .05), 0 6px 16px rgba(54, 44, 37, .04);
+  --sh-raised: 0 6px 20px rgba(54, 44, 37, .10);
+  --sh-tabbar: 0 4px 18px rgba(54, 44, 37, .13);
+  --sh-sheet:  0 -8px 28px rgba(54, 44, 37, .14);
+
+  /* ── 모션 ───────────────────────────────────────────────────────────── */
+
+  --ease-out:   cubic-bezier(.22, .61, .36, 1);
+  --ease-sheet: cubic-bezier(.32, .72, 0, 1);
+  --dur-press: 90ms;  --dur-fade: 220ms;  --dur-section: 320ms;  --dur-sheet: 220ms;
+}
+
+
+/* ============================================================================
+   에셋 크롭 유틸
+   글자가 구워진 이미지(splash · loading · onboarding · input · empty_state · share_card)는
+   그림만 쓰고 글자는 HTML 로 올린다. 아래 두 방식 중 하나를 쓴다.
+   크롭 좌표는 colors.html 의 이미지 매핑표에 파일별로 적어 두었다.
+   ============================================================================ */
+
+/* 방식 1: 상자로 잘라 쓴다. 이미지 안 글자 영역을 상자 밖으로 밀어낸다.
+   --iw/--ih 는 이미지 원본 크기, --cx/--cy 는 크롭 시작점, --k 는 확대 배율. */
+.asset-crop {
+  --k: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-illust);
+  border-radius: var(--r-image);
+}
+.asset-crop > img {
+  position: absolute;
+  width: calc(var(--iw) * var(--k) * 1px);
+  height: calc(var(--ih) * var(--k) * 1px);
+  left: calc(var(--cx) * var(--k) * -1px);
+  top: calc(var(--cy) * var(--k) * -1px);
+  max-width: none;
+  image-rendering: auto;
+}
+
+/* 방식 2: 그림 위에 글자를 올린다. 원본 글자 자리를 우리 배경색으로 덮고 그 위에 실제 텍스트를 놓는다.
+   덮개는 반드시 불투명 구간을 포함한다. 반투명만 깔면 원본 글자가 비쳐 두 겹으로 읽힌다. */
+.asset-veil { position: relative; overflow: hidden; background: var(--surface-illust); }
+.asset-veil > img { display: block; width: 100%; }
+.asset-veil::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--surface-illust) 0%,
+    var(--surface-illust) var(--veil-solid, 28%),
+    rgba(251, 247, 239, 0) calc(var(--veil-solid, 28%) + 12%)
+  );
+  pointer-events: none;
+}
+
+/* 부처 이미지는 원본이 약 175×190px 이다. 2배를 넘겨 키우면 흐려진다.
+   카드 안 작은 그림·원형 마스크·블러 배경 위 원본 크기 배치로 쓴다.
+   최종 앱에는 고해상도 재생성이 필요하다. */
+.buddha-thumb {
+  width: 128px; height: 128px;
+  border-radius: var(--r-image);
+  object-fit: cover; object-position: 50% 42%;
+  background: var(--surface-illust);
+}
+.buddha-hero {
+  width: 100%; max-width: 350px; aspect-ratio: 1 / 1;
+  border-radius: var(--r-image);
+  object-fit: cover;
+  background: var(--surface-illust);
+}
+
+
+/* ============================================================================
+   여기부터는 목업 껍데기 전용 변수다. 기기 프레임 바깥 종이·라벨·캡션에만 쓴다.
+   앱 화면 안에서는 위 의미 토큰만 쓴다. 이 값이 제품으로 넘어가지 않는다.
+   ============================================================================ */
+:root {
+  --mock-paper:   #6E6E6E;  /* 프레임 밖 중립 회색 종이 */
+  --mock-ink:     #F2F1F4;  /* 종이 위 제목. 대비 6.0 */
+  --mock-sub:     #E4E3E8;  /* 종이 위 캡션. 대비 4.8 */
+  --mock-faint:   #7E7D83;  /* 구분선 */
+  --mock-navband: #DCDBDE;  /* 토스가 그리는 상단 44px 자리 */
+  --mock-navink:  #6C6B70;  /* 그 띠 안 표기 */
+}
+
+* { box-sizing: border-box; }
+.device :is(button, a):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+body {
+  margin: 0;
+  padding: 40px 20px 80px;
+  background: var(--mock-paper);
+  font-family: var(--font-sans);
+  color: var(--mock-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-head { max-width: 1180px; margin: 0 auto 40px; }
+.page-head h1 {
+  margin: 0 0 10px;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+}
+.page-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--mock-sub);
+}
+
+.rack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px 36px;
+  align-items: flex-start;
+  justify-content: center;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.cell { display: flex; flex-direction: column; gap: var(--s-3); }
+.cell-wide { flex-basis: 100%; align-items: center; }
+
+.cell-label {
+  display: flex; align-items: center; gap: var(--s-2);
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+}
+.cell-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: var(--r-pill);
+  background: var(--mock-ink); color: var(--mock-paper);
+  font-size: var(--t-caption); font-weight: var(--w-bold);
+}
+.cell-tag {
+  padding: 2px 9px; border-radius: var(--r-pill);
+  border: 1px dashed var(--mock-sub);
+  color: var(--mock-sub);
+  font-size: var(--t-caption); font-weight: var(--w-medium);
+}
+
+.cell-note {
+  max-width: 390px;
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: 1.62;
+  color: var(--mock-sub);
+}
+
+/* ── 기기 프레임 ───────────────────────────────────────────────────────── */
+
+.device {
+  position: relative;
+  width: 390px; height: 844px;
+  border-radius: 42px;
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 2px 6px rgba(0,0,0,.24), 0 22px 54px rgba(0,0,0,.30);
+  display: flex; flex-direction: column;
+  font-family: var(--font-sans);
+  color: var(--text);
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+
+/* 토스가 그리는 상단 영역. 우리 UI 를 여기에 넣지 않는다 (C1·C2) */
+.tossbar {
+  flex: 0 0 44px;
+  background: var(--mock-navband);
+  display: flex; align-items: center; padding-left: 18px;
+}
+.tossbar span {
+  font-size: var(--t-micro); line-height: var(--lh-micro);
+  color: var(--mock-navink); letter-spacing: .02em;
+}
+
+.screen { flex: 1; min-height: 0; overflow-y: auto; position: relative; }
+.screen::-webkit-scrollbar { width: 0; }
+
+/* ── 스플래시 ─────────────────────────────────────────────────────────── */
+
+.splash {
+  height: 100%;
+  background: var(--surface-illust);
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 146px;
+  position: relative;
+}
+.splash-mark {
+  width: 96px; height: 78px;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: var(--s-5);
+}
+.splash-mark > img, .onb-art-pad .asset-crop > img { mix-blend-mode: darken; }
+.splash-name {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-l);
+  line-height: var(--lh-display-l);
+  letter-spacing: .04em;
+  color: var(--text);
+}
+.splash-tag {
+  margin: var(--s-3) 0 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-regular);
+  font-size: var(--t-body-l);
+  line-height: 1.7;
+  color: var(--text-muted);
+  text-align: center;
+}
+.splash-art {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  width: 390px; height: 346px;
+  border-radius: 0;
+  background: transparent;
+}
+.splash-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+              var(--surface-illust) 0%,
+              rgba(251, 247, 239, 0) 46%);
+  pointer-events: none;
+}
+/* ── 홈 (S1) ──────────────────────────────────────────────────────────── */
+
+.home { padding: var(--s-3) var(--gutter) 104px; }
+
+.svc {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--s-3);
+  min-height: var(--tap-min);
+}
+.svc-line {
+  font-size: var(--t-caption); line-height: var(--lh-caption);
+  color: var(--text-muted); font-weight: var(--w-medium);
+}
+.icon-btn {
+  flex: 0 0 auto;
+  width: var(--tap-min); height: var(--tap-min);
+  margin-right: -10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--text-muted);
+}
+
+/* 첫 진입 안내 카드 */
+.guide {
+  position: relative;
+  margin-top: var(--s-2);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+  overflow: hidden;
+}
+.guide-row {
+  display: flex; gap: var(--s-4);
+  padding: var(--s-4) var(--pad-card);
+}
+.guide-fig { flex: 0 0 auto; width: 64px; height: 64px; }
+.guide-body { flex: 1; min-width: 0; padding-right: var(--s-5); }
+.guide-t {
+  margin: 2px 0 var(--s-2);
+  font-size: var(--t-body); line-height: 1.45;
+  font-weight: var(--w-bold); color: var(--text);
+  letter-spacing: -.01em;
+}
+.guide-d {
+  margin: 0;
+  font-size: var(--t-caption); line-height: 1.62;
+  color: var(--text-muted);
+}
+.guide-n {
+  margin: var(--s-1) 0 0;
+  font-size: var(--t-caption); line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+.guide-x {
+  position: absolute; top: 8px; right: 6px;
+  width: var(--tap-min); height: var(--tap-min);
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent; cursor: pointer;
+  color: var(--text-muted);
+}
+
+.home-title {
+  margin: var(--s-4) 0 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-l);
+  line-height: var(--lh-display-l);
+  letter-spacing: var(--ls-display-l);
+  color: var(--text);
+}
+.home-sub {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-body); line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.field {
+  margin-top: var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-button);
+  padding: var(--s-4);
+  min-height: 104px;
+}
+.field p {
+  margin: 0;
+  font-size: var(--t-body-l); line-height: var(--lh-body-l);
+  color: var(--text-weak);
+}
+.field-caret {
+  display: inline-block; width: 2px; height: 20px;
+  background: var(--focus); vertical-align: -4px;
+  margin-right: 1px;
+}
+
+.meter {
+  display: flex; align-items: center; gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+.dot { width: 7px; height: 7px; border-radius: var(--r-pill); }
+.dot-on { background: var(--sage); }
+.dot-off { border: 1.5px solid var(--line-strong); }
+.meter-label {
+  margin-left: var(--s-1);
+  font-size: var(--t-caption); line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.privacy {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-caption); line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+.seeds {
+  display: flex; flex-wrap: wrap; gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+.seed {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  border-radius: var(--r-pill);
+  min-height: var(--tap-min);
+  padding: 0 14px;
+  font-family: inherit;
+  font-size: var(--t-label); line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-medium);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.send {
+  display: block; width: 100%;
+  margin-top: var(--s-4);
+  height: 54px;
+  border: 0; border-radius: var(--r-button);
+  background: var(--btn); color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-body); font-weight: var(--w-bold);
+  letter-spacing: -.01em;
+  cursor: pointer;
+}
+.send[disabled] {
+  background: var(--surface); color: var(--text-weak);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: default;
+}
+
+/* 토스 플로팅 탭바 (직접 구현, 탭 2개 · X4) */
+/* 플로팅 탭바. 규격은 components/kit.html 07 과 같다 (좌우 16 · 높이 64 · 아이콘 24 위에 라벨) */
+.tabbar {
+  position: absolute; left: 16px; right: 16px; bottom: 24px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-around;
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-tabbar);
+  z-index: 3;
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; width: 120px; height: 48px;
+  border: 0; border-radius: var(--r-pill);
+  background: transparent; padding: 0;
+  font-family: inherit;
+  font-size: var(--t-label); font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab-on { background: var(--accent-soft); color: var(--accent-text); }
+
+/* ── 온보딩 3장 안 (비채택) ────────────────────────────────────────────── */
+
+.minis {
+  display: flex; flex-wrap: wrap; gap: var(--s-6);
+  justify-content: center;
+  padding: var(--s-6);
+  border: 1px dashed var(--mock-sub);
+  border-radius: 24px;
+}
+.mini-slot {
+  --mk: .46;
+  width: calc(390px * var(--mk));
+  height: calc(844px * var(--mk));
+}
+.mini-slot .device {
+  transform: scale(var(--mk));
+  transform-origin: top left;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2), 0 14px 32px rgba(0,0,0,.26);
+}
+
+.onb { height: 100%; display: flex; flex-direction: column; background: var(--surface-illust); }
+.onb-art { flex: 0 0 auto; width: 390px; height: 205px; border-radius: 0; }
+.onb-art::after {
+  content: ''; position: absolute; inset: auto 0 0 0; height: 52px;
+  background: linear-gradient(180deg, rgba(251,247,239,0) 0%, var(--surface-illust) 100%);
+}
+.onb-art-pad {
+  flex: 0 0 auto; height: 205px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-illust);
+}
+.onb-text {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 var(--gutter);
+}
+.onb-t {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-l);
+  line-height: var(--lh-display-l);
+  letter-spacing: var(--ls-display-l);
+  color: var(--text);
+}
+.onb-d {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-body-l); line-height: var(--lh-body-l);
+  color: var(--text-muted);
+}
+.onb-foot { margin-top: auto; padding: 0 var(--gutter) 46px; }
+.onb-dots { display: flex; gap: var(--s-2); justify-content: center; margin-bottom: var(--s-6); }
+.onb-dot { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--line); }
+.onb-dot-on { background: var(--accent); }
+.onb-skip {
+  display: block; width: 100%; min-height: var(--tap-min); margin-top: var(--s-3);
+  border: 0; background: transparent;
+  font-family: inherit; font-size: var(--t-label); font-weight: var(--w-medium);
+  color: var(--text-weak); cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .rack { gap: 40px 24px; }
+}
+</style>
+
+<div class="page-head">
+  <h1>부처의 말 · 스플래시와 첫 진입</h1>
+  <p>앱을 처음 여는 순간부터 첫 글자를 쓰기까지의 화면이다. 앱인토스는 진입 직후 전면을 막는 시트를 금지하고, 통합 개발 계획은 첫 화면에서 바로 고민을 쓰게 하라고 못 박았다. 그래서 안내는 시트가 아니라 화면 안 카드 한 장으로만 둔다.</p>
+</div>
+
+<div class="rack">
+
+  <!-- ══ 1. 스플래시 ════════════════════════════════════════════════════ -->
+  <div class="cell">
+    <div class="cell-label"><span class="cell-num">1</span> 스플래시 · 1초 미만 <span class="cell-tag">선택</span></div>
+
+    <div class="device">
+      <div class="tossbar"><span>토스가 그리는 영역</span></div>
+      <div class="screen">
+        <div class="splash">
+
+          <div class="splash-mark asset-crop" style="--iw:172;--ih:166;--cx:38;--cy:6;--k:1">
+            <img src="../assets/logo_lockup.webp" alt="연꽃 마크">
+          </div>
+
+          <p class="splash-name">부처의 말</p>
+          <p class="splash-tag">지금, 당신의 마음에<br>조용히 답합니다</p>
+
+          <div class="splash-art asset-crop" style="--iw:272;--ih:531;--cx:0;--cy:235;--k:1.4338">
+            <img src="../assets/splash_screen.webp" alt="나무 아래에서 명상하는 부처">
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <p class="cell-note">에셋의 스플래시 이미지에는 제목·부제·하단 문구가 픽셀로 박혀 있어서, 글자가 없는 나무 아래 구간(원본 y 235~476)만 잘라 쓰고 로고 마크와 문구는 전부 HTML 글자로 다시 올렸다. <b>선택으로 표시한 이유</b>: 토스 미니앱은 번들이 작아 첫 그림이 1초 안에 뜬다. 브랜드를 각인시키는 값어치와 1초를 버리는 값어치를 재 보고 넣을지 정한다. 넣더라도 최대 800ms 안에 홈으로 넘어가고, 탭이나 스와이프로 건너뛸 수 있어야 한다.</p>
+  </div>
+
+  <!-- ══ 2. 첫 진입 안내 카드 ═══════════════════════════════════════════ -->
+  <div class="cell">
+    <div class="cell-label"><span class="cell-num">2</span> 첫 진입 · 안내 카드가 열린 홈</div>
+
+    <div class="device">
+      <div class="tossbar"><span>토스가 그리는 영역</span></div>
+      <div class="screen">
+        <div class="home">
+
+          <div class="svc">
+            <span class="svc-line">부처의 말 · AI 가 경전을 찾아 풀어 드려요</span>
+            <button class="icon-btn" aria-label="앱 설정">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <path d="M4 7h9M17.8 7H20M4 17h3.2M12 17h8"/>
+                <circle cx="15.2" cy="7" r="2.4"/>
+                <circle cx="9.6" cy="17" r="2.4"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="guide">
+            <div class="guide-row">
+              <div class="guide-fig asset-crop" style="--iw:226;--ih:321;--cx:4;--cy:140;--k:.667">
+                <img src="../assets/onboarding_screen.webp" alt="먼 곳을 바라보는 부처">
+              </div>
+              <div class="guide-body">
+                <p class="guide-t">어떤 마음이든<br>이야기해도 괜찮아요</p>
+                <p class="guide-d">AI 가 부처의 가르침을 근거로 답해요</p>
+                <p class="guide-n">이 안내는 처음 한 번만 보여요</p>
+              </div>
+            </div>
+            <button class="guide-x" aria-label="안내 닫기">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>
+              </svg>
+            </button>
+          </div>
+
+          <h2 class="home-title">무슨 일이 있었나요?<br>편하게 이야기해 주세요</h2>
+          <p class="home-sub">자세히 이야기할수록 더 깊이 풀어 드릴 수 있어요</p>
+
+          <div class="field">
+            <p><span class="field-caret"></span>오늘 있었던 일, 요즘 드는 생각, 무엇이든 좋아요</p>
+          </div>
+
+          <div class="meter">
+            <span class="dot dot-off"></span>
+            <span class="dot dot-off"></span>
+            <span class="dot dot-off"></span>
+            <span class="meter-label">조금 더 들려주면 더 잘 풀어 드릴 수 있어요</span>
+          </div>
+
+          <p class="privacy">이름·연락처 같은 정보는 적지 않아도 괜찮아요</p>
+
+          <div class="seeds">
+            <button class="seed">요즘 불안해요</button>
+            <button class="seed">사람 때문에 화가 나요</button>
+            <button class="seed">선택을 못 하겠어요</button>
+          </div>
+
+          <button class="send" disabled>이야기 보내기</button>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <button class="tab tab-on">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.8a8.3 8.3 0 0 1-8.9 8.2 9 9 0 0 1-3.4-.8L3.5 20.5l1.4-4.6a8.1 8.1 0 0 1-1-4 8.3 8.3 0 0 1 8.7-8.2 8.3 8.3 0 0 1 7.9 8.1Z"/></svg>
+          이야기하기
+        </button>
+        <button class="tab">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 20.5 12 15.9l-6.5 4.6V5.6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2Z"/></svg>
+          보관함
+        </button>
+      </div>
+    </div>
+
+    <p class="cell-note">안내를 바텀시트로 띄우면 심사에서 막힌다. 그래서 화면 안 카드로 내리고, 닫기(×)를 누르면 다시 나오지 않는다. 카드가 있어도 입력창은 그 자리에 있어서 안내를 읽지 않고 바로 쓸 수 있다. 부처 그림은 온보딩 에셋에서 글자가 없는 구간만 정사각으로 잘라 64px 로 줄여 썼다(줄여 쓰는 것이라 흐려지지 않는다).</p>
+  </div>
+
+  <!-- ══ 3. 안내를 닫은 뒤의 홈 ═════════════════════════════════════════ -->
+  <div class="cell">
+    <div class="cell-label"><span class="cell-num">3</span> 안내를 닫은 뒤 · 두 번째 방문부터의 홈</div>
+
+    <div class="device">
+      <div class="tossbar"><span>토스가 그리는 영역</span></div>
+      <div class="screen">
+        <div class="home">
+
+          <div class="svc">
+            <span class="svc-line">부처의 말 · AI 가 경전을 찾아 풀어 드려요</span>
+            <button class="icon-btn" aria-label="앱 설정">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <path d="M4 7h9M17.8 7H20M4 17h3.2M12 17h8"/>
+                <circle cx="15.2" cy="7" r="2.4"/>
+                <circle cx="9.6" cy="17" r="2.4"/>
+              </svg>
+            </button>
+          </div>
+
+          <h2 class="home-title">무슨 일이 있었나요?<br>편하게 이야기해 주세요</h2>
+          <p class="home-sub">자세히 이야기할수록 더 깊이 풀어 드릴 수 있어요</p>
+
+          <div class="field" style="min-height:200px">
+            <p><span class="field-caret"></span>오늘 있었던 일, 요즘 드는 생각, 무엇이든 좋아요</p>
+          </div>
+
+          <div class="meter">
+            <span class="dot dot-off"></span>
+            <span class="dot dot-off"></span>
+            <span class="dot dot-off"></span>
+            <span class="meter-label">조금 더 들려주면 더 잘 풀어 드릴 수 있어요</span>
+          </div>
+
+          <p class="privacy">이름·연락처 같은 정보는 적지 않아도 괜찮아요</p>
+
+          <div class="seeds">
+            <button class="seed">요즘 불안해요</button>
+            <button class="seed">사람 때문에 화가 나요</button>
+            <button class="seed">선택을 못 하겠어요</button>
+          </div>
+
+          <button class="send" disabled>이야기 보내기</button>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <button class="tab tab-on">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.8a8.3 8.3 0 0 1-8.9 8.2 9 9 0 0 1-3.4-.8L3.5 20.5l1.4-4.6a8.1 8.1 0 0 1-1-4 8.3 8.3 0 0 1 8.7-8.2 8.3 8.3 0 0 1 7.9 8.1Z"/></svg>
+          이야기하기
+        </button>
+        <button class="tab">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 20.5 12 15.9l-6.5 4.6V5.6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2Z"/></svg>
+          보관함
+        </button>
+      </div>
+    </div>
+
+    <p class="cell-note">카드가 빠진 자리를 다른 것으로 메우지 않는다. 제목이 위로 올라오고 입력창이 한 단 커져서, 이 화면이 「고민을 쓰는 곳」 하나라는 것이 더 분명해진다. 서비스 한 줄이 AI 가 답한다는 사전 고지를 상시로 맡고 있어서, 안내 카드가 사라져도 고지가 비지 않는다.</p>
+  </div>
+
+  <!-- ══ 4. 온보딩 3장 안 (비채택) ══════════════════════════════════════ -->
+  <div class="cell cell-wide">
+    <div class="cell-label"><span class="cell-num">4</span> 온보딩 3장 넘기기 <span class="cell-tag">비채택 · 참고</span></div>
+
+    <div class="minis">
+
+      <div class="mini-slot">
+        <div class="device">
+          <div class="tossbar"><span>토스가 그리는 영역</span></div>
+          <div class="screen">
+            <div class="onb">
+              <div class="onb-art asset-crop" style="--iw:226;--ih:321;--cx:0;--cy:118;--k:1.7257">
+                <img src="../assets/onboarding_screen.webp" alt="먼 산을 바라보는 부처">
+              </div>
+              <div class="onb-text">
+                <p class="onb-t">어떤 마음이든<br>이야기해도 괜찮아요</p>
+                <p class="onb-d">부처의 가르침이 당신의 이야기에 귀 기울입니다</p>
+              </div>
+              <div class="onb-foot">
+                <div class="onb-dots">
+                  <span class="onb-dot onb-dot-on"></span>
+                  <span class="onb-dot"></span>
+                  <span class="onb-dot"></span>
+                </div>
+                <button class="send" style="margin-top:0">다음</button>
+                <button class="onb-skip">건너뛰기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-slot">
+        <div class="device">
+          <div class="tossbar"><span>토스가 그리는 영역</span></div>
+          <div class="screen">
+            <div class="onb">
+              <div class="onb-art-pad">
+                <div class="asset-crop" style="--iw:172;--ih:166;--cx:38;--cy:6;--k:1.5;width:144px;height:117px;border-radius:0;background:transparent">
+                  <img src="../assets/logo_lockup.webp" alt="연꽃 마크">
+                </div>
+              </div>
+              <div class="onb-text">
+                <p class="onb-t">경전을 찾아<br>오늘의 말로 풀어요</p>
+                <p class="onb-d">답은 AI 가 쓰지만, 근거가 되는 경전은 검증된 원문에서만 가져와요</p>
+              </div>
+              <div class="onb-foot">
+                <div class="onb-dots">
+                  <span class="onb-dot"></span>
+                  <span class="onb-dot onb-dot-on"></span>
+                  <span class="onb-dot"></span>
+                </div>
+                <button class="send" style="margin-top:0">다음</button>
+                <button class="onb-skip">건너뛰기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mini-slot">
+        <div class="device">
+          <div class="tossbar"><span>토스가 그리는 영역</span></div>
+          <div class="screen">
+            <div class="onb">
+              <div class="onb-art-pad">
+                <img src="../assets/buddha_growth.webp" alt="새싹이 트는 자리의 부처"
+                     style="width:175px;height:193px;border-radius:var(--r-image);background:var(--surface-illust)">
+              </div>
+              <div class="onb-text">
+                <p class="onb-t">오늘 해볼 수 있는<br>일까지 알려 드려요</p>
+                <p class="onb-d">위로로 끝내지 않고, 지금 할 수 있는 작은 일을 함께 정리해요</p>
+              </div>
+              <div class="onb-foot">
+                <div class="onb-dots">
+                  <span class="onb-dot"></span>
+                  <span class="onb-dot"></span>
+                  <span class="onb-dot onb-dot-on"></span>
+                </div>
+                <button class="send" style="margin-top:0">시작하기</button>
+                <button class="onb-skip">&nbsp;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="cell-note" style="max-width:760px">비채택: 첫 입력까지의 거리를 늘린다. 고민을 쓰러 온 사람을 세 번 스와이프시키고 나서야 입력창을 보여주는 구조라, 가장 마음이 급한 사람이 가장 오래 기다린다. 세 장이 말하는 내용도 홈 화면이 이미 다 하고 있다: 1번은 안내 카드 한 줄, 2번은 서비스 한 줄, 3번은 답변 화면이 직접 보여준다. 에셋에 온보딩 시안이 있어서 여기 남겨 두지만 만들지 않는다.</p>
+  </div>
+
+</div>

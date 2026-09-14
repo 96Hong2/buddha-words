@@ -1,0 +1,867 @@
+<!-- @dsCard group="Foundations" name="색 · 타이포 · 에셋 토큰" -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부처의 말 · 파운데이션</title>
+
+<!-- ===== _fonts.html 스니펫 그대로 복사 ===== -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      media="print" onload="this.media='all'">
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      media="print" onload="this.media='all'">
+<style>
+  @font-face{font-family:'MaruBuri';font-weight:400;font-style:normal;font-display:swap;
+    src:url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2');}
+  @font-face{font-family:'MaruBuri';font-weight:600;font-style:normal;font-display:swap;
+    src:url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-SemiBold.woff2') format('woff2');}
+  @font-face{font-family:'MaruBuri';font-weight:700;font-style:normal;font-display:swap;
+    src:url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2');}
+  html{font-synthesis-weight:none;font-synthesis-style:none;}
+</style>
+
+<style>
+/* ===== _tokens.css 전문 (자기완결형이어야 하므로 인라인으로 옮겨 둔다) ===== */
+:root{
+  --c-sand-50:#FFFAF1; --c-sand-100:#FBF7EF; --c-sand-150:#F6EFE2; --c-sand-200:#EDE4D3;
+  --c-sand-300:#E4D9C4; --c-sand-400:#DCCFB8; --c-sand-500:#C2B096; --c-sand-600:#8A7A61;
+  --c-sand-700:#6B5C4E; --c-sand-800:#4C4234; --c-sand-900:#362C25;
+  --c-gold-50:#FAF2DE; --c-gold-100:#F2E3C4; --c-gold-200:#E3C388; --c-gold-300:#D3AC60;
+  --c-gold-400:#B48A4A; --c-gold-500:#AE8340; --c-gold-600:#9E7329; --c-gold-700:#8E6B26;
+  --c-gold-800:#7E5C1E; --c-gold-900:#6B4E19;
+  --c-sage-50:#EFF3EA; --c-sage-100:#DFE7D5; --c-sage-200:#C3D2B6; --c-sage-300:#9DB08D;
+  --c-sage-400:#7B9169; --c-sage-500:#637C55; --c-sage-600:#4E6543; --c-sage-700:#3D5135; --c-sage-800:#2F3F29;
+  --c-lotus-50:#FDF1F3; --c-lotus-100:#F5DBE0; --c-lotus-200:#EDC0C8; --c-lotus-300:#E09FAB;
+  --c-lotus-400:#CE7688; --c-lotus-500:#B85568; --c-lotus-600:#9A4356; --c-lotus-700:#7D3446;
+  --c-brown-700:#41382F; --c-brown-800:#2B241D; --c-red-600:#A83C33;
+
+  --bg:var(--c-sand-200); --surface:var(--c-sand-50); --surface-2:var(--c-sand-200);
+  --surface-pressed:var(--c-sand-300); --surface-chip:var(--c-sand-200);
+  --surface-scripture:var(--c-gold-100); --surface-deep:var(--c-brown-700);
+  --surface-illust:var(--c-sand-100);
+  --text:var(--c-sand-900); --text-muted:var(--c-sand-700); --text-weak:#736354;
+  --text-on-deep:var(--c-sand-50); --text-on-deep-muted:#D9CDBC;
+  --accent:var(--c-gold-500); --accent-text:var(--c-gold-800); --accent-rule:var(--c-gold-600);
+  --accent-pressed:var(--c-gold-900); --accent-soft:var(--c-gold-100); --accent-on-deep:var(--c-gold-200);
+  --sage:var(--c-sage-600); --sage-soft:var(--c-sage-100);
+  --lotus:var(--c-lotus-600); --lotus-soft:var(--c-lotus-100);
+  --line:var(--c-sand-400); --line-strong:var(--c-sand-600); --focus:var(--c-gold-700);
+  --success:var(--c-sage-600); --caution:var(--c-gold-800); --danger:var(--c-red-600);
+  --btn:var(--c-brown-700); --btn-pressed:var(--c-brown-800); --on-btn:var(--c-sand-50);
+  --btn-ghost-line:var(--c-sand-600); --dim:rgba(54,44,37,.42);
+
+  --font-sans:'Pretendard Variable','Pretendard','SUIT','Apple SD Gothic Neo',-apple-system,
+              BlinkMacSystemFont,system-ui,'Noto Sans KR',sans-serif;
+  --font-serif:'MaruBuri','Noto Serif KR','AppleMyungjo','Apple SD Gothic Neo',serif;
+
+  --t-display-l:28px; --lh-display-l:1.42; --ls-display-l:-0.02em;
+  --t-display-m:22px; --lh-display-m:1.55; --ls-display-m:-0.015em;
+  --t-title:18px;     --lh-title:1.45;     --ls-title:-0.01em;
+  --t-scripture:17px; --lh-scripture:1.90; --ls-scripture:0.01em;
+  --t-body-l:17px;    --lh-body-l:1.80;    --ls-body-l:0;
+  --t-body:15px;      --lh-body:1.65;      --ls-body:0;
+  --t-label:14px;     --lh-label:1.20;     --ls-label:-0.005em;
+  --t-caption:13px;   --lh-caption:1.50;   --ls-caption:0;
+  --t-micro:11px;     --lh-micro:1.3;
+  --w-regular:400; --w-medium:500; --w-semibold:600; --w-bold:700;
+
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px;
+  --s-6:24px; --s-8:32px; --s-10:40px; --s-12:48px; --s-16:64px;
+  --gutter:20px; --pad-card:20px; --gap-card:16px; --gap-section:32px; --gap-para:16px; --tap-min:44px;
+
+  --r-pill:999px; --r-sheet:24px; --r-card:20px; --r-image:16px;
+  --r-inset:16px; --r-button:14px; --r-sm:10px; --r-xs:8px;
+
+  --sh-card:0 1px 3px rgba(54,44,37,.05), 0 6px 16px rgba(54,44,37,.04);
+  --sh-raised:0 6px 20px rgba(54,44,37,.10);
+  --sh-tabbar:0 4px 18px rgba(54,44,37,.13);
+  --sh-sheet:0 -8px 28px rgba(54,44,37,.14);
+
+  --ease-out:cubic-bezier(.22,.61,.36,1); --ease-sheet:cubic-bezier(.32,.72,0,1);
+  --dur-press:90ms; --dur-fade:220ms; --dur-section:320ms; --dur-sheet:220ms;
+}
+
+/* ===== 이 문서 자체의 레이아웃 ===== */
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-sans); font-size:15px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:56px 28px 120px;}
+
+header.doc{margin-bottom:64px;}
+.doc h1{
+  font-family:var(--font-serif); font-weight:700;
+  font-size:40px; line-height:1.3; letter-spacing:-.02em; margin:0 0 14px;
+}
+.doc p.lead{font-size:16px; color:var(--text-muted); max-width:62ch; margin:0;}
+.doc .meta{
+  margin-top:22px; display:flex; flex-wrap:wrap; gap:8px;
+}
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r-pill); padding:6px 14px;
+  font-size:13px; color:var(--text-muted);
+}
+
+section{margin-bottom:72px;}
+h2{
+  font-family:var(--font-serif); font-weight:700;
+  font-size:26px; line-height:1.4; letter-spacing:-.015em;
+  margin:0 0 10px; padding-bottom:14px; border-bottom:2px solid var(--line);
+}
+h2 .num{color:var(--accent-text); font-size:18px; margin-right:10px; font-family:var(--font-sans); font-weight:700;}
+.note{color:var(--text-muted); font-size:14px; max-width:68ch; margin:14px 0 28px;}
+h3{font-size:16px; font-weight:700; margin:36px 0 14px; letter-spacing:-.01em;}
+
+/* 색 칩 */
+.chips{display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:16px;}
+.chip{
+  background:var(--surface); border-radius:var(--r-card);
+  box-shadow:var(--sh-card); overflow:hidden;
+}
+.chip .swatch{height:82px; border-bottom:1px solid var(--line);}
+.chip .body{padding:14px 16px 16px;}
+.chip .tok{font-size:13px; font-weight:700; letter-spacing:-.01em;}
+.chip .hex{font-size:12px; color:var(--text-muted); font-variant-numeric:tabular-nums; margin-top:3px;}
+.chip .use{font-size:12.5px; color:var(--text-muted); margin-top:9px; line-height:1.5;}
+.chip .ratios{margin-top:11px; display:flex; flex-wrap:wrap; gap:6px;}
+
+.badge{
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11.5px; font-weight:600; border-radius:var(--r-xs);
+  padding:3px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+.badge.pass{background:var(--sage-soft); color:var(--sage);}
+.badge.fail{background:#F7DCDA; color:var(--danger);}
+
+/* 표 */
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+table{
+  width:100%; border-collapse:collapse; background:var(--surface);
+  border-radius:var(--r-card); overflow:hidden; box-shadow:var(--sh-card);
+  font-size:13.5px; min-width:640px;
+}
+th,td{padding:13px 16px; text-align:left; border-bottom:1px solid var(--line); vertical-align:middle;}
+th{background:var(--surface-2); font-weight:700; font-size:12.5px; color:var(--text-muted);
+   letter-spacing:.01em; white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+td.num{font-variant-numeric:tabular-nums; white-space:nowrap;}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;
+  background:var(--surface-2); border-radius:5px; padding:2px 6px; white-space:nowrap;
+}
+.dot{display:inline-block; width:13px; height:13px; border-radius:4px; vertical-align:-2px;
+     margin-right:7px; border:1px solid rgba(54,44,37,.14);}
+
+/* 타이포 견본 */
+.type-row{
+  background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
+  padding:24px 26px; margin-bottom:14px;
+  display:grid; grid-template-columns:168px 1fr; gap:26px; align-items:start;
+}
+.type-row .spec{font-size:12.5px; color:var(--text-muted); line-height:1.85;
+  font-variant-numeric:tabular-nums; border-right:1px solid var(--line); padding-right:20px;}
+.type-row .spec b{display:block; color:var(--text); font-size:13.5px; margin-bottom:4px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+
+/* 스케일 견본 */
+.spec-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(196px,1fr)); gap:16px;}
+.spec-card{background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
+  padding:18px; text-align:center;}
+.spec-card .label{font-size:12.5px; color:var(--text-muted); margin-top:12px;}
+.spec-card .label b{display:block; color:var(--text); font-size:13px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; margin-bottom:2px;}
+.bar{background:var(--accent); height:18px; border-radius:3px;}
+.roundbox{width:84px; height:84px; background:var(--accent-soft);
+  border:2px solid var(--accent); margin:0 auto;}
+.shadowbox{width:100%; height:74px; background:var(--surface-illust); border-radius:var(--r-card);}
+
+/* 이미지 매핑 */
+.map-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(178px,1fr)); gap:18px;}
+.map-card{background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
+  padding:14px; text-align:center;}
+.map-card img{width:150px; height:150px; object-fit:cover; border-radius:var(--r-image);
+  background:var(--surface-illust); display:block; margin:0 auto;}
+.map-card .theme{margin-top:12px; font-size:13.5px; font-weight:700;}
+.map-card .ko{font-size:12.5px; color:var(--text-muted); margin-top:2px;}
+.map-card .file{font-size:11px; color:var(--text-weak); margin-top:7px; word-break:break-all;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
+.map-card.reuse{outline:2px dashed var(--accent); outline-offset:-2px;}
+.tag-reuse{display:inline-block; margin-top:8px; font-size:11px; font-weight:600;
+  background:var(--accent-soft); color:var(--accent-text); border-radius:var(--r-xs); padding:3px 8px;}
+
+/* 패턴 띠 */
+.band{height:55px; background-repeat:repeat-x; background-position:center;
+  background-size:auto 55px; border-radius:var(--r-sm);}
+.band-demo{background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
+  padding:20px; margin-bottom:16px;}
+.band-demo .cap{font-size:12.5px; color:var(--text-muted); margin-bottom:12px;}
+.band-demo .cap b{color:var(--text); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px;}
+
+/* 짙은 면 경고 */
+.deep-demo{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:18px;}
+.deep-panel{background:var(--surface-deep); border-radius:var(--r-card); padding:26px 24px;}
+.deep-panel .q{font-family:var(--font-serif); font-weight:700; font-size:22px; line-height:1.45;
+  letter-spacing:-.02em; color:var(--text-on-deep); word-break:keep-all;}
+.deep-panel .sub{font-size:13px; color:var(--text-on-deep-muted); margin-top:10px;}
+.deep-panel .btn{display:block; width:100%; margin-top:22px; border:none; cursor:pointer;
+  border-radius:var(--r-button); padding:14px; font-size:15px; font-weight:600; font-family:inherit;}
+.btn-bad{background:var(--btn); color:var(--on-btn);}
+.btn-good{background:var(--accent-on-deep); color:var(--surface-deep);}
+.verdict{margin-top:12px; font-size:12.5px; font-weight:600;}
+.verdict.bad{color:var(--danger);}
+.verdict.good{color:var(--sage);}
+
+/* 크롭 예 */
+.crop-demo{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:18px;}
+.crop-card{background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card);
+  padding:18px; overflow:hidden;}
+.crop-card h4{margin:0 0 12px; font-size:13.5px; font-weight:700;}
+.crop-card .cap{font-size:12px; color:var(--text-muted); margin-top:12px; line-height:1.6;}
+.asset-crop{position:relative; overflow:hidden; background:var(--surface-illust);
+  border-radius:var(--r-image); margin:0 auto;}
+.asset-crop img{position:absolute; max-width:none; display:block;}
+.raw-frame{border-radius:var(--r-image); overflow:hidden; background:var(--surface-illust);}
+.raw-frame img{display:block; width:100%;}
+
+@media (max-width:720px){
+  .wrap{padding:36px 18px 90px;}
+  .doc h1{font-size:30px;}
+  .type-row{grid-template-columns:1fr; gap:16px;}
+  .type-row .spec{border-right:none; border-bottom:1px solid var(--line); padding:0 0 14px;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+  <h1>부처의 말 · 파운데이션</h1>
+  <p class="lead">
+    사용자가 준 실제 디자인 에셋에서 뽑은 색을 출발점으로 삼고, 대비비를 전부 계산해 통과시킨 라이트 전용 토큰이다.
+    화면 목업 10개가 이 문서 위에 그려진다. 여기서 정하지 않은 색과 크기는 화면에서 새로 만들지 않는다.
+  </p>
+  <div class="meta">
+    <span class="pill">라이트 전용 (통합 계획 X1)</span>
+    <span class="pill">본문 4.5 · 큰 글씨 3.0 · 면 대 면 1.20</span>
+    <span class="pill">부처 이미지 8종, visualTheme 10종 매핑</span>
+    <span class="pill">대비비는 이 페이지가 실시간으로 계산한다</span>
+  </div>
+</header>
+
+<!-- ══════════════ 1. 색 ══════════════ -->
+<section>
+  <h2><span class="num">01</span>색 · 의미 토큰</h2>
+  <p class="note">
+    램프(<code>--c-*</code>)를 화면에서 직접 쓰지 않는다. 의미 토큰만 쓴다.
+    램프를 직접 쓰면 값이 바뀔 때 그 자리만 안 바뀐다.
+    아래 칩의 대비비 배지는 페이지가 열릴 때 WCAG 상대휘도 공식으로 계산한 값이다.
+  </p>
+
+  <h3>면 (층은 두 개다)</h3>
+  <p class="note">
+    아이보리에서 세 층을 각각 1.20 으로 벌리면 셋째 층이 흙빛이 된다.
+    그래서 층은 앱 배경과 카드 둘뿐이고, 층이 하나 더 필요한 자리는 밝기가 아니라 <code>--line</code> 으로 나눈다.
+    <code>--surface-illust</code> 는 부처 이미지에 구워져 있는 아이보리 매트(<code>#FBF8F2</code>)와 같은 톤이라,
+    그 위에 이미지를 올리면 이음매가 안 보인다.
+  </p>
+  <div class="chips" id="chips-surface"></div>
+
+  <h3>글자</h3>
+  <div class="chips" id="chips-text"></div>
+
+  <h3>강조 (금색 하나)</h3>
+  <p class="note">
+    이 앱의 강조는 금색 하나다. 경전이 신뢰의 핵심이라 그 자리가 시각적으로 따로 서야 한다.
+    같은 금색이라도 글자용과 면·선용의 값이 다르다. 섞어 쓰면 대비가 무너진다.
+  </p>
+  <div class="chips" id="chips-accent"></div>
+
+  <h3>보조 색 (감정 태그 칩 전용)</h3>
+  <p class="note">
+    세이지와 연꽃 핑크는 감정 태그 칩의 색만 담당한다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다.
+    두려움 계열(#불안 #걱정)은 세이지, 관계·욕구 계열(#집착 #인정욕구)은 연꽃, 그 밖은 중립 칩이다.
+  </p>
+  <div class="chips" id="chips-support"></div>
+
+  <h3>선 · 상태 · 버튼</h3>
+  <div class="chips" id="chips-misc"></div>
+</section>
+
+<!-- ══════════════ 2. 대비비 전수 ══════════════ -->
+<section>
+  <h2><span class="num">02</span>대비비 전수 검증</h2>
+  <p class="note">
+    눈으로 보지 않고 계산으로 판정한다. 사람 눈은 아이보리 계열에서 한두 단계 차이를 못 본다.
+    아래 표는 페이지가 열릴 때마다 다시 계산한다. 토큰을 고치면 이 표가 바로 알려 준다.
+  </p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>쓰임</th><th>앞</th><th>뒤</th><th>대비비</th><th>기준</th><th>판정</th></tr>
+      </thead>
+      <tbody id="ratio-table"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ 3. 짙은 면 규칙 ══════════════ -->
+<section>
+  <h2><span class="num">03</span>짙은 면 위에 무엇을 놓을 수 있나</h2>
+  <p class="note">
+    10초 가계부에서 실제로 난 사고다. 월간 결산을 짙은 면으로 바꿨더니 다음 버튼이 사라진 것처럼 보였다.
+    버튼 바닥색과 배경색이 같은 토큰이라 대비가 1대 1 이 됐다.
+    이 앱은 오늘의 한마디를 <code>--surface-deep</code> 짙은 면으로 내는데,
+    주 버튼 <code>--btn</code> 이 그 면과 <b>같은 값</b>이다. 아무 생각 없이 얹으면 그 사고가 그대로 난다.
+  </p>
+  <div class="deep-demo">
+    <div>
+      <div class="deep-panel">
+        <p class="q">다른 사람의 속도가 당신의 방향을 결정하지 않아요.</p>
+        <p class="sub">법구경 제1장 · 오늘의 한마디</p>
+        <button class="btn btn-bad">이 답 간직하기</button>
+      </div>
+      <p class="verdict bad">금지. <code>--btn</code> 을 <code>--surface-deep</code> 위에 올린 모습이다. 대비 1.00 이라 버튼이 통째로 사라진다.</p>
+    </div>
+    <div>
+      <div class="deep-panel">
+        <p class="q">다른 사람의 속도가 당신의 방향을 결정하지 않아요.</p>
+        <p class="sub">법구경 제1장 · 오늘의 한마디</p>
+        <button class="btn btn-good">이 답 간직하기</button>
+      </div>
+      <p class="verdict good">통과. 짙은 면 위에서는 <code>--accent-on-deep</code> 바닥에 <code>--surface-deep</code> 글자를 쓴다. 대비 6.79.</p>
+    </div>
+  </div>
+
+  <h3>짙은 면 위 배치 판정표</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>짙은 면 위에 놓는 것</th><th>HEX</th><th>대비비</th><th>판정</th></tr></thead>
+      <tbody id="deep-table"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ 4. 타이포 ══════════════ -->
+<section>
+  <h2><span class="num">04</span>타이포 8단</h2>
+  <p class="note">
+    기준 화면 390px. 좌우 여백 20 과 카드 안쪽 20 을 빼면 본문 폭이 310px 다.
+    답변 본문은 1,600자에서 2,500자 사이라, 이 길이를 편하게 읽히게 하는 것이 화면의 첫 목적이다.
+    본문을 16px 가 아니라 17px 로 올렸다. 16px 면 한 줄 19.4자에 2,500자가 약 3,600px,
+    17px 면 한 줄 18.2자에 약 4,200px 다. 줄 수는 늘지만 글자가 커져 한 줄을 훑는 속도가 빨라진다.
+    모바일 390px 에서 한 줄 25자 이상은 어차피 안 나오니, 줄 수를 줄이는 대신 글자를 키우는 쪽을 택했다.
+    행간 1.8 은 한글 받침 때문에 라틴보다 세로로 빽빽한 점을 감안한 값이고,
+    문단 사이 16px 과 겹쳐 보이지 않는 최소값이기도 하다.
+  </p>
+  <div id="type-samples"></div>
+
+  <h3>MaruBuri 디스플레이 2단</h3>
+  <p class="note">
+    명조는 제목과 경전, 오늘의 한마디에만 쓴다. 본문까지 명조로 가면 1,600자가 무거워진다.
+    MaruBuri 는 가중치마다 이름이 다른 폰트라(MaruBuri · MaruBuriSemiBold · MaruBuriBold),
+    <code>_fonts.html</code> 에서 한 이름에 묶어 놓았다. 그대로 쓰지 않으면 가짜 굵기가 한글 받침을 뭉갠다.
+  </p>
+
+  <div class="type-row">
+    <div class="spec">
+      <b>disp-quote</b>
+      28px / 1.42<br>자간 -0.02em<br>굵기 700<br>MaruBuri<br>한 줄 약 11자
+    </div>
+    <div>
+      <p style="font-family:var(--font-serif); font-weight:700; font-size:28px; line-height:1.42;
+                letter-spacing:-.02em; word-break:keep-all; margin:0; max-width:310px;">
+        내가 쥐고 있는 것이 나를 쥐고 있어요.
+      </p>
+      <p style="font-size:13px; color:var(--text-muted); margin:14px 0 0;">
+        오늘의 한마디. 40자 상한이 310px 폭에서 4줄 안에 들어온다. 30px 이상으로 키우면
+        같은 문장이 화면과 공유 카드에서 다르게 접혀 미리보기가 어긋난다.
+      </p>
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="spec">
+      <b>disp-scripture</b>
+      17px / 1.90<br>자간 +0.01em<br>굵기 400<br>MaruBuri<br>왼쪽 금색 세로선 3px
+    </div>
+    <div>
+      <div style="background:var(--surface-scripture); border-radius:var(--r-inset);
+                  border-left:3px solid var(--accent-rule); padding:18px 20px; max-width:340px;">
+        <p style="font-family:var(--font-serif); font-weight:400; font-size:17px; line-height:1.90;
+                  letter-spacing:.01em; margin:0; word-break:keep-all;">
+          남을 이기는 사람보다 자기를 이기는 사람이 더 낫다. 스스로를 다스린 사람은 언제나 절제 속에 산다.
+        </p>
+        <p style="font-size:13px; line-height:1.5; color:var(--accent-text); margin:14px 0 0;
+                  font-variant-numeric:tabular-nums;">
+          법구경 제8장 103절
+        </p>
+      </div>
+      <p style="font-size:13px; color:var(--text-muted); margin:14px 0 0;">
+        경전 번역문. 여기만 굵기 400 을 쓴다. MaruBuri 는 획이 가늘어 500 단계가 없고,
+        경전은 본문보다 한 톤 물러나 있어야 인용으로 읽힌다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 5. 간격 · 라운드 · 그림자 ══════════════ -->
+<section>
+  <h2><span class="num">05</span>간격 · 라운드 · 그림자</h2>
+  <p class="note">간격은 4의 배수만 쓴다. 그 밖의 값을 화면에서 새로 만들지 않는다.</p>
+
+  <h3>간격</h3>
+  <div class="spec-grid" id="space-grid"></div>
+
+  <h3>라운드</h3>
+  <p class="note">
+    부처 이미지에는 반경 약 16px 의 둥근 모서리가 이미 구워져 있다(175px 폭 기준 실측).
+    그래서 <code>--r-image</code> 를 16px 로 맞췄다. 더 작게 주면 구워진 아이보리 매트가 각지게 비친다.
+    앱 아이콘만 반경 0 이다. 콘솔 규격이 라운드 모서리 사용 불가라, 우리가 둥글게 만들면 플랫폼 마스킹과 겹쳐 두 번 깎인다.
+  </p>
+  <div class="spec-grid" id="round-grid"></div>
+
+  <h3>그림자</h3>
+  <p class="note">순검정을 쓰지 않는다. 아이보리 배경 위에서 회색 그림자는 차갑게 뜬다. 따뜻한 잉크 값을 쓴다.</p>
+  <div class="spec-grid" id="shadow-grid"></div>
+</section>
+
+<!-- ══════════════ 6. 이미지 매핑 ══════════════ -->
+<section>
+  <h2><span class="num">06</span>visualTheme 10종 → 자세 6종 × 시간대 4 (v0.3) · 아래 8장 표는 옛 매핑</h2>
+<div class="v03-banner" style="margin:0 0 24px;padding:14px 18px;border-radius:14px;background:#F2E3C4;border:1px solid #9E7329;color:#362C25;font-size:14px;line-height:1.6">
+  <b>2026-09-14 v0.3.</b> 고해상 자세 6종(1254×1254, 눈을 뜬 마스터 캐릭터)이 도착했다. production 은 이 6종을 쓰고 아래 저해상 8종 판정은 <b>시안 참고용으로 강등</b>됐다.
+  화면은 이제 <code>visualTheme</code> 10종을 <b>자세 6 × 배경 시간대 4</b>(CSS 그라데이션 토큰 <code>--backdrop-*</code>)로 고른다. 표정은 늘 평온하고 상황은 자세와 배경으로만 말한다.
+  정본은 <code>docs/spec/visual-theme.ts</code> 와 통합 개발 계획 v0.3 1.1절이다. 원본은 <code>assets/buddha_hires_v2/</code>, 시안용 800px webp 는 <code>design/assets/buddha2_*.webp</code>.
+</div>
+
+  <p class="note">
+    이미지는 <code>emotionTags</code>(한국어 자유 문자열)로 고르지 않는다.
+    태그로 고르면 LLM 이 #번아웃 같은 새 태그를 만드는 순간 해당 이미지가 없다.
+    영문 열거형 <code>visualTheme</code> 10개로만 고르고, 그 10개를 받은 8장에 다대일로 매핑한다.
+    값이 없거나 오타이거나 목록 밖이면 무조건 <code>buddha_choice</code> 다.
+    길을 가리키지 않고 조용히 앉아 있는 장면이라 어떤 고민에도 어긋나지 않는 유일한 그림이다.
+    여기에 <code>anxiety</code> 를 깔면 답변이 "당신은 불안하군요"로 오독된다.
+  </p>
+  <div class="map-grid" id="map-grid"></div>
+
+  <h3>매핑표</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>visualTheme</th><th>한국어 라벨</th><th>파일</th><th>왜 이 그림인가</th></tr></thead>
+      <tbody id="map-table"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════ 7. 에셋 전수 ══════════════ -->
+<section>
+  <h2><span class="num">07</span>에셋 전수: 크기 · 글자 포함 여부 · 쓰는 방식</h2>
+  <p class="note">
+    글자가 픽셀로 구워진 이미지는 그림만 쓰고 글자는 HTML 로 올린다.
+    AI 가 찍은 글자라 해상도도 나쁘고, 접근성 도구가 못 읽고, 문구를 고칠 수도 없다.
+    크롭 좌표는 실제로 잘라서 눈으로 확인한 값이다. 왼쪽 위 기준 <code>(x1, y1, x2, y2)</code> 다.
+  </p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>파일</th><th>실제 크기</th><th>글자</th><th>쓰는 방식</th><th>글자 없는 영역 (크롭 좌표)</th></tr>
+      </thead>
+      <tbody id="asset-table"></tbody>
+    </table>
+  </div>
+
+  <h3>크롭 실제 예</h3>
+  <div class="crop-demo">
+    <div class="crop-card">
+      <h4>splash_screen · 그대로 쓰면 안 되는 모습</h4>
+      <div class="raw-frame" style="max-width:190px; margin:0 auto;">
+        <img src="../assets/splash_screen.webp" alt="원본 스플래시. 부처의 말 제목과 문구가 픽셀로 구워져 있다">
+      </div>
+      <p class="cap">제목 부처의 말, 부제 두 줄, 하단 문구가 전부 이미지 안에 있다. 이대로 화면에 깔면 안 된다.</p>
+    </div>
+    <div class="crop-card">
+      <h4>splash_screen · 그림만 잘라낸 모습</h4>
+      <div class="asset-crop" style="--k:.7; width:190px; height:169px;">
+        <img src="../assets/splash_screen.webp" alt="나무 아래 앉은 부처"
+             style="width:190px; height:372px; left:0; top:-165px;">
+      </div>
+      <p class="cap">세로 235에서 476 구간만 남겼다. 그 위에 실제 텍스트를 HTML 로 올린다.</p>
+    </div>
+    <div class="crop-card">
+      <h4>input_screen · 부처 얼굴만</h4>
+      <div class="asset-crop" style="width:147px; height:144px;">
+        <img src="../assets/input_screen.webp" alt="입력 화면의 작은 부처"
+             style="width:390px; height:468px; left:-213px; top:-174px;">
+      </div>
+      <p class="cap">가로 142에서 240, 세로 116에서 212 구간이다. 원본이 260px 폭이라 1.5배를 넘겨 키우지 않는다.</p>
+    </div>
+    <div class="crop-card">
+      <h4>empty_state · 연꽃만</h4>
+      <div class="asset-crop" style="width:144px; height:144px;">
+        <img src="../assets/empty_state.webp" alt="바위 위에 핀 연꽃"
+             style="width:508px; height:238px; left:-320px; top:-4px;">
+      </div>
+      <p class="cap">원본 왼쪽에 "empty 상태 이미지"라는 시안 라벨이 그대로 남아 있다. 오른쪽 연꽃만 쓴다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 8. 패턴 띠 ══════════════ -->
+<section>
+  <h2><span class="num">08</span>패턴 띠 4종</h2>
+  <p class="note">
+    높이 55px 의 가로 띠 네 장이다. 글자가 없고 배경이 우리 아이보리와 같아 그대로 이어 붙일 수 있다.
+    <code>background-repeat:repeat-x</code> 로 깔고 높이는 원본 55px 를 지킨다.
+    세로로 늘리면 흐려진다. 한 화면에 띠는 하나만 쓴다. 앱인토스 그래픽 규칙이
+    한 화면에 그래픽을 많이 쓰지 말라고 못 박고 있고, 답변 화면의 핵심 그래픽 자리는 이미 부처 이미지가 가져갔다.
+  </p>
+  <div id="pattern-list"></div>
+
+  <h3>실제 쓰임 예</h3>
+  <div class="band-demo">
+    <p class="cap"><b>pattern_lotus</b> · 오늘의 한마디 카드 상단 띠. 가장 넓어(366px) 반복 이음매가 덜 보인다.</p>
+    <div style="background:var(--surface); border-radius:var(--r-card); box-shadow:var(--sh-card); overflow:hidden; max-width:390px;">
+      <div class="band" style="background-image:url('../assets/pattern_lotus.webp'); border-radius:0;"></div>
+      <div style="padding:22px 20px 24px;">
+        <p style="font-family:var(--font-serif); font-weight:700; font-size:22px; line-height:1.45;
+                  letter-spacing:-.015em; margin:0; word-break:keep-all;">
+          비교를 멈추면 내 속도가 보여요.
+        </p>
+        <p style="font-size:13px; color:var(--text-muted); margin:12px 0 0;">오늘의 한마디 · 현대적 해석</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="band-demo">
+    <p class="cap"><b>pattern_ripple</b> · 답변 섹션과 섹션 사이 구분 띠. 폭이 157px 로 좁아 반복이 잦으니 흐리게 눕힌다.</p>
+    <div style="opacity:.55;"><div class="band" style="background-image:url('../assets/pattern_ripple.webp');"></div></div>
+  </div>
+
+  <div class="band-demo">
+    <p class="cap"><b>pattern_leaves</b> · 보관함 빈 상태 아래 받침. <b>pattern_petals</b> · 공유 카드 하단 브랜딩 줄.</p>
+    <div class="band" style="background-image:url('../assets/pattern_leaves.webp'); margin-bottom:12px;"></div>
+    <div class="band" style="background-image:url('../assets/pattern_petals.webp');"></div>
+  </div>
+</section>
+
+<!-- ══════════════ 9. 화면에서 지킬 것 ══════════════ -->
+<section>
+  <h2><span class="num">09</span>화면 목업이 지킬 것</h2>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>#</th><th>지킬 것</th><th>왜</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>상단 44px 는 흐린 회색 띠로만 표시하고 그 안에 우리 UI 를 넣지 않는다</td><td>상단 네비게이션은 플랫폼이 그린다. 자체 상단바를 그리면 심사에서 반려된다</td></tr>
+        <tr><td class="num">2</td><td>화면 제목은 본문 맨 위에 직접 그린다</td><td>상단바에 제목을 줄 수 있는 API 가 없다</td></tr>
+        <tr><td class="num">3</td><td>다크 팔레트를 만들지 않는다</td><td>상단바가 라이트 고정이라 본문만 뒤집으면 화면 위아래가 갈라진다</td></tr>
+        <tr><td class="num">4</td><td>광고 영역을 어디에도 그리지 않는다</td><td>보상형 한 자리만 남았고, 그것도 사용량 소진 시트 안에서만 뜬다</td></tr>
+        <tr><td class="num">5</td><td>부처 이미지를 2배 넘게 키우지 않는다</td><td>원본이 약 175 곱하기 190px 다. 그 이상은 흐려진다</td></tr>
+        <tr><td class="num">6</td><td>이미지 안 글자가 화면에 보이면 안 된다</td><td>해상도·접근성·문구 수정이 전부 나쁘다. 크롭하거나 덮고 그 위에 실제 텍스트를 놓는다</td></tr>
+        <tr><td class="num">7</td><td>부처 얼굴 위에 글자를 얹지 않는다</td><td>얼굴을 가리는 것이 불경으로 읽힌다</td></tr>
+        <tr><td class="num">8</td><td>일러스트 자리를 <code>aspect-ratio</code> 로 먼저 잡아 둔다</td><td>이미지가 늦게 와도 레이아웃이 튀지 않는다</td></tr>
+        <tr><td class="num">9</td><td>글자를 담은 상자에 <code>display:flex; gap</code> 을 걸지 않는다</td><td>텍스트 노드 하나하나가 flex 항목이 되어 글자 사이에 간격이 낀다. #불안 태그와 법구경 216장 같은 자리에서 그대로 난다</td></tr>
+        <tr><td class="num">10</td><td>본문에 <code>word-break:keep-all</code> 을 건다</td><td>한국어는 어절 중간이 끊기면 읽기가 크게 나빠진다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ── WCAG 상대휘도와 대비비 ─────────────────────────────── */
+function lin(v){v/=255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);}
+function lum(hex){
+  var h=hex.replace('#','');
+  var r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+}
+function cr(a,b){var la=lum(a),lb=lum(b);if(la<lb){var t=la;la=lb;lb=t;}return (la+0.05)/(lb+0.05);}
+function f2(n){return n.toFixed(2);}
+
+var C={
+  bg:'#EDE4D3', surface:'#FFFAF1', surface2:'#EDE4D3', surfacePressed:'#E4D9C4',
+  surfaceChip:'#EDE4D3', scripture:'#F2E3C4', deep:'#41382F', illust:'#FBF7EF',
+  text:'#362C25', muted:'#6B5C4E', weak:'#736354', onDeep:'#FFFAF1', onDeepMuted:'#D9CDBC',
+  accent:'#AE8340', accentText:'#7E5C1E', accentRule:'#9E7329', accentPressed:'#6B4E19',
+  accentSoft:'#F2E3C4', accentOnDeep:'#E3C388',
+  sage:'#4E6543', sageSoft:'#DFE7D5', lotus:'#9A4356', lotusSoft:'#F5DBE0',
+  line:'#DCCFB8', lineStrong:'#8A7A61', focus:'#8E6B26',
+  success:'#4E6543', caution:'#7E5C1E', danger:'#A83C33',
+  btn:'#41382F', btnPressed:'#2B241D', onBtn:'#FFFAF1'
+};
+
+function badge(label,val,need){
+  var ok=val>=need;
+  return '<span class="badge '+(ok?'pass':'fail')+'">'+label+' '+f2(val)+(ok?' 통과':' 미달')+'</span>';
+}
+
+/* ── 색 칩 ─────────────────────────────────────────────── */
+var GROUPS={
+  'chips-surface':[
+    ['--bg', C.bg, '앱 배경. 모든 화면의 지반이다', [['카드 대비', cr(C.surface,C.bg), 1.20]]],
+    ['--surface', C.surface, '카드·시트·입력칸. 배경 위에 얹히는 층', [['배경 대비', cr(C.surface,C.bg), 1.20],['본문', cr(C.text,C.surface), 4.5]]],
+    ['--surface-2', C.surface2, '카드 안 인셋. 배경과 같은 톤으로 파인 자리를 만든다', [['카드 대비', cr(C.surface2,C.surface), 1.20]]],
+    ['--surface-pressed', C.surfacePressed, '눌린 상태. 잠깐 보이는 자리라 1.20 요건 밖이다', [['배경 대비', cr(C.surfacePressed,C.bg), 1.05]]],
+    ['--surface-scripture', C.scripture, '경전 인용면. 경전이 따로 서야 신뢰가 읽힌다', [['카드 대비', cr(C.scripture,C.surface), 1.20],['본문', cr(C.text,C.scripture), 4.5]]],
+    ['--surface-deep', C.deep, '오늘의 한마디 짙은 면', [['흰 글자', cr(C.onDeep,C.deep), 4.5]]],
+    ['--surface-illust', C.illust, '부처 이미지 뒤. 이미지에 구워진 매트와 같은 톤이라 이음매가 안 보인다', [['카드 대비', cr(C.illust,C.surface), 1.00]]]
+  ],
+  'chips-text':[
+    ['--text', C.text, '본문. 에셋의 잉크색 그대로. 순검정을 쓰지 않는다', [['배경', cr(C.text,C.bg), 4.5],['카드', cr(C.text,C.surface), 4.5]]],
+    ['--text-muted', C.muted, '보조 글자. 출처·설명·날짜', [['배경', cr(C.muted,C.bg), 4.5],['경전면', cr(C.muted,C.scripture), 4.5]]],
+    ['--text-weak', C.weak, '입력 안내문과 비활성 라벨. 여기보다 더 흐리게 가지 않는다', [['배경', cr(C.weak,C.bg), 4.5],['카드', cr(C.weak,C.surface), 4.5]]],
+    ['--text-on-deep', C.onDeep, '짙은 면 위 글자', [['짙은 면', cr(C.onDeep,C.deep), 4.5]]],
+    ['--text-on-deep-muted', C.onDeepMuted, '짙은 면 위 보조 글자', [['짙은 면', cr(C.onDeepMuted,C.deep), 4.5]]]
+  ],
+  'chips-accent':[
+    ['--accent', C.accent, '아이콘·큰 글씨·선. 에셋 금색 계열', [['카드', cr(C.accent,C.surface), 3.0]]],
+    ['--accent-text', C.accentText, '금색 글자. 경전 출처와 링크', [['카드', cr(C.accentText,C.surface), 4.5],['경전면', cr(C.accentText,C.scripture), 4.5]]],
+    ['--accent-rule', C.accentRule, '경전 인용면 왼쪽 세로선 3px', [['경전면', cr(C.accentRule,C.scripture), 3.0]]],
+    ['--accent-pressed', C.accentPressed, '금색 눌림', [['카드', cr(C.accentPressed,C.surface), 4.5]]],
+    ['--accent-soft', C.accentSoft, '금색 약배경. 경전면과 같은 값이다', [['카드', cr(C.accentSoft,C.surface), 1.20]]],
+    ['--accent-on-deep', C.accentOnDeep, '짙은 면 위 금색 버튼 바닥', [['그 위 글자', cr(C.deep,C.accentOnDeep), 4.5]]]
+  ],
+  'chips-support':[
+    ['--sage', C.sage, '두려움 계열 태그 글자·성공', [['세이지 칩', cr(C.sage,C.sageSoft), 4.5],['배경', cr(C.sage,C.bg), 4.5]]],
+    ['--sage-soft', C.sageSoft, '두려움 계열 태그 칩 바닥 (#불안 #걱정)', [['카드', cr(C.sageSoft,C.surface), 1.20]]],
+    ['--lotus', C.lotus, '관계·욕구 계열 태그 글자', [['연꽃 칩', cr(C.lotus,C.lotusSoft), 4.5]]],
+    ['--lotus-soft', C.lotusSoft, '관계·욕구 계열 태그 칩 바닥 (#집착 #인정욕구)', [['카드', cr(C.lotusSoft,C.surface), 1.20]]]
+  ],
+  'chips-misc':[
+    ['--line', C.line, '장식 구분선. 만질 수 없는 선에만 쓴다', [['카드', cr(C.line,C.surface), 1.20]]],
+    ['--line-strong', C.lineStrong, '입력칸·토글 등 UI 경계', [['배경', cr(C.lineStrong,C.bg), 3.0],['카드', cr(C.lineStrong,C.surface), 3.0]]],
+    ['--focus', C.focus, '포커스 링', [['배경', cr(C.focus,C.bg), 3.0],['카드', cr(C.focus,C.surface), 3.0]]],
+    ['--success', C.success, '저장 완료·수행 체크', [['배경', cr(C.success,C.bg), 4.5]]],
+    ['--caution', C.caution, '개인정보 안내 같은 주의 문구', [['배경', cr(C.caution,C.bg), 4.5]]],
+    ['--danger', C.danger, '오류', [['배경', cr(C.danger,C.bg), 4.5],['카드', cr(C.danger,C.surface), 4.5]]],
+    ['--btn', C.btn, '주 버튼 바닥. 에셋의 버튼색 그대로', [['버튼 글자', cr(C.onBtn,C.btn), 4.5]]],
+    ['--btn-pressed', C.btnPressed, '주 버튼 눌림', [['버튼 글자', cr(C.onBtn,C.btnPressed), 4.5]]],
+    ['--on-btn', C.onBtn, '버튼 글자', [['버튼 바닥', cr(C.onBtn,C.btn), 4.5]]]
+  ]
+};
+Object.keys(GROUPS).forEach(function(id){
+  document.getElementById(id).innerHTML = GROUPS[id].map(function(r){
+    var ratios = r[3].map(function(x){return badge(x[0],x[1],x[2]);}).join('');
+    return '<div class="chip">'
+      + '<div class="swatch" style="background:'+r[1]+'"></div>'
+      + '<div class="body"><div class="tok">'+r[0]+'</div>'
+      + '<div class="hex">'+r[1]+'</div>'
+      + '<div class="use">'+r[2]+'</div>'
+      + '<div class="ratios">'+ratios+'</div></div></div>';
+  }).join('');
+});
+
+/* ── 대비비 전수표 ─────────────────────────────────────── */
+var RATIOS=[
+  ['카드가 앱 배경 위에서 층으로 읽히나','--surface',C.surface,'--bg',C.bg,1.20],
+  ['경전면이 카드 위에서 구분되나','--surface-scripture',C.scripture,'--surface',C.surface,1.20],
+  ['중립 태그 칩이 카드 위에서 구분되나','--surface-chip',C.surfaceChip,'--surface',C.surface,1.20],
+  ['세이지 태그 칩이 카드 위에서 구분되나','--sage-soft',C.sageSoft,'--surface',C.surface,1.20],
+  ['연꽃 태그 칩이 카드 위에서 구분되나','--lotus-soft',C.lotusSoft,'--surface',C.surface,1.20],
+  ['본문 · 앱 배경','--text',C.text,'--bg',C.bg,4.5],
+  ['본문 · 카드','--text',C.text,'--surface',C.surface,4.5],
+  ['본문 · 경전면','--text',C.text,'--surface-scripture',C.scripture,4.5],
+  ['보조 글자 · 앱 배경','--text-muted',C.muted,'--bg',C.bg,4.5],
+  ['보조 글자 · 카드','--text-muted',C.muted,'--surface',C.surface,4.5],
+  ['보조 글자 · 경전면','--text-muted',C.muted,'--surface-scripture',C.scripture,4.5],
+  ['입력 안내문 · 카드','--text-weak',C.weak,'--surface',C.surface,4.5],
+  ['입력 안내문 · 앱 배경','--text-weak',C.weak,'--bg',C.bg,4.5],
+  ['금색 글자 · 카드','--accent-text',C.accentText,'--surface',C.surface,4.5],
+  ['금색 글자 · 경전면','--accent-text',C.accentText,'--surface-scripture',C.scripture,4.5],
+  ['세이지 태그 글자 · 세이지 칩','--sage',C.sage,'--sage-soft',C.sageSoft,4.5],
+  ['연꽃 태그 글자 · 연꽃 칩','--lotus',C.lotus,'--lotus-soft',C.lotusSoft,4.5],
+  ['성공 · 앱 배경','--success',C.success,'--bg',C.bg,4.5],
+  ['주의 · 앱 배경','--caution',C.caution,'--bg',C.bg,4.5],
+  ['오류 · 앱 배경','--danger',C.danger,'--bg',C.bg,4.5],
+  ['오류 · 카드','--danger',C.danger,'--surface',C.surface,4.5],
+  ['버튼 글자 · 주 버튼','--on-btn',C.onBtn,'--btn',C.btn,4.5],
+  ['버튼 글자 · 눌린 주 버튼','--on-btn',C.onBtn,'--btn-pressed',C.btnPressed,4.5],
+  ['짙은 면 글자','--text-on-deep',C.onDeep,'--surface-deep',C.deep,4.5],
+  ['짙은 면 보조 글자','--text-on-deep-muted',C.onDeepMuted,'--surface-deep',C.deep,4.5],
+  ['짙은 면 금색 버튼 글자','--surface-deep',C.deep,'--accent-on-deep',C.accentOnDeep,4.5],
+  ['금색 아이콘·큰 글씨 · 카드','--accent',C.accent,'--surface',C.surface,3.0],
+  ['UI 경계 · 카드','--line-strong',C.lineStrong,'--surface',C.surface,3.0],
+  ['UI 경계 · 앱 배경','--line-strong',C.lineStrong,'--bg',C.bg,3.0],
+  ['포커스 링 · 앱 배경','--focus',C.focus,'--bg',C.bg,3.0],
+  ['포커스 링 · 카드','--focus',C.focus,'--surface',C.surface,3.0],
+  ['경전 세로선 · 경전면','--accent-rule',C.accentRule,'--surface-scripture',C.scripture,3.0],
+  ['경전 세로선 · 카드','--accent-rule',C.accentRule,'--surface',C.surface,3.0],
+  ['장식 구분선 · 카드','--line',C.line,'--surface',C.surface,1.20]
+];
+document.getElementById('ratio-table').innerHTML = RATIOS.map(function(r){
+  var v=cr(r[2],r[4]), ok=v>=r[5];
+  return '<tr><td>'+r[0]+'</td>'
+    + '<td><span class="dot" style="background:'+r[2]+'"></span><code>'+r[1]+'</code></td>'
+    + '<td><span class="dot" style="background:'+r[4]+'"></span><code>'+r[3]+'</code></td>'
+    + '<td class="num"><b>'+f2(v)+'</b></td>'
+    + '<td class="num">'+r[5].toFixed(2)+'</td>'
+    + '<td><span class="badge '+(ok?'pass':'fail')+'">'+(ok?'통과':'미달')+'</span></td></tr>';
+}).join('');
+
+/* ── 짙은 면 판정표 ─────────────────────────────────────── */
+var DEEP=[
+  ['--text-on-deep 글자',C.onDeep,'놓을 수 있다'],
+  ['--text-on-deep-muted 보조 글자',C.onDeepMuted,'놓을 수 있다'],
+  ['--accent-on-deep 버튼 바닥',C.accentOnDeep,'놓을 수 있다'],
+  ['--accent 아이콘 (큰 글씨·선만)',C.accent,'제한'],
+  ['--accent-text 글자',C.accentText,'금지'],
+  ['--text-muted 글자',C.muted,'금지'],
+  ['--btn 버튼 바닥',C.btn,'금지']
+];
+document.getElementById('deep-table').innerHTML = DEEP.map(function(r){
+  var v=cr(r[1],C.deep);
+  var cls = r[2]==='금지' ? 'fail' : 'pass';
+  var extra = r[2]==='금지' ? (r[1]===C.btn?' · 사고가 나는 그 조합이다':'') : '';
+  var lbl = r[2]==='제한' ? '큰 글씨만 3.0 통과' : (r[2]==='금지'?'금지':'통과');
+  return '<tr><td>'+r[0]+extra+'</td>'
+    + '<td><span class="dot" style="background:'+r[1]+'"></span><code>'+r[1]+'</code></td>'
+    + '<td class="num"><b>'+f2(v)+'</b></td>'
+    + '<td><span class="badge '+cls+'">'+lbl+'</span></td></tr>';
+}).join('');
+
+/* ── 타이포 견본 ────────────────────────────────────────── */
+var SAMPLE_BODY =
+ '어제와 오늘의 마음이 다르다고 해서 어느 한쪽이 거짓인 것은 아니에요. '
++'마음은 날씨에 가깝습니다. 아침에 흐렸다가 낮에 개는 일이 하루에도 몇 번씩 일어나요. '
++'문제는 날씨가 바뀌는 것이 아니라, 흐린 날의 나를 진짜 나라고 못 박아 버리는 데서 시작돼요.';
+
+var TYPES=[
+  ['display-l','28px / 1.42','-0.02em','700','MaruBuri','오늘의 한마디','서두르지 않아도 늦지 않아요.',
+   {ff:'serif',fs:28,lh:1.42,ls:'-0.02em',fw:700}],
+  ['display-m','22px / 1.55','-0.015em','600','MaruBuri','화면 제목·마지막 한 문장','오늘, 무슨 일이 있었나요?',
+   {ff:'serif',fs:22,lh:1.55,ls:'-0.015em',fw:600}],
+  ['title','18px / 1.45','-0.01em','700','Pretendard','답변 섹션 제목','지금 마음에 닿는 가르침',
+   {ff:'sans',fs:18,lh:1.45,ls:'-0.01em',fw:700}],
+  ['scripture','17px / 1.90','+0.01em','400','MaruBuri','경전 번역문','미움은 미움으로 그치지 않아요. 미움을 놓을 때에야 비로소 그쳐요. 이것은 변하지 않는 오래된 법이에요.',
+   {ff:'serif',fs:17,lh:1.90,ls:'0.01em',fw:400}],
+  ['body-l','17px / 1.80','0','500','Pretendard','답변 본문 (1,600에서 2,500자)',SAMPLE_BODY,
+   {ff:'sans',fs:17,lh:1.80,ls:'0',fw:500}],
+  ['body','15px / 1.65','0','500','Pretendard','일반 본문·목록 항목','오늘 잠들기 전에 한 가지만 적어 보세요. 오늘 내가 잘 넘긴 순간 하나면 충분해요.',
+   {ff:'sans',fs:15,lh:1.65,ls:'0',fw:500}],
+  ['label','14px / 1.20','-0.005em','600','Pretendard','칩·버튼·탭 라벨','이야기하기',
+   {ff:'sans',fs:14,lh:1.20,ls:'-0.005em',fw:600}],
+  ['caption','13px / 1.50','0','500','Pretendard','경전 출처·안내문','법구경 제1장 5절 · 감수를 마친 번역이에요',
+   {ff:'sans',fs:13,lh:1.50,ls:'0',fw:500}]
+];
+document.getElementById('type-samples').innerHTML = TYPES.map(function(t){
+  var s=t[7];
+  var fam = s.ff==='serif' ? 'var(--font-serif)' : 'var(--font-sans)';
+  return '<div class="type-row">'
+   + '<div class="spec"><b>'+t[0]+'</b>'+t[1]+'<br>자간 '+t[2]+'<br>굵기 '+t[3]+'<br>'+t[4]+'<br>'+t[5]+'</div>'
+   + '<div><p style="font-family:'+fam+';font-size:'+s.fs+'px;line-height:'+s.lh+';letter-spacing:'+s.ls
+   + ';font-weight:'+s.fw+';margin:0;max-width:310px;word-break:keep-all;">'+t[6]+'</p></div></div>';
+}).join('');
+
+/* ── 간격 · 라운드 · 그림자 ─────────────────────────────── */
+var SPACE=[['--s-1',4,'아이콘과 글자 사이'],['--s-2',8,'태그 칩 사이'],['--s-3',12,'제목과 본문 사이'],
+ ['--s-4',16,'문단 사이·카드 사이'],['--s-5',20,'좌우 여백·카드 안쪽'],['--s-6',24,'시트 안쪽'],
+ ['--s-8',32,'답변 섹션 사이'],['--s-10',40,'큰 단락 사이'],['--s-12',48,'화면 위아래 여유'],['--s-16',64,'화면 끝 여백']];
+document.getElementById('space-grid').innerHTML = SPACE.map(function(s){
+  return '<div class="spec-card"><div class="bar" style="width:'+s[1]+'px;margin:0 auto;"></div>'
+   + '<div class="label"><b>'+s[0]+' · '+s[1]+'px</b>'+s[2]+'</div></div>';
+}).join('');
+
+var ROUND=[['--r-xs',8,'작은 배지'],['--r-sm',10,'작은 버튼'],['--r-button',14,'버튼·입력칸'],
+ ['--r-image',16,'부처 일러스트. 이미지에 구워진 반경과 같다'],['--r-inset',16,'경전 인용면'],
+ ['--r-card',20,'카드'],['--r-sheet',24,'바텀시트 상단'],['--r-pill',999,'칩·탭바']];
+document.getElementById('round-grid').innerHTML = ROUND.map(function(r){
+  return '<div class="spec-card"><div class="roundbox" style="border-radius:'+r[1]+'px"></div>'
+   + '<div class="label"><b>'+r[0]+' · '+(r[1]===999?'999px':r[1]+'px')+'</b>'+r[2]+'</div></div>';
+}).join('');
+
+var SHADOW=[['--sh-card','0 1px 3px rgba(54,44,37,.05), 0 6px 16px rgba(54,44,37,.04)','카드'],
+ ['--sh-raised','0 6px 20px rgba(54,44,37,.10)','떠 있는 요소'],
+ ['--sh-tabbar','0 4px 18px rgba(54,44,37,.13)','플로팅 탭바'],
+ ['--sh-sheet','0 -8px 28px rgba(54,44,37,.14)','바텀시트']];
+document.getElementById('shadow-grid').innerHTML = SHADOW.map(function(s){
+  return '<div class="spec-card" style="background:var(--bg);box-shadow:none;">'
+   + '<div class="shadowbox" style="box-shadow:'+s[1]+'"></div>'
+   + '<div class="label"><b>'+s[0]+'</b>'+s[2]+'</div></div>';
+}).join('');
+
+/* ── 이미지 매핑 ────────────────────────────────────────── */
+var MAP=[
+  ['anxiety','불안','buddha_anxiety','그 감정을 위해 만들어진 그림이다',false],
+  ['anger','분노','buddha_anger','그 감정을 위해 만들어진 그림이다',false],
+  ['loss','이별·상실','buddha_loss','그 감정을 위해 만들어진 그림이다',false],
+  ['comparison','비교·열등감','buddha_comparison','그 감정을 위해 만들어진 그림이다',false],
+  ['choice','고민·선택','buddha_choice','기본값이기도 하다. 길을 가리키지 않고 조용히 앉아 있는 장면',false],
+  ['sleepless','잠 못 드는 걱정','buddha_sleep','달빛과 연꽃등. 파일명만 sleep 이고 뜻은 같다',false],
+  ['attachment','집착·미련','buddha_loss','쥔 것을 놓는 장면이 상실과 같다. 붙잡는 마음과 보내는 마음은 한 짝이다',true],
+  ['emptiness','무기력·공허','buddha_growth','마른 자리에서 새싹이 트는 그림이다. 공허에 필요한 것은 위로가 아니라 다시 자랄 여지다',true],
+  ['relationship','관계 피로','buddha_relationship','그 감정을 위해 만들어진 그림이다',false],
+  ['approval','인정받고 싶은 마음','buddha_comparison','남과 견주는 자리에서 생기는 마음이라 비교와 같은 장면을 쓴다',true]
+];
+document.getElementById('map-grid').innerHTML = MAP.map(function(m){
+  return '<div class="map-card'+(m[4]?' reuse':'')+'">'
+   + '<img src="../assets/'+m[2]+'.webp" alt="'+m[1]+' 부처 일러스트" loading="lazy">'
+   + '<div class="theme">'+m[0]+'</div><div class="ko">'+m[1]+'</div>'
+   + '<div class="file">'+m[2]+'.webp</div>'
+   + (m[4]?'<span class="tag-reuse">다대일 매핑</span>':'')
+   + '</div>';
+}).join('');
+document.getElementById('map-table').innerHTML = MAP.map(function(m){
+  return '<tr><td><code>'+m[0]+'</code></td><td>'+m[1]+'</td>'
+   + '<td><code>'+m[2]+'.webp</code></td><td>'+m[3]+'</td></tr>';
+}).join('')
+ + '<tr><td><code>그 밖의 모든 값 · 누락 · 오타</code></td><td>없음</td>'
+ + '<td><code>buddha_choice.webp</code></td><td>기본값. 어떤 고민에도 어긋나지 않는 유일한 장면이다</td></tr>';
+
+/* ── 에셋 전수 ──────────────────────────────────────────── */
+var ASSETS=[
+  ['buddha_anxiety.webp','178 × 185','없음','그대로. 원본 크기 부근에서 쓴다','전체'],
+  ['buddha_anger.webp','173 × 185','없음','그대로','전체'],
+  ['buddha_loss.webp','174 × 185','없음','그대로','전체'],
+  ['buddha_comparison.webp','175 × 185','없음','그대로','전체'],
+  ['buddha_choice.webp','178 × 193','없음','그대로. 매핑 기본값','전체'],
+  ['buddha_sleep.webp','174 × 193','없음','그대로. 유일한 밤 장면이라 어두워도 그대로 둔다','전체'],
+  ['buddha_relationship.webp','174 × 193','없음','그대로','전체'],
+  ['buddha_growth.webp','175 × 193','없음','그대로','전체'],
+  ['app_icon.png / .webp','148 × 146','없음','참고만. 콘솔 규격이 600 × 600 · 라운드 불가 · 투명 불가라 다시 만들어야 한다','전체'],
+  ['logo_lockup.webp','172 × 166','있음 (부처의 말 + 태그라인)','연꽃 마크만 크롭. 글자는 MaruBuri 로 다시 쓴다','(0, 0, 172, 78)'],
+  ['splash_screen.webp','272 × 531','있음 (제목·부제·하단 문구)','크롭. 나무 아래 부처만 남기고 글자는 HTML 로','(0, 235, 272, 476)'],
+  ['loading_screen.webp','263 × 529','있음 (진행 문구 4줄·인용문)','크롭. 부처와 연꽃 상단만. 진행 문구는 HTML 로 교체된다','(0, 10, 263, 235)'],
+  ['onboarding_screen.webp','226 × 321','있음 (제목·부제·버튼)','크롭. 온보딩은 안 만들지만 풍경이 쓸 만하다','(0, 118, 226, 240)'],
+  ['input_screen.webp','260 × 312','있음 (질문·안내·입력칸)','크롭. 오른쪽 부처 얼굴만','(142, 116, 240, 212)'],
+  ['empty_state.webp','254 × 119','있음 (시안 라벨 + 안내문 2줄)','크롭. 오른쪽 연꽃만. 왼쪽에 "empty 상태 이미지"라는 시안 라벨이 남아 있다','(160, 2, 232, 74)'],
+  ['share_card.webp','293 × 290','있음 (인용문·출처·로고·QR)','화면에 쓰지 않는다. 공유 카드는 HTML 로 새로 그린다. 구도 참고용','없음'],
+  ['premium_banner.webp','259 × 288','있음','쓰지 않는다. MVP 에서 결제를 뺐다','해당 없음'],
+  ['pattern_lotus.webp','366 × 55','없음','가로 반복 띠. 넷 중 가장 넓어 이음매가 덜 보인다','전체'],
+  ['pattern_leaves.webp','181 × 55','없음','가로 반복 띠','전체'],
+  ['pattern_petals.webp','158 × 55','없음','가로 반복 띠','전체'],
+  ['pattern_ripple.webp','157 × 55','없음','가로 반복 띠','전체']
+];
+document.getElementById('asset-table').innerHTML = ASSETS.map(function(a){
+  var has = a[2]!=='없음';
+  return '<tr><td><code>'+a[0]+'</code></td><td class="num">'+a[1]+'</td>'
+   + '<td><span class="badge '+(has?'fail':'pass')+'">'+(has?'있음':'없음')+'</span>'
+   + (has?'<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">'+a[2].replace('있음 ','').replace(/^\(|\)$/g,'')+'</div>':'')
+   + '</td><td>'+a[3]+'</td><td class="num">'+a[4]+'</td></tr>';
+}).join('');
+
+/* ── 패턴 띠 목록 ───────────────────────────────────────── */
+var PATTERNS=[
+  ['pattern_lotus','366 × 55','연꽃 두 송이와 연잎. 가장 넓어 반복 이음매가 덜 보인다'],
+  ['pattern_leaves','181 × 55','연잎만. 차분해서 빈 상태 받침에 맞는다'],
+  ['pattern_petals','158 × 55','흩어진 꽃잎. 가장 가벼워 하단 브랜딩 줄에 맞는다'],
+  ['pattern_ripple','157 × 55','물결. 섹션 사이 구분에 맞는다']
+];
+document.getElementById('pattern-list').innerHTML = PATTERNS.map(function(p){
+  return '<div class="band-demo"><p class="cap"><b>'+p[0]+'</b> · '+p[1]+' · '+p[2]+'</p>'
+   + '<div class="band" style="background-image:url(\'../assets/'+p[0]+'.webp\')"></div></div>';
+}).join('');
+</script>
+</body>
+</html>
