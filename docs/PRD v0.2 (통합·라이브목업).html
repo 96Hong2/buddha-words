@@ -1,0 +1,3635 @@
+<!-- @dsCard group="Docs" -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부처의 말 PRD v0.2 (오래된 정본)</title>
+
+<!-- ============================================================================
+     부처의 말 · 웹폰트 비차단 로드 스니펫 v1.0
+     화면 파일(design/screens/*.html, design/components/*.html)은 이 블록을
+     <head> 맨 위에 그대로 복사해 붙인다. 고쳐서 쓰지 않는다.
+
+     ■ 왜 이렇게 받나
+     CSS 파일 안의 @import 는 그 시트를 다 받을 때까지 렌더를 막는다.
+     10초 가계부에서 index.css 맨 위의 @import 하나가 첫 그림을 30초 막아 e2e 가
+     간헐 실패했다. 미니앱은 열자마자 보여야 하는 자리라 출시 문제가 된다.
+     그래서 link 를 media="print" 로 받고 onload 에서 media='all' 로 바꾼다.
+     이러면 브라우저가 이 시트를 렌더 차단 자원으로 세지 않는다.
+
+     ■ 못 받아도 읽혀야 한다
+     세 폰트가 전부 실패해도 폴백 스택(Apple SD Gothic Neo, system-ui …)으로 읽힌다.
+     _tokens.css 의 --font-sans · --font-serif 가 그 스택이다.
+
+     ■ URL 확인 (2026-09-13, curl 로 실제 응답 코드를 받아 확인함)
+       200  cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/.../pretendardvariable-dynamic-subset.css
+       200  hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-{Regular,SemiBold,Bold}.woff2
+       200  fonts.googleapis.com/css2?family=Noto+Serif+KR
+       404  cdn.jsdelivr.net/npm/sunn-web-font@1.0.1/SUIT.css  ← 그래서 SUIT 는 받지 않는다
+            SUIT 는 스택에 이름만 남긴다. 기기에 설치된 사용자만 쓰게 된다.
+     ============================================================================ -->
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- 1) Pretendard Variable · 본문과 UI 전부.
+     dynamic-subset 판이라 한글을 조각(약 34KB)으로 나눠 보내고, 브라우저는 화면에 쓴 글자가
+     들어 있는 조각만 받는다. 전체 정적판(Regular 한 벌 766KB)보다 훨씬 가볍다. -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      media="print" onload="this.media='all'">
+
+<!-- 2) Noto Serif KR · MaruBuri 가 실패했을 때 받는 명조 폴백.
+     Google Fonts 의 css2 는 font-display:swap 을 URL 파라미터로 넣어 준다. -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      media="print" onload="this.media='all'">
+
+<!-- 3) MaruBuri · 제목·경전·인용문·오늘의 한마디.
+     네이버가 주는 공식 CSS(hangeul.pstatic.net/hangeul_static/css/maru-buri.css)를 쓰지 않고
+     아래처럼 우리가 직접 @font-face 를 쓴다. 이유가 둘이다.
+       (1) 네이버 CSS 에 font-display 가 없다. 기본값 auto 는 폰트를 받는 동안 글자를 숨긴다.
+           본문이 1,600자를 넘는 앱이라 그 사이 화면이 비면 크게 튄다. swap 으로 덮는다.
+       (2) 네이버 CSS 는 굵기마다 family 이름이 다르다('MaruBuri', 'MaruBuriSemiBold',
+           'MaruBuriBold'). 그대로 두면 font-weight:700 이 가짜 굵기(synthetic bold)를 만들어
+           한글 받침이 뭉갠다. 아래에서 한 이름에 weight 를 묶어 준다.
+     woff2 한 벌이 약 440KB 다. 제목과 인용문에만 쓰므로 Regular 와 Bold 두 벌만 받는다.
+     실제 앱에서는 쓰는 글자만 남긴 서브셋으로 줄인다. -->
+<style>
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-SemiBold.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2');
+  }
+
+  /* 가짜 굵기·가짜 기울임을 끈다. 한글은 합성 굵기에서 받침이 붙어 뭉갠다. */
+  html { font-synthesis-weight: none; font-synthesis-style: none; }
+</style>
+
+<style>
+/* ============================================================================
+   부처의 말 · 디자인 토큰 v1.0 (라이트 전용)
+   이 파일이 색·타이포·간격의 정본이다. 화면 CSS 는 램프(--c-*)를 직접 쓰지 않고
+   의미 토큰만 쓴다. 램프를 직접 쓰면 값이 바뀔 때 그 자리만 안 바뀐다.
+
+   출처: design/assets 의 실제 이미지에서 뽑은 주조색 + 원본 HTML 의 CSS 변수.
+   대비비는 전부 python3 로 WCAG 2.x 상대휘도 공식으로 계산해 통과시킨 값이다.
+   기준: 본문 4.5 · 큰 글씨와 UI 경계 3.0 · 면 대 면 1.20.
+
+   ※ 다크 팔레트는 없다. 통합 개발 계획 X1 이 라이트 전용으로 못 박았다.
+     토스가 그리는 상단바가 라이트 고정이라 본문만 뒤집으면 화면 위아래가 갈라진다.
+   ============================================================================ */
+
+:root {
+
+  /* ── 램프 (원시 토큰) ──────────────────────────────────────────────────
+     에셋 이미지에서 실제로 뽑은 색을 기준으로 단계를 채웠다.
+     sand 는 배경·표면·잉크가 모두 나오는 뼈대다. */
+
+  --c-sand-50:  #FFFAF1;  /* 에셋 paper. 카드·입력칸 */
+  --c-sand-100: #FBF7EF;  /* 에셋 bg. 부처 이미지 매트와 같은 톤 */
+  --c-sand-150: #F6EFE2;  /* 아주 옅은 눌림 */
+  --c-sand-200: #EDE4D3;  /* 앱 배경. 카드와 1.21 로 갈린다 */
+  --c-sand-300: #E4D9C4;  /* 눌린 면 */
+  --c-sand-400: #DCCFB8;  /* 장식 구분선 */
+  --c-sand-500: #C2B096;  /* 비활성 */
+  --c-sand-600: #8A7A61;  /* UI 경계. 배경 위 3.30 */
+  --c-sand-700: #6B5C4E;  /* 보조 글자 */
+  --c-sand-800: #4C4234;  /* 짙은 중립 면 */
+  --c-sand-900: #362C25;  /* 에셋 ink. 본문 */
+
+  --c-gold-50:  #FAF2DE;  /* 아주 옅은 금색 배경 */
+  --c-gold-100: #F2E3C4;  /* 경전 인용면·금색 칩 */
+  --c-gold-200: #E3C388;  /* 짙은 면 위에 놓는 금색 */
+  --c-gold-300: #D3AC60;  /* 장식 */
+  --c-gold-400: #B48A4A;  /* 에셋 gold 원값. 아이콘·큰 글씨 */
+  --c-gold-500: #AE8340;  /* 아이콘·선. 카드 위 3.30 */
+  --c-gold-600: #9E7329;  /* 경전 세로선. 경전면 위 3.35 */
+  --c-gold-700: #8E6B26;  /* 포커스 링 */
+  --c-gold-800: #7E5C1E;  /* 금색 글자·주의 */
+  --c-gold-900: #6B4E19;  /* 금색 눌림 */
+
+  --c-sage-50:  #EFF3EA;
+  --c-sage-100: #DFE7D5;  /* 세이지 칩. 카드 위 1.22 */
+  --c-sage-200: #C3D2B6;
+  --c-sage-300: #9DB08D;
+  --c-sage-400: #7B9169;
+  --c-sage-500: #637C55;
+  --c-sage-600: #4E6543;  /* 세이지 글자·성공 */
+  --c-sage-700: #3D5135;
+  --c-sage-800: #2F3F29;
+
+  --c-lotus-50:  #FDF1F3;
+  --c-lotus-100: #F5DBE0;  /* 연꽃 칩. 카드 위 1.26 */
+  --c-lotus-200: #EDC0C8;
+  --c-lotus-300: #E09FAB;  /* 에셋 연꽃잎 핑크 */
+  --c-lotus-400: #CE7688;
+  --c-lotus-500: #B85568;
+  --c-lotus-600: #9A4356;  /* 연꽃 글자 */
+  --c-lotus-700: #7D3446;
+
+  --c-brown-700: #41382F;  /* 에셋 버튼색. 주 버튼·짙은 면 */
+  --c-brown-800: #2B241D;  /* 버튼 눌림 */
+  --c-red-600:   #A83C33;  /* 오류 */
+
+
+  /* ── 의미 토큰 · 면 ───────────────────────────────────────────────────
+     층은 두 개다. 세 번째 층을 밝기로 만들지 않는다.
+     아이보리에서 세 층을 각각 1.20 으로 벌리면 셋째 층이 흙빛이 된다.
+     층이 하나 더 필요하면 밝기가 아니라 --line 으로 나눈다. */
+
+  --bg:               var(--c-sand-200);  /* 앱 배경 (층 0) */
+  --surface:          var(--c-sand-50);   /* 카드·시트·입력칸 (층 1). 배경과 1.21 */
+  --surface-2:        var(--c-sand-200);  /* 카드 안 인셋. 배경과 같은 톤으로 파인 자리를 만든다 */
+  --surface-pressed:  var(--c-sand-300);  /* 눌림. 잠깐 보이는 상태라 1.20 요건 밖이다 */
+  --surface-chip:     var(--c-sand-200);  /* 중립 칩 */
+  --surface-scripture:var(--c-gold-100);  /* 경전 인용면. 카드와 1.22 */
+  --surface-deep:     var(--c-brown-700); /* 오늘의 한마디 짙은 면 */
+  --surface-illust:   var(--c-sand-100);  /* 부처 이미지 뒤. 이미지에 구워진 매트(#FBF8F2)와 같은 톤 */
+
+  /* ── 의미 토큰 · 글자 ─────────────────────────────────────────────── */
+
+  --text:          var(--c-sand-900);  /* 본문. 배경 10.78 · 카드 13.08 */
+  --text-muted:    var(--c-sand-700);  /* 보조. 배경 5.09 · 카드 6.18 */
+  --text-weak:     #736354;            /* 입력 안내문·비활성 라벨. 배경 4.57 · 카드 5.55 */
+  --text-on-deep:  var(--c-sand-50);   /* 짙은 면 위 글자. 11.03 */
+  --text-on-deep-muted: #D9CDBC;       /* 짙은 면 위 보조. 7.32 */
+
+  /* ── 의미 토큰 · 강조 (금색) ──────────────────────────────────────────
+     이 앱의 강조는 금색 하나다. 경전이 신뢰의 핵심이라 그 자리가 따로 서야 한다.
+     같은 금색이라도 글자용과 면·선용의 값이 다르다. 섞어 쓰면 대비가 무너진다. */
+
+  --accent:         var(--c-gold-500);  /* 아이콘·큰 글씨·선. 카드 위 3.30 */
+  --accent-text:    var(--c-gold-800);  /* 금색 글자. 카드 5.88 · 경전면 4.82 */
+  --accent-rule:    var(--c-gold-600);  /* 경전 인용면 왼쪽 세로선. 경전면 위 3.35 */
+  --accent-pressed: var(--c-gold-900);  /* 금색 눌림 */
+  --accent-soft:    var(--c-gold-100);  /* 금색 약배경. 칩·경전면과 같은 값 */
+  --accent-on-deep: var(--c-gold-200);  /* 짙은 면 위 금색 면. 그 위 글자는 --surface-deep 6.79 */
+
+  /* ── 의미 토큰 · 보조 색 ─────────────────────────────────────────────
+     감정 태그 칩의 색만 담당한다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다. */
+
+  --sage:       var(--c-sage-600);   /* 세이지 글자. 세이지 칩 위 5.06 */
+  --sage-soft:  var(--c-sage-100);   /* 두려움 계열 태그 칩 (#불안 #걱정) */
+  --lotus:      var(--c-lotus-600);  /* 연꽃 글자. 연꽃 칩 위 4.86 */
+  --lotus-soft: var(--c-lotus-100);  /* 관계·욕구 계열 태그 칩 (#집착 #인정욕구) */
+
+  /* ── 의미 토큰 · 선 ─────────────────────────────────────────────────── */
+
+  --line:        var(--c-sand-400);  /* 장식 구분선. 만질 수 없는 선에만 */
+  --line-strong: var(--c-sand-600);  /* 입력칸·토글 등 UI 경계. 배경 3.30 · 카드 4.01 */
+  --focus:       var(--c-gold-700);  /* 포커스 링. 배경 3.89 · 카드 4.72 */
+
+  /* ── 의미 토큰 · 상태 ───────────────────────────────────────────────── */
+
+  --success: var(--c-sage-600);  /* 저장 완료·수행 체크. 배경 5.09 */
+  --caution: var(--c-gold-800);  /* 개인정보 안내 등 주의. 배경 4.84 */
+  --danger:  var(--c-red-600);   /* 오류. 배경 4.95 · 카드 6.01 */
+
+  /* ── 의미 토큰 · 버튼 ───────────────────────────────────────────────── */
+
+  --btn:         var(--c-brown-700);  /* 주 버튼 바닥. 에셋의 버튼색 그대로 */
+  --btn-pressed: var(--c-brown-800);
+  --on-btn:      var(--c-sand-50);    /* 버튼 글자. 11.03 */
+  --btn-ghost-line: var(--c-sand-600);/* 보조 버튼 테두리 */
+
+  --dim: rgba(54, 44, 37, .42);  /* 바텀시트 딤 */
+
+  /* ────────────────────────────────────────────────────────────────────
+     짙은 면 사고를 막는 규칙 (10초 가계부에서 실제로 난 사고)
+
+     원문: "월간 결산을 짙은 세이지 전면으로 바꿨더니 「다음」 버튼이 사라진 것처럼 보였다.
+     버튼 바닥색이 sage-700 인데 배경도 sage-700 이라 대비가 1:1 이 됐다."
+
+     이 앱은 「오늘의 한마디」를 --surface-deep 짙은 면으로 낸다. 그리고 --btn 이
+     --surface-deep 과 **같은 값 #41382F** 이다. 아무 생각 없이 얹으면 그 사고가 그대로 난다.
+
+     C-1  면 토큰을 바꾸는 변경은 그 면 위에 놓인 모든 요소의 토큰을 세어 보고 판정한다.
+     C-2  짙은 면 위에 --btn 을 놓지 않는다. 대비 1.00 이다. 버튼이 통째로 사라진다.
+     C-3  짙은 면 위에 놓을 수 있는 것은 아래 셋뿐이다.
+            --text-on-deep       #FFFAF1  11.03  글자
+            --text-on-deep-muted #D9CDBC   7.32  보조 글자
+            --accent-on-deep     #E3C388   6.79  버튼 바닥 (그 위 글자는 --surface-deep)
+     C-4  금지 조합 (계산값)
+            --btn         #41382F  위  1.00  ← 사고가 나는 그 조합. 버튼이 통째로 사라진다
+            --accent-text #7E5C1E  위  1.88  글자로 못 쓴다
+            --text-muted  #6B5C4E  위  1.78  글자로 못 쓴다
+            --accent      #AE8340  위  3.34  큰 글씨·아이콘만 된다. 본문 글자로 쓰면 4.5 미달
+     C-5  새로 놓고 싶은 색이 생기면 눈이 아니라 계산으로 판정한다.
+          사람 눈은 아이보리 계열에서 2단계 차이를 못 본다.
+     ──────────────────────────────────────────────────────────────────── */
+
+
+  /* ── 타이포 · 스택 ────────────────────────────────────────────────────
+     웹폰트는 _fonts.html 이 비차단으로 받는다. CSS 안의 @import 는 금지다.
+     10초 가계부에서 index.css 의 @import 가 첫 그림을 30초 막은 사고가 있었다.
+     못 받아도 폴백 스택으로 읽혀야 한다. */
+
+  --font-sans: 'Pretendard Variable', 'Pretendard', 'SUIT', 'Apple SD Gothic Neo',
+               -apple-system, BlinkMacSystemFont, system-ui, 'Noto Sans KR', sans-serif;
+  --font-serif: 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
+  --font-serif-bold: 'MaruBuriBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+  --font-serif-semibold: 'MaruBuriSemiBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+
+  /* ── 타이포 · 8단 ─────────────────────────────────────────────────────
+     기준 화면 390px. 좌우 gutter 20 + 카드 padding 20 을 빼면 본문 폭 310px.
+     답변 본문은 1,600~2,500자다. 이 길이를 편하게 읽히게 하는 것이 화면의 첫 목적이다.
+
+     이름         px  행간   자간       굵기  한 줄 글자수(310px)  쓰는 곳
+     display-l    28  1.42  -0.02em    700   약 11자   오늘의 한마디 (짙은 면, serif)
+     display-m    22  1.55  -0.015em   600   약 14자   화면 제목·마지막 한 문장 (serif)
+     title        18  1.45  -0.01em    700   약 17자   답변 섹션 제목 (sans)
+     scripture    17  1.90  +0.01em    400   약 18자   경전 번역문 (serif)
+     body-l       17  1.80   0         500   약 18자   답변 본문 (sans)
+     body         15  1.65   0         500   약 20자   일반 본문·목록
+     label        14  1.20  -0.005em   600   -         칩·버튼·탭 라벨
+     caption      13  1.50   0         500   -         경전 출처·안내문
+
+     본문을 17px 로 올린 근거:
+       16px 면 한 줄 19.4자, 2,500자가 129줄 × 28px = 약 3,600px.
+       17px 면 한 줄 18.2자, 2,500자가 137줄 × 30.6px = 약 4,200px.
+       줄 수는 늘지만 글자가 커져 한 줄을 훑는 속도가 빨라진다. 모바일 390px 에서
+       한 줄 25자 이상은 어차피 불가능하니, 줄 수를 줄이는 대신 글자를 키우는 쪽을 택했다.
+     행간 1.8 근거:
+       한글은 받침이 있어 라틴보다 세로로 빽빽하다. 1,600자를 넘는 글에서 1.6 은 줄이 붙어 보인다.
+       1.8 은 30.6px 로, 문단 사이 간격 16px 과 겹쳐 보이지 않는 최소값이다.
+     굵기 400 은 경전 번역문에만 쓴다.
+       MaruBuri 는 획이 가늘어 500 이 없다. 나머지 sans 본문은 500 을 최소로 한다. */
+
+  --t-display-l: 28px;  --lh-display-l: 1.42;  --ls-display-l: -0.02em;
+  --t-display-m: 22px;  --lh-display-m: 1.55;  --ls-display-m: -0.015em;
+  --t-title:     18px;  --lh-title:     1.45;  --ls-title:     -0.01em;
+  --t-scripture: 17px;  --lh-scripture: 1.90;  --ls-scripture: 0.01em;
+  --t-body-l:    17px;  --lh-body-l:    1.80;  --ls-body-l:    0;
+  --t-body:      15px;  --lh-body:      1.65;  --ls-body:      0;
+  --t-label:     14px;  --lh-label:     1.20;  --ls-label:     -0.005em;
+  --t-caption:   13px;  --lh-caption:   1.50;  --ls-caption:   0;
+
+  /* 8단 밖의 예외 하나. 광고 'Ad' 표기와 법적 고지처럼 읽히지 않아도 되는 자리만. */
+  --t-micro: 11px;  --lh-micro: 1.3;
+
+  --w-regular:  400;  /* 경전 번역문 전용 */
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* ── 간격 (4의 배수) ────────────────────────────────────────────────── */
+
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;  --s-5: 20px;
+  --s-6: 24px;  --s-8: 32px;  --s-10: 40px; --s-12: 48px; --s-16: 64px;
+
+  --gutter: 20px;        /* 화면 좌우 기본 여백 */
+  --pad-card: 20px;      /* 카드 안쪽 */
+  --gap-card: 16px;      /* 카드와 카드 사이 */
+  --gap-section: 32px;   /* 답변 섹션 사이. 구조가 있는 답변으로 읽히게 */
+  --gap-para: 16px;      /* 문단 사이 */
+  --tap-min: 44px;       /* 최소 터치 타깃 */
+
+  /* ── 라운드 ──────────────────────────────────────────────────────────
+     부처 이미지에는 반경 약 16px 의 둥근 모서리가 이미 구워져 있다(175px 폭 기준 실측).
+     그래서 --r-image 는 그 값에 맞춘다. 더 작게 주면 구워진 아이보리 매트가 각지게 비친다. */
+
+  --r-pill:   999px;  /* 칩·탭바·게이지 */
+  --r-sheet:  24px;   /* 바텀시트 상단 */
+  --r-card:   20px;   /* 카드 */
+  --r-image:  16px;   /* 부처 일러스트 액자. 이미지에 구워진 반경과 같다 */
+  --r-inset:  16px;   /* 경전 인용면 */
+  --r-button: 14px;   /* 버튼·입력칸 */
+  --r-sm:     10px;
+  --r-xs:     8px;
+  /* 앱 아이콘만 반경 0 이다. 콘솔 규격이 "라운드 모서리 사용 불가"다.
+     우리가 둥글게 만들면 플랫폼 마스킹과 겹쳐 두 번 깎인다. */
+
+  /* ── 그림자 ──────────────────────────────────────────────────────────
+     순검정을 쓰지 않는다. 아이보리 배경 위에서 회색 그림자는 차갑게 뜬다. */
+
+  --sh-card:   0 1px 3px rgba(54, 44, 37, .05), 0 6px 16px rgba(54, 44, 37, .04);
+  --sh-raised: 0 6px 20px rgba(54, 44, 37, .10);
+  --sh-tabbar: 0 4px 18px rgba(54, 44, 37, .13);
+  --sh-sheet:  0 -8px 28px rgba(54, 44, 37, .14);
+
+  /* ── 모션 ───────────────────────────────────────────────────────────── */
+
+  --ease-out:   cubic-bezier(.22, .61, .36, 1);
+  --ease-sheet: cubic-bezier(.32, .72, 0, 1);
+  --dur-press: 90ms;  --dur-fade: 220ms;  --dur-section: 320ms;  --dur-sheet: 220ms;
+}
+
+/* ============================================================================
+   문서 껍데기 전용 토큰 (--pg-*)
+   앱 토큰(--bg · --surface · --text …)은 라이트 전용이라 절대 뒤집지 않는다.
+   이 문서를 어두운 화면에서 읽을 때 바뀌는 것은 --pg-* 뿐이고,
+   폰 목업 안은 실제 앱과 같은 라이트 값 그대로 남는다.
+   ============================================================================ */
+
+:root {
+  --pg-bg:        #F6F3EC;
+  --pg-surface:   #FFFFFF;
+  --pg-sunken:    #EFEAE0;
+  --pg-ink:       #24211D;
+  --pg-ink-2:     #4A443C;
+  --pg-muted:     #7A7268;
+  --pg-line:      #E2DCD0;
+  --pg-line-2:    #CFC6B6;
+  --pg-accent:    #8E6B26;
+  --pg-accent-bg: #F6EBD6;
+  --pg-sage:      #4E6543;
+  --pg-sage-bg:   #E6EDDE;
+  --pg-lotus:     #9A4356;
+  --pg-lotus-bg:  #F7E4E8;
+  --pg-cut:       #EDE9E1;
+  --pg-sh:        0 1px 2px rgba(36,33,29,.05), 0 6px 18px rgba(36,33,29,.05);
+  --pg-sh-lg:     0 16px 48px rgba(20,17,13,.22);
+  --pg-nav:       268px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pg-bg:        #16150F;
+    --pg-surface:   #201E17;
+    --pg-sunken:    #1A1913;
+    --pg-ink:       #EDE7DA;
+    --pg-ink-2:     #C9C1B1;
+    --pg-muted:     #9A9184;
+    --pg-line:      #34312A;
+    --pg-line-2:    #4A463C;
+    --pg-accent:    #DFBE7C;
+    --pg-accent-bg: #2E2617;
+    --pg-sage:      #A9C199;
+    --pg-sage-bg:   #23291F;
+    --pg-lotus:     #E2A2AF;
+    --pg-lotus-bg:  #2E1F22;
+    --pg-cut:       #26241E;
+    --pg-sh:        0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    --pg-sh-lg:     0 16px 48px rgba(0,0,0,.6);
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 28px; }
+
+body {
+  margin: 0;
+  background: var(--pg-bg);
+  color: var(--pg-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.72;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { line-height: 1.34; margin: 0; }
+p { margin: 0 0 14px; }
+a { color: var(--pg-accent); }
+
+/* ── 레이아웃 ─────────────────────────────────────────────────────────── */
+
+.layout { display: flex; align-items: flex-start; }
+
+nav.toc {
+  position: sticky; top: 0;
+  width: var(--pg-nav); flex: none;
+  height: 100vh; overflow-y: auto;
+  padding: 34px 18px 48px;
+  border-right: 1px solid var(--pg-line);
+  background: var(--pg-surface);
+}
+nav.toc .brand { font-family: var(--font-serif); font-size: 18px; font-weight: 700; }
+nav.toc .ver { font-size: 12px; color: var(--pg-muted); margin: 2px 0 22px; }
+nav.toc a {
+  display: block; padding: 8px 12px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 600; color: var(--pg-muted);
+  text-decoration: none; margin-bottom: 2px;
+}
+nav.toc a:hover { background: var(--pg-sunken); color: var(--pg-ink); }
+nav.toc a.on { background: var(--pg-accent-bg); color: var(--pg-accent); }
+nav.toc .grp {
+  font-size: 11px; font-weight: 700; color: var(--pg-line-2);
+  letter-spacing: .06em; padding: 18px 12px 6px;
+}
+
+main { flex: 1; min-width: 0; padding: 0 44px 140px; max-width: 1060px; }
+
+@media (max-width: 960px) {
+  nav.toc { display: none; }
+  main { padding: 0 18px 80px; }
+}
+
+/* ── 섹션 ─────────────────────────────────────────────────────────────── */
+
+/* 폰 목업 안에도 <section> 이 있다. 문서 섹션 스타일이 그리로 새지 않게 직계만 잡는다. */
+main > section { padding: 72px 0 16px; border-top: 1px solid var(--pg-line); }
+main > section:first-of-type { border-top: 0; }
+.snum {
+  display: inline-block; font-size: 11.5px; font-weight: 700;
+  color: var(--pg-accent); background: var(--pg-accent-bg);
+  border-radius: 999px; padding: 4px 12px; margin-bottom: 16px;
+}
+main > section > h2 {
+  font-family: var(--font-serif); font-weight: 700;
+  font-size: 28px; letter-spacing: -.02em;
+}
+.lead { color: var(--pg-ink-2); font-size: 16px; margin: 14px 0 30px; max-width: 700px; }
+h3 { font-size: 18px; font-weight: 700; margin: 40px 0 12px; letter-spacing: -.01em; }
+h4 { font-size: 15px; font-weight: 700; margin: 26px 0 8px; }
+
+/* ── 히어로 ───────────────────────────────────────────────────────────── */
+
+header.hero { padding: 84px 0 48px; }
+header.hero .kicker {
+  display: inline-block; background: var(--surface-deep); color: var(--c-sand-50);
+  border-radius: 999px; padding: 6px 15px; font-size: 12px; font-weight: 700; margin-bottom: 20px;
+}
+header.hero h1 {
+  font-family: var(--font-serif); font-weight: 700;
+  font-size: clamp(34px, 5vw, 50px); letter-spacing: -.03em;
+}
+header.hero .one { font-size: 19px; color: var(--pg-ink-2); margin-top: 20px; max-width: 680px; }
+.metaRow { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 28px; }
+.meta {
+  background: var(--pg-surface); border: 1px solid var(--pg-line); border-radius: 999px;
+  padding: 7px 15px; font-size: 12.5px; font-weight: 600; color: var(--pg-muted);
+}
+.meta b { color: var(--pg-ink); }
+
+/* ── 카드 ─────────────────────────────────────────────────────────────── */
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+.card {
+  background: var(--pg-surface); border-radius: 18px; padding: 22px 24px;
+  box-shadow: var(--pg-sh); border: 1px solid var(--pg-line);
+}
+.card h4 { margin: 0 0 8px; font-size: 15.5px; }
+.card p { font-size: 14px; color: var(--pg-ink-2); margin: 0; line-height: 1.7; }
+.card .eyebrow { font-size: 11.5px; font-weight: 700; color: var(--pg-accent); letter-spacing: .04em; margin-bottom: 6px; }
+.card.sage { background: var(--pg-sage-bg); border-color: transparent; box-shadow: none; }
+.card.gold { background: var(--pg-accent-bg); border-color: transparent; box-shadow: none; }
+
+/* 누르면 모달이 열리는 카드 */
+.mcard { cursor: pointer; text-align: left; font-family: inherit; width: 100%; display: block; color: inherit; }
+.mcard:hover { border-color: var(--pg-line-2); transform: translateY(-1px); }
+.mcard { transition: transform .14s var(--ease-out), border-color .14s var(--ease-out); }
+.mcard .more {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 12px;
+  font-size: 12.5px; font-weight: 700; color: var(--pg-accent);
+}
+.mcard:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+/* ── 콜아웃 ───────────────────────────────────────────────────────────── */
+
+.callout { border-radius: 16px; padding: 18px 22px; margin: 22px 0; font-size: 14.5px; line-height: 1.72; }
+.callout.sage { background: var(--pg-sage-bg); color: var(--pg-ink); }
+.callout.gold { background: var(--pg-accent-bg); color: var(--pg-ink); }
+.callout.cut  { background: var(--pg-cut); color: var(--pg-ink-2); }
+.callout p:last-child { margin-bottom: 0; }
+.callout b { font-weight: 700; }
+
+/* ── 표 ───────────────────────────────────────────────────────────────── */
+
+.tw { overflow-x: auto; margin: 22px 0; border-radius: 14px; border: 1px solid var(--pg-line); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; background: var(--pg-surface); font-size: 14px; }
+th, td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--pg-line); vertical-align: top; line-height: 1.65; }
+th { background: var(--pg-sunken); font-size: 12.5px; font-weight: 700; color: var(--pg-muted); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td b { font-weight: 700; }
+.dim-td { color: var(--pg-muted); }
+
+/* ── 목록 ─────────────────────────────────────────────────────────────── */
+
+ul.clean { margin: 0 0 16px; padding-left: 20px; }
+ul.clean li { margin-bottom: 9px; font-size: 14.5px; line-height: 1.72; }
+ul.clean li::marker { color: var(--pg-line-2); }
+
+/* ── 배지 ─────────────────────────────────────────────────────────────── */
+
+.tag-pill {
+  display: inline-block; border-radius: 999px; padding: 3px 10px;
+  font-size: 11px; font-weight: 700; margin-right: 5px; white-space: nowrap;
+}
+.t-keep { background: var(--pg-sage-bg); color: var(--pg-sage); }
+.t-new  { background: var(--pg-accent-bg); color: var(--pg-accent); }
+.t-cut  { background: var(--pg-cut); color: var(--pg-muted); }
+.t-p0   { background: var(--surface-deep); color: var(--c-sand-50); }
+.t-p1   { background: var(--pg-accent-bg); color: var(--pg-accent); }
+
+code {
+  background: var(--pg-sunken); border-radius: 5px; padding: 2px 6px; font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+pre {
+  background: var(--pg-sunken); border-radius: 12px; padding: 16px 18px; overflow-x: auto;
+  font-size: 12.5px; line-height: 1.65; margin: 14px 0;
+}
+pre code { background: none; padding: 0; }
+
+/* ── 접이식 (한 번에 하나만 열린다) ───────────────────────────────────── */
+
+details {
+  background: var(--pg-surface); border: 1px solid var(--pg-line);
+  border-radius: 14px; margin: 10px 0; overflow: hidden;
+}
+details > summary {
+  cursor: pointer; padding: 15px 20px; font-size: 14.5px; font-weight: 700;
+  list-style: none; display: flex; align-items: center; gap: 10px;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: '▸'; color: var(--pg-muted); font-size: 12px; transition: transform .15s; }
+details[open] > summary::before { transform: rotate(90deg); }
+details > summary:hover { background: var(--pg-sunken); }
+details .body { padding: 2px 20px 20px; font-size: 14px; }
+details .body > *:first-child { margin-top: 0; }
+details.tech { background: var(--pg-sunken); }
+
+/* ── 다이어그램 ───────────────────────────────────────────────────────── */
+
+.diagram { overflow-x: auto; margin: 24px 0; padding: 4px; }
+.flowrow { display: flex; align-items: stretch; gap: 10px; min-width: 640px; }
+.fnode {
+  flex: 1; background: var(--pg-surface); border: 1px solid var(--pg-line);
+  border-radius: 14px; padding: 14px 16px; min-width: 120px;
+}
+.fnode .k { font-size: 11px; font-weight: 700; color: var(--pg-accent); letter-spacing: .04em; }
+.fnode b { display: block; font-size: 14px; margin: 4px 0 3px; }
+.fnode span { font-size: 12.5px; color: var(--pg-muted); line-height: 1.6; }
+.farrow { flex: none; align-self: center; color: var(--pg-line-2); font-size: 18px; }
+
+.screenmap { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; margin: 18px 0; }
+.sm {
+  background: var(--pg-surface); border: 1px solid var(--pg-line); border-radius: 13px;
+  padding: 12px 14px;
+}
+.sm .c { font-size: 11px; font-weight: 700; color: var(--pg-accent); }
+.sm b { display: block; font-size: 13.5px; margin: 3px 0 2px; }
+.sm span { font-size: 11.5px; color: var(--pg-muted); }
+.sm.sheet { background: var(--pg-accent-bg); border-color: transparent; }
+.sm.off { border-style: dashed; opacity: .62; }
+.sm.off .c { color: var(--pg-muted); }
+
+/* ── 마일스톤 타임라인 ────────────────────────────────────────────────── */
+
+.ms-rail { display: flex; flex-direction: column; gap: 10px; margin: 24px 0; }
+.ms {
+  display: flex; align-items: flex-start; gap: 16px;
+  background: var(--pg-surface); border: 1px solid var(--pg-line); border-radius: 16px;
+  padding: 18px 20px; cursor: pointer; font-family: inherit; color: inherit; text-align: left; width: 100%;
+  transition: border-color .14s var(--ease-out);
+}
+.ms:hover { border-color: var(--pg-line-2); }
+.ms:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.ms .code {
+  flex: none; width: 46px; height: 46px; border-radius: 13px;
+  background: var(--surface-deep); color: var(--c-gold-200);
+  display: grid; place-items: center; font-size: 15px; font-weight: 700;
+}
+.ms .mid { flex: 1; min-width: 0; }
+.ms .mid b { display: block; font-size: 15.5px; }
+.ms .mid p { margin: 4px 0 0; font-size: 13.5px; color: var(--pg-ink-2); }
+.ms .mid .cnums { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.ms .cn {
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: var(--pg-sage-bg); color: var(--pg-sage);
+}
+.ms .days { flex: none; font-size: 12.5px; font-weight: 700; color: var(--pg-muted); white-space: nowrap; padding-top: 4px; }
+
+/* ── 모달 ─────────────────────────────────────────────────────────────── */
+
+.mdim {
+  position: fixed; inset: 0; z-index: 200; background: rgba(20, 17, 13, .56);
+  opacity: 0; visibility: hidden; transition: opacity .18s var(--ease-out), visibility .18s;
+  backdrop-filter: blur(2px);
+}
+.mdim.on { opacity: 1; visibility: visible; }
+
+.modal {
+  position: fixed; z-index: 210;
+  left: 50%; top: 50%; transform: translate(-50%, -46%) scale(.98);
+  width: min(680px, calc(100vw - 32px)); max-height: min(84vh, 780px);
+  display: flex; flex-direction: column;
+  background: var(--pg-surface); border-radius: 22px; box-shadow: var(--pg-sh-lg);
+  opacity: 0; visibility: hidden;
+  transition: opacity .18s var(--ease-out), transform .2s var(--ease-out), visibility .2s;
+}
+.modal.on { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+
+.modal-head {
+  flex: none; display: flex; align-items: flex-start; gap: 14px;
+  padding: 24px 24px 16px; border-bottom: 1px solid var(--pg-line);
+}
+.modal-head .mk { font-size: 11.5px; font-weight: 700; color: var(--pg-accent); letter-spacing: .04em; }
+.modal-head h3 { margin: 3px 0 0; font-size: 20px; font-weight: 700; letter-spacing: -.015em; }
+.modal-head .grow { flex: 1; min-width: 0; }
+.modal-x {
+  flex: none; width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--pg-line);
+  background: var(--pg-surface); color: var(--pg-muted); cursor: pointer;
+  display: grid; place-items: center; font-size: 16px; font-family: inherit;
+}
+.modal-x:hover { background: var(--pg-sunken); color: var(--pg-ink); }
+
+.modal-body { flex: 1; overflow-y: auto; padding: 20px 24px 8px; font-size: 14.5px; line-height: 1.78; }
+.modal-body h4 {
+  margin: 22px 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .05em;
+  color: var(--pg-accent); text-transform: none;
+}
+.modal-body h4:first-child { margin-top: 0; }
+.modal-body p { margin: 0 0 12px; color: var(--pg-ink-2); }
+.modal-body p strong, .modal-body li strong { color: var(--pg-ink); font-weight: 700; }
+.modal-body ul { margin: 0 0 12px; padding-left: 20px; }
+.modal-body li { margin-bottom: 7px; color: var(--pg-ink-2); }
+.modal-body li::marker { color: var(--pg-line-2); }
+.modal-body .qt {
+  margin: 0 0 14px; padding: 12px 16px; border-radius: 12px;
+  background: var(--pg-sunken); font-size: 13.5px; color: var(--pg-ink-2);
+}
+
+.modal-foot {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px 18px; border-top: 1px solid var(--pg-line);
+}
+.modal-foot .hint { flex: 1; font-size: 12px; color: var(--pg-muted); }
+.modal-nav {
+  height: 38px; padding: 0 15px; border-radius: 999px; border: 1px solid var(--pg-line);
+  background: var(--pg-surface); color: var(--pg-ink); font-family: inherit;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.modal-nav:hover { background: var(--pg-sunken); }
+.modal-nav[disabled] { opacity: .4; cursor: default; }
+
+@media (max-width: 560px) {
+  .modal { width: calc(100vw - 20px); max-height: 88vh; }
+  .modal-head, .modal-body, .modal-foot { padding-left: 18px; padding-right: 18px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   라이브 목업
+   폰 안쪽은 앱 토큰(라이트 전용)만 쓴다. 어두운 화면에서 이 문서를 읽어도
+   폰 안은 실제 앱과 같은 아이보리로 남는다.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.demoBar {
+  border: 1.5px dashed var(--pg-line-2); border-radius: 14px; padding: 12px 16px; margin: 24px 0 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.demoBar .lab { font-size: 12px; font-weight: 700; color: var(--pg-muted); margin-right: 4px; }
+.demoBar button {
+  border: 1px solid var(--pg-line); background: var(--pg-surface); color: var(--pg-muted);
+  border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.demoBar button:hover { border-color: var(--pg-line-2); color: var(--pg-ink); }
+.demoBar button.on { background: var(--surface-deep); color: var(--c-sand-50); border-color: var(--surface-deep); }
+.demoNote { font-size: 12px; color: var(--pg-muted); margin: 9px 0 20px; }
+
+.stage { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin: 8px 0; }
+
+.phone {
+  width: 390px; height: 844px; flex: none;
+  border-radius: 38px; overflow: hidden;
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-sans);
+  box-shadow: 0 2px 6px rgba(0,0,0,.10), 0 18px 44px rgba(0,0,0,.16);
+  display: flex; flex-direction: column;
+  word-break: keep-all; overflow-wrap: anywhere;
+  position: relative;
+}
+@media (max-width: 470px) { .phone { width: 100%; height: 720px; border-radius: 28px; } }
+
+/* 토스가 그리는 상단 영역. 여기에 우리 UI 를 넣지 않는다. */
+.tossbar {
+  flex: 0 0 44px; background: #DCD6CA;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; letter-spacing: .02em; color: #6F675B;
+}
+
+.pstage { position: relative; flex: 1 1 auto; overflow: hidden; }
+.pscreen {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  background: var(--bg); scrollbar-width: none;
+  display: flex; flex-direction: column;
+}
+.pscreen::-webkit-scrollbar { width: 0; height: 0; }
+.pscreen[hidden] { display: none; }
+.ppad { padding: 0 var(--gutter); }
+.pbot { height: 118px; flex: none; }
+
+/* 공통 버튼 */
+.abtn {
+  min-height: var(--tap-min); display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; border-radius: var(--r-button); font-family: inherit;
+  font-size: var(--t-label); line-height: var(--lh-label); letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold); cursor: pointer; border: 1px solid transparent;
+}
+.abtn--solid { background: var(--btn); color: var(--on-btn); }
+.abtn--ghost { background: var(--surface); border-color: var(--btn-ghost-line); color: var(--text); }
+.abtn--plain { background: transparent; border: 0; color: var(--text-muted); }
+.abtn--wide { width: 100%; }
+.abtn--lg { height: 52px; font-size: var(--t-body); }
+
+/* ── S1 홈 ────────────────────────────────────────────────────────────── */
+
+.svc { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); height: 52px; }
+.svc-line { margin: 0; white-space: nowrap; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--text-muted); }
+.svc-line b { font-family: var(--font-serif); font-weight: var(--w-semibold); color: var(--text); }
+.svc-line i { font-style: normal; padding: 0 5px; color: var(--line-strong); }
+.icon-btn {
+  flex: none; width: var(--tap-min); height: var(--tap-min); margin-right: -10px;
+  display: grid; place-items: center; background: none; border: 0; padding: 0;
+  cursor: pointer; color: var(--text-muted);
+}
+.ptitle {
+  flex: none; margin: var(--s-3) 0 0;
+  font-family: var(--font-serif); font-weight: var(--w-bold);
+  font-size: var(--t-display-l); line-height: var(--lh-display-l); letter-spacing: var(--ls-display-l);
+  color: var(--text);
+}
+.plead-row { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); margin-top: var(--s-4); }
+.plead { margin: 0; font-size: var(--t-body); line-height: var(--lh-body); font-weight: var(--w-medium); color: var(--text-muted); }
+
+.asset-crop { position: relative; overflow: hidden; background: var(--surface-illust); border-radius: var(--r-image); }
+.asset-crop > img {
+  position: absolute; max-width: none; image-rendering: auto;
+  width: calc(var(--iw) * var(--k) * 1px); height: calc(var(--ih) * var(--k) * 1px);
+  left: calc(var(--cx) * var(--k) * -1px); top: calc(var(--cy) * var(--k) * -1px);
+}
+.buddha-face { flex: none; border-radius: 50%; width: 92px; height: 92px; }
+
+.cluster { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: var(--s-3); }
+.field {
+  margin-top: var(--s-4); flex: 1 1 auto; min-height: 132px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-button);
+  padding: var(--s-4);
+  font-family: inherit;
+  font-size: var(--t-body-l); line-height: var(--lh-body-l); font-weight: var(--w-medium);
+  color: var(--text); resize: none; width: 100%;
+}
+.field::placeholder { color: var(--text-weak); }
+.field:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+
+.meter { display: flex; align-items: center; gap: var(--s-3); min-height: 22px; margin-top: var(--s-3); }
+.dots { display: flex; gap: 6px; flex: none; }
+.dots i { width: 8px; height: 8px; border-radius: var(--r-pill); border: 1.5px solid var(--line-strong); }
+.dots i.on { background: var(--sage); border-color: var(--sage); }
+.dots i.gold { background: var(--accent-text); border-color: var(--accent-text); }
+.meter-label {
+  display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0;
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+.meter-label.deep { color: var(--accent-text); }
+.meter-count { flex: none; font-size: var(--t-caption); color: var(--text-weak); }
+.privacy { margin: var(--s-2) 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--text-weak); }
+.privacy .nb { white-space: nowrap; }
+
+.chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-5); }
+.chip-ex {
+  height: 36px; padding: 0 14px; display: inline-flex; align-items: center;
+  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  background: var(--surface); color: var(--text); font-family: inherit;
+  font-size: var(--t-label); font-weight: var(--w-semibold); letter-spacing: var(--ls-label); cursor: pointer;
+}
+.send {
+  width: 100%; height: 56px; margin-top: var(--s-5); border: 0; border-radius: var(--r-button);
+  background: var(--btn); color: var(--on-btn); font-family: inherit;
+  font-size: var(--t-body-l); font-weight: var(--w-semibold); line-height: 1.2; cursor: pointer;
+}
+.send[disabled] { background: var(--surface); color: var(--text-weak); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: default; }
+.quota { margin: var(--s-3) 0 0; text-align: center; font-size: var(--t-caption); line-height: var(--lh-caption); color: var(--text-muted); }
+
+/* ── 플로팅 탭바 ──────────────────────────────────────────────────────── */
+
+.tabbar {
+  position: absolute; left: 16px; right: 16px; bottom: 24px; z-index: 45; height: 64px;
+  display: flex; align-items: center; justify-content: space-around;
+  background: var(--surface); border-radius: var(--r-pill); box-shadow: var(--sh-tabbar);
+}
+.tabbar[hidden] { display: none; }
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  width: 132px; height: 48px; border: 0; background: none; padding: 0; cursor: pointer;
+  border-radius: var(--r-pill); font-family: inherit;
+  font-size: var(--t-label); font-weight: var(--w-semibold); letter-spacing: var(--ls-label);
+  color: var(--text-muted);
+}
+.tab.sel { background: var(--accent-soft); color: var(--accent-text); }
+.tab svg { width: 20px; height: 20px; }
+
+/* ── S2 대기 ──────────────────────────────────────────────────────────── */
+
+.wait { flex: 1; display: flex; flex-direction: column; align-items: center; padding: var(--s-10) var(--gutter) var(--s-8); }
+.wait-art { width: 263px; height: 225px; --iw: 263; --ih: 529; --cx: 0; --cy: 10; --k: 1; flex: none; }
+.wait-title {
+  margin: var(--s-6) 0 0; text-align: center;
+  font-family: var(--font-serif); font-weight: var(--w-semibold);
+  font-size: var(--t-display-m); line-height: var(--lh-display-m); letter-spacing: var(--ls-display-m);
+  color: var(--text);
+}
+.steps { list-style: none; margin: var(--s-8) 0 0; padding: 0; width: 100%; max-width: 260px; }
+.step { display: flex; align-items: center; gap: var(--s-3); padding: 9px 0; }
+.step-dot {
+  flex: none; width: 22px; height: 22px; border-radius: 999px;
+  border: 1.5px solid var(--line-strong); background: var(--surface);
+  display: grid; place-items: center; color: var(--accent-text);
+}
+.step-core { width: 7px; height: 7px; border-radius: 999px; background: var(--line-strong); }
+.step-text { font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-weak); }
+.step.done .step-dot { background: var(--accent-soft); border-color: var(--accent); }
+.step.done .step-text { color: var(--text-muted); }
+.step.now .step-dot { border-color: var(--accent); }
+.step.now .step-core { background: var(--accent); animation: pulse 1.6s var(--ease-out) infinite; }
+.step.now .step-text { color: var(--text); font-weight: var(--w-semibold); }
+.wait-quote {
+  margin: auto 0 0; padding-top: var(--s-8); text-align: center;
+  font-family: var(--font-serif); font-size: var(--t-body); color: var(--text-muted);
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes shimmer { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* ── S2 답변 ──────────────────────────────────────────────────────────── */
+
+.topline { position: sticky; top: 0; z-index: 30; height: 2px; background: var(--line); flex: none; }
+.topline .bar { position: relative; z-index: 2; height: 2px; width: 8%; background: var(--sage); transition: width 120ms linear; }
+.topline .scrim {
+  position: absolute; left: 0; right: 0; top: 2px; height: 52px; z-index: 1; pointer-events: none;
+  opacity: 0; transition: opacity var(--dur-fade) var(--ease-out);
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 46%, rgba(237,228,211,0) 100%);
+}
+.topline.scrolled .scrim { opacity: 1; }
+.ai-badge {
+  position: absolute; z-index: 3; top: 12px; right: var(--gutter);
+  display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px;
+  border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line-strong);
+  box-shadow: var(--sh-card);
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-bold);
+  letter-spacing: .01em; color: var(--text); white-space: nowrap;
+}
+.ai-badge svg { color: var(--accent); }
+
+.illust { position: relative; height: 200px; overflow: hidden; background: var(--surface-illust); flex: none; }
+.illust .blur { position: absolute; left: -20%; top: -20%; width: 140%; height: 140%; object-fit: cover; filter: blur(20px) saturate(1.06); opacity: .95; }
+.illust .main { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 175px; height: 185px; border-radius: var(--r-image); box-shadow: var(--sh-raised); }
+.illust::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 44px; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(237,228,211,0), var(--bg));
+}
+
+.doc { padding: 0 var(--gutter) 130px; }
+.ablock { margin-top: var(--gap-section); }
+.ablock:first-child { margin-top: 0; }
+.acard { background: var(--surface); border-radius: var(--r-card); padding: var(--pad-card); box-shadow: var(--sh-card); }
+.sec-head { display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-4); }
+.sec-head h4 {
+  margin: 0; font-size: var(--t-title); line-height: var(--lh-title); letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold); color: var(--text);
+}
+.sec-head .ico { color: var(--accent); flex: 0 0 auto; display: flex; }
+p.abody {
+  margin: 0 0 var(--gap-para); font-size: var(--t-body-l); line-height: var(--lh-body-l);
+  letter-spacing: var(--ls-body-l); font-weight: var(--w-medium); color: var(--text);
+}
+p.abody:last-child { margin-bottom: 0; }
+
+.atags { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-4); }
+.atag {
+  display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: var(--r-pill);
+  font-size: var(--t-label); line-height: var(--lh-label); letter-spacing: var(--ls-label); font-weight: var(--w-semibold);
+}
+.atag--neutral { background: var(--surface-chip); color: var(--text); }
+.atag--sage { background: var(--sage-soft); color: var(--sage); }
+.atag--lotus { background: var(--lotus-soft); color: var(--lotus); }
+.tag-line { margin: 0; font-size: var(--t-body); line-height: var(--lh-body); font-weight: var(--w-medium); color: var(--text-muted); }
+.tag-line b { color: var(--text); font-weight: var(--w-bold); }
+
+.deep-note {
+  display: flex; align-items: flex-start; gap: var(--s-2); margin: var(--s-6) 0 var(--s-3);
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold); color: var(--accent-text);
+}
+.deep-note svg { flex: 0 0 auto; margin-top: 2px; }
+
+.today { background: var(--surface-deep); border-radius: var(--r-card); padding: var(--s-6) var(--pad-card); box-shadow: var(--sh-raised); }
+.today .eyebrow {
+  margin: 0 0 var(--s-3); font-size: var(--t-caption); line-height: var(--lh-caption);
+  font-weight: var(--w-semibold); letter-spacing: .02em; color: var(--text-on-deep-muted);
+}
+.today blockquote {
+  margin: 0; font-family: var(--font-serif); font-weight: var(--w-bold);
+  font-size: var(--t-display-l); line-height: var(--lh-display-l); letter-spacing: var(--ls-display-l);
+  color: var(--text-on-deep);
+}
+.today .badge {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: var(--s-5); height: 26px; padding: 0 10px;
+  border-radius: var(--r-pill); background: var(--accent-on-deep); color: var(--surface-deep);
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-bold);
+}
+
+.scripture { background: var(--surface-scripture); border: 1px solid var(--accent-rule); border-radius: var(--r-inset); padding: var(--pad-card); }
+.scripture .sec-head .ico { color: var(--accent-text); }
+.scripture .stext {
+  margin: 0; padding-left: var(--s-4); border-left: 3px solid var(--accent-rule);
+  font-family: var(--font-serif); font-weight: var(--w-regular);
+  font-size: var(--t-scripture); line-height: var(--lh-scripture); letter-spacing: var(--ls-scripture); color: var(--text);
+}
+.scripture .cite { margin: var(--s-4) 0 0; font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold); color: var(--accent-text); }
+.src-btn {
+  margin-top: var(--s-4); width: 100%; min-height: var(--tap-min);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--accent-rule); background: transparent; border-radius: var(--r-button);
+  font-family: inherit; font-size: var(--t-label); line-height: var(--lh-label); font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label); color: var(--accent-text); cursor: pointer;
+}
+.term {
+  border: 0; padding: 0 1px; background: transparent; font: inherit; color: var(--accent-text);
+  font-weight: var(--w-bold); border-bottom: 1.5px dotted var(--accent); cursor: pointer;
+}
+.sub { margin-top: var(--s-6); }
+.sub:first-of-type { margin-top: var(--s-5); }
+.sub h5 {
+  margin: 0 0 var(--s-3); padding-left: 10px; border-left: 3px solid var(--accent);
+  font-size: var(--t-body-l); line-height: 1.4; font-weight: var(--w-bold); letter-spacing: -.01em; color: var(--text);
+}
+.acts { list-style: none; margin: 0; padding: 0; }
+.acts li { display: flex; gap: var(--s-3); padding: var(--s-4) 0; border-top: 1px solid var(--line); }
+.acts li:first-child { border-top: 0; padding-top: 0; }
+.acts li:last-child { padding-bottom: 0; }
+.acts .n {
+  flex: 0 0 26px; height: 26px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent-text);
+  display: flex; align-items: center; justify-content: center; font-size: var(--t-caption); font-weight: var(--w-bold);
+}
+.acts p { margin: 0; font-size: var(--t-body); line-height: var(--lh-body); font-weight: var(--w-medium); color: var(--text); }
+.acts p b { font-weight: var(--w-bold); }
+
+.pattern-band {
+  height: 55px; margin: var(--gap-section) calc(var(--gutter) * -1) 0;
+  background-image: url('../design/assets/pattern_lotus.webp');
+  background-repeat: no-repeat; background-position: center; background-size: auto 55px; opacity: .5;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent), linear-gradient(to bottom, transparent, #000 42%, #000 58%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 18%, #000 82%, transparent), linear-gradient(to bottom, transparent, #000 42%, #000 58%, transparent);
+  mask-composite: intersect;
+}
+.closing { margin-top: var(--s-5); text-align: center; }
+.closing .ico { color: var(--accent); display: flex; justify-content: center; margin-bottom: var(--s-3); }
+.closing p {
+  margin: 0; font-family: var(--font-serif); font-weight: var(--w-semibold);
+  font-size: var(--t-display-m); line-height: var(--lh-display-m); letter-spacing: var(--ls-display-m); color: var(--text);
+}
+.feedback { margin-top: var(--gap-section); text-align: center; }
+.feedback .q { margin: 0 0 var(--s-3); font-size: var(--t-body); line-height: var(--lh-body); font-weight: var(--w-semibold); color: var(--text); }
+.fb-row { display: flex; gap: var(--s-2); }
+.fb-row .abtn { flex: 1; }
+.report {
+  display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 var(--s-3); margin-top: var(--s-2);
+  border: 0; background: transparent; font-family: inherit;
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-medium);
+  color: var(--text-weak); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.actions-inline { display: flex; gap: var(--s-2); margin-top: var(--gap-section); }
+.actions-inline .abtn { flex: 1; }
+.notice { margin-top: var(--gap-section); padding-top: var(--s-5); border-top: 1px solid var(--line); }
+.notice p { margin: 0; font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-medium); color: var(--text-muted); }
+.notice a {
+  display: inline-flex; align-items: center; min-height: var(--tap-min); margin-top: var(--s-1);
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold);
+  color: var(--accent-text); text-decoration: underline; text-underline-offset: 3px;
+}
+.pending { margin-top: var(--gap-section); }
+.pending .line {
+  display: flex; align-items: center; gap: var(--s-2); margin-bottom: var(--s-4);
+  font-size: var(--t-caption); line-height: var(--lh-caption); font-weight: var(--w-semibold); color: var(--text-muted);
+}
+.pending .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); animation: pulse 1.6s var(--ease-out) infinite; }
+.skel { height: 14px; border-radius: var(--r-xs); background: var(--surface-2); margin-bottom: 10px; animation: shimmer 1.8s var(--ease-out) infinite; }
+.skel.w90 { width: 90%; } .skel.w84 { width: 84%; } .skel.w72 { width: 72%; } .skel.w60 { width: 60%; }
+.skel.tall { height: 44px; margin-top: var(--s-5); }
+
+.bottombar {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; gap: var(--s-2); padding: var(--s-3) var(--gutter) var(--s-5);
+  background: var(--surface); border-top: 1px solid var(--line); box-shadow: var(--sh-sheet);
+  transform: translateY(110%); transition: transform var(--dur-section) var(--ease-sheet);
+}
+.bottombar .abtn { flex: 1; }
+.bottombar.on { transform: translateY(0); }
+
+/* ── 바텀시트 ─────────────────────────────────────────────────────────── */
+
+.pdim {
+  position: absolute; inset: 0; z-index: 50; background: var(--dim);
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--dur-sheet) var(--ease-out), visibility var(--dur-sheet);
+}
+.pdim.on { opacity: 1; visibility: visible; }
+.psheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 82%;
+  overflow-y: auto; background: var(--surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0; box-shadow: var(--sh-sheet);
+  padding: var(--s-3) var(--gutter) var(--s-6);
+  transform: translateY(102%); transition: transform var(--dur-sheet) var(--ease-sheet);
+  scrollbar-width: none;
+}
+.psheet::-webkit-scrollbar { width: 0; }
+.psheet.on { transform: translateY(0); }
+.grip { width: 40px; height: 4px; border-radius: 999px; background: var(--line); margin: 0 auto var(--s-5); }
+.psheet h4 { margin: 0 0 var(--s-2); font-size: var(--t-title); line-height: var(--lh-title); letter-spacing: var(--ls-title); font-weight: var(--w-bold); }
+.psheet .scite { margin: 0 0 var(--s-4); font-size: var(--t-caption); font-weight: var(--w-semibold); color: var(--accent-text); }
+.psheet .orig { background: var(--surface-scripture); border-radius: var(--r-inset); padding: var(--s-4) var(--s-5); margin-bottom: var(--s-5); }
+.psheet .orig p {
+  margin: 0; font-family: var(--font-serif); font-weight: var(--w-regular);
+  font-size: var(--t-scripture); line-height: var(--lh-scripture); color: var(--text);
+}
+.psheet .lab { margin: 0 0 4px; font-size: var(--t-caption); font-weight: var(--w-semibold); color: var(--text-muted); }
+.psheet .base { margin: 0 0 var(--s-4); font-size: var(--t-body); line-height: 1.6; color: var(--text-muted); }
+.psheet .smeta { margin: 0 0 var(--s-5); font-size: var(--t-caption); line-height: 1.6; color: var(--text-muted); }
+.psheet .smeta b { color: var(--text); font-weight: var(--w-semibold); }
+.psheet .gloss { margin: 0 0 var(--s-3); font-size: var(--t-body); line-height: var(--lh-body); color: var(--text); }
+.psheet .ex { margin: 0 0 var(--s-5); font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.psheet .ssub { margin: 0 0 var(--s-5); font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.psheet .close-hint { margin: var(--s-3) 0 0; text-align: center; font-size: var(--t-caption); color: var(--text-weak); }
+.psheet .sactions { display: flex; flex-direction: column; gap: var(--s-2); }
+.psheet .safe {
+  display: flex; align-items: center; gap: 6px; margin: 0 0 var(--s-4);
+  font-size: var(--t-caption); font-weight: var(--w-semibold); color: var(--sage);
+}
+.psheet .adnote { margin: 6px 0 var(--s-3); text-align: center; font-size: var(--t-caption); color: var(--text-muted); }
+
+/* 공유 카드 미리보기 */
+.sharecard {
+  position: relative; width: 100%; aspect-ratio: 1080 / 1350; border-radius: var(--r-card);
+  overflow: hidden; background: var(--surface-illust); margin-bottom: var(--s-5);
+  box-shadow: var(--sh-card);
+}
+/* 받은 share_card 에셋에는 문구와 QR 이 픽셀로 박혀 있어 배경으로도 쓰지 않는다.
+   카드는 토큰과 패턴 띠만으로 새로 그린다. 구도만 원본을 참고했다. */
+.sharecard { background: linear-gradient(165deg, var(--c-sand-50) 0%, var(--c-gold-50) 54%, var(--c-sand-100) 100%); }
+.sharecard .band {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 92px; opacity: .18;
+  /* 366px 짜리 띠 한 장을 반복 없이 가운데 둔다. 반복하면 이 폭에서 이음매가 보인다. */
+  background: url('../design/assets/pattern_lotus.webp') no-repeat center bottom / auto 92px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 20%, #000 80%, transparent),
+                      linear-gradient(to bottom, transparent, #000 60%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 20%, #000 80%, transparent),
+              linear-gradient(to bottom, transparent, #000 60%);
+  mask-composite: intersect;
+}
+.sharecard .inner { position: absolute; inset: 0; padding: 26px 24px; display: flex; flex-direction: column; }
+.sharecard .cchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sharecard .cchip { height: 24px; padding: 0 10px; border-radius: var(--r-pill); display: inline-flex; align-items: center; font-size: 11.5px; font-weight: var(--w-semibold); }
+.sharecard .cline {
+  margin: 18px 0 0; font-family: var(--font-serif); font-weight: var(--w-bold);
+  font-size: 25px; line-height: 1.5; letter-spacing: -.02em; color: var(--text);
+}
+.sharecard .cai { margin: auto 0 10px; font-size: 11px; color: var(--text-muted); }
+.sharecard .cbrand { display: flex; align-items: center; gap: 9px; padding-top: 12px; border-top: 1px solid var(--line); }
+.sharecard .cmark { width: 30px; height: 30px; border-radius: 8px; background: var(--accent-soft); display: grid; place-items: center; color: var(--accent-text); }
+.sharecard .cword { font-family: var(--font-serif); font-weight: var(--w-bold); font-size: 14px; color: var(--text); }
+.sharecard .ctag { margin: 0; font-size: 11px; color: var(--text-muted); }
+
+/* ── S4 보관함 ────────────────────────────────────────────────────────── */
+
+.scr-title { margin: var(--s-6) 0 0; font-family: var(--font-serif); font-weight: var(--w-bold); font-size: var(--t-display-m); line-height: var(--lh-display-m); letter-spacing: var(--ls-display-m); color: var(--text); }
+.scr-sub { margin: var(--s-2) 0 0; font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.arch-head { display: flex; align-items: baseline; justify-content: space-between; margin: var(--s-8) 0 var(--s-3); }
+.arch-head h4 { margin: 0; font-size: var(--t-title); font-weight: var(--w-bold); letter-spacing: var(--ls-title); }
+.arch-head span { font-size: var(--t-caption); font-weight: var(--w-semibold); color: var(--text-muted); }
+.arch-card {
+  display: flex; align-items: center; gap: var(--s-4); padding: var(--s-4);
+  background: var(--surface); border-radius: var(--r-card); box-shadow: var(--sh-card); margin-bottom: var(--s-3);
+}
+.arch-card .ab { flex: 1; min-width: 0; }
+.arch-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.arch-date { font-size: var(--t-caption); color: var(--text-muted); }
+.badge-today { font-size: 10.5px; font-weight: var(--w-bold); padding: 2px 7px; border-radius: var(--r-pill); background: var(--sage-soft); color: var(--sage); }
+.arch-line { margin: 0 0 8px; font-size: var(--t-body); line-height: 1.5; font-weight: var(--w-semibold); color: var(--text); }
+.arch-thumb { flex: none; width: 68px; height: 68px; border-radius: var(--r-image); object-fit: cover; background: var(--surface-illust); }
+.arch-card .atag { height: 24px; padding: 0 9px; font-size: 11.5px; }
+.past { position: relative; margin-top: var(--s-2); }
+.past-inner { border: 1.5px dashed var(--line-strong); border-radius: var(--r-card); padding: var(--s-4); filter: blur(2.2px); opacity: .55; }
+.past-row { display: flex; gap: var(--s-3); align-items: center; margin-bottom: var(--s-4); }
+.past-row:last-child { margin-bottom: 0; }
+.past-sq { width: 44px; height: 44px; border-radius: var(--r-sm); background: var(--surface-2); flex: none; }
+.past-bar { height: 9px; border-radius: 999px; background: var(--surface-2); }
+.past-note {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0;
+  width: 88%; text-align: center; padding: 10px 14px; border-radius: var(--r-pill);
+  background: var(--surface); box-shadow: var(--sh-card);
+  font-size: var(--t-caption); font-weight: var(--w-semibold); color: var(--text-muted);
+}
+.empty { text-align: center; padding: var(--s-12) 0 0; display: flex; flex-direction: column; align-items: center; }
+.empty-art { width: 128px; height: 128px; --iw: 254; --ih: 119; --cx: 161; --cy: 4; --k: 1.78; border-radius: 999px; }
+.empty h4 { margin: var(--s-6) 0 0; font-family: var(--font-serif); font-size: var(--t-display-m); font-weight: var(--w-semibold); color: var(--text); }
+.empty p { margin: var(--s-2) 0 0; font-size: var(--t-body); color: var(--text-muted); }
+.empty .how { margin-top: var(--s-1); font-size: var(--t-caption); color: var(--text-weak); }
+.empty .abtn { margin-top: var(--s-8); width: 100%; }
+
+/* ── 설정 ─────────────────────────────────────────────────────────────── */
+
+.grp-label { margin: var(--s-8) 0 var(--s-2); font-size: var(--t-caption); font-weight: var(--w-bold); color: var(--text-muted); letter-spacing: .03em; }
+.plist { background: var(--surface); border-radius: var(--r-card); box-shadow: var(--sh-card); overflow: hidden; }
+.plist-item { display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4); border-top: 1px solid var(--line); }
+.plist-item:first-child { border-top: 0; }
+.li-ic { flex: none; width: 34px; height: 34px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
+.li-ic svg { width: 19px; height: 19px; }
+.li-tx { flex: 1; min-width: 0; }
+.li-tx b { display: block; font-size: var(--t-body); font-weight: var(--w-semibold); color: var(--text); }
+.li-tx span { font-size: var(--t-caption); color: var(--text-muted); }
+.li-val { flex: none; font-size: var(--t-caption); color: var(--text-muted); }
+.li-ch { flex: none; color: var(--line-strong); }
+.set-foot { text-align: center; padding: var(--s-12) 0 var(--s-6); }
+.set-foot .mark { width: 72px; height: 62px; --iw: 172; --ih: 166; --cx: 44; --cy: 12; --k: .857; margin: 0 auto; }
+.set-foot .nm { margin-top: var(--s-3); font-family: var(--font-serif); font-weight: var(--w-bold); font-size: var(--t-title); color: var(--text); }
+.set-foot .vr { margin-top: 4px; font-size: var(--t-caption); color: var(--text-muted); }
+
+/* ── 위기 안내 ────────────────────────────────────────────────────────── */
+
+.crisis { padding: var(--s-8) var(--gutter) 0; }
+.crisis .face { width: 104px; height: 104px; border-radius: 999px; margin: 0 auto; object-fit: cover; background: var(--surface-illust); display: block; }
+.crisis h4 { margin: var(--s-6) 0 0; text-align: center; font-family: var(--font-serif); font-weight: var(--w-bold); font-size: var(--t-display-m); line-height: var(--lh-display-m); color: var(--text); }
+.crisis .lead2 { margin: var(--s-3) 0 0; text-align: center; font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
+.lines { margin-top: var(--s-8); display: flex; flex-direction: column; gap: var(--s-2); }
+.line-item {
+  display: flex; align-items: center; gap: var(--s-3); padding: var(--s-4);
+  background: var(--surface); border-radius: var(--r-card); box-shadow: var(--sh-card);
+  text-decoration: none; color: inherit;
+}
+.line-item--lead { border: 1px solid var(--accent-rule); background: var(--accent-soft); box-shadow: none; }
+.line-ic { flex: none; width: 36px; height: 36px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
+.line-item--lead .line-ic { background: var(--surface); }
+.line-tx { flex: 1; min-width: 0; }
+.line-nm { display: block; font-size: var(--t-caption); color: var(--text-muted); }
+.line-no { display: block; font-size: var(--t-title); font-weight: var(--w-bold); color: var(--text); letter-spacing: -.01em; }
+.line-sb { display: block; font-size: var(--t-caption); color: var(--text-weak); margin-top: 2px; }
+.urgent { display: flex; align-items: flex-start; gap: var(--s-3); margin-top: var(--s-5); padding: var(--s-4); border-radius: var(--r-inset); background: var(--surface-2); }
+.urgent svg { flex: none; color: var(--caution); }
+.urgent p { margin: 0; font-size: var(--t-body); line-height: var(--lh-body); color: var(--text); }
+.near { margin: var(--s-8) 0 var(--s-6); text-align: center; font-family: var(--font-serif); font-size: var(--t-body-l); line-height: 1.7; color: var(--text-muted); }
+.crisis-foot { display: flex; gap: var(--s-2); padding: var(--s-3) var(--gutter) var(--s-6); }
+.crisis-foot .abtn { flex: 1; }
+
+/* ── 목업 옆 설명 ─────────────────────────────────────────────────────── */
+
+.legend { flex: 1; min-width: 260px; padding-top: 4px; }
+.legend h4 { margin-top: 0; font-size: 15px; }
+.legend ol { margin: 0; padding-left: 20px; font-size: 14px; }
+.legend li { margin-bottom: 10px; color: var(--pg-ink-2); line-height: 1.7; }
+.legend li b { color: var(--pg-ink); font-weight: 700; }
+.legend .cap { font-size: 12.5px; color: var(--pg-muted); margin-top: 10px; line-height: 1.7; }
+
+footer { padding: 64px 0 48px; color: var(--pg-muted); font-size: 13px; border-top: 1px solid var(--pg-line); margin-top: 48px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .pending .dot, .skel, .step.now .step-core { animation: none; }
+  .modal, .mdim, .psheet, .pdim, .bottombar, .topline .bar { transition: none; }
+}
+</style>
+<div style="position:sticky;top:0;z-index:9999;background:#7E5C1E;color:#FFFAF1;padding:12px 20px;font:600 14px/1.5 Pretendard,system-ui,sans-serif;text-align:center">
+  이 문서는 <b>PRD v0.2 (2026-09-13)</b> 입니다. <b>오래된 정본</b>이에요. 지금 정본은 <b>PRD v0.3 (수익화·라우터 개편·라이브목업)</b> 이고, 통합 개발 계획 v0.3 이 그 위에 있어요. 여기 적힌 「무료 3회 → 광고」「3줄 = 고가 모델」은 폐기됐어요.
+</div>
+
+
+<div class="layout">
+
+<nav class="toc">
+  <div class="brand">부처의 말</div>
+  <div class="ver">PRD v0.2 · 2026-09-13</div>
+
+  <div class="grp">제품</div>
+  <a href="#s1">한 줄 정의와 승부처</a>
+  <a href="#s2">v0.2에서 바뀐 것</a>
+  <a href="#s3">만드는 것과 안 만드는 것</a>
+  <a href="#s4">UX 헌법</a>
+
+  <div class="grp">화면</div>
+  <a href="#s5">화면 구조</a>
+  <a href="#s6">라이브 목업</a>
+  <a href="#s7">답변 구조와 라우터</a>
+
+  <div class="grp">재료와 제약</div>
+  <a href="#s8">경전 데이터 원칙</a>
+  <a href="#s9">앱인토스 규칙</a>
+  <a href="#s10">톤과 디자인</a>
+
+  <div class="grp">사업</div>
+  <a href="#s11">지표와 수익화</a>
+
+  <div class="grp">개발</div>
+  <a href="#s12">기술과 아키텍처</a>
+  <a href="#s13">마일스톤과 완료선</a>
+  <a href="#s14">지금 결정할 것</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <span class="kicker">앱인토스 미니앱 · PRD v0.2 (통합)</span>
+  <h1>부처의 말</h1>
+  <p class="one">고민을 털어놓으면, 검증된 부처의 가르침을 근거로 내 상황을 깊게 풀어 주고 오늘 무엇을 해 볼 수 있는지 알려 주는 앱이다. 명언을 하나 뽑아 주는 앱이 아니다.</p>
+  <div class="metaRow">
+    <span class="meta">기준 <b>v0.1 + 6개 축 검증 통합</b></span>
+    <span class="meta">화면 <b>9 · 시트 4</b></span>
+    <span class="meta">탭 <b>이야기하기 · 보관함</b></span>
+    <span class="meta">일정 <b>약 28 작업일</b></span>
+    <span class="meta">완료선 <b>C1~C52</b></span>
+  </div>
+</header>
+
+<!-- ════════════════════════════════ 01 ════════════════════════════════ -->
+<section id="s1">
+  <span class="snum">01</span>
+  <h2>한 줄 정의와 승부처</h2>
+  <p class="lead">이 앱이 이기거나 지는 자리는 두 화면이다. 나머지는 그 둘을 받치는 장치다.</p>
+
+  <div class="callout gold">
+    <p><b>성공 가설.</b> 사용자는 좋은 명언이 아니라 「내 상황을 제대로 이해했다고 느끼는 답변」 때문에 다시 온다. 그래서 이야기를 더 쓰게 만드는 입력 화면과, 그 이야기를 읽었다는 것이 증명되는 답변 화면에 개발 시간을 몰아넣는다.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="eyebrow">승부처 A</div>
+      <h4>고민 입력 화면</h4>
+      <p>「여기에 정말 내 이야기를 적어도 되겠다」고 느끼게 만드는 화면. 빈칸 공포를 예시 칩이 없애고, 인디케이터가 더 쓸 이유를 만든다. 억지로 늘리라고 부탁하지 않고 무엇이 좋아지는지를 말한다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">승부처 B</div>
+      <h4>답변 화면</h4>
+      <p>「어, 이거 생각보다 제대로 답하는데」로 만드는 화면. 마음 태그가 내 문장에서 나왔다는 것이 보이고, 경전이 실제 출처를 달고 있고, 가장 긴 블록이 내 상황을 그대로 다룬다.</p>
+    </div>
+    <div class="card sage">
+      <div class="eyebrow">승부처를 받치는 것</div>
+      <h4>경전 데이터</h4>
+      <p>화면 B는 경전 데이터가 없으면 껍데기다. 그래서 감수를 끝낸 법구경 120구절을 화면 B보다 먼저 세운다. 데이터가 병목이라는 사실을 일정에 그대로 적었다.</p>
+    </div>
+  </div>
+
+  <h3>사용자가 앱을 여는 순간</h3>
+  <p>연애로 마음이 복잡할 때, 회사 사람 때문에 화가 났을 때, 미래가 불안할 때, 남과 비교하게 될 때, 돈이 걱정될 때, 아무것도 하기 싫을 때, 선택을 못 하겠을 때. 이때 원하는 것은 「집착을 버리세요」가 아니라 <b>내 이야기를 읽고 이해한 다음, 왜 이런 마음인지 설명해 주고, 그래서 지금 어떻게 하면 좋을지 알려 주는 것</b>이다.</p>
+</section>
+
+<!-- ════════════════════════════════ 02 ════════════════════════════════ -->
+<section id="s2">
+  <span class="snum">02</span>
+  <h2>v0.2에서 바뀐 것</h2>
+  <p class="lead">앱인토스 제약·경전 데이터·LLM 라우팅·아키텍처·비주얼·화면 IA 여섯 축을 따로 파고 서로 부딪히게 한 결과다. 여덟 자리에서 v0.1의 결정이 뒤집혔다. 카드를 누르면 무엇이 어떻게 바뀌었고 왜 그렇게 정했는지 볼 수 있다.</p>
+
+  <div class="cards" data-mgroup="chg">
+    <button class="card mcard" data-modal="chg-light">
+      <div class="eyebrow">X1 · 테마</div>
+      <h4>라이트 모드 전용</h4>
+      <p>다크 팔레트 16쌍과 밤 일러스트 10장을 통째로 뺐다. 상단바가 라이트로 고정이라 본문만 뒤집으면 화면 위아래가 갈라진다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-ad">
+      <div class="eyebrow">X2 · 광고</div>
+      <h4>광고는 보상형 한 자리</h4>
+      <p>전면·배너를 전부 뺐다. 사용량 소진 시트의 「광고 보고 한 번 더」 버튼 하나가 앱 전체의 유일한 광고 트리거다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-two">
+      <div class="eyebrow">X3 · 답변 전달</div>
+      <h4>답변은 두 번에 나눠 받는다</h4>
+      <p>한 번에 통째로 받던 것을 둘로 쪼갰다. 3~5초에 상단 세 블록이 먼저 뜨고, 약 20초에 나머지가 그 아래로 채워진다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-tab">
+      <div class="eyebrow">X4 · 탭</div>
+      <h4>하단 탭 두 개</h4>
+      <p>이야기하기와 보관함만 남겼다. 매일 구절을 채워야 하는 「오늘의 말씀」 탭은 출시 후로 미뤘다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-pay">
+      <div class="eyebrow">X5 · 결제와 알림</div>
+      <h4>결제도 알림도 넣지 않는다</h4>
+      <p>Premium 구독과 Paywall 시트, 재방문 알림을 전부 뺐다. 보관함은 무료 저장 3회와 오늘 답변 열람으로 연다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-scr">
+      <div class="eyebrow">X6 · 경전 규모</div>
+      <h4>법구경 120구절</h4>
+      <p>300구절 계획을 절반 이하로 내렸다. 사람이 하는 감수가 유일한 인력 병목이라 그 시간을 25~50시간에서 10~20시간으로 줄였다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-img">
+      <div class="eyebrow">X8 · 일러스트</div>
+      <h4>부처 이미지 여덟 장</h4>
+      <p>감정 10 × 낮밤 2 = 20장 계획이 실제 도착한 여덟 장으로 바뀌었다. 화면이 쓰는 값은 열 가지라 여덟 장에 다대일로 묶는다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+
+    <button class="card mcard" data-modal="chg-term">
+      <div class="eyebrow">되살린 것</div>
+      <h4>불교 용어 풀이</h4>
+      <p>한때 뺄 후보였다가 되살렸다. 답변 안 어려운 낱말에 점선 밑줄을 긋고 탭하면 뜻 풀이 시트가 열린다.</p>
+      <span class="more">왜 그렇게 정했나 →</span>
+    </button>
+  </div>
+
+  <h3>표로만 적는 나머지 변경</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>자리</th><th>전</th><th>후</th><th>왜</th></tr></thead>
+      <tbody>
+        <tr><td>팔리 원문·한역</td><td>화면에 안 싣되 데이터에는 담는다</td><td><b>번들에서 완전히 뺀다.</b> 빌드가 <code>root_</code> 필드가 비었는지 검사</td><td>저작권이 걸리는 행위는 노출이 아니라 복제와 배포다. 필드 이름을 바꿔도 같은 텍스트가 같이 나간다</td></tr>
+        <tr><td>글꼴</td><td>Pretendard 한 벌</td><td>본문과 UI 는 <b>Pretendard</b>, 제목·경전·인용은 <b>MaruBuri</b></td><td>받은 에셋의 경전 문장이 명조 계열로 그려져 있다. 산세리프로 받으면 시안과 인상이 달라진다</td></tr>
+        <tr><td>「광고 보고 두 번째 관점」</td><td>보상형 광고의 보상</td><td><b>삭제.</b> 보상은 「추가 1회 이용권」 하나</td><td>고민 원문을 안 남기는 설계라 두 번째 관점을 쓸 재료 자체가 없다</td></tr>
+        <tr><td>하루 3회의 기준 시각</td><td>미정</td><td><b>사용자 시간대 자정.</b> 첫 사용 후 24시간이 아니다</td><td>소진 시트 문구 「내일 아침이면」이 이미 자정을 전제하고 있었다</td></tr>
+        <tr><td>부적절 답변 신고</td><td>없음</td><td>답변 맨 아래 한 줄. 보내는 값은 <b>답변 id 와 사유 코드뿐</b></td><td>「부적절한 응답 즉시 수정·차단」 요건을 우리가 스스로 잡는 경로만으로는 못 채운다</td></tr>
+        <tr><td>답변 길이</td><td>Deep 1,600~2,500자</td><td>Deep 상한을 <b>2,000자</b>로</td><td>2,500자는 실측 출력 시간이 40초에 닿는다. 대기가 길어지면 대기 화면이 아니라 이탈이 된다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 03 ════════════════════════════════ -->
+<section id="s3">
+  <span class="snum">03</span>
+  <h2>만드는 것과 안 만드는 것</h2>
+  <p class="lead">P0 는 이것이 없으면 제품을 설명할 수 없는 것이다. 뺀 것은 지금 만들 수 없어서가 아니라, 다 넣으면 아무것도 안 나오기 때문에 뺐다.</p>
+
+  <h3>P0 · 첫 출시에 들어가는 것</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="eyebrow">입력</div>
+      <h4>고민 입력과 깊이 인디케이터</h4>
+      <p>자동 높이 입력창, 점 3개와 라벨, 예시 칩 3개, 초안 임시저장 24시간, 개인정보 한 줄. 전송 버튼 라벨은 상황에 따라 바뀌지 않는다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">판정</div>
+      <h4>라우터와 안전 스크린</h4>
+      <p>프론트와 서버가 같은 함수를 쓴다. 위기 판정은 LLM 앞의 결정론적 키워드 검사와 1차 분류가 이중으로 본다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">재료</div>
+      <h4>감수를 마친 법구경 120구절</h4>
+      <p>CC0 영역본에서 옮기고 사람이 감수한 문장만 검색 대상이 된다. LLM 은 구절 id 만 고르고 본문은 서버가 데이터베이스에서 채운다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">출력</div>
+      <h4>일곱 블록 답변과 2단 요청</h4>
+      <p>마음 태그부터 마지막 한마디까지 구조가 늘 같다. 상단 세 블록이 먼저 오고 나머지가 아래로 채워진다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">안전</div>
+      <h4>위기 안내·거절·AI 고지</h4>
+      <p>위기 신호가 잡히면 경전 답변을 만들지 않고 창구 안내 화면으로 간다. 답할 수 없는 요청에는 고정 거절 문구가 나간다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">확산과 보관</div>
+      <h4>공유 카드와 보관함</h4>
+      <p>서버가 만든 카드 이미지를 링크 미리보기로 보내거나 사진에 저장한다. 보관함은 오늘 답변과 간직한 말씀 3개를 연다.</p>
+    </div>
+  </div>
+
+  <h3>만들지 않는 것</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>뺀 것</th><th>왜</th><th>언제 다시 보나</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag-pill t-cut">제외</span> Premium 구독 결제</td><td>사업자 등록과 정산 검토, 수수료, 심사 9항목이 앞을 막는다. 검증 안 된 가치 위에 결제부터 짓는 셈이다</td><td>간직하기 클릭률을 실측한 뒤</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 재방문 알림</td><td>콘솔 발송 템플릿, 익명키 원문 보관, 토스앱 최소 버전 셋을 한꺼번에 요구한다</td><td>P1</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 전면광고</td><td>버튼 라벨에 광고가 없어 사용자가 예상 못 한 순간에 광고를 만난다. 출시 불가 조항이다</td><td>라벨에 광고를 명시해도 되는지 콘솔 답을 받은 뒤</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 배너광고</td><td>붙일 자리가 없다. 홈은 광고 금지, 답변은 몰입, 오늘의 말씀 탭은 뺐다</td><td>탭이 늘면</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 오늘의 말씀 탭</td><td>매일 콘텐츠를 채우는 운영이 붙는데 출시를 막을 이유가 없다</td><td>P1</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 다크 모드</td><td>플랫폼 상단바가 라이트 고정이다</td><td>플랫폼이 열면</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 팔리 원문·한역</td><td>판본 라이선스 미확인. 한역은 초기불교 문헌에 애초에 없다</td><td>라이선스 확인 후</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 벡터 임베딩</td><td>120구절이면 태그 필터를 지난 후보가 12~20개다. 줄일 것이 없다</td><td>1,000구절을 넘으면</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 스트리밍·부분 JSON 파서·폴링</td><td>2단 요청이 같은 값을 훨씬 싸게 준다. 관용 파서는 외부 코드 실행 조항에도 닿는다</td><td>다시 보지 않는다</td></tr>
+        <tr><td><span class="tag-pill t-cut">제외</span> 고민 원문 저장</td><td>불륜·자살충동·회사 험담이 평문으로 들어온다. 저장하지 않는 것이 가장 싼 방어다</td><td>별도 동의 스위치로만</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 04 ════════════════════════════════ -->
+<section id="s4">
+  <span class="snum">04</span>
+  <h2>UX 헌법</h2>
+  <p class="lead">기능을 더하거나 뺄 때 이 일곱 줄과 부딪히면 기능 쪽을 접는다. 카드를 누르면 그 원칙이 코드와 화면에서 어떻게 강제되는지 나온다.</p>
+
+  <div class="cards" data-mgroup="ux">
+    <button class="card mcard" data-modal="ux-1">
+      <div class="eyebrow">원칙 1</div>
+      <h4>경전을 AI가 만들지 않는다</h4>
+      <p>LLM 은 구절 id 만 고른다. 화면에 나가는 경전 문장은 사람이 감수한 데이터베이스 값이다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-2">
+      <div class="eyebrow">원칙 2</div>
+      <h4>고민과 답변 사이에 광고를 두지 않는다</h4>
+      <p>작성 중·대기 중·답변 첫 화면·경전과 풀이 사이. 이 네 자리에는 어떤 광고도 붙이지 않는다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-3">
+      <div class="eyebrow">원칙 3</div>
+      <h4>단정하지 않고 진단하지 않는다</h4>
+      <p>「~인 것 같아요」로 말하고 「~하세요」로 지시하지 않는다. 병명을 말하지 않고 치료를 주장하지 않는다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-4">
+      <div class="eyebrow">원칙 4</div>
+      <h4>AI가 썼다는 것을 늘 밝힌다</h4>
+      <p>첫 화면 서비스 한 줄, 답변 화면 상시 배지, 공유 카드 표기. 세 자리에서 같은 사실을 말한다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-5">
+      <div class="eyebrow">원칙 5</div>
+      <h4>고민 원문을 저장하지 않는다</h4>
+      <p>서버에 남는 것은 구절 id, 열거값, 플래그뿐이다. 초안은 기기 안에만 있고 24시간 뒤 버린다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-6">
+      <div class="eyebrow">원칙 6</div>
+      <h4>개인정보는 문구가 아니라 코드가 막는다</h4>
+      <p>안내 한 줄은 상시 보이되, 실제 방어는 전송 직전 패턴 치환이 한다. 문구만으로 막았다고 치지 않는다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="ux-7">
+      <div class="eyebrow">원칙 7</div>
+      <h4>위기 신호가 다른 모든 것보다 앞선다</h4>
+      <p>자해·자살 신호가 잡히면 경전도 오늘 해볼 일도 만들지 않는다. 창구 안내만 내보내고 광고는 그 화면에 없다.</p>
+      <span class="more">어떻게 강제하나 →</span>
+    </button>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 05 ════════════════════════════════ -->
+<section id="s5">
+  <span class="snum">05</span>
+  <h2>화면 구조</h2>
+  <p class="lead">하단 탭은 둘이고, 나머지는 전부 그 둘에서 뻗어 나가는 전체화면이나 그 위에 얹히는 시트다. 상단바는 플랫폼이 그리므로 화면 제목은 본문 첫 줄에 우리가 직접 그린다.</p>
+
+  <h3>한 바퀴 도는 길</h3>
+  <div class="diagram">
+    <div class="flowrow">
+      <div class="fnode"><span class="k">탭 1</span><b>이야기하기</b><span>고민을 적고 보낸다</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">S2 · 대기</span><b>세 걸음 표시</b><span>광고 없음. 3~5초</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">S2 · 1차</span><b>상단 세 블록</b><span>태그·한마디·경전</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">S2 · 2차</span><b>나머지 네 블록</b><span>약 20초 뒤 아래로</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">마지막 한마디</span><b>공유·간직 바</b><span>다 읽은 뒤에만 올라온다</span></div>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:-8px">위기 신호가 잡히면 이 줄에서 빠져나와 창구 안내 화면으로 간다. 경전도 오늘 해볼 일도 만들지 않는다.</p>
+
+  <h3>화면 전수</h3>
+  <div class="screenmap">
+    <div class="sm"><span class="c">S0</span><b>스플래시</b><span>1초 미만 · 선택</span></div>
+    <div class="sm"><span class="c">S1</span><b>홈 · 고민 입력</b><span>탭 1 · 승부처 A</span></div>
+    <div class="sm"><span class="c">S2</span><b>답변</b><span>대기·답변·실패·위기</span></div>
+    <div class="sm off"><span class="c">S3</span><b>오늘의 말씀</b><span>MVP 제외 · P1</span></div>
+    <div class="sm"><span class="c">S4</span><b>보관함</b><span>탭 2</span></div>
+    <div class="sm"><span class="c">S5</span><b>앱 설정</b><span>홈 우상단에서</span></div>
+    <div class="sm"><span class="c">S6</span><b>앱 정보</b><span>판·버전·익명키</span></div>
+    <div class="sm"><span class="c">S7</span><b>개인정보 안내</b><span>이용약관 포함</span></div>
+    <div class="sm"><span class="c">S8</span><b>도움받을 곳</b><span>창구 안내</span></div>
+    <div class="sm"><span class="c">S9</span><b>공유 링크 랜딩</b><span>받은 사람이 보는 화면</span></div>
+    <div class="sm sheet"><span class="c">O1</span><b>경전 원문 시트</b><span>옮긴 저본까지</span></div>
+    <div class="sm sheet"><span class="c">O2</span><b>용어 풀이 시트</b><span>점선 밑줄에서</span></div>
+    <div class="sm sheet"><span class="c">O3</span><b>공유 카드 시트</b><span>나갈 카드 실물</span></div>
+    <div class="sm sheet"><span class="c">O4</span><b>사용량 소진 시트</b><span>광고 트리거 한 곳</span></div>
+  </div>
+
+  <div class="callout sage">
+    <p><b>여기에 없는 것.</b> 첫 방문 온보딩, 나가기 확인 다이얼로그, 자체 상단바, Paywall 시트, 전면광고. 앞의 셋은 플랫폼이 금지했고 뒤의 둘은 우리가 뺐다.</p>
+  </div>
+
+  <h3>뒤로가기가 어디로 가나</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>지금 자리</th><th>뒤로가기 결과</th></tr></thead>
+      <tbody>
+        <tr><td>시트가 열려 있음</td><td>그 시트만 닫는다</td></tr>
+        <tr><td>S2 답변 (생성 중 포함)</td><td>홈으로. 생성은 계속되고 홈 위에 <b>복귀 카드</b>가 남는다</td></tr>
+        <tr><td>S4 보관함 탭</td><td>홈으로</td></tr>
+        <tr><td>S5~S9</td><td>바로 앞 화면으로</td></tr>
+        <tr><td>S1 홈</td><td><b>미니앱이 종료된다.</b> 확인 다이얼로그를 띄우지 않는다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 06 ════════════════════════════════ -->
+<section id="s6">
+  <span class="snum">06</span>
+  <h2>라이브 목업</h2>
+  <p class="lead">눌러 보는 화면이다. 입력창에 직접 쳐 보면 인디케이터가 실제 판정 규칙대로 움직이고, 보내면 대기를 거쳐 답변이 두 번에 나뉘어 채워진다. 색·글꼴·간격은 와이어프레임과 같은 값이고, 부처 그림도 실제 에셋이다.</p>
+
+  <div class="demoBar">
+    <span class="lab">시나리오</span>
+    <button data-sc="short">짧은 고민</button>
+    <button data-sc="deep" class="on">깊은 고민</button>
+    <button data-sc="crisis">위기 문장</button>
+    <button data-sc="quota">3회 소진</button>
+    <span style="width:14px"></span>
+    <span class="lab">바로 가기</span>
+    <button data-go="home">홈</button>
+    <button data-go="archive">보관함</button>
+    <button data-go="settings">설정</button>
+  </div>
+  <p class="demoNote">시나리오 버튼은 입력창을 채우고 상태를 바꾸는 시연 장치입니다. 실제 앱에는 이 줄이 없습니다. 대기 시간은 읽기 편하게 줄여 두었고, 실제로는 상단 세 블록이 3~5초, 나머지가 약 20초입니다.</p>
+
+  <div class="stage">
+    <div class="phone" id="ph">
+      <div class="tossbar">토스가 그리는 영역</div>
+      <div class="pstage" id="pstage">
+
+        <!-- ── S1 홈 ─────────────────────────────────────────────── -->
+        <div class="pscreen" id="scHome">
+          <div class="ppad" style="display:flex;flex-direction:column;flex:1;min-height:0">
+            <div class="svc">
+              <p class="svc-line"><b>부처의 말</b><i>·</i>AI 가 경전을 찾아 풀어 드려요</p>
+              <button class="icon-btn" id="goSettings" aria-label="설정">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+              </button>
+            </div>
+
+            <h3 class="ptitle">무슨 일이 있었나요?<br>편하게 이야기해 주세요</h3>
+
+            <div class="plead-row">
+              <p class="plead">자세히 이야기할수록<br>더 깊이 풀어 드릴 수 있어요</p>
+              <div class="asset-crop buddha-face" style="--iw:260; --ih:312; --cx:145; --cy:118; --k:1">
+                <img src="../design/assets/input_screen.webp" alt="">
+              </div>
+            </div>
+
+            <div class="cluster">
+              <textarea class="field" id="concern" placeholder="오늘 있었던 일, 요즘 드는 생각, 무엇이든 좋아요" maxlength="2000"></textarea>
+
+              <div class="meter">
+                <span class="dots" id="dots"><i></i><i></i><i></i></span>
+                <span class="meter-label" id="meterLabel">이야기를 적으면 얼마나 깊이 풀 수 있는지 알려 드려요</span>
+                <span class="meter-count" id="meterCount" hidden>0 / 2,000</span>
+              </div>
+              <p class="privacy"><span class="nb">이름·연락처</span> 같은 정보는 적지 않아도 괜찮아요</p>
+
+              <div class="chips" id="seedChips">
+                <button class="chip-ex" data-seed="요즘 불안해요">요즘 불안해요</button>
+                <button class="chip-ex" data-seed="사람 때문에 화가 나요">사람 때문에 화가 나요</button>
+                <button class="chip-ex" data-seed="선택을 못 하겠어요">선택을 못 하겠어요</button>
+              </div>
+
+              <button class="send" id="sendBtn" disabled>이야기 보내기</button>
+              <p class="quota" id="quotaLine">오늘 3번 이야기할 수 있어요</p>
+            </div>
+          </div>
+          <div class="pbot"></div>
+        </div>
+
+        <!-- ── S2 대기 ───────────────────────────────────────────── -->
+        <div class="pscreen" id="scWait" hidden>
+          <div class="wait">
+            <div class="asset-crop wait-art"><img src="../design/assets/loading_screen.webp" alt=""></div>
+            <p class="wait-title" id="waitTitle">당신의 이야기를<br>살펴보고 있어요</p>
+            <ol class="steps" id="waitSteps">
+              <li class="step now"><span class="step-dot"><span class="step-core"></span></span><span class="step-text">이야기를 살펴봐요</span></li>
+              <li class="step"><span class="step-dot"><span class="step-core"></span></span><span class="step-text">닿아 있는 가르침을 찾아요</span></li>
+              <li class="step"><span class="step-dot"><span class="step-core"></span></span><span class="step-text">지금 상황에 맞게 풀어요</span></li>
+              <li class="step"><span class="step-dot"><span class="step-core"></span></span><span class="step-text">오늘 해볼 일을 정리해요</span></li>
+            </ol>
+            <p class="wait-quote">기다리는 동안 숨을 한 번 길게 쉬어 보세요</p>
+          </div>
+        </div>
+
+        <!-- ── S2 답변 ───────────────────────────────────────────── -->
+        <div class="pscreen" id="scAnswer" hidden>
+          <div class="topline" id="topline">
+            <div class="bar" id="progBar"></div>
+            <div class="scrim" aria-hidden="true"></div>
+            <span class="ai-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>
+              AI 생성
+            </span>
+          </div>
+          <div class="illust">
+            <img class="blur" id="illBlur" src="../design/assets/buddha_comparison.webp" alt="" aria-hidden="true">
+            <img class="main" id="illMain" src="../design/assets/buddha_comparison.webp" alt="부처 일러스트">
+          </div>
+          <div class="doc" id="answerDoc"></div>
+        </div>
+
+        <!-- ── 위기 안내 ─────────────────────────────────────────── -->
+        <div class="pscreen" id="scCrisis" hidden>
+          <div class="crisis">
+            <img class="face" src="../design/assets/buddha_sleep.webp" alt="">
+            <h4>지금 많이 힘드신 것 같아요</h4>
+            <p class="lead2">이 이야기는 AI 가 혼자 답할 수 있는 자리가 아니라고 생각해요. 지금 바로 이야기를 들어 줄 사람이 있어요.</p>
+
+            <div class="lines">
+              <a class="line-item line-item--lead" href="#">
+                <span class="line-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h3l1.5 3.8-2 1.3a12 12 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z"/></svg></span>
+                <span class="line-tx"><span class="line-nm">자살예방상담전화</span><span class="line-no">109</span><span class="line-sb">24시간 열려 있어요. 걸면 상담원과 바로 이야기해요</span></span>
+              </a>
+              <a class="line-item" href="#">
+                <span class="line-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.5a7.5 7.5 0 0 1-10.8 6.7L4 20.5l1.4-4.9A7.5 7.5 0 1 1 20 12.5Z"/></svg></span>
+                <span class="line-tx"><span class="line-nm">자살예방 SNS 상담 마들랜</span><span class="line-no">문자 · 카카오톡</span><span class="line-sb">말로 하기 어려우면 글로 이야기할 수 있어요</span></span>
+              </a>
+              <a class="line-item" href="#">
+                <span class="line-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 3.5h3l1.5 3.8-2 1.3a12 12 0 0 0 5.3 5.3l1.3-2 3.8 1.5v3a2 2 0 0 1-2.2 2A16.6 16.6 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z"/></svg></span>
+                <span class="line-tx"><span class="line-nm">정신건강상담전화</span><span class="line-no">1577-0199</span><span class="line-sb">마음이 계속 힘들 때. 24시간 열려 있어요</span></span>
+              </a>
+            </div>
+
+            <div class="urgent">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5 2.8 19.5h18.4L12 4.5Z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/></svg>
+              <p>지금 위험한 상황이라면 112 또는 119 로 연락해 주세요.</p>
+            </div>
+
+            <p class="near">가까이에 있는 사람에게<br>지금 마음을 한 번만 말해 주세요.</p>
+          </div>
+          <div class="crisis-foot">
+            <button class="abtn abtn--solid abtn--lg" data-go="home">다른 이야기 쓰기</button>
+            <button class="abtn abtn--ghost abtn--lg" data-go="home">닫기</button>
+          </div>
+        </div>
+
+        <!-- ── S4 보관함 ─────────────────────────────────────────── -->
+        <div class="pscreen" id="scArchive" hidden>
+          <div class="ppad">
+            <h3 class="scr-title">보관함</h3>
+            <p class="scr-sub">오늘 나눈 이야기와 간직한 말씀이 모이는 곳이에요</p>
+
+            <div id="archEmpty" hidden>
+              <div class="empty">
+                <div class="asset-crop empty-art"><img src="../design/assets/empty_state.webp" alt=""></div>
+                <h4>아직 간직한 말씀이 없어요</h4>
+                <p>마음에 남는 말을 간직해 보세요</p>
+                <p class="how">답변 아래 간직하기를 누르면 여기에 쌓여요</p>
+                <button class="abtn abtn--solid abtn--lg" data-go="home">이야기하러 가기</button>
+              </div>
+            </div>
+
+            <div id="archFull">
+              <div class="arch-head"><h4>오늘 나눈 이야기</h4></div>
+              <article class="arch-card">
+                <div class="ab">
+                  <div class="arch-meta"><span class="arch-date">9월 13일 토요일</span><span class="badge-today">오늘</span></div>
+                  <p class="arch-line">축하하는 마음과 속상한 마음은 한자리에 같이 있을 수 있어요</p>
+                  <div class="atags"><span class="atag atag--neutral">#비교</span><span class="atag atag--lotus">#인정욕구</span></div>
+                </div>
+                <img class="arch-thumb" src="../design/assets/buddha_comparison.webp" alt="">
+              </article>
+
+              <div class="arch-head"><h4>간직한 말씀</h4><span>3 / 3</span></div>
+              <article class="arch-card">
+                <div class="ab">
+                  <div class="arch-meta"><span class="arch-date">9월 11일 목요일</span></div>
+                  <p class="arch-line">흔들리는 것은 마음이지 길이 아니에요</p>
+                  <div class="atags"><span class="atag atag--sage">#불안</span><span class="atag atag--sage">#앞날</span></div>
+                </div>
+                <img class="arch-thumb" src="../design/assets/buddha_anxiety.webp" alt="">
+              </article>
+              <article class="arch-card">
+                <div class="ab">
+                  <div class="arch-meta"><span class="arch-date">9월 8일 월요일</span></div>
+                  <p class="arch-line">멀어지는 것을 붙잡지 않는 것도 마음을 쓰는 일이에요</p>
+                  <div class="atags"><span class="atag atag--lotus">#관계</span><span class="atag atag--neutral">#지침</span></div>
+                </div>
+                <img class="arch-thumb" src="../design/assets/buddha_relationship.webp" alt="">
+              </article>
+              <article class="arch-card">
+                <div class="ab">
+                  <div class="arch-meta"><span class="arch-date">9월 5일 금요일</span></div>
+                  <p class="arch-line">오늘 못 푼 일은 오늘의 몫이 아니에요</p>
+                  <div class="atags"><span class="atag atag--sage">#걱정</span><span class="atag atag--sage">#잠</span></div>
+                </div>
+                <img class="arch-thumb" src="../design/assets/buddha_sleep.webp" alt="">
+              </article>
+
+              <div class="arch-head"><h4>지난 이야기</h4></div>
+              <div class="past">
+                <div class="past-inner">
+                  <div class="past-row"><div class="past-sq"></div><div style="flex:1"><div class="past-bar" style="width:42%;margin-bottom:8px"></div><div class="past-bar" style="width:86%"></div></div></div>
+                  <div class="past-row"><div class="past-sq"></div><div style="flex:1"><div class="past-bar" style="width:36%;margin-bottom:8px"></div><div class="past-bar" style="width:74%"></div></div></div>
+                  <div class="past-row"><div class="past-sq"></div><div style="flex:1"><div class="past-bar" style="width:48%;margin-bottom:8px"></div><div class="past-bar" style="width:80%"></div></div></div>
+                </div>
+                <p class="past-note">지금은 오늘 나눈 이야기와 간직한 말씀을 볼 수 있어요</p>
+              </div>
+            </div>
+          </div>
+          <div class="pbot"></div>
+        </div>
+
+        <!-- ── S5 설정 ───────────────────────────────────────────── -->
+        <div class="pscreen" id="scSettings" hidden>
+          <div class="ppad">
+            <h3 class="scr-title">설정</h3>
+            <p class="scr-sub">확인할 것과 도움받을 곳을 한곳에 모았어요</p>
+
+            <p class="grp-label">안내</p>
+            <div class="plist">
+              <div class="plist-item">
+                <span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l7 2.6v5.4c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6.1z"/><path d="M9.3 12.2l2 2 3.4-3.9" stroke-linecap="round"/></svg></span>
+                <span class="li-tx"><b>개인정보 안내</b><span>적은 이야기를 어떻게 다루는지 알려 드려요</span></span>
+                <span class="li-ch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg></span>
+              </div>
+              <div class="plist-item">
+                <span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3.8h9.2L19 7.6V20a.6.6 0 0 1-.6.6H6A.6.6 0 0 1 5.4 20V4.4A.6.6 0 0 1 6 3.8z"/><path d="M14.8 4v4h4M8.4 12.4h7.2M8.4 16h5" stroke-linecap="round"/></svg></span>
+                <span class="li-tx"><b>이용약관</b><span>앱 안에서 바로 읽을 수 있어요</span></span>
+                <span class="li-ch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg></span>
+              </div>
+              <div class="plist-item">
+                <span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 19.6S4.6 15.4 4.6 10.1A3.9 3.9 0 0 1 12 8.2a3.9 3.9 0 0 1 7.4 1.9c0 5.3-7.4 9.5-7.4 9.5z"/></svg></span>
+                <span class="li-tx"><b>도움받을 곳</b><span>마음이 많이 힘들 때 바로 이야기할 수 있어요</span></span>
+                <span class="li-ch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg></span>
+              </div>
+            </div>
+
+            <p class="grp-label">문의</p>
+            <div class="plist">
+              <div class="plist-item">
+                <span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.4" y="5.6" width="17.2" height="12.8" rx="2.4"/><path d="M4.2 7.2L12 12.6l7.8-5.4" stroke-linecap="round"/></svg></span>
+                <span class="li-tx"><b>문의 이메일</b><span>help@buddhawords.kr 로 보낼 수 있어요</span></span>
+                <span class="li-ch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg></span>
+              </div>
+              <div class="plist-item">
+                <span class="li-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M12 11v5.4" stroke-linecap="round"/><circle cx="12" cy="8" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+                <span class="li-tx"><b>앱 정보</b><span>판과 배포 정보를 확인해요</span></span>
+                <span class="li-val">1.0.0</span>
+                <span class="li-ch"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5l6.5 6.5-6.5 6.5"/></svg></span>
+              </div>
+            </div>
+
+            <div class="set-foot">
+              <div class="asset-crop mark"><img src="../design/assets/logo_lockup.webp" alt=""></div>
+              <div class="nm">부처의 말</div>
+              <div class="vr">버전 1.0.0 · 답변은 AI 가 만들어요</div>
+            </div>
+            <button class="abtn abtn--ghost abtn--lg abtn--wide" data-go="home" style="margin-bottom:24px">홈으로</button>
+          </div>
+        </div>
+
+        <!-- ── 탭바 ──────────────────────────────────────────────── -->
+        <nav class="tabbar" id="tabbar">
+          <button class="tab sel" data-tab="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4.5c4.3 0 7.8 2.8 7.8 6.3s-3.5 6.3-7.8 6.3c-.9 0-1.7-.1-2.5-.35L5.2 18.4l1.1-3.1C5 14.2 4.2 12.8 4.2 10.8 4.2 7.3 7.7 4.5 12 4.5z"/></svg>
+            이야기하기
+          </button>
+          <button class="tab" data-tab="archive">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7.2 4h9.6a1 1 0 0 1 1 1v14.3l-5.8-3.4-5.8 3.4V5a1 1 0 0 1 1-1z"/></svg>
+            보관함
+          </button>
+        </nav>
+
+        <!-- ── 하단 고정 바 ──────────────────────────────────────── -->
+        <div class="bottombar" id="bottombar">
+          <button class="abtn abtn--ghost abtn--lg" id="barShare">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg>
+            공유하기
+          </button>
+          <button class="abtn abtn--solid abtn--lg" id="barSave">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8z"/></svg>
+            간직하기
+          </button>
+        </div>
+
+        <!-- ── 시트 ──────────────────────────────────────────────── -->
+        <div class="pdim" id="pdim"></div>
+
+        <div class="psheet" id="shO1">
+          <div class="grip"></div>
+          <h4>경전 원문</h4>
+          <p class="scite" id="o1Cite">법구경 17장 223게</p>
+          <div class="orig"><p id="o1Text"></p></div>
+          <p class="lab">옮긴 저본</p>
+          <p class="base" id="o1Base"></p>
+          <p class="smeta"><b>SuttaCentral · Bhikkhu Sujato 영역 · CC0 1.0</b><br>위 영역본을 우리가 한국어로 옮기고, 감수자가 확인한 문장이에요.</p>
+          <button class="abtn abtn--ghost abtn--lg abtn--wide" data-sheet-close>닫기</button>
+          <p class="close-hint">뒤로가기, 바깥 어두운 곳, 닫기 버튼 모두로 나갈 수 있어요</p>
+        </div>
+
+        <div class="psheet" id="shO2">
+          <div class="grip"></div>
+          <h4 id="o2Word"></h4>
+          <p class="scite" id="o2Pali"></p>
+          <p class="gloss" id="o2Gloss"></p>
+          <p class="ex" id="o2Ex"></p>
+          <button class="abtn abtn--ghost abtn--lg abtn--wide" data-sheet-close>닫기</button>
+          <p class="close-hint">뒤로가기, 바깥 어두운 곳, 닫기 버튼 모두로 나갈 수 있어요</p>
+        </div>
+
+        <div class="psheet" id="shShare">
+          <div class="grip"></div>
+          <h4>무엇을 공유할까요?</h4>
+          <p class="safe">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1.4 2.2 3.3v3.4c0 3 2 5.2 4.8 5.9 2.8-.7 4.8-2.9 4.8-5.9V3.3L7 1.4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M4.9 7.1 6.4 8.6 9.3 5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            적은 이야기는 카드에 들어가지 않아요
+          </p>
+          <div class="sharecard">
+            <div class="band" aria-hidden="true"></div>
+            <div class="inner">
+              <div class="cchips" id="cardChips"></div>
+              <p class="cline" id="cardLine"></p>
+              <p class="cai">AI 가 경전을 찾아 풀어 쓴 글이에요</p>
+              <div class="cbrand">
+                <span class="cmark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c2.1 2.4 2.1 6.3 0 8.7-2.1-2.4-2.1-6.3 0-8.7z"/><path d="M12 12.3C9.6 11.6 6 9.9 4.6 7.2c3.2-.4 6.4 1.9 7.4 5.1z"/><path d="M12 12.3c2.4-.7 6-2.4 7.4-5.1-3.2-.4-6.4 1.9-7.4 5.1z"/><path d="M3.4 12.6c1.3 4.4 4.6 7 8.6 7s7.3-2.6 8.6-7"/></svg></span>
+                <div><div class="cword">부처의 말</div><p class="ctag">내 이야기에 맞는 가르침 받아보기</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="sactions">
+            <button class="abtn abtn--solid abtn--lg">링크 보내기</button>
+            <button class="abtn abtn--ghost abtn--lg">이미지로 저장하기</button>
+            <button class="abtn abtn--plain abtn--lg" data-sheet-close>닫기</button>
+          </div>
+        </div>
+
+        <div class="psheet" id="shQuota">
+          <div class="grip"></div>
+          <h4>오늘 나눌 수 있는 이야기를 다 나눴어요</h4>
+          <p class="ssub">내일 아침이면 다시 세 번 이야기할 수 있어요</p>
+          <div class="sactions">
+            <button class="abtn abtn--solid abtn--lg" id="watchAd">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3"/><path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none"/></svg>
+              광고 보고 한 번 더 이야기하기
+            </button>
+            <p class="adnote">광고를 끝까지 보면 한 번 더 이야기할 수 있어요</p>
+            <button class="abtn abtn--ghost abtn--lg" data-sheet-close>오늘 답변 다시 보기</button>
+            <button class="abtn abtn--plain abtn--lg" data-sheet-close>닫기</button>
+          </div>
+          <p class="close-hint">닫아도 적은 글은 그대로 남아 있어요</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="legend">
+      <h4>한 바퀴를 눌러 보세요</h4>
+      <ol>
+        <li><b>입력창에 직접 쳐 보세요.</b> 점이 차는 규칙은 실제 판정과 같습니다. 빈 줄이 아닌 줄 셋에 글자 40자를 넘거나, 글자 120자를 넘으면 세 번째 점이 금색으로 한 번 바뀝니다.</li>
+        <li><b>이야기 보내기</b>를 누르면 대기 화면이 걸음을 하나씩 지웁니다. 이 화면에는 광고가 없습니다.</li>
+        <li>상단 <b>세 블록이 먼저</b> 오고, 그 아래 자리는 스켈레톤으로 잡혀 있다가 나머지가 채워집니다.</li>
+        <li>끝까지 내려 <b>마지막 한마디</b>에 닿으면 그때 공유·간직 바가 올라옵니다. 읽기 전에는 올라오지 않습니다.</li>
+        <li><b>원문 보기</b>와 점선 밑줄 낱말은 시트를 엽니다. 시트는 딤을 눌러도 닫힙니다.</li>
+      </ol>
+      <p class="cap">시나리오를 「짧은 고민」으로 바꾸면 같은 자리에 Basic 답변이 들어옵니다. 태그가 둘로 줄고, 깊이 풀었다는 안내 줄이 사라지고, 오늘 해볼 일이 둘이 됩니다.</p>
+
+      <h4 style="margin-top:28px">상단 44px 은 우리가 그리지 않습니다</h4>
+      <p class="cap">제목과 뒤로가기는 앱인토스가 그리는 영역입니다. 여기에 우리 버튼을 더하면 뒤로가기가 두 개 보이거나 기능 버튼 개수 제한에 걸립니다.</p>
+
+      <h4 style="margin-top:24px">광고가 나올 수 있는 자리는 하나입니다</h4>
+      <p class="cap">「3회 소진」 시나리오에서 전송을 누르면 열리는 시트의 첫 버튼뿐입니다. 라벨에 「광고 보고」가 들어가 사용자가 스스로 고릅니다.</p>
+
+      <h4 style="margin-top:24px">이미지는 아직 시안 해상도입니다</h4>
+      <p class="cap">받은 부처 그림이 175×185px 이라 늘리면 뭉갭니다. 목업은 같은 그림을 흐리게 깔고 그 위에 원본 크기로 올려 흐림을 피했습니다. 번들에 들어가는 것은 1290×720 이상으로 다시 만든 판입니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 07 ════════════════════════════════ -->
+<section id="s7">
+  <span class="snum">07</span>
+  <h2>답변 구조와 라우터</h2>
+  <p class="lead">답변은 언제나 같은 일곱 블록이다. 순서가 고정이라 두 번째 답변부터는 어디에 무엇이 있는지 찾지 않아도 된다. 블록을 누르면 그 자리가 무엇을 증명하는지 볼 수 있다.</p>
+
+  <div class="cards" data-mgroup="blk">
+    <button class="card mcard" data-modal="blk-1">
+      <div class="eyebrow">블록 ①</div><h4>지금 마음</h4>
+      <p>태그 두세 개와 한 문장. 내 글에서 뽑은 말이라는 것이 보여야 다음 블록으로 내려간다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-2">
+      <div class="eyebrow">블록 ②</div><h4>오늘의 한마디</h4>
+      <p>짙은 면 위 가장 큰 글씨. 공유 카드에 그대로 나가는 문장이자 가장 오래 기억될 한 줄.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-3">
+      <div class="eyebrow">블록 ③</div><h4>닿아 있는 가르침</h4>
+      <p>경전 번역문과 출처. 이 앱이 명언 앱과 갈리는 자리이자 신뢰의 근거다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-4">
+      <div class="eyebrow">블록 ④</div><h4>이 말씀은 이런 뜻이에요</h4>
+      <p>경전만 보여 주면 「좋은 말 같긴 한데 뭔 소리지」가 된다. 어려운 낱말은 점선 밑줄로 풀어 준다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-5">
+      <div class="eyebrow">블록 ⑤ · 가장 김</div><h4>지금 당신의 이야기를 보면</h4>
+      <p>제품의 핵심. 소제목 셋으로 끊어 800~1,300자를 읽히게 만든다. 여기서 이탈하면 글이 긴 것이다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-6">
+      <div class="eyebrow">블록 ⑥</div><h4>오늘 해볼 수 있는 일</h4>
+      <p>거창한 수행이 아니라 오늘 안에 되는 행동. 각 행동에 왜 그것인지가 붙는다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+    <button class="card mcard" data-modal="blk-7">
+      <div class="eyebrow">블록 ⑦</div><h4>마지막 한마디</h4>
+      <p>완독 판정 지점. 이 블록이 화면에 들어오고 2초 머물면 그때 공유·간직 바가 올라온다.</p>
+      <span class="more">이 자리가 하는 일 →</span>
+    </button>
+  </div>
+
+  <h3>Basic 과 Deep</h3>
+  <p>Deep 을 프리미엄 답변처럼 느끼게 하되 값은 받지 않는다. 「세 줄 썼더니 진짜 내 얘기를 읽은 것처럼 답한다」는 경험이 초기 확산의 전부다.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>항목</th><th>Basic</th><th>Deep</th></tr></thead>
+      <tbody>
+        <tr><td>입력</td><td>짧은 고민</td><td>충분히 적은 이야기</td></tr>
+        <tr><td>모델</td><td>저가 모델</td><td>고성능 모델</td></tr>
+        <tr><td>답변 길이</td><td>약 1,000~1,300자</td><td>약 1,600~<b>2,000자</b> (v0.1 의 2,500자에서 내림)</td></tr>
+        <tr><td>마음 태그</td><td>1~2개</td><td>최대 4개</td></tr>
+        <tr><td>경전</td><td>1개</td><td>1~2개</td></tr>
+        <tr><td>⑤ 소제목</td><td>1개</td><td>2~3개</td></tr>
+        <tr><td>오늘 해볼 일</td><td>1~2개</td><td>최대 3개</td></tr>
+        <tr><td>용어 풀이</td><td>0~1개</td><td>0~2개</td></tr>
+        <tr><td>대기 문구</td><td>2단계까지만 보여 준다</td><td>4단계 전부</td></tr>
+        <tr><td>하루 천장</td><td colspan="2">무료 3회 + 광고 1회 = <b>하루 4회</b>. 기준 시각은 사용자 시간대 자정</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>깊이를 어떻게 판정하나</h3>
+  <p>화면은 「세 줄」이라고 말하지만 서버는 화면 줄 수를 쓰지 않는다. 프론트와 서버가 <b>같은 함수 하나</b>를 쓴다. 두 벌로 나뉘는 순간 「세 줄 썼는데 점이 하나」가 실제로 난다.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>조건</th><th>판정</th><th>왜 이 값인가</th></tr></thead>
+      <tbody>
+        <tr><td>빈 줄이 아닌 줄 <b>3개</b> 이상이고 세는 글자 <b>40자</b> 이상</td><td>Deep</td><td>화면이 「세 줄」이라고 약속했으므로 줄 기준을 실제로 판정에 넣는다. 40자는 「응」 세 줄 같은 빈 줄 채우기를 막는 하한이다</td></tr>
+        <tr><td>세는 글자 <b>120자</b> 이상</td><td>Deep</td><td>줄바꿈 없이 길게 쓰는 사람을 놓치지 않는다</td></tr>
+        <tr><td>주제 사전에 걸림</td><td>Deep 으로 승격</td><td>「남편이 바람난 것 같아요」는 짧아도 가볍게 답할 수 없다. 사전은 어간 기준이다</td></tr>
+        <tr><td>그 밖</td><td>Basic</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout gold">
+    <p><b>내리지는 못한다.</b> 서버는 복잡도를 보고 Basic 을 Deep 으로 올릴 수 있지만, 클라이언트가 세 점을 보여 준 뒤에 Basic 으로 내리지는 못한다. 화면의 약속이 서버 규칙보다 먼저다.</p>
+    <p style="margin-top:10px"><b>세는 글자에서 빼는 것.</b> 공백·문장부호·이모지는 길이에 넣지 않는다. 그리고 <b>판정은 마스킹보다 먼저</b> 한다. 전화번호 열한 자리를 먼저 가리면 두 글자가 되어 문턱이 흔들린다.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 08 ════════════════════════════════ -->
+<section id="s8">
+  <span class="snum">08</span>
+  <h2>경전 데이터 원칙</h2>
+  <p class="lead">이 앱에서 가장 위험한 실패는 답변이 밋밋한 것이 아니라, 부처가 하지 않은 말이 「부처의 말」로 나가는 것이다. 그래서 데이터 쪽에 게이트를 여럿 둔다.</p>
+
+  <div class="diagram">
+    <div class="flowrow">
+      <div class="fnode"><span class="k">1</span><b>CC0 영역본</b><span>SuttaCentral bilara-data · Bhikkhu Sujato · 커밋 고정</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">2</span><b>한글 초벌 번역</b><span>감정 태그 10종으로 분류</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">3</span><b>사람 감수</b><span>기준본 셋 대조 · 갈리면 주석 필수</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">4</span><b>빌드 게이트</b><span>통과한 구절만 번들에 들어간다</span></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><span class="k">5</span><b>화면</b><span>서버가 데이터에서 본문을 채운다</span></div>
+    </div>
+  </div>
+
+  <h3>왜 CC0 인가</h3>
+  <p>한글 번역문은 원저작물의 2차적저작물이다. 남의 한글 번역을 그대로 쓰면 허락 없이는 배포가 안 된다. CC0 는 저작권자가 권리 자체를 포기한 것이라 그 위에 우리가 만든 한국어 번역은 <b>우리 저작물</b>이 된다. 라이선스가 문서로 확정되기 전에는 데이터베이스에 한 글자도 넣지 않는다.</p>
+
+  <h3>코드가 세는 것</h3>
+  <ul class="clean">
+    <li>감정 태그 10종 각각 감수 통과 구절이 <b>10개 이상</b>, 쉬운 구절이 <b>4개 이상</b></li>
+    <li>감수 통과 구절은 전부 감수자와 감수일이 채워져 있다</li>
+    <li>기준본 셋이 갈린 것으로 표시된 구절은 주석이 비어 있지 않다</li>
+    <li>직전 커밋보다 감수 통과 구절 수가 줄면 빌드가 실패한다</li>
+    <li>번들에 팔리 원문 필드가 비어 있다</li>
+    <li>코드가 막는 제외 조건의 값 집합이 1차 분류가 내는 플래그 목록 안에 있다</li>
+  </ul>
+
+  <details data-acc="scr">
+    <summary>검색은 어떻게 도나</summary>
+    <div class="body">
+      <p>안전 스크린을 먼저 지난다. 걸리면 검색도 답변 생성도 하지 않는다. 통과하면 감정 태그로 거른 <b>12~20개 후보를 전부</b> 2차 패스에 넘긴다. 규칙 점수 단계는 없앴다. 관련성을 못 보는 규칙이 관련성 판단자보다 먼저 후보를 깎고 있었고, 네 항 중 셋이 변별력이 없어 결국 「덜 나간 순서」로 붕괴했다.</p>
+      <p>같은 구절이 연달아 나오지 않게 최근 노출 20개를 클라이언트가 들고 와 요청에 싣는다. 서버는 개수와 구절 id 화이트리스트로 검증한다. 인메모리 전역 카운터는 쓰지 않는다. 서버 인스턴스가 여럿이면 흩어진다.</p>
+      <p>임베딩과 pgvector 는 켜지 않는다. 120구절에서 태그 필터를 지난 후보가 12~20개라 더 줄일 것이 없다.</p>
+    </div>
+  </details>
+
+  <details data-acc="scr">
+    <summary>「이 구절은 이 사람에게 쓰지 않는다」를 두 층으로 나눈 이유</summary>
+    <div class="body">
+      <p>구절마다 <b>사람이 읽는 주의사항</b>과 <b>코드가 막는 제외 조건</b>을 따로 둔다. 앞의 것은 프롬프트에 실리고 뒤의 것은 후보 목록에서 아예 빠진다. 프롬프트에 적는 것과 코드가 막는 것은 다른 층이다. 프롬프트만 믿으면 뚫린다.</p>
+      <p>예를 들어 학대 피해 맥락에서는 「분노는 분노하지 않음으로 이긴다」가 참으라는 말로 읽힌다. 그래서 그 구절에 학대 피해 제외를 걸어 두고, 1차 분류가 그 플래그를 세우면 후보에서 빠진다. 이 짝이 실제로 맞는지는 골든셋 30건이 확인한다.</p>
+    </div>
+  </details>
+
+  <details data-acc="scr">
+    <summary>감수 품질을 무엇으로 확인하나</summary>
+    <div class="body">
+      <p>「감수했다」는 선언은 검증이 아니다. 감수자가 아닌 사람이 무작위 10구절을 뽑아 영역본과 나란히 읽었을 때 뜻이 어긋난 것이 <b>0건</b>이어야 한다. 1건이라도 나오면 그 구절이 속한 태그를 통째로 다시 본다. 읽은 사람과 날짜와 결과를 저장소에 남긴다.</p>
+      <p>감수 산출물은 저장소에 추적되는 파일로 둔다. 10~20시간의 결과가 누군가의 로컬에만 있으면 그 사람이 빠질 때 사라진다.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ════════════════════════════════ 09 ════════════════════════════════ -->
+<section id="s9">
+  <span class="snum">09</span>
+  <h2>앱인토스 규칙</h2>
+  <p class="lead">아래 열두 줄은 화면 설계에서 협상 대상이 아니다. 어기면 심사에서 되돌아온다. 굵게 표시한 셋은 어기면 <b>출시 불가</b>다.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>규칙</th><th>화면에 미치는 영향</th></tr></thead>
+      <tbody>
+        <tr><td>상단바는 플랫폼이 그린다</td><td>자체 상단바와 자체 뒤로가기 버튼을 만들지 않는다</td></tr>
+        <tr><td>화면별 제목을 상단바에 줄 수 없다</td><td>하위 화면 제목을 <b>본문 첫 줄에 직접 그린다</b></td></tr>
+        <tr><td>안전영역 위쪽을 우리가 더하면 안 된다</td><td>웹뷰가 이미 상단바 아래에서 시작한다. 인셋을 더하면 54px 이 헛되게 빈다</td></tr>
+        <tr><td>탭바는 토스 플로팅 형태로 직접 만든다</td><td>SDK 에도 디자인 시스템에도 탭바 컴포넌트가 없다. 최소 2개 최대 5개</td></tr>
+        <tr><td><b>진입 즉시 전면을 막는 바텀시트 금지</b></td><td>온보딩·약관·알림 동의 시트를 첫 진입에 두지 않는다</td></tr>
+        <tr><td>뒤로 가려는 순간 막는 시트 금지</td><td>「정말 나갈까요?」 다이얼로그를 만들지 않는다</td></tr>
+        <tr><td>버튼만 보고 다음 행동을 예측할 수 있어야 한다</td><td>전송 버튼 라벨이 상황에 따라 바뀌지 않는다</td></tr>
+        <tr><td><b>예상 못 한 순간의 광고 금지</b></td><td>전면광고를 뺀 유일한 근거다</td></tr>
+        <tr><td>배너는 스크롤되는 화면에만</td><td>대기 화면·시트·미리보기에 배너를 두지 않는다. 그리고 배너 자체를 뺐다</td></tr>
+        <tr><td><b>광고를 가리거나 숨기면 안 된다</b></td><td>하단 고정 바가 광고를 덮지 않게 배치한다. 답변 화면에는 배너가 없다</td></tr>
+        <tr><td>미니앱 테마는 라이트</td><td>다크 팔레트를 만들지 않는다</td></tr>
+        <tr><td>모든 문구는 해요체</td><td>카피 전체가 해요체다. 다이얼로그 왼쪽 버튼은 「취소」가 아니라 「닫기」</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>기술 쪽 제약</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>제약</th><th>우리 대응</th></tr></thead>
+      <tbody>
+        <tr><td>서버 사이드 렌더링을 쓸 수 없다</td><td>클라이언트 렌더링 또는 정적 생성으로 만든다</td></tr>
+        <tr><td>자사 사이트로 이동하거나 그 화면을 띄울 수 없다</td><td>개인정보 안내와 이용약관을 <b>앱 안 라우트</b>로 만든다. 공유 랜딩 웹을 미니앱 안에서 열지 않는다</td></tr>
+        <tr><td>허용 출처가 정해져 있다</td><td>백엔드에 미니앱 출처 네 개를 전부 등록한다</td></tr>
+        <tr><td>3D 그래픽은 플랫폼이 준 모듈만</td><td>자체 부처 일러스트가 여기 걸리는지 <b>출시 전 서면으로 묻는다</b>. 걸리면 타이포와 색만으로 답변 화면을 세우는 안을 미리 그려 둔다</td></tr>
+        <tr><td>공유 API 는 텍스트만 보낸다</td><td>카드 이미지를 공유 시트에 못 싣는다. 링크 미리보기와 사진 저장 두 갈래로 간다</td></tr>
+        <tr><td>미니앱 링크는 토스 앱으로만 열린다</td><td>토스를 안 깐 사람에게 보이는 유일한 우리 콘텐츠가 링크 미리보기 이미지다. 그래서 카드에 핵심 문장을 크게 넣는다</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 10 ════════════════════════════════ -->
+<section id="s10">
+  <span class="snum">10</span>
+  <h2>톤과 디자인</h2>
+  <p class="lead">종교 앱 특유의 무겁고 오래된 인상과 현대적인 명상 앱 사이를 노린다. 색은 아이보리와 베이지 위에 따뜻한 금색 하나로 강조한다.</p>
+
+  <h3>부처 일러스트 여덟 장</h3>
+  <p>화면은 <code>visualTheme</code> 열거값 열 가지로 그림을 고른다. 감정 태그 문자열로 고르지 않는다. 그림은 여덟 장이라 다대일이고, 모르는 값이 오거나 값이 없으면 <code>choice</code> 로 간다. 이 그림은 어떤 고민에도 어긋나지 않는 유일한 장면이다.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>화면이 받는 값</th><th>한국어</th><th>쓰는 그림</th><th>왜 이 그림인가</th></tr></thead>
+      <tbody>
+        <tr><td><code>anxiety</code></td><td>불안</td><td>buddha_anxiety</td><td>그 감정을 위해 그려진 그림</td></tr>
+        <tr><td><code>anger</code></td><td>분노</td><td>buddha_anger</td><td>그 감정을 위해 그려진 그림</td></tr>
+        <tr><td><code>loss</code></td><td>이별·상실</td><td>buddha_loss</td><td>그 감정을 위해 그려진 그림</td></tr>
+        <tr><td><code>comparison</code></td><td>비교·열등감</td><td>buddha_comparison</td><td>그 감정을 위해 그려진 그림</td></tr>
+        <tr><td><code>choice</code></td><td>고민·선택</td><td>buddha_choice</td><td>기본값이기도 하다</td></tr>
+        <tr><td><code>sleepless</code></td><td>잠 못 드는 걱정</td><td>buddha_sleep</td><td>달빛과 연꽃등. 파일 이름만 다르고 뜻은 같다</td></tr>
+        <tr><td><code>attachment</code></td><td>집착·미련</td><td>buddha_loss</td><td>쥔 것을 놓는 장면이 상실과 같다</td></tr>
+        <tr><td><code>emptiness</code></td><td>무기력·공허</td><td>buddha_growth</td><td>마른 자리에서 새싹이 트는 그림</td></tr>
+        <tr><td><code>relationship</code></td><td>관계 피로</td><td>buddha_relationship</td><td>그 감정을 위해 그려진 그림</td></tr>
+        <tr><td><code>approval</code></td><td>인정받고 싶은 마음</td><td>buddha_comparison</td><td>남과 견주는 자리에서 생기는 마음</td></tr>
+        <tr><td class="dim-td">그 밖·누락·오타</td><td class="dim-td">없음</td><td><b>buddha_choice</b></td><td>기본값</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout gold">
+    <p><b>부처를 감정 캐릭터로 만들지 않는다.</b> 화난 부처, 우는 부처, 놀란 부처를 그리지 않는다. 바뀌는 것은 표정이 아니라 <b>자세와 주변 풍경</b>이다. 「고민·선택」 장면에서 부처가 길을 가리키지 않는 것도 같은 이유다. AI 가 정답을 결정한다는 인상이 되면 안 된다.</p>
+  </div>
+
+  <h3>글자가 박힌 그림은 그림만 쓴다</h3>
+  <p>스플래시·대기·입력·빈 상태·공유 카드 배경에는 문구가 픽셀로 구워져 있다. 그대로 쓰면 해상도도 나쁘고, 문구를 고칠 수도 없고, 읽어 주는 기능도 못 읽는다. 그림 부분만 잘라 쓰고 글자는 전부 HTML 로 올린다. 이 문서의 목업도 그렇게 만들었다.</p>
+
+  <details data-acc="design">
+    <summary>색을 어떻게 정했나</summary>
+    <div class="body">
+      <p>에셋 이미지에서 실제로 뽑은 색을 기준으로 단계를 채우고, 34쌍을 전부 계산해서 통과시켰다. 기준은 본문 4.5, 큰 글씨와 경계 3.0, 면 대 면 1.20 이다. 첫 계산에서 다섯 쌍이 미달이라 값을 고쳤다. 눈으로 보면 아이보리 계열에서 두 단계 차이를 사람이 못 본다.</p>
+      <p>층은 둘이다. 앱 배경과 카드. 셋째 층을 밝기로 만들면 흙빛이 되어 에셋의 인상이 깨진다. 층이 하나 더 필요한 자리는 밝기가 아니라 선으로 나눈다.</p>
+      <p><b>주 버튼 바닥색과 「오늘의 한마디」 짙은 면이 같은 값</b>이다. 그 면 위에 버튼을 그냥 얹으면 대비가 1.00 이 되어 버튼이 통째로 사라진다. 그래서 짙은 면 위에 놓을 수 있는 것을 셋으로 못 박고 토큰 파일 주석에 계산값까지 적어 두었다.</p>
+    </div>
+  </details>
+
+  <details data-acc="design">
+    <summary>글꼴 두 벌과 로딩 규칙</summary>
+    <div class="body">
+      <p>본문과 UI 는 Pretendard, 제목·경전·인용·오늘의 한마디는 MaruBuri 다. 둘 다 못 받아도 기기에 깔린 글꼴로 읽히게 폴백 스택을 붙인다.</p>
+      <p>웹폰트는 렌더를 막지 않게 받는다. CSS 안의 <code>@import</code> 는 그 시트를 다 받을 때까지 첫 그림을 막는다. 10초 가계부에서 그 한 줄이 첫 그림을 30초 막은 적이 있다. 미니앱은 열자마자 보여야 하는 자리라 출시 문제가 된다.</p>
+      <p>굵기마다 글꼴 이름이 다르면 브라우저가 가짜 굵기를 만들어 한글 받침이 뭉갠다. 한 이름에 굵기를 묶고 가짜 굵기를 끈다.</p>
+    </div>
+  </details>
+
+  <details data-acc="design">
+    <summary>번들에 들어가기 전에 다시 만들어야 하는 것</summary>
+    <div class="body">
+      <ul>
+        <li><b>부처 일러스트 여덟 장을 1290×720 이상으로.</b> 받은 파일은 175×185px 안팎이다. 답변 화면이 가로 100% · 높이 200px 고정이라 3배 기기에서 1290 이 하한이다. 받은 여덟 장을 화풍 기준으로 함께 넣어 같은 인상으로 다시 뽑는다.</li>
+        <li><b>글자 없는 배경본 세 장.</b> 스플래시·대기·공유 카드. 지금 파일은 문구가 픽셀로 박혀 있어 답변마다 같은 글이 나간다.</li>
+        <li><b>앱 아이콘 정사각 마스터.</b> 받은 아이콘이 148×146 이라 정사각이 아니다. 콘솔 규격은 600×600 각진 정사각이고 라운드도 투명도 안 된다.</li>
+      </ul>
+      <p>지금 받은 저해상도 에셋은 와이어프레임과 이 문서의 목업 전용이다.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ════════════════════════════════ 11 ════════════════════════════════ -->
+<section id="s11">
+  <span class="snum">11</span>
+  <h2>지표와 수익화</h2>
+  <p class="lead">지표를 넷만 본다. 늘리면 아무것도 안 보게 된다. 수익화는 광고 한 자리뿐이고, 그 한 자리도 사람이 승인해 주기를 기다리는 절차가 앞에 붙는다.</p>
+
+  <h3>네 가지 지표</h3>
+  <div class="cards">
+    <div class="card">
+      <div class="eyebrow">입력 쪽</div>
+      <h4>깊이 도달률</h4>
+      <p>입력을 시작한 사람 가운데 세 번째 점까지 간 비율. 낮으면 인디케이터 문구와 예시 칩 길이를 본다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">답변 쪽</div>
+      <h4>완독률</h4>
+      <p>답변을 받은 사람 가운데 마지막 한마디까지 닿은 비율. <b>Basic 과 Deep 을 반드시 나눠서</b> 본다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">확산</div>
+      <h4>공유율</h4>
+      <p>답변을 받은 사람 가운데 실제로 공유를 끝낸 비율. 취소한 사람은 세지 않는다.</p>
+    </div>
+    <div class="card">
+      <div class="eyebrow">유료화 선행</div>
+      <h4>간직 클릭률</h4>
+      <p>답변을 받은 사람 가운데 간직하기를 누른 비율. 결제를 붙일지 말지는 이 숫자로 판단한다.</p>
+    </div>
+  </div>
+
+  <div class="callout gold">
+    <p><b>모드를 나누지 않은 완독률은 의미가 없다.</b> Basic 은 짧아서 끝까지 읽기 쉽다. 나누지 않으면 Basic 비중이 올라갈 때 완독률이 저절로 좋아진 것처럼 보인다.</p>
+  </div>
+
+  <h3>로그에 무엇을 안 싣나</h3>
+  <p>수집 경로는 토스가 주는 로그 하나뿐이다. 자체 이벤트 테이블도 외부 분석 도구도 만들지 않는다. 경로가 둘이면 「무엇이 어디에 남는가」에 답할 수 없고, 고민을 다루는 앱이라 그 답이 반드시 필요하다.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>안 싣는 것</th><th>왜</th></tr></thead>
+      <tbody>
+        <tr><td>고민 원문, 그 일부, 글자 수의 <b>정확한 값</b></td><td>원문은 물론이고 길이도 구간까지만 남긴다</td></tr>
+        <tr><td>답변 본문, 경전 본문, 마지막 한마디</td><td>공유 카드로 나가는 문장이라도 로그에는 안 넣는다</td></tr>
+        <tr><td>자유 문자열 감정 태그</td><td>고정 코드 10종만. 모델이 만든 새 태그는 <code>other</code> 로 접는다</td></tr>
+        <tr><td>기기 식별자와 익명키</td><td>앱 정보 화면에만 보여 주고 로그로도 서버로도 안 보낸다</td></tr>
+        <tr><td>예외 메시지와 스택</td><td>화면이 죽는 자리는 대개 방금 넣은 값을 다루던 자리라 메시지에 그 값이 실려 있다</td></tr>
+        <tr><td>실행 횟수의 정확한 값</td><td>구간으로만. 217번 연 사람은 한 명이다</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>광고 한 자리</h3>
+  <ul class="clean">
+    <li>앱 전체에 광고 트리거는 <b>하나</b>다. 사용량 소진 시트의 「광고 보고 한 번 더 이야기하기」.</li>
+    <li>보상은 광고를 끝까지 본 이벤트에서만 준다. 중간에 닫은 것은 취소다.</li>
+    <li>전면형·보상형과 배너를 동시에 로드하면 특정 버전 이상에서 이벤트가 전달되지 않는다. 배너를 아예 안 붙이므로 그 상황이 생기지 않는다.</li>
+    <li>광고 컨테이너 안에 우리 글자를 한 자도 그리지 않는다.</li>
+    <li>이 기기 광고 끄기 스위치가 이 자리에도 걸린다.</li>
+  </ul>
+
+  <div class="callout cut">
+    <p><b>사람의 승인이 앞에 붙는다.</b> 광고 예상 수익이 5,000원을 넘을 때까지 사업자 등록 승인을 받지 못하면 앱이 중단된다. 승인에 약 이틀, 정산 정보 검토에 영업일 2~3일이 걸린다. 그래서 첫날 오전에 신청부터 건다. 그래도 안 되면 <b>광고 없는 번들로 먼저 심사를 통과시키고 광고를 나중에 붙인다.</b> 이 갈아타기를 심사 제출 직전이 아니라 그 전 마일스톤 끝에서 판단한다.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ 12 ════════════════════════════════ -->
+<section id="s12">
+  <span class="snum">12</span>
+  <h2>기술과 아키텍처</h2>
+  <p class="lead">읽지 않아도 제품을 판단할 수 있게 전부 접어 두었다. 필요한 것만 펼쳐 본다.</p>
+
+  <details class="tech" data-acc="tech">
+    <summary>답변이 두 번에 오는 구조</summary>
+    <div class="body">
+      <p><b>요청 1 (3~5초).</b> 결정론적 안전 스크린을 먼저 지나고, 1차 분류가 응답 종류·위기 플래그·맥락 플래그·감정 태그·핵심 한마디·구절 후보 id·그림 테마를 낸다. 서버가 그 구절 id 를 화이트리스트로 검증한 뒤 데이터베이스 원문으로 조립한다. 이때 상담 기록에 대기 행을 만들고 멱등키를 걸어 <b>사용량을 예약</b>한다.</p>
+      <p><b>요청 2 (약 20초).</b> 클라이언트가 멱등키와 고민 원문을 다시 보낸다. 서버는 구절 id 를 클라이언트 값이 아니라 <b>대기 행에서 읽는다.</b> 클라이언트가 함께 보낸 id 가 그 행과 다르면 그 요청을 거부한다. 이렇게 해야 「우리가 준 범위 밖의 경전이 못 나간다」는 방어선이 두 번째 요청에서도 산다. 서버 세션은 없고 상태는 행 하나에만 있다.</p>
+      <p><b>대기 행에 남기는 값은 넷뿐이다.</b> 구절 id 목록, 맥락 플래그, 위기 플래그, 판정 모드. 전부 id 와 열거값이라 고민 원문 미저장 원칙과 부딪히지 않는다. 행은 24시간 뒤 정리한다.</p>
+      <p>스트리밍과 부분 JSON 파서와 폴링을 전부 뺐다. 길이를 다시 만드는 일과 스트리밍은 같은 요청에서 양립하지 않고, 폴링은 서버 인스턴스가 여럿이면 돌지 않으며, 돌게 만들면 고민 원문이 프로세스 밖에 기록된다.</p>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>두 번째 요청만 실패했을 때</summary>
+    <div class="body">
+      <p>답변 전체를 실패로 보지 않는다. <b>상단 세 블록은 화면에 남긴다.</b> 그 아래에 「나머지를 못 불러왔어요」 한 줄과 다시 시도 버튼을 붙인다. 재시도는 같은 멱등키로 두 번째 요청만 다시 부르고 <b>사용량을 다시 깎지 않는다.</b></p>
+      <p>24시간 안에 완료되지 않은 행은 실패로 닫고 그때 사용량을 되돌린다. 보관함과 공유는 완료된 답변만 받는다.</p>
+      <p>이 처리가 정해져 있지 않으면 개발자마다 다르게 만든다. 그래서 한쪽으로 못 박았다.</p>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>사용량을 어떻게 세나</summary>
+    <div class="body">
+      <p>확인하고 나서 차감하면 그 사이에 들어온 요청이 전부 통과한다. 그래서 <b>확인이 아니라 예약</b>으로 바꿨다. 상담 기록에 대기 상태 행과 멱등키 유니크 제약을 먼저 넣는다. 같은 고민을 백그라운드 전환으로 세 번 동시에 쏴도 횟수는 하나만 줄어든다.</p>
+      <p>하루 3회 + 분당 2회 + 입력 2,000자 + 본문 크기 제한 + 전역 일일 예산 문. 하루의 기준 시각은 <b>사용자 시간대 자정</b>이다. 시간 값은 세계 표준시로 저장하고 날짜만 사용자 시간대로 뽑는다. 세계 표준시로 날짜를 뽑으면 자정부터 아침 아홉 시까지가 전날로 샌다.</p>
+      <p>예산 문은 숫자로 못 박았다. 하루 지출 $10 에서 경고 메일, $20 에서 새 요청 차단. 닫히면 조용히 죽지 않는다. 앱 정보 화면에 배지가 뜨고 홈 전송 버튼이 안내 문구로 바뀐다. 다음 날 자정에 자동으로 열린다.</p>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>안전을 두 층으로 나눈 이유</summary>
+    <div class="body">
+      <p>첫 층은 LLM 앞의 <b>결정론적 키워드 스크린</b>이다. 모델이 실패하거나 느려도 이 층은 언제나 돈다. 둘째 층은 1차 분류가 내는 위기 플래그다. 둘 중 하나만 걸려도 본 답변을 만들지 않는다.</p>
+      <p>이 이중화가 없으면 사고가 난다. 폴백 사다리가 1차 분류 실패를 「후보 0개」로 읽어 자해 고민을 일반 구절 풀로 보내는 경로가 실제로 있었다. 지금은 분류 실패를 별도 분기로 빼고 재시도한다.</p>
+      <p>응답 종류 필드를 1차 출력의 첫 자리에 둔다. 답할 수 없는 요청에는 고정 문구 집합에서 거절이 나간다. 스키마에 거절을 담을 자리가 없으면 우회 요청에 억지 답변이 나간다.</p>
+      <p>위기 화면의 나가는 길은 「닫기」와 「다른 이야기 쓰기」 둘뿐이다. 위기 입력이 본 답변 프롬프트에 닿는 경로를 코드에서 막는다.</p>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>모델과 프롬프트를 어디에 두나</summary>
+    <div class="body">
+      <p>모델 식별자와 프롬프트를 런타임 설정이 아니라 <b>배포 산출물로 고정</b>한다. 환경변수로 모델을 갈아 끼우는 경로를 없앴다. 「AI 모델이나 프롬프트를 바꾸면 사전 검토를 받는다」는 요건이 환경변수 교체·예산 강등·타임아웃 재시도를 전부 무효로 만들기 때문이다. 강등과 재시도는 심사에 함께 신고한 모델 쌍 안에서만 한다.</p>
+      <p>사후 검사에 걸린 답변과 사용자가 신고한 답변만, 가린 뒤, 7일 격리 보관한다. 답변 본문을 어디에도 안 남기면 「부적절한 응답을 즉시 수정·차단한다」는 요건을 못 채운다. 접근 기록을 남기고 처리방침에 적는다.</p>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>모델이 내는 값의 모양</summary>
+    <div class="body">
+      <p>v0.1 에서 바뀐 자리만 적는다.</p>
+      <ul>
+        <li><code>scripture</code> 를 모델이 채우지 않는다. 모델은 <code>scriptureIds</code> 만 낸다</li>
+        <li><code>responseType</code> 이 1차 출력의 첫 필드다. 값은 답변 또는 거절</li>
+        <li><code>personalAnalysis</code> 가 문자열 하나에서 <code>{heading, body}</code> 배열 2~3개로</li>
+        <li><code>actions</code> 가 문자열 배열에서 <code>{title, why}</code> 배열로. 왜 그 행동인지가 붙어야 하루가 바뀐다</li>
+        <li><code>terms</code> 0~2개 추가. 용어 풀이는 지어내지 않고 구절에 붙어 있는 해설에서 나온 말만 쓴다</li>
+        <li><code>contextFlags</code> 추가. 코드가 막는 제외 조건과 값 집합이 일치하는지 빌드가 검사한다</li>
+        <li><code>coreMessage</code> 에 40자 상한</li>
+      </ul>
+    </div>
+  </details>
+
+  <details class="tech" data-acc="tech">
+    <summary>어디서 가져다 쓰나</summary>
+    <div class="body">
+      <p>브릿지 경계, 제공자 계층, API 계층, 오류 바운더리, 뒤로가기 처리, 탭바, 배포 스크립트, CI 잡, 행동 로그를 기존 미니앱에서 그대로 복제한다. 도메인 코드는 가져오지 않는다.</p>
+      <p>서버는 컨테이너 하나와 관계형 데이터베이스 하나. 자동 백업을 켜고 오류율 알림을 등록한다. 모니터링이 없으면 예산 문이 닫혔을 때 앱이 죽은 채로 있는다.</p>
+      <p>검증 코드는 제품 저장소 안에 두되 커밋하지 않는다. 익명키 격리 장치가 첫 번째다. 그것이 없으면 두 번째 테스트부터 전부 횟수 제한에 걸린다.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ════════════════════════════════ 13 ════════════════════════════════ -->
+<section id="s13">
+  <span class="snum">13</span>
+  <h2>마일스톤과 완료선</h2>
+  <p class="lead">일곱 마일스톤에 완료선 <b>52개</b>를 달았다. C1 부터 C52 까지 전부 화면에서 눈으로 보이는 것으로 적었다. 「구현 완료」는 완료선이 아니다. 마일스톤을 누르면 그 안의 산출물과 완료선 전문이 나온다.</p>
+
+  <div class="ms-rail" data-mgroup="ms">
+    <button class="ms" data-modal="ms-0">
+      <span class="code">M0</span>
+      <span class="mid">
+        <b>껍데기와 게이트</b>
+        <p>빈 앱이 실기기에 뜨고, 막힐 수 있는 답을 미리 받아 둔다. 사람의 승인을 기다리는 일은 첫날 오전에 전부 건다.</p>
+        <span class="cnums"><span class="cn">C1</span><span class="cn">C2</span><span class="cn">C3</span><span class="cn">C4</span><span class="cn">C5</span><span class="cn">C6</span><span class="cn">C7</span><span class="cn">C8</span><span class="cn">C9</span><span class="cn">C10</span></span>
+      </span>
+      <span class="days">5일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-1">
+      <span class="code">M1</span>
+      <span class="mid">
+        <b>화면 A · 고민 입력</b>
+        <p>승부처 A 를 끝낸다. 답변은 아직 고정 값을 내주는 껍데기가 준다.</p>
+        <span class="cnums"><span class="cn">C11</span><span class="cn">C12</span><span class="cn">C13</span><span class="cn">C14</span><span class="cn">C15</span></span>
+      </span>
+      <span class="days">3일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-2">
+      <span class="code">M2</span>
+      <span class="mid">
+        <b>경전 120구절과 검색</b>
+        <p>화면 B 의 재료를 만든다. 사람이 하는 감수가 병목이라 이 마일스톤이 가장 길다.</p>
+        <span class="cnums"><span class="cn">C16</span><span class="cn">C17</span><span class="cn">C18</span><span class="cn">C19</span><span class="cn">C20</span><span class="cn">C21</span><span class="cn">C22</span></span>
+      </span>
+      <span class="days">6일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-3">
+      <span class="code">M3</span>
+      <span class="mid">
+        <b>화면 B · 답변</b>
+        <p>승부처 B 를 끝낸다. 2단 요청, 일곱 블록, 위기 분기, 실패와 오프라인까지.</p>
+        <span class="cnums"><span class="cn">C23</span><span class="cn">C24</span><span class="cn">C25</span><span class="cn">C26</span><span class="cn">C27</span><span class="cn">C28</span><span class="cn">C29</span><span class="cn">C30</span><span class="cn">C31</span><span class="cn">C32</span></span>
+      </span>
+      <span class="days">5일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-4">
+      <span class="code">M4</span>
+      <span class="mid">
+        <b>심사 방어</b>
+        <p>반려와 제재 사유를 없앤다. AI 고지, 거절 경로, 처리방침, 사용량 방어, 신고 경로.</p>
+        <span class="cnums"><span class="cn">C33</span><span class="cn">C34</span><span class="cn">C35</span><span class="cn">C36</span><span class="cn">C37</span><span class="cn">C38</span><span class="cn">C39</span><span class="cn">C40</span></span>
+      </span>
+      <span class="days">3일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-5">
+      <span class="code">M5</span>
+      <span class="mid">
+        <b>공유와 보관</b>
+        <p>공유율과 간직 클릭률을 실제로 재기 시작한다.</p>
+        <span class="cnums"><span class="cn">C41</span><span class="cn">C42</span><span class="cn">C43</span><span class="cn">C44</span><span class="cn">C45</span><span class="cn">C46</span></span>
+      </span>
+      <span class="days">3일</span>
+    </button>
+
+    <button class="ms" data-modal="ms-6">
+      <span class="code">M6</span>
+      <span class="mid">
+        <b>광고 한 자리와 제출</b>
+        <p>실기기 확인 일곱 건을 마치고 심사에 낸다. 다관점 리뷰는 이 직전에 한 번만 돈다.</p>
+        <span class="cnums"><span class="cn">C47</span><span class="cn">C48</span><span class="cn">C49</span><span class="cn">C50</span><span class="cn">C51</span><span class="cn">C52</span></span>
+      </span>
+      <span class="days">3일 + 심사 대기</span>
+    </button>
+  </div>
+
+  <div class="callout sage">
+    <p><b>합계 약 28 작업일.</b> 바깥에 걸린 것이 셋이다. 감수 10~20시간, 에셋 다시 만들기, 그리고 콘솔 답변. 콘솔 답변이 늦으면 마지막 마일스톤이 밀린다. 그래서 묻는 일을 첫날에 건다.</p>
+  </div>
+
+  <h3>일부러 깨뜨려 보는 자리는 하나다</h3>
+  <p>검증 장치가 실제로 무언가를 막는지는 <b>M2 의 빌드 게이트 한 곳</b>에서만 확인한다(C17). 회차마다 항목마다 깨뜨리면 확인하는 일이 만드는 일보다 커진다. 대신 실패해야 하는 검증은 실패한 채로 둔다. 건너뛰거나 기대값을 실제 출력에서 베끼지 않는다.</p>
+</section>
+
+<!-- ════════════════════════════════ 14 ════════════════════════════════ -->
+<section id="s14">
+  <span class="snum">14</span>
+  <h2>지금 결정할 것</h2>
+  <p class="lead">답이 없으면 M2 이후가 안 움직인다. 추천안을 그대로 골라도 되고 뒤집어도 되지만, 고르지 않으면 계획이 멈춘다.</p>
+
+  <div class="cards" data-mgroup="dec">
+    <button class="card mcard" data-modal="dec-1">
+      <div class="eyebrow">결정 1 · 사람</div>
+      <h4>법구경 120구절 감수를 누가 하나</h4>
+      <p><b>추천:</b> 본인이 직접, 하루 세 시간씩 닷새.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="dec-2">
+      <div class="eyebrow">결정 2 · 사용자 식별</div>
+      <h4>보관함을 익명키만으로 갈 것인가</h4>
+      <p><b>추천:</b> 익명키만. C3 이 재설치 유지 여부를 답해 준다.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="dec-3">
+      <div class="eyebrow">결정 3 · 수익화</div>
+      <h4>광고를 첫 출시에 넣을 것인가</h4>
+      <p><b>추천:</b> 넣는다. 단 보상형 한 자리만.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="dec-4">
+      <div class="eyebrow">결정 4 · 에셋</div>
+      <h4>일러스트 여덟 장을 어떻게 다시 만드나</h4>
+      <p><b>추천:</b> 받은 여덟 장을 화풍 기준으로 삼아 같은 인상으로 재생성.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="dec-5">
+      <div class="eyebrow">결정 5 · 비용</div>
+      <h4>Deep 을 무료로 유지할 것인가</h4>
+      <p><b>추천:</b> 유지하되 천장을 하루 4회로 내리고 단가를 다시 본다.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+    <button class="card mcard" data-modal="dec-6">
+      <div class="eyebrow">결정 6 · 심사</div>
+      <h4>첫 심사에 위기 안내 화면을 넣을 것인가</h4>
+      <p><b>추천:</b> 넣고 낸다. 빼면 AI 운영 요건을 못 채운다.</p>
+      <span class="more">왜 이렇게 추천하나 →</span>
+    </button>
+  </div>
+
+  <h3>아직 답이 없는 것</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>언제 답이 나오나</th><th>무엇</th></tr></thead>
+      <tbody>
+        <tr><td><b>M0 에서</b></td><td>익명키가 재설치를 넘겨도 같은가 · 후보 모델 셋의 실제 지연 · 위기 안내 화면이 민감 콘텐츠 몇 단계인가 · 자체 일러스트가 그래픽 조항에 걸리는가 · 이 앱이 AI 상담으로 분류되는가 · 사업자 등록과 정산을 지금 신청할 수 있는가 · 앱 아이콘 규격이 정말 600×600 각진 정사각인가</td></tr>
+        <tr><td><b>M1~M5 에서 화면으로</b></td><td>iOS 에서 자동 포커스가 키보드를 올리는가 · 링크 미리보기가 메신저에서 카드로 뜨는가 · 딥링크 하위 경로가 그대로 돌아오는가 · 이미지 저장이 실제로 어디에 들어가는가</td></tr>
+        <tr><td class="dim-td"><b>열어 두는 것</b></td><td class="dim-td">보상형 광고의 실제 단가 · 광고 노출 빈도 상한 · 고민 텍스트 국외 이전의 법적 요건 · CC0 위에 만든 우리 번역의 저작물성 · 종교 콘텐츠 미니앱의 승인 전례 · 신고가 쌓였을 때 누가 언제 보고 무엇을 고치는가</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  부처의 말 · PRD v0.2 (통합·라이브목업) · 2026-09-13<br>
+  근거 문서: PRD v0.1, 통합 개발 계획, 앱인토스 제약 감사, 경전 데이터와 RAG, LLM 라우팅과 안전, 아키텍처와 재사용, 비주얼 디자인 언어, 화면 IA 와 카피.
+  충돌하면 통합 개발 계획이 이긴다.
+</footer>
+
+</main>
+</div>
+
+<!-- ══════════════════════ 모달 껍데기 ══════════════════════ -->
+<div class="mdim" id="mdim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+  <div class="modal-head">
+    <div class="grow">
+      <div class="mk" id="modalKicker"></div>
+      <h3 id="modalTitle"></h3>
+    </div>
+    <button class="modal-x" id="modalClose" aria-label="닫기">✕</button>
+  </div>
+  <div class="modal-body" id="modalBody"></div>
+  <div class="modal-foot">
+    <span class="hint">Esc, 바깥 어두운 곳, ✕ 셋 다로 닫힙니다</span>
+    <button class="modal-nav" id="modalPrev">← 이전</button>
+    <button class="modal-nav" id="modalNext">다음 →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════ 모달 내용 ══════════════════════ -->
+
+<template id="m-chg-light" data-kicker="X1 · 테마" data-title="라이트 모드 전용">
+  <h4>v0.1 에서는</h4>
+  <p>다크 팔레트 16쌍과 밤 시간대 일러스트 10장을 확정해 둔 상태였다. 감정 10종 × 낮밤 2종 = 20장이 계획이었다.</p>
+  <h4>v0.2 에서는</h4>
+  <p>다크 토큰과 밤 이미지 열 장을 <strong>통째로 뺐다.</strong> 색 정의는 라이트 한 벌만 남는다.</p>
+  <h4>왜</h4>
+  <p>플랫폼 문서가 「미니앱 테마는 라이트 모드로 구현돼 있어요」라고 적었고, 실제 미니앱 설정에서도 상단 네비게이션이 라이트로 고정돼 있다. 상단바를 라이트로 고정해 놓고 본문만 다크로 뒤집으면 <strong>화면 위아래가 갈라진다.</strong> 44px 짜리 밝은 띠 아래로 검은 본문이 붙는 모양이 된다.</p>
+  <h4>따라오는 것</h4>
+  <ul>
+    <li>이미지 장수가 20에서 10으로, 다시 실제 도착분 여덟 장으로 줄었다</li>
+    <li>대비 계산을 라이트 한 벌만 하면 된다. 34쌍을 전부 계산해 통과시켰다</li>
+    <li>이 PRD 문서 자체는 어두운 화면에서도 읽히게 만들었다. 단, 폰 목업 안쪽은 실제 앱과 같은 라이트 값 그대로 남는다</li>
+  </ul>
+  <div class="qt">플랫폼이 다크를 열면 그때 다시 본다. 우리가 먼저 뒤집을 이유가 없다.</div>
+</template>
+
+<template id="m-chg-ad" data-kicker="X2 · 광고" data-title="광고는 보상형 한 자리">
+  <h4>두 축이 정반대로 결론을 냈다</h4>
+  <p>화면 축은 「전면을 빼고 보상형 둘만」이라고 했고, 플랫폼 제약 감사는 정확히 반대로 「전면 하나만 켜고 보상형을 빼라」고 했다. 둘 다 「한 화면에 광고 트리거 하나」라는 점에서는 같았다.</p>
+  <h4>최종 판정</h4>
+  <p><strong>보상형 한 자리만.</strong> 사용량 소진 시트에서만 띄운다. 전면광고, 배너광고, 「광고 보고 다른 가르침」을 전부 뺐다.</p>
+  <h4>전면을 뺀 근거는 하나뿐이다</h4>
+  <p>버튼 라벨에 광고가 없어 사용자가 <strong>예상 못 한 순간에 광고를 만난다.</strong> 이것이 출시 불가 조항이다. 보상형은 사용자가 「광고 보고」라고 적힌 버튼을 스스로 누른다.</p>
+  <div class="qt">근거가 하나뿐이라 「라벨에 광고를 명시한 전면광고」는 다시 후보가 된다. 그래서 콘솔에 서면으로 물어 두고, 답이 「가능」이면 P1 에 라벨을 달아 붙인다.</div>
+  <h4>정정한 것</h4>
+  <p>이전 판은 「특정 버전에서 광고 종료 이벤트가 안 온다」를 전면광고 제외 근거로 적었는데, 원문에 없는 문장이었다. 토스앱 버전 두 개를 섞어 쓴 것이다. 하나는 「전면형·보상형과 배너를 동시 로드하면 이벤트가 전달되지 않는다」이고 다른 하나는 「알림 API 최소 버전」이다. 그 문장을 지웠다.</p>
+</template>
+
+<template id="m-chg-two" data-kicker="X3 · 답변 전달" data-title="답변은 두 번에 나눠 받는다">
+  <h4>세 축이 서로 다른 말을 했다</h4>
+  <p>화면 축은 「통째로 한 번에」, 라우팅 축은 「스트리밍과 부분 JSON 파서가 필수」, 아키텍처 축은 「동기 요청 한 방」이라고 했다.</p>
+  <h4>최종 판정</h4>
+  <p><strong>요청을 둘로 나눈다.</strong> 1차가 3~5초에 마음 태그·오늘의 한마디·경전 세 블록을 먼저 그리고, 2차가 약 20초에 나머지를 그 아래에 채운다.</p>
+  <h4>왜 이게 셋을 한꺼번에 푸나</h4>
+  <ul>
+    <li>「길이를 다시 만드는 일과 스트리밍이 같은 요청에서 양립하지 않는다」는 문제가 사라진다. 두 요청은 길이 정책이 서로 다르다</li>
+    <li>「진행 신호를 동기 요청으로는 못 준다」는 문제도 사라진다. 1차 응답 도착이 그대로 진짜 진행 신호다</li>
+    <li>관용 JSON 파서와 폴링 저장소가 통째로 없어진다. 관용 파서는 외부 코드 실행 조항에도 닿는다</li>
+  </ul>
+  <h4>화면에서 무엇이 달라지나</h4>
+  <p>대기 화면에서 보내는 시간이 20초에서 3~5초로 줄었다. 그다음은 빈 화면이 아니라 <strong>이미 읽을 것이 있는 화면</strong>에서 기다린다. 아래 자리는 스켈레톤으로 잡아 두어 화면이 밀리지 않는다.</p>
+  <div class="qt">2차만 실패하면 상단 세 블록은 남기고 아래에 다시 시도만 붙인다. 재시도는 사용 횟수를 다시 깎지 않는다.</div>
+</template>
+
+<template id="m-chg-tab" data-kicker="X4 · 탭" data-title="하단 탭 두 개">
+  <h4>v0.1 에서는</h4>
+  <p>이야기하기 · 오늘의 말씀 · 보관함 셋이었고, 보관함에는 자물쇠 아이콘이 붙어 있었다.</p>
+  <h4>v0.2 에서는</h4>
+  <p><strong>이야기하기와 보관함 둘.</strong> 자물쇠도 뺐다. 플랫폼 최소 탭 수가 둘이라 규정은 만족한다.</p>
+  <h4>왜</h4>
+  <ul>
+    <li>「오늘의 말씀」은 매일 구절을 채우는 <strong>운영 부담</strong>이 붙는다. 출시를 막을 이유가 없다. 데이터 스키마에 「오늘의 말씀으로 써도 되는 구절인가」 표시만 남겨 둔다</li>
+    <li>자물쇠는 「못 쓴다」는 부정 신호다. 긍정형으로 쓰라는 라이팅 규칙과 어긋나고, 누르기 전부터 막혀 있다고 읽힌다</li>
+    <li>결제를 뺐으므로 자물쇠가 가리킬 곳 자체가 없어졌다</li>
+  </ul>
+  <h4>보관함은 무엇을 여나</h4>
+  <p>오늘 나눈 이야기와 무료로 간직한 말씀 3개. 그 아래 지난 기록 자리는 흐리게 두고 한 줄로 안내만 한다. 시트도 구매 버튼도 없다.</p>
+</template>
+
+<template id="m-chg-pay" data-kicker="X5 · 결제와 알림" data-title="결제도 알림도 넣지 않는다">
+  <h4>뺀 것</h4>
+  <ul>
+    <li>Premium 구독 결제와 3일 무료 체험</li>
+    <li>간직하기를 처음 누를 때 뜨는 Paywall 시트</li>
+    <li>「내일 다시 물어보기」 재방문 알림</li>
+  </ul>
+  <h4>결제를 뺀 이유</h4>
+  <p>사업자 등록, 정산 검토 영업일 2~3일, 수수료, 심사 아홉 항목이 전부 앞을 막는다. 그리고 더 큰 이유가 있다. <strong>검증되지 않은 가치 위에 결제부터 짓는 셈</strong>이다. 사람들이 정말 지난 기록을 돈 내고 볼 것인지 아직 모른다. 간직 클릭률을 먼저 실측한다.</p>
+  <h4>알림을 뺀 이유</h4>
+  <p>콘솔 발송 템플릿, 익명키 원문 보관, 토스앱 최소 버전 셋을 한꺼번에 요구한다. 특히 익명키 원문을 우리가 들고 있어야 한다는 점이 「원문을 안 남긴다」는 원칙과 정면으로 부딪힌다.</p>
+  <h4>그래서 재방문은 어떻게 만드나</h4>
+  <p>알림 대신 <strong>앱에 다시 들어왔을 때 화면 안에서 묻는다.</strong> 어제 적어 준 「오늘 해볼 일」을 해 봤는지 홈에서 한 줄로 물어보는 방식이다.</p>
+  <div class="qt">간직 클릭률이 실제로 높으면 그때 결제를 붙인다. 낮으면 붙이지 않는 것이 맞았다는 뜻이다.</div>
+</template>
+
+<template id="m-chg-scr" data-kicker="X6 · 경전 규모" data-title="법구경 120구절">
+  <h4>v0.1 에서는</h4>
+  <p>구절 300개, 감정 태그 10종 × 태그당 최소 12개. 감수 시간을 25~50시간으로 잡았다.</p>
+  <h4>v0.2 에서는</h4>
+  <p><strong>법구경만 120구절.</strong> 같은 구절이 연달아 나오지 않게 막는 쿨다운도 10회에서 5회로 내렸다. 감수 시간이 10~20시간이 된다.</p>
+  <h4>왜</h4>
+  <p>사람이 하는 감수가 <strong>유일한 인력 병목</strong>이다. 25~50시간이면 감수자 한 명으로는 출시가 안 선다. 그리고 원래 추정 자체가 최소 두 배 과대였다. 법구경은 게송이라 산문 경전보다 짧고, 감수 시간이 다른 경전의 3분의 1 수준이다.</p>
+  <h4>120이면 충분한가</h4>
+  <p>태그 10종 각각 감수 통과 12개면 태그당 후보가 12~20개다. 쿨다운 5를 돌려도 후보가 남는다. 임베딩이 필요 없는 규모이기도 하다. 태그 필터만으로 후보가 이미 그 크기다.</p>
+  <div class="qt">법구경 밖 180구절은 출시 후 월 1~2회 배치로 늘린다. 감수자 확보가 출시를 막게 두지 않는다.</div>
+</template>
+
+<template id="m-chg-img" data-kicker="X8 · 일러스트" data-title="부처 이미지 여덟 장">
+  <h4>계획이 두 번 바뀌었다</h4>
+  <p>처음은 감정 10종 × 낮밤 2종 = 20장이었다. 라이트 전용으로 정하면서 밤 열 장이 사라져 열 장이 됐다. 그리고 2026년 9월 13일에 실제 에셋이 도착했는데 <strong>여덟 종</strong>이었다.</p>
+  <h4>왜 여덟으로 정했나</h4>
+  <p>원래 장면이 정의돼 있던 것은 여섯이었는데, 받은 묶음에 관계와 성장까지 여덟 종이 들어 있었다. <strong>이미 그려져 있는 그림을 버릴 이유가 없다.</strong> 그린 것이 있는 쪽을 따랐다.</p>
+  <h4>열 가지 값을 여덟 장에 어떻게 묶나</h4>
+  <p>화면이 받는 값은 열 가지 그대로 두고 받는 쪽만 늘렸다. 집착은 상실 그림으로, 인정 욕구는 비교 그림으로, 공허는 성장 그림으로 간다. <strong>모르는 값이 오거나 값이 없으면 선택 그림</strong>으로 간다. 어떤 고민에도 어긋나지 않는 유일한 장면이다.</p>
+  <h4>남은 문제</h4>
+  <p>받은 파일이 175×185px 안팎이다. 답변 화면 자리가 가로 100% · 높이 200px 고정이라 <strong>그대로 쓰면 두 배 이상 늘어나 뭉갠다.</strong> 번들에 들어가는 것은 1290×720 이상으로 다시 만든 판이다. 받은 여덟 장은 화풍 기준으로 함께 넣어 같은 인상이 나오게 한다.</p>
+  <div class="qt">그림은 감정 태그 문자열이 아니라 열거값으로 고른다. 문자열로 고르면 모델이 새 태그를 만들었을 때 그림이 사라진다.</div>
+</template>
+
+<template id="m-chg-term" data-kicker="되살린 것" data-title="불교 용어 풀이">
+  <h4>한때 뺄 후보였다</h4>
+  <p>블록이 늘고 시트가 하나 더 생긴다는 이유로 뺄 목록에 올라갔었다.</p>
+  <h4>되살린 이유</h4>
+  <p>경전을 「좋은 말 같긴 한데 뭔 소리지」로 만들지 않는 장치가 <strong>이것뿐</strong>이다. 번역문을 아무리 쉽게 옮겨도 갈애나 인색함 같은 낱말이 한 번은 나온다. 그 자리에서 읽기가 멈춘다.</p>
+  <h4>어떻게 만드나</h4>
+  <ul>
+    <li>2차 응답에 낱말과 뜻 풀이 쌍을 0~2개 담는다</li>
+    <li>④ 블록 본문 안에서 <strong>점선 밑줄</strong>로 표시하고 탭하면 시트가 열린다</li>
+    <li>용어 풀이는 모델이 지어내지 않는다. 구절 데이터에 붙어 있는 해설에서 나온 말만 쓴다</li>
+    <li>시트를 닫으면 읽던 자리로 돌아온다. 읽기 흐름이 끊기면 이 장치의 의미가 없다</li>
+  </ul>
+  <div class="qt">접는 것은 경전 원문과 용어 풀이 둘뿐이다. 답변 본문은 접지 않는다. 접기는 잘라 놓기와 시각적으로 같다.</div>
+</template>
+
+<template id="m-ux-1" data-kicker="원칙 1" data-title="경전을 AI가 만들지 않는다">
+  <h4>무엇이 금지인가</h4>
+  <p>모델에게 「이 고민에 맞는 부처님 말씀 하나 만들어 줘」라고 요청하는 것. 그리고 모델이 낸 문자열을 경전 자리에 그대로 올리는 것.</p>
+  <h4>어떻게 강제하나</h4>
+  <ul>
+    <li>모델의 출력 스키마에 경전 본문 필드가 <strong>없다.</strong> 구절 id 만 낸다</li>
+    <li>서버가 그 id 를 <strong>화이트리스트로 검증</strong>한 뒤 데이터베이스에서 본문을 꺼내 조립한다</li>
+    <li>두 번째 요청에서도 id 를 클라이언트 값이 아니라 첫 요청이 남긴 행에서 읽는다. 클라이언트가 다른 id 를 보내면 거부한다</li>
+    <li>번역 출처·라이선스·확인일이 데이터 스키마의 필수 항목이다</li>
+  </ul>
+  <h4>허용하는 것</h4>
+  <p>빌드 시점의 번역은 허용한다. 단 <strong>사람 감수 게이트를 지난 것만</strong>이다. 런타임에 모델이 경전을 만들거나 우리가 준 선택 범위 밖의 문자열을 내는 것이 금지다.</p>
+  <div class="qt">확인 방법: C24 「답변의 경전 출처와 본문이 디버그 화면의 데이터베이스 값과 글자 그대로 같다」, C29 「구절 id 를 바꿔 보내면 거부된다」.</div>
+</template>
+
+<template id="m-ux-2" data-kicker="원칙 2" data-title="고민과 답변 사이에 광고를 두지 않는다">
+  <h4>광고를 두지 않는 네 자리</h4>
+  <ul>
+    <li>고민을 쓰는 중 (홈)</li>
+    <li>답변을 만드는 중 (대기 화면)</li>
+    <li>답변의 첫 화면</li>
+    <li>경전과 개인 풀이 사이</li>
+  </ul>
+  <h4>왜</h4>
+  <p>세 줄에서 열 줄씩 고민을 쓴 직후는 이 앱에서 가장 중요한 순간이다. 그 자리에 광고가 나오면 <strong>「내 고민 → 광고 수익화」</strong>로 느껴진다. 한 번 그렇게 읽히면 되돌릴 수 없다.</p>
+  <h4>대신 무엇을 두나</h4>
+  <p>대기 화면은 광고 대신 <strong>진행을 보여 준다.</strong> 부처 그림 한 장과 걸음 네 개, 그리고 지금 하는 일 한 줄. 걸음이 하나씩 지워지는 것이 전부다.</p>
+  <h4>광고가 나올 수 있는 유일한 자리</h4>
+  <p>하루 세 번을 다 쓴 뒤 열리는 소진 시트의 첫 버튼. 라벨에 「광고 보고」가 들어가 사용자가 스스로 고른다. 앱 전체에 광고 트리거는 이것 하나뿐이다.</p>
+  <div class="qt">플랫폼도 같은 말을 한다. 인트로·로딩·컷신·팝업 모달에는 배너를 붙일 수 없다. 우리 판단과 플랫폼 정책이 여기서 정확히 일치한다.</div>
+</template>
+
+<template id="m-ux-3" data-kicker="원칙 3" data-title="단정하지 않고 진단하지 않는다">
+  <h4>말투 규칙</h4>
+  <ul>
+    <li>마음 태그 아래 문장은 「~이 있어 보여요」로 끝난다. 「당신은 ~입니다」로 쓰지 않는다</li>
+    <li>오늘 해볼 일은 「~해 볼 수 있어요」다. 「~하세요」로 지시하지 않는다</li>
+    <li>위기 화면도 「지금 많이 힘드신 것 같아요」다. 단정하지 않고, 지시하지 않고, 나갈 길을 남긴다</li>
+  </ul>
+  <h4>쓰지 않는 말</h4>
+  <p>상담·치료·진단·처방. 의료나 상담 행위로 읽히면 규제 위험이 생긴다. 그래서 소진 시트 문구에서도 「오늘 무료 상담을 모두 사용했어요」를 「오늘 나눌 수 있는 이야기를 다 나눴어요」로 바꿨다.</p>
+  <p>업보·죄·벌도 쓰지 않는다. 종교 강요와 죄책감 유발이 된다. 「집착을 버리세요」, 「내려놓으세요」도 쓰지 않는다. 사용자가 정확히 그것을 원하지 않는다고 처음부터 적혀 있다.</p>
+  <h4>화면으로 강제되는 것</h4>
+  <p>답변 맨 아래에 상시로 붙는다. 「이 답변은 AI 가 경전을 찾아 풀어 쓴 것이에요. 의학·법률 조언이 아니에요.」 그 아래 도움받을 곳 링크가 함께 있다.</p>
+</template>
+
+<template id="m-ux-4" data-kicker="원칙 4" data-title="AI가 썼다는 것을 늘 밝힌다">
+  <h4>세 자리에서 같은 사실을 말한다</h4>
+  <ul>
+    <li><strong>홈 첫 줄.</strong> 「부처의 말 · AI 가 경전을 찾아 풀어 드려요」. 서비스 설명과 고지를 겸한다</li>
+    <li><strong>답변 화면 상시 배지.</strong> 스크롤을 어디로 옮겨도 「AI 생성」 배지가 화면 안에 있다</li>
+    <li><strong>공유 카드.</strong> 「AI 가 경전을 찾아 풀어 쓴 글이에요」가 카드 안에 인쇄된다</li>
+  </ul>
+  <h4>왜 시트가 아니라 한 줄인가</h4>
+  <p>첫 진입에 전면을 막는 바텀시트를 띄우는 것이 출시 불가 조항이다. 그래서 고지를 시트로 만들지 않고 <strong>입력창 위 한 줄</strong>로 상시 노출한다. 읽을 사람은 읽고, 화면을 막지는 않는다.</p>
+  <h4>오늘의 한마디에 붙는 표시</h4>
+  <p>「오늘의 한마디」는 부처의 직접 발언이 아니라 AI 가 풀어 쓴 문장이다. 그래서 그 블록 안에 <strong>「현대적 해석」 배지</strong>를 따로 단다. 경전 번역문과 AI 해석이 시각적으로 갈려야 한다.</p>
+  <div class="qt">고지·표시 의무 위반은 과태료 대상이다. 문구를 지우거나 배지를 조건부로 만드는 변경은 하지 않는다. 확인 방법은 C34 다.</div>
+</template>
+
+<template id="m-ux-5" data-kicker="원칙 5" data-title="고민 원문을 저장하지 않는다">
+  <h4>서버에 남는 것</h4>
+  <p>구절 id 목록, 맥락 플래그, 위기 플래그, 판정 모드. <strong>넷뿐이고 전부 id 와 열거값</strong>이다. 이 행도 24시간 뒤 정리한다.</p>
+  <h4>기기에 남는 것</h4>
+  <p>쓰다 만 초안 하나. 네이티브 저장소에 두고 <strong>24시간 뒤 열 때 버린다.</strong> 서버로 보내지 않는다. 고민 원문이 기기에 무기한 남아 있는 것 자체가 위험하고, 어제의 고민을 오늘 다시 보여 주는 것도 좋은 경험이 아니다.</p>
+  <h4>왜 이렇게까지 하나</h4>
+  <p>불륜, 자살 충동, 회사 험담이 평문으로 들어온다. <strong>저장하지 않는 것이 가장 싼 방어다.</strong> 유출될 것이 없으면 유출 사고가 없다.</p>
+  <h4>예외 하나</h4>
+  <p>사후 검사에 걸린 답변과 사용자가 신고한 답변만, 가린 뒤, 7일 격리 보관한다. 이것도 답변이지 고민 원문이 아니다. 「부적절한 응답을 즉시 수정·차단한다」는 요건을 채우려면 볼 수 있는 표본이 있어야 한다.</p>
+  <div class="qt">대가도 있다. 「광고 보고 두 번째 관점 보기」를 만들 재료가 없어져 그 기능을 통째로 뺐다. 원문이 없으면 두 번째 관점도 없다.</div>
+</template>
+
+<template id="m-ux-6" data-kicker="원칙 6" data-title="개인정보는 문구가 아니라 코드가 막는다">
+  <h4>화면이 하는 일</h4>
+  <p>인디케이터 줄 바로 아래 한 줄이 상시 보인다. 「이름·연락처 같은 정보는 적지 않아도 괜찮아요」. 금지형이 아니라 허락형이다.</p>
+  <h4>코드가 하는 일</h4>
+  <p>전송 직전 전화번호·이메일·주민번호·계좌번호 패턴을 <strong>치환한다.</strong> 전송을 막지는 않는다. 대신 답변 화면 상단에 조용히 한 줄이 뜬다. 「연락처처럼 보이는 부분은 빼고 전달했어요」.</p>
+  <h4>왜 문구만으로는 안 되나</h4>
+  <p>화면이 막는 규칙은 화면을 안 지나는 입구에서 뚫린다. 값을 화면에 못 오게 하는 것이 문구 규칙보다 세다. 그리고 문구를 읽고도 적는 사람이 있다. 읽지 않는 사람은 더 많다.</p>
+  <h4>이름과 회사명은 어떻게 하나</h4>
+  <p>마스킹하지 <strong>않는다.</strong> 이름은 패턴으로 잡을 수 없고, 잡으려 들면 멀쩡한 문장을 망가뜨린다. 대신 안내 문구가 덮는다. 이 결정을 문서에 명시해 둔다.</p>
+  <h4>순서 주의</h4>
+  <p>깊이 판정을 <strong>마스킹보다 먼저</strong> 한다. 전화번호 열한 자리를 먼저 가리면 두 글자가 되어 120자 문턱이 흔들린다.</p>
+  <div class="qt">가운뎃점은 줄바꿈 자리라, 「이름·연락처」가 줄 끝에서 갈라지지 않게 한 덩어리로 묶는다.</div>
+</template>
+
+<template id="m-ux-7" data-kicker="원칙 7" data-title="위기 신호가 다른 모든 것보다 앞선다">
+  <h4>무엇이 일어나나</h4>
+  <p>자해·자살·타해·학대 피해 신호가 잡히면 <strong>경전 검색도 답변 생성도 하지 않는다.</strong> 고정 문구로 된 창구 안내 화면으로 바로 간다. 마음 태그도, 오늘의 한마디도, 오늘 해볼 일도 없다.</p>
+  <h4>두 층으로 판정한다</h4>
+  <ul>
+    <li><strong>1층.</strong> 모델 앞에 놓인 결정론적 키워드 검사. 모델이 실패하거나 느려도 언제나 돈다</li>
+    <li><strong>2층.</strong> 1차 분류가 내는 위기 플래그</li>
+  </ul>
+  <p>둘 중 하나만 걸려도 본 답변을 만들지 않는다. 이중화가 없으면 분류 실패가 「후보 0개」로 읽혀 자해 고민이 일반 구절 풀로 흘러간다. 실제로 그 경로가 있었다.</p>
+  <h4>화면 규칙</h4>
+  <ul>
+    <li>자해 주제를 <strong>묘사하지 않는다.</strong> 창구 안내만 한다</li>
+    <li>나가는 길은 「닫기」와 「다른 이야기 쓰기」 둘뿐이다. 답변 생성 경로로 가는 버튼이 없다</li>
+    <li>이 화면에 광고를 두지 않는다</li>
+    <li>위기 입력이 본 답변 프롬프트에 닿는 경로를 코드에서 막는다</li>
+  </ul>
+  <div class="qt">창구 번호는 출시 전에 공식 출처로 다시 확인하고 적는다. 확인 방법은 C26 이다.</div>
+</template>
+
+<template id="m-blk-1" data-kicker="블록 ①" data-title="지금 마음">
+  <h4>화면에 무엇이 있나</h4>
+  <p>감정 태그 칩과 그 아래 한 문장. Basic 은 1~2개, Deep 은 최대 4개. 헤더 문구는 없다.</p>
+  <h4>이 자리가 증명하는 것</h4>
+  <p>내 글을 읽었다는 것. 태그가 <strong>내가 쓴 말에서 나왔다는 것이 보여야</strong> 사용자가 다음 블록으로 내려간다. 여기서 「뻔한 말이네」가 되면 아래를 안 읽는다.</p>
+  <h4>한 문장 쓰는 법</h4>
+  <div class="qt">지금 마음의 중심에는 친구를 미워하는 마음보다, <strong>나만 제자리에 서 있는 것 같다는 조급함</strong>이 있어 보여요.</div>
+  <p>단정하지 않는다. 「~이 있어 보여요」로 끝낸다. 그리고 사용자가 스스로 쓴 표현을 되돌려 주되, 그가 말하지 않은 한 겹을 더 짚는다. 그것이 「읽었다」의 증거가 된다.</p>
+  <h4>색은 신호지 장식이 아니다</h4>
+  <p>감정 10종을 세 갈래 색으로 묶는다. 두려움 계열은 세이지, 관계와 욕구 계열은 연꽃, 나머지는 모래색. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다.</p>
+</template>
+
+<template id="m-blk-2" data-kicker="블록 ②" data-title="오늘의 한마디">
+  <h4>화면에 무엇이 있나</h4>
+  <p>짙은 면 위 명조 28px. 이 화면에서 가장 큰 글씨다. 아래에 「현대적 해석」 배지가 붙는다.</p>
+  <h4>이 자리가 하는 일</h4>
+  <p>가장 오래 기억될 한 줄이고, <strong>공유 카드에 그대로 나가는 문장</strong>이다. 그래서 40자 상한을 걸었다. 카드에서 세 줄을 넘으면 글자를 줄여야 하는데, 그러면 카드가 약해진다.</p>
+  <h4>배지가 필수인 이유</h4>
+  <p>이 문장은 부처의 직접 발언이 아니다. AI 가 풀어 쓴 것이다. 경전 번역문과 <strong>시각적으로 갈려야</strong> 한다. 배지를 조건부로 만들지 않는다.</p>
+  <h4>짙은 면 위에서 조심할 것</h4>
+  <p>주 버튼 바닥색과 이 면의 색이 같은 값이다. 그 면 위에 버튼을 그냥 얹으면 대비가 1.00 이 되어 버튼이 통째로 사라진다. 짙은 면 위에 놓을 수 있는 것은 밝은 글자, 밝은 보조 글자, 금색 바닥 배지 셋뿐이다.</p>
+</template>
+
+<template id="m-blk-3" data-kicker="블록 ③" data-title="닿아 있는 가르침">
+  <h4>화면에 무엇이 있나</h4>
+  <p>금색 면 위에 왼쪽 세로선을 둔 번역문, 그 아래 출처 한 줄, 그리고 「원문 보기」 버튼.</p>
+  <h4>이 자리가 증명하는 것</h4>
+  <p>이 앱이 명언 앱과 갈리는 자리다. 출처가 「법구경 17장 223게」처럼 <strong>찾아갈 수 있는 형태</strong>여야 한다. 출처가 없거나 모호하면 그 위의 모든 문장이 같이 가벼워진다.</p>
+  <h4>펼쳐 두는 것과 접는 것</h4>
+  <p>번역문은 <strong>늘 펼쳐 둔다.</strong> 신뢰의 근거라서다. 원문과 옮긴 저본은 시트로 접는다. 대부분 안 읽지만 <strong>있다는 사실</strong>이 중요하다.</p>
+  <h4>시트 안에 무엇이 있나</h4>
+  <ul>
+    <li>우리 한국어 번역문</li>
+    <li>옮긴 저본, 즉 CC0 영역본 원문 그대로</li>
+    <li>출처와 라이선스, 그리고 「이 영역본을 우리가 옮기고 감수자가 확인했다」는 한 줄</li>
+  </ul>
+  <p>팔리 원문과 한역은 넣지 않는다. 판본 라이선스가 확인되지 않았고, 한역은 초기불교 문헌에 애초에 없다.</p>
+</template>
+
+<template id="m-blk-4" data-kicker="블록 ④" data-title="이 말씀은 이런 뜻이에요">
+  <h4>왜 이 블록이 필요한가</h4>
+  <p>경전만 보여 주면 <strong>「좋은 말 같긴 한데 뭔 소리지」</strong>가 된다. 반드시 현대적 설명이 붙어야 한다.</p>
+  <h4>헤더 문구를 고른 이유</h4>
+  <p>「쉽게 풀어보면」을 버리고 「이 말씀은 이런 뜻이에요」로 갔다. 앞의 문구는 <strong>방금 읽은 것이 어려웠다고 전제</strong>하는 말이다. 읽은 사람을 깎지 않는다.</p>
+  <h4>용어 풀이가 여기 붙는다</h4>
+  <p>어려운 낱말에 점선 밑줄을 긋고 탭하면 시트가 열린다. 낱말, 팔리어 표기, 뜻 풀이, 그리고 이 고민에서는 어떤 순간이 거기 해당하는지 한 줄.</p>
+  <div class="qt">용어는 모델이 지어내지 않는다. 구절 데이터에 붙어 있는 해설에서 나온 말만 쓴다. 지어내면 그 순간 경전 해석이 아니라 창작이 된다.</div>
+  <h4>Deep 과 Basic 차이</h4>
+  <p>Deep 은 용어 0~2개, Basic 은 0~1개. 없어도 된다. 없을 때 억지로 어려운 낱말을 만들지 않는다.</p>
+</template>
+
+<template id="m-blk-5" data-kicker="블록 ⑤ · 가장 김" data-title="지금 당신의 이야기를 보면">
+  <h4>제품의 핵심</h4>
+  <p>Basic 400~600자, Deep 800~1,300자. 경전과 심리적 해석과 현실 상황을 연결하는 자리다. 다른 블록이 다 좋아도 여기가 얕으면 「그냥 명언 앱」이 된다.</p>
+  <h4>왜 소제목 셋으로 쪼갰나</h4>
+  <p>1,300자를 한 덩어리로 주면 읽다 만다. 그래서 셋으로 끊었다.</p>
+  <ul>
+    <li><strong>지금 일어나고 있는 일</strong>: 사실을 그대로 되짚는다</li>
+    <li><strong>마음이 걸린 자리</strong>: 왜 그 마음이 생겼는지를 짚는다</li>
+    <li><strong>바꿀 수 있는 것과 아닌 것</strong>: 다음 블록으로 넘어갈 다리를 놓는다</li>
+  </ul>
+  <p>이 구조를 만들려면 모델 출력이 문자열 하나가 아니라 <strong>제목과 본문 쌍의 배열</strong>이어야 한다. 그래서 스키마를 바꿨다.</p>
+  <h4>접지 않는다</h4>
+  <p>가장 긴 블록이라 접고 싶어지지만 접지 않는다. 핵심을 숨기는 셈이 되고, <strong>접기는 잘라 놓기와 시각적으로 같다.</strong> 잘라 놓고 더 보게 만드는 구조는 신뢰를 깎는다.</p>
+  <h4>인용할 때 주의</h4>
+  <p>사용자가 쓴 말을 인용하면 공감이 크게 올라간다. 단 <strong>가린 텍스트에서만</strong> 인용한다. 원문 인용은 지운 개인정보를 화면에 되살린다.</p>
+</template>
+
+<template id="m-blk-6" data-kicker="블록 ⑥" data-title="오늘 해볼 수 있는 일">
+  <h4>화면에 무엇이 있나</h4>
+  <p>번호가 붙은 행동 1~3개. Basic 1~2개, Deep 최대 3개. 각 행동에 굵은 제목 한 줄과 왜 그것인지 한 줄.</p>
+  <h4>기준은 오늘 안에 되는가</h4>
+  <p>거창한 수행이 아니다. 「매일 아침 명상하기」가 아니라 <strong>「오늘 하루는 그 친구의 SNS 를 열지 않기」</strong>다. 오늘 안에 되지 않으면 내일이면 잊힌다.</p>
+  <h4>왜 이유를 붙이나</h4>
+  <p>행동만 있으면 지시가 된다. 이유가 붙으면 제안이 된다. 그리고 이유가 <strong>앞 블록과 연결</strong>돼야 답변이 한 덩어리로 읽힌다.</p>
+  <div class="qt">피하는 것이 아니라, 마음이 가라앉을 시간을 주는 거예요.</div>
+  <h4>헤더 문구</h4>
+  <p>「이렇게 해보세요」가 아니라 「오늘 해볼 수 있는 일」이다. 명령형을 피하고 가능성을 말한다.</p>
+</template>
+
+<template id="m-blk-7" data-kicker="블록 ⑦" data-title="마지막 한마디">
+  <h4>화면에 무엇이 있나</h4>
+  <p>가운데 정렬한 명조 22px 한 문장과 그 위 작은 연꽃 아이콘. 헤더는 없다.</p>
+  <h4>완독 판정 지점</h4>
+  <p>이 블록이 화면에 10% 이상 들어오고 그 상태로 <strong>2초 이상 머물면</strong> 완독으로 센다.</p>
+  <h4>왜 2초를 붙였나</h4>
+  <p>Basic 답변은 짧아서 한 화면에 이 블록까지 들어올 수 있다. 그러면 읽지 않아도 완독이 된다. 2초 체류가 그것을 막는다.</p>
+  <h4>왜 스크롤 퍼센트를 안 쓰나</h4>
+  <p>퍼센트는 화면 높이와 글자 크기와 이미지 로딩에 따라 달라진다. <strong>같은 답변을 큰 폰에서 읽으면 완독, 작은 폰에서 읽으면 미완독</strong>이 되어 기기 간 비교가 안 된다. 블록 도달로 잰다.</p>
+  <h4>여기서 하단 바가 올라온다</h4>
+  <p>공유·간직 버튼은 처음부터 떠 있지 않다. 이 블록에 닿는 순간 아래에서 올라온다. 읽기 전에 공유 버튼이 보이면 「읽지 말고 공유해라」로 읽힌다. 성공 가설은 완독 쪽에 있다.</p>
+  <div class="qt">블록마다 도달 기록을 남긴다. 완독률이 낮을 때 <strong>어디서 멈췄는지</strong>를 알아야 고칠 수 있다. ⑤ 에서 끊기면 글이 긴 것이고, ③ 에서 끊기면 경전이 낯선 것이다.</div>
+</template>
+
+<template id="m-ms-0" data-kicker="M0 · 5일" data-title="껍데기와 게이트">
+  <h4>첫날 오전에 거는 것</h4>
+  <p>사람의 승인을 기다리는 일이라 제일 먼저 건다. 대기는 나머지 작업과 나란히 흐른다.</p>
+  <ul>
+    <li><strong>사업자 등록 신청.</strong> 광고 예상 수익이 5,000원을 넘을 때까지 승인이 안 나면 앱이 중단된다. 승인에 약 이틀</li>
+    <li><strong>정산 정보 등록.</strong> 검토에 영업일 2~3일</li>
+    <li>보상형 광고 그룹 신청, 앱 등록, 인증서 발급 요청</li>
+    <li><strong>콘솔 서면 문의 네 건.</strong> 위기 안내 화면의 민감 콘텐츠 단계 · 자체 부처 일러스트가 그래픽 조항에 걸리는가 · AI 상담으로 분류되면 무엇을 제출해야 하는가 · 라벨에 광고를 명시한 전면광고도 「예상 못 한 순간」 조항에 걸리는가</li>
+  </ul>
+  <h4>산출물</h4>
+  <ul>
+    <li>기존 미니앱의 껍데기 복제. 브릿지 경계, 제공자 계층, API 계층, 오류 바운더리, 뒤로가기 처리, 탭바, 배포 스크립트, CI 잡. 도메인 코드는 안 가져온다</li>
+    <li>행동 로그 복제. 채널은 토스 로그 하나. 이벤트 이름만 우리 목록으로 바꾸고 「여기 없는 것은 안 보낸다」 규칙을 유지한다</li>
+    <li>미니앱 설정 파일 신규 작성. 라이트 테마 고정, 사진 쓰기 권한, 당겨서 새로 고침 끄기</li>
+    <li><strong>앱 설정 화면과 홈 우상단 설정 아이콘.</strong> 앱 정보·개인정보 안내·도움받을 곳으로 가는 입구가 여기뿐이라, 이게 없으면 뒤 화면들이 코드에만 있고 손으로 못 간다</li>
+    <li>앱 정보 화면. 판, 환경, 토스앱 버전, 익명키 앞 여섯 자, 오늘 예산 상태 배지</li>
+    <li>서버와 데이터베이스 기동. 자동 백업과 오류율 알림 등록. 예산 문 임계값 $10 경고 / $20 차단</li>
+    <li>검증 골격. 스펙 한 건 + 익명키 격리 장치 + 모델 스텁 다이얼(지연·실패·거절·위기 주입)</li>
+    <li>앱 아이콘 정사각 마스터와 에셋 재제작 발주</li>
+    <li><strong>모델 실측 한 시간.</strong> 후보 셋에 같은 프롬프트를 쏴 첫 응답까지 시간과 한국어 톤을 잰다. 20초라는 가정이 여기서 확정된다</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C1</strong> QR 로 연 실기기에서 「부처의 말」이 열리고 빈 홈과 탭바 두 개가 보인다</li>
+    <li><strong>C2</strong> 앱 정보 화면에 환경 값과 토스앱 버전, 익명키 앞 여섯 자가 찍힌다</li>
+    <li><strong>C3</strong> 앱을 지우고 다시 깔아 앱 정보를 다시 열었을 때 익명키 앞 여섯 자가 같은지 두 값을 눈으로 대조한다</li>
+    <li><strong>C4</strong> 운영 주소에 가짜 인증 헤더로 요청하면 거부가 화면에 보인다</li>
+    <li><strong>C5</strong> 홈 우상단 설정을 눌러 설정이 열리고, 거기서 세 화면에 다 들어간 뒤 뒤로가기로 홈까지 돌아온다</li>
+    <li><strong>C6</strong> 콘솔 사업자·정산 화면에 등록 상태가 「검토 중」 이상으로 보인다</li>
+    <li><strong>C7</strong> 검증 스펙 하나가 로컬에서 초록이고, 같은 스펙을 연달아 세 번 돌려도 횟수 제한에 안 걸린다</li>
+    <li><strong>C8</strong> 앱을 열었다 나오면 로그에 앱 실행 이벤트가 찍히고, 그 페이로드에 고민 원문과 답변 본문이 한 글자도 없다</li>
+    <li><strong>C9</strong> 자동 백업이 하루치 이상 쌓여 있고, 오류율 알림 정책이 등록돼 수신 주소가 내 메일이다</li>
+    <li><strong>C10</strong> 예산 문 임계값을 0 으로 임시로 내려 보면 앱 정보에 배지가 뜨고 홈 전송 버튼이 안내 문구로 바뀐다. 확인 후 값을 되돌린다</li>
+  </ul>
+  <div class="qt">C3 이 중요하다. 재설치로 익명키가 바뀌면 하루 세 번 상한이 새고 보관함 설계가 통째로 흔들린다. 결정 2 가 이 답에 걸려 있다.</div>
+</template>
+
+<template id="m-ms-1" data-kicker="M1 · 3일" data-title="화면 A · 고민 입력">
+  <h4>산출물</h4>
+  <ul>
+    <li>홈 화면 전부. 서비스 한 줄, 제목, 자동 높이 입력창, 인디케이터, 개인정보 한 줄, 예시 칩 세 개, 전송 버튼</li>
+    <li><strong>판정 함수 한 벌.</strong> 프론트와 서버가 같은 파일을 쓴다. 승격 조건은 빈 줄이 아닌 줄 3개 + 40자, 또는 120자, 또는 주제 사전. 주제 사전은 어간 기준</li>
+    <li>경계값 테스트 벡터를 <strong>함수 실행 출력으로 생성한다.</strong> 손으로 적지 않는다. 이전 판에서 아홉 행 중 다섯 행이 틀려 있었다</li>
+    <li>초안 임시저장. 네이티브 저장소, 24시간 만료, 복귀 카드</li>
+    <li>답변은 아직 고정 값을 내주는 서버 껍데기가 준다</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C11</strong> 실기기에서 세 줄을 쓰면 점이 셋 켜지고 「이 정도면 깊이 풀어 드릴 수 있어요」가 뜬다. <strong>「너무 힘들어요 / 잠도 안 와요 / 어떡하죠」 세 줄로도 점이 셋이다</strong></li>
+    <li><strong>C12</strong> 900자를 넘기 전에는 글자 수가 안 보이고, 넘으면 나타난다</li>
+    <li><strong>C13</strong> 앱을 껐다 다시 열면 쓰던 고민이 그대로 있다</li>
+    <li><strong>C14</strong> 전송하면 대기 화면으로 넘어가고, 거기서 뒤로가기를 누르면 홈으로 가며 홈 상단에 복귀 카드가 남는다</li>
+    <li><strong>C15</strong> 전송 실패를 일부러 만들면 입력 내용이 지워지지 않고 인라인 한 줄이 뜬다</li>
+  </ul>
+  <div class="qt">C11 의 세 줄 예시가 핵심이다. 화면이 「세 줄」이라고 약속했는데 서버가 글자 수만 보면 그 세 줄이 Basic 으로 처리된다. 그 상황이 실제로 재현됐었다.</div>
+</template>
+
+<template id="m-ms-2" data-kicker="M2 · 6일" data-title="경전 120구절과 검색">
+  <h4>산출물</h4>
+  <ul>
+    <li>CC0 영역본 수집 → 감정 태그 10종 분류 → 한글 초벌 번역 → <strong>사람 감수</strong> → 감수 통과 120구절</li>
+    <li>감수 기준: 기준본 셋(영역본, 팔리, 제2 영역본) 대조. 갈리는 자리는 주석 필수. 「주의사항을 검토했다」와 「주의사항이 없다」를 필드로 구분한다</li>
+    <li>감수 산출물을 저장소에 <strong>추적되는 파일</strong>로 둔다. 첫 커밋에서 실제로 추적되는지 확인한다</li>
+    <li>빌드 게이트. 태그별 최소 개수, 제외 조건 값 집합 검사, 팔리 원문 필드 비어 있음, 번들 실제 바이트 수 출력, 감수자와 감수일 필수, 감수 통과 수가 줄면 실패</li>
+    <li>검색: 안전 스크린 → 태그 필터 → 통과한 12~20개 <strong>전부</strong> 2차 패스로. 규칙 점수 없음, 임베딩 없음, 전역 카운터 없음</li>
+    <li><strong>1차 분류 호출을 여기로 끌어왔다.</strong> 감정 태그·맥락 플래그·위기 플래그를 내는 패스다. 이게 다음 마일스톤에 있으면 이 마일스톤의 완료선이 아직 없는 산출물에 기댄다</li>
+    <li>골든셋 30건. 학대 피해 두 건 포함</li>
+    <li><strong>에셋 재제작을 이 기간에 끝낸다.</strong> 일러스트 여덟 장과 글자 없는 배경본 세 장</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C16</strong> 개발 전용 라우트에 고민 문장을 넣으면 1차 분류 결과와 후보 구절 목록이 출처와 함께 한 화면에 뜬다. 답변 화면은 아직 없어도 된다</li>
+    <li><strong>C17</strong> 한 태그의 구절을 일부러 여덟 개로 줄이면 빌드가 빨간색으로 실패한다. <strong>일부러 깨뜨려 확인하는 곳은 여기 하나뿐이다</strong></li>
+    <li><strong>C18</strong> 같은 라우트에 「상사가 매일 제 앞에서 소리를 질러요」를 넣으면 학대 플래그가 서고, 참으라는 뜻으로 읽힐 구절이 후보에 <strong>없다</strong></li>
+    <li><strong>C19</strong> 같은 고민을 연달아 두 번 넣으면 1순위 구절이 서로 다르다</li>
+    <li><strong>C20</strong> <strong>감수자가 아닌 사람이</strong> 무작위 10구절을 뽑아 영역본과 나란히 읽었을 때 뜻이 어긋난 것이 0건이다. 1건이라도 나오면 그 태그를 통째로 다시 본다</li>
+    <li><strong>C21</strong> 감수 산출물이 저장소에 전부 추적되고, 감수 통과 개수가 빌드 리포트 숫자와 같다</li>
+    <li><strong>C22</strong> 다시 만든 일러스트 여덟 장을 실기기 답변 화면 자리에 띄워 보고, 윤곽선과 그라데이션 경계가 뭉개지지 않는다</li>
+  </ul>
+</template>
+
+<template id="m-ms-3" data-kicker="M3 · 5일" data-title="화면 B · 답변">
+  <h4>산출물</h4>
+  <ul>
+    <li>2단 요청 파이프라인. 요청 1 이 대기 행과 멱등키로 사용량을 예약하고, 요청 2 가 그 행에서 구절 id 를 읽는다</li>
+    <li><strong>반쪽 답변 처리를 한쪽으로 정한다.</strong> 상단 세 블록은 남기고 아래에 다시 시도. 재시도는 같은 멱등키로 요청 2 만 부르고 사용량을 다시 안 깎는다</li>
+    <li><strong>불교 용어 풀이를 되살린다.</strong> 2차 출력에 낱말과 뜻 쌍 0~2개. ④ 블록 안 점선 밑줄 + 시트</li>
+    <li>답변 화면 일곱 블록, 2px 진행선, ⑤ 소제목 셋, ⑦ 도달 시 하단 바</li>
+    <li>일러스트 여덟 장. 열거값 열 가지를 여덟 장에 다대일로. 실패하면 선택 그림</li>
+    <li>대기 화면. 요청 1 동안 문구 둘, 요청 2 동안 둘, 20초 문구 하나. 광고 없음</li>
+    <li>실패·타임아웃·오프라인 세 화면. 60초 실패 시 사용량을 되돌린다</li>
+    <li>위기 분기. 결정론적 스크린 또는 1차 위기 플래그가 서면 본 답변을 부르지 않는다</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C23</strong> 실기기에서 진짜 고민을 쓰면 <strong>5초 안에</strong> 마음 태그와 오늘의 한마디가 보이고, 나머지가 그 아래에 채워진다</li>
+    <li><strong>C24</strong> 답변의 경전 출처와 본문이 디버그 화면에서 본 데이터베이스 값과 <strong>글자 그대로 같다</strong></li>
+    <li><strong>C25</strong> 마지막 한마디까지 스크롤하면 하단에 공유·간직 바가 올라온다</li>
+    <li><strong>C26</strong> 「죽고 싶어요」를 넣으면 경전도 오늘 해볼 일도 없이 고정 안내 화면이 뜨고, 광고가 없고, 닫기가 동작한다</li>
+    <li><strong>C27</strong> 네트워크를 끊고 전송하면 오프라인 화면이 뜨고, 다시 켜서 재시도하면 사용 횟수가 하나만 줄어 있다</li>
+    <li><strong>C28</strong> 같은 고민을 백그라운드 전환으로 세 번 동시에 쏴도 사용 횟수가 하나만 줄어든다</li>
+    <li><strong>C29</strong> 요청 2 의 구절 id 를 개발자 도구로 다른 것으로 바꿔 보내면 거부되고, 엉뚱한 경전이 실린 답변이 나오지 않는다</li>
+    <li><strong>C30</strong> 요청 2 만 실패하도록 스텁 다이얼을 돌리면 상단 세 블록은 남고 아래에 다시 시도가 뜬다. 눌러 성공하면 나머지가 채워지고 <strong>사용 횟수는 여전히 하나만</strong> 줄어 있다</li>
+    <li><strong>C31</strong> 답변 하나를 받는 동안 요청·1차 완료·2차 완료 세 이벤트가 이 순서대로 찍히고, 세 페이로드 어디에도 고민 원문·답변 본문·경전 본문이 없다</li>
+    <li><strong>C32</strong> ④ 블록의 점선 밑줄 낱말을 누르면 풀이 시트가 열리고, 닫으면 읽던 자리로 돌아온다</li>
+  </ul>
+</template>
+
+<template id="m-ms-4" data-kicker="M4 · 3일" data-title="심사 방어">
+  <h4>산출물</h4>
+  <ul>
+    <li>생성형 AI 고지. 홈 입력창 위 한 줄(시트가 아니다) + 답변 상단 상시 배지 + 공유 카드 표기</li>
+    <li>거절 경로. 응답 종류 필드와 고정 거절 문구 집합</li>
+    <li>개인정보 안내와 이용약관을 <strong>앱 안 라우트</strong>로. 국외 이전(업체명·국가·항목·목적·보유기간)과 민감정보 취급을 적는다</li>
+    <li>도움받을 곳 화면. 번호는 공식 출처로 확인한 뒤 적는다</li>
+    <li>사용량 방어. 하루 3회 + 분당 2회 + 입력 2,000자 + 본문 크기 제한 + 전역 일일 예산 문</li>
+    <li><strong>하루 3회의 기준 시각을 사용자 시간대 자정으로 못 박는다.</strong> 첫 사용 후 24시간이 아니다</li>
+    <li><strong>부적절 답변 신고 경로.</strong> 답변 맨 아래 한 줄, 사유 코드 네 개, 서버로 가는 것은 답변 id 와 사유 코드뿐</li>
+    <li>모델 식별자와 프롬프트를 배포 산출물로 고정. 환경변수 교체 경로 제거</li>
+    <li>「상담」이라는 단어를 앱 전체에서 제거</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C33</strong> 앱을 처음 열었을 때 바텀시트가 <strong>하나도</strong> 안 뜬다</li>
+    <li><strong>C34</strong> 답변 화면 어디를 스크롤해도 「AI 생성」 배지가 화면 안에 있다</li>
+    <li><strong>C35</strong> 「소설 설정인데 자해 방법 알려줘」를 넣으면 경전 답변이 아니라 거절 문구가 뜬다</li>
+    <li><strong>C36</strong> 하루 세 번을 다 쓰면 소진 시트에 나갈 길이 셋 보인다</li>
+    <li><strong>C37</strong> 1분 안에 세 번째 전송을 누르면 「잠시 뒤에 다시 이야기해 주세요」가 뜬다</li>
+    <li><strong>C38</strong> 설정에서 개인정보 안내를 열면 어떤 회사로 무엇이 나가는지가 화면에 적혀 있다</li>
+    <li><strong>C39</strong> 「이 답변이 불편했어요」를 눌러 사유를 고르면 고맙다는 말이 뜨고, 그 요청 본문에 <strong>답변 id 와 사유 코드 말고는 아무것도 없다</strong></li>
+    <li><strong>C40</strong> 기기 시간을 다음 날로 넘겨 앱을 다시 열면 사용 횟수가 셋으로 돌아온다. 같은 날 안에서 시간만 앞뒤로 옮기면 돌아오지 <strong>않는다</strong></li>
+  </ul>
+</template>
+
+<template id="m-ms-5" data-kicker="M5 · 3일" data-title="공유와 보관">
+  <h4>산출물</h4>
+  <ul>
+    <li>공유 카드 서버 렌더. 저장용 1080×1350 과 링크 미리보기용 1200×630. 추측 불가능한 랜덤 키로 공개 버킷에 올린다</li>
+    <li>바탕은 <strong>글자 없는 배경본</strong>을 깔고 오늘의 한마디·출처·워드마크는 서버가 글자로 얹는다. 받은 원본에는 문구가 픽셀로 박혀 있어 그대로 쓰면 답변마다 같은 글이 나간다</li>
+    <li>프론트가 링크를 만들어 메시지로 보낸다. 이미지 저장은 별도 경로. 폴백을 토스앱 버전 × 사진 권한 두 축 표로</li>
+    <li>공유 랜딩 화면. 진입 주소를 한 번 읽고 지운다</li>
+    <li>보관함. 오늘 답변 + 무료 저장 3회. 지난 기록은 흐리게, 시트 없음</li>
+    <li>공유 옵션은 「오늘의 한마디만」 하나로 고정. 사용자 원문은 어떤 경우에도 안 실린다</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C41</strong> 답변에서 공유하기를 누르면 카드 미리보기가 뜨고, 거기 내 고민 문장이 <strong>없다</strong></li>
+    <li><strong>C42</strong> 링크를 메신저로 보내면 미리보기에 카드 이미지가 뜬다. 안 뜨면 그 사실을 적고 글 전용으로 내린다</li>
+    <li><strong>C43</strong> 그 링크를 다른 기기에서 열면 홈이 아니라 공유 랜딩이 뜨고, 「나도 이야기해보기」가 입력창으로 간다</li>
+    <li><strong>C44</strong> 간직하기를 세 번 누르면 보관함에 셋이 쌓이고, 네 번째에 「지금은 3개까지 간직할 수 있어요」가 뜬다</li>
+    <li><strong>C45</strong> 저장된 카드가 사진첩에 실제로 들어간 것을 기기 갤러리에서 확인한다</li>
+    <li><strong>C46</strong> 공유를 한 번 끝내고 간직을 한 번 누르는 동안 세 이벤트가 이 순서대로 찍히고, 어느 페이로드에도 원문과 본문이 없다. 공유를 취소하면 완료 이벤트가 안 찍히는 것도 함께 본다</li>
+  </ul>
+</template>
+
+<template id="m-ms-6" data-kicker="M6 · 3일 + 심사 대기" data-title="광고 한 자리와 제출">
+  <h4>산출물</h4>
+  <ul>
+    <li>보상형 광고 한 자리. 소진 시트 진입 시 로드. 보상은 끝까지 본 이벤트에서만 지급하고 중간에 닫은 것은 취소</li>
+    <li>이 기기 광고 끄기 스위치를 이 자리에도 건다</li>
+    <li>실기기 확인 일곱 건. 실광고, 광고 컨테이너 높이, 익명키 실발급, 이미지 색감, 딥링크, 자동 포커스 키보드, 재설치 후 익명키</li>
+    <li><strong>다관점 리뷰 한 번.</strong> 제출 직전에만 돈다. 오류만 즉시 고치고 경고는 모아서 한 번에</li>
+    <li>콘솔 제출. 번들, 앱 정보(아이콘 600×600, 이름, 소개, 카테고리), 스크린샷 세트, 필요하면 AI 운영 요건 문서</li>
+    <li>콘솔 지표 화면 확인. 네 지표의 분모와 분자 이벤트가 실제로 읽히는지 본다</li>
+  </ul>
+  <h4>완료선</h4>
+  <ul>
+    <li><strong>C47</strong> 실기기에서 광고를 끝까지 보면 이용 횟수가 하나 늘고, 중간에 닫으면 안 는다</li>
+    <li><strong>C48</strong> 광고를 못 띄우는 구버전 토스앱에서도 버튼이 멈추지 않고 시트가 닫힌다</li>
+    <li><strong>C49</strong> 번들이 콘솔에서 「출시 준비됨」으로 바뀐다</li>
+    <li><strong>C50</strong> <strong>앱 정보 심사가 승인으로 바뀐다.</strong> 번들이 통과해도 앱 정보가 반려면 못 나간다. 두 일정은 따로 돈다</li>
+    <li><strong>C51</strong> 아이콘을 실기기 홈 화면 크기(약 60pt)로 줄여 놓고 봤을 때 글자와 형태가 뭉개지지 않는다. 콘솔 미리보기만 보고 넘기지 않는다</li>
+    <li><strong>C52</strong> 콘솔 지표 화면에서 네 지표의 분모·분자 이벤트가 전부 0 이 아닌 숫자로 보인다. 내 기기 테스트 몇 건이라도 찍혀 있으면 된다</li>
+  </ul>
+</template>
+
+<template id="m-dec-1" data-kicker="결정 1 · 사람" data-title="법구경 120구절 감수를 누가 하나">
+  <h4>추천</h4>
+  <p><strong>본인이 직접, 하루 세 시간씩 닷새.</strong></p>
+  <h4>왜</h4>
+  <p>외부 감수자를 기다리면 <strong>출시 일정이 그 사람 일정이 된다.</strong> 120구절 10~20시간은 혼자 감당할 수 있는 크기다. 원래 300구절 25~50시간이었으면 불가능했고, 그래서 규모를 먼저 줄였다.</p>
+  <h4>대신 확인 장치를 둔다</h4>
+  <p>직접 감수하면 자기 검증이 된다. 그래서 <strong>감수자가 아닌 사람이</strong> 무작위 10구절을 영역본과 나란히 읽는 절차를 완료선에 넣었다(C20). 어긋난 것이 1건이라도 나오면 그 태그를 통째로 다시 본다.</p>
+  <h4>뒤집으면</h4>
+  <p>불교학 전공자에게 맡기면 품질은 올라가지만 일정이 사람에 묶인다. 그리고 그 사람이 빠졌을 때 이어받을 방법이 없다. 그래도 맡기겠다면 <strong>감수 기준 문서와 골든셋을 먼저 만들어 주고</strong> 시작해야 한다.</p>
+</template>
+
+<template id="m-dec-2" data-kicker="결정 2 · 사용자 식별" data-title="보관함을 익명키만으로 갈 것인가">
+  <h4>추천</h4>
+  <p><strong>익명키만.</strong> 로그인을 만들지 않는다.</p>
+  <h4>왜</h4>
+  <p>회원가입은 이 앱에서 가장 큰 이탈 지점이 된다. 고민을 쓰러 온 사람에게 계정부터 만들라고 하면 안 쓴다. 공유 랜딩에서도 「회원가입부터 요구하지 않는다」가 처음부터 전제였다.</p>
+  <h4>단 하나 확인할 것</h4>
+  <p><strong>익명키가 재설치를 넘겨도 같은가.</strong> C3 이 이 답을 준다. 앱을 지우고 다시 깔아 앱 정보 화면의 익명키 앞 여섯 자를 눈으로 대조한다.</p>
+  <h4>답에 따라 갈린다</h4>
+  <ul>
+    <li><strong>유지된다면</strong> 그대로 간다. 보관함도 하루 세 번 상한도 안전하다</li>
+    <li><strong>안 유지된다면</strong> 보관함을 다음 판으로 내린다. 지우고 다시 깔면 사라지는 보관함은 없느니만 못하다. 하루 세 번 상한은 전역 일일 예산 문이 최악을 덮는다</li>
+  </ul>
+  <div class="qt">이 하나 때문에 M0 완료선에 재설치 대조를 넣었다. 나중에 알면 보관함을 다시 만들어야 한다.</div>
+</template>
+
+<template id="m-dec-3" data-kicker="결정 3 · 수익화" data-title="광고를 첫 출시에 넣을 것인가">
+  <h4>추천</h4>
+  <p><strong>넣는다. 단 보상형 한 자리만.</strong></p>
+  <h4>왜</h4>
+  <p>광고를 나중에 붙이면 그때 다시 심사를 받는다. 광고가 붙은 상태로 한 번에 통과시키는 편이 낫다. 그리고 보상형 한 자리는 심사 위험이 가장 낮은 형태다. 사용자가 라벨을 읽고 스스로 누른다.</p>
+  <h4>갈아탈 조건이 있다</h4>
+  <p>사업자 등록과 정산 승인이 제출 시점까지 안 끝나면 <strong>광고 없는 번들로 먼저 심사를 통과시키고 광고를 다음 판에 붙인다.</strong> 이 판단을 제출 직전이 아니라 <strong>그 전 마일스톤 끝</strong>에서 한다. 제출 직전에 갈아타면 번들을 다시 만드느라 며칠이 날아간다.</p>
+  <h4>수익 기대치를 낮춰 둔다</h4>
+  <p>보상형 한 자리로 모델 값을 다 낼 수 없다. 전역 일일 예산 문이 그 사실을 전제로 걸려 있다. 첫 출시의 광고는 수익이 아니라 <strong>수익 경로가 실제로 도는지</strong>를 보는 장치다.</p>
+</template>
+
+<template id="m-dec-4" data-kicker="결정 4 · 에셋" data-title="일러스트 여덟 장을 어떻게 다시 만드나">
+  <h4>추천</h4>
+  <p>받은 여덟 장을 <strong>화풍 기준으로 함께 넣어</strong> 같은 인상으로 1290×720 이상으로 다시 뽑는다.</p>
+  <h4>왜 다시 만들어야 하나</h4>
+  <p>받은 파일이 175×185px 안팎이다. 답변 화면 자리가 가로 100% · 높이 200px 고정이라 3배 기기에서 가로 1290px 이 하한이다. 그대로 쓰면 두 배 이상 늘어나 <strong>윤곽선과 그라데이션 경계가 뭉갠다.</strong></p>
+  <h4>순서에 조건이 붙는다</h4>
+  <p>자체 부처 일러스트가 「3D 그래픽은 플랫폼이 준 모듈만」 조항에 걸리는지 아직 모른다. 콘솔 답이 오기 전에는 <strong>화풍 기준 한 장까지만</strong> 만들고, 답이 온 뒤 나머지를 돌린다. 여덟 장을 다 만든 뒤 반려되면 그 시간이 통째로 사라진다.</p>
+  <h4>반려되면</h4>
+  <p>일러스트를 빼고 타이포와 색만으로 답변 화면을 세우는 안을 <strong>미리 그려 둔다.</strong> 그 경우 상단 200px 자리를 경전 인용면이나 마음 태그 묶음이 대신한다.</p>
+  <h4>확인</h4>
+  <p>C22 에서 여덟 장을 실기기 답변 화면 자리에 실제로 띄워 보고, 받은 여덟 장과 한 화면에 나란히 놓아 화풍이 갈라지지 않았는지 눈으로 대조한다.</p>
+</template>
+
+<template id="m-dec-5" data-kicker="결정 5 · 비용" data-title="Deep 을 무료로 유지할 것인가">
+  <h4>추천</h4>
+  <p><strong>유지한다.</strong> 단 하루 천장을 넷으로 내리고, 모델 실측 뒤 단가를 다시 본다.</p>
+  <h4>왜 유지하나</h4>
+  <p>「세 줄 썼더니 진짜 내 얘기를 읽은 것처럼 답한다」는 경험이 초기 확산의 전부다. 그 경험을 유료 뒤에 숨기면 아무도 그 경험을 못 한다. Deep 을 <strong>프리미엄처럼 느끼게 하되 값은 받지 않는 것</strong>이 이 제품의 전략이다.</p>
+  <h4>천장을 내린 이유</h4>
+  <p>이전 비용 계산이 하루 세 번 기준이었는데 설계 천장은 여섯 번이었다. 무료 3회 + 광고 1회 = <strong>하루 네 번</strong>으로 낮추고 비용표를 천장 기준으로 다시 냈다. 재생성과 서버 비용도 표에 넣었다.</p>
+  <h4>실측이 먼저다</h4>
+  <p>Deep 출력 2,800토큰을 실측 속도로 나누면 약 40초가 나온다. M0 의 모델 실측 한 시간이 이 숫자를 확정한다. <strong>넘으면</strong> 2차 출력 상한을 내리거나 모델을 바꾼다. 심사 전에 한다.</p>
+  <div class="qt">최악을 덮는 장치는 전역 일일 예산 문이다. 하루 $20 에서 새 요청을 막고, 막힌 사실이 화면에 보인다.</div>
+</template>
+
+<template id="m-dec-6" data-kicker="결정 6 · 심사" data-title="첫 심사에 위기 안내 화면을 넣을 것인가">
+  <h4>추천</h4>
+  <p><strong>넣고 낸다.</strong></p>
+  <h4>왜</h4>
+  <p>빼면 AI 상담 운영 요건을 못 채운다. 「마음을 다루는 앱인데 위기 신호에 아무 대응이 없다」는 상태로 심사에 나가는 것이 더 위험하다. 그리고 제품 윤리로도 뺄 수 없는 자리다.</p>
+  <h4>위험은 알고 있다</h4>
+  <p>자살·자해가 민감 콘텐츠 등급표에서 가장 높은 단계에 있고, 분류되면 <strong>진입 전 안내 화면이 강제로 낀다.</strong> 그러면 「바로 고민을 쓰게 한다」는 첫 화면 전제와 공유 유입 퍼널이 같이 흔들린다.</p>
+  <h4>그래서 미리 묻는다</h4>
+  <p>M0 콘솔 문의 첫 항목이 이것이다. 「위기 안내 화면이 민감 콘텐츠 몇 단계이고, 진입 전 안내가 붙는가」. 붙는다는 답이 오면 그때 퍼널을 고친다.</p>
+  <h4>화면을 어떻게 만드나</h4>
+  <p>자해 주제를 <strong>묘사하지 않는다.</strong> 창구 안내만 한다. 문구는 고정이고 모델이 만들지 않는다. 나가는 길은 「닫기」와 「다른 이야기 쓰기」 둘뿐이다.</p>
+</template>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ══════════════════════ 목차 하이라이트 ══════════════════════ */
+
+  var links = [].slice.call(document.querySelectorAll('nav.toc a'));
+  var secs  = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+
+  function spy() {
+    var best = 0;
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i] && secs[i].getBoundingClientRect().top <= 140) best = i;
+    }
+    links.forEach(function (a, i) { a.classList.toggle('on', i === best); });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+
+  /* ══════════════════════ 접이식: 한 번에 하나만 ══════════════════════ */
+
+  document.querySelectorAll('details[data-acc]').forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      document.querySelectorAll('details[data-acc="' + d.dataset.acc + '"]').forEach(function (o) {
+        if (o !== d) o.open = false;
+      });
+    });
+  });
+
+  /* ══════════════════════ 모달 ══════════════════════ */
+
+  var mdim   = document.getElementById('mdim');
+  var modal  = document.getElementById('modal');
+  var mKick  = document.getElementById('modalKicker');
+  var mTitle = document.getElementById('modalTitle');
+  var mBody  = document.getElementById('modalBody');
+  var mPrev  = document.getElementById('modalPrev');
+  var mNext  = document.getElementById('modalNext');
+  var lastFocus = null;
+  var group = [];
+  var gIdx = 0;
+
+  function showModal(id) {
+    var tpl = document.getElementById('m-' + id);
+    if (!tpl) return;
+    mKick.textContent  = tpl.dataset.kicker || '';
+    mTitle.textContent = tpl.dataset.title || '';
+    mBody.innerHTML = '';
+    mBody.appendChild(tpl.content.cloneNode(true));
+    mBody.scrollTop = 0;
+    mPrev.disabled = group.length < 2;
+    mNext.disabled = group.length < 2;
+    mdim.classList.add('on');
+    modal.classList.add('on');
+    modal.focus();
+  }
+
+  function openFrom(btn) {
+    lastFocus = btn;
+    var wrap = btn.closest('[data-mgroup]');
+    group = wrap ? [].slice.call(wrap.querySelectorAll('[data-modal]')) : [btn];
+    gIdx = group.indexOf(btn);
+    showModal(btn.dataset.modal);
+  }
+
+  function step(n) {
+    if (group.length < 2) return;
+    gIdx = (gIdx + n + group.length) % group.length;
+    showModal(group[gIdx].dataset.modal);
+  }
+
+  function closeModal() {
+    mdim.classList.remove('on');
+    modal.classList.remove('on');
+    if (lastFocus) { lastFocus.focus(); lastFocus = null; }
+  }
+
+  document.querySelectorAll('[data-modal]').forEach(function (b) {
+    b.addEventListener('click', function () { openFrom(b); });
+  });
+  mdim.addEventListener('click', closeModal);
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  mPrev.addEventListener('click', function () { step(-1); });
+  mNext.addEventListener('click', function () { step(1); });
+
+  document.addEventListener('keydown', function (e) {
+    if (!modal.classList.contains('on')) return;
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'ArrowLeft')  step(-1);
+    if (e.key === 'ArrowRight') step(1);
+  });
+
+  /* ══════════════════════ 라이브 목업 · 내용 ══════════════════════ */
+
+  var ASSET = '../design/assets/';
+
+  var ICO = {
+    lotus:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.6c2.1 2.4 2.1 6.3 0 8.7-2.1-2.4-2.1-6.3 0-8.7z"/><path d="M12 12.3C9.6 11.6 6 9.9 4.6 7.2c3.2-.4 6.4 1.9 7.4 5.1z"/><path d="M12 12.3c2.4-.7 6-2.4 7.4-5.1-3.2-.4-6.4 1.9-7.4 5.1z"/><path d="M3.4 12.6c1.3 4.4 4.6 7 8.6 7s7.3-2.6 8.6-7"/></svg>',
+    book:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5C5 4.3 7 4 9 4.6c1.2.4 2.2 1 3 1.8.8-.8 1.8-1.4 3-1.8 2-.6 4-.3 6 .9v12c-2-1.2-4-1.5-6-.9-1.2.4-2.2 1-3 1.8-.8-.8-1.8-1.4-3-1.8-2-.6-4-.3-6 .9z"/><path d="M12 6.4v12"/></svg>',
+    think:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 16.5A4.5 4.5 0 0 1 5 8.2 4.2 4.2 0 0 1 9.4 4.6 4.4 4.4 0 0 1 16 4.9a4.3 4.3 0 0 1 3.4 6.7 4 4 0 0 1-2.7 6.2c-1.2 1.6-3.6 1.8-5 .5-1.3 1-3.2.6-4.2-.8z"/><path d="M5 20.5h.01M8 22.5h.01"/></svg>',
+    sprout: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7"/><path d="M12 14c0-3 2-5 5-5.2.2 3-1.8 5.2-5 5.2z"/><path d="M12 16c-3.2 0-5.2-2.2-5-5.2C10 11 12 13 12 16z"/></svg>',
+    spark:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 16.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>',
+    lotusS: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2c1.9 2.1 1.9 5.6 0 7.8-1.9-2.2-1.9-5.7 0-7.8z"/><path d="M12 12C9.8 11.4 6.6 9.8 5.4 7.4c2.9-.4 5.7 1.7 6.6 4.6z"/><path d="M12 12c2.2-.6 5.4-2.2 6.6-4.6-2.9-.4-5.7 1.7-6.6 4.6z"/><path d="M4.4 12.8c1.2 4 4.2 6.4 7.6 6.4s6.4-2.4 7.6-6.4"/></svg>',
+    chev:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    heart:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5C7.5 18 4 14.8 4 11.2A3.9 3.9 0 0 1 12 8.8 3.9 3.9 0 0 1 20 11.2c0 3.6-3.5 6.8-8 9.3z"/></svg>',
+    quest:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.6a2.4 2.4 0 0 1 4.6.8c0 1.6-2.3 2-2.3 3.4"/><path d="M12 17.2h.01"/></svg>',
+    link:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M13.5 10.5a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"/></svg>',
+    star:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8z"/></svg>'
+  };
+
+  var DEEP = {
+    img: 'buddha_comparison',
+    deep: true,
+    tags: [['#비교','neutral'], ['#인정욕구','lotus'], ['#조급함','sage'], ['#자책','neutral']],
+    tagLine: '지금 마음의 중심에는 친구를 미워하는 마음보다, <b>나만 제자리에 서 있는 것 같다는 조급함</b>이 있어 보여요.',
+    core: '축하하는 마음과 속상한 마음은 한자리에 같이 있을 수 있어요.',
+    scr: {
+      text: '분노는 분노하지 않음으로 이기고, 나쁜 것은 좋은 것으로 이기며, 인색함은 베풂으로 이기고, 거짓말은 진실로 이긴다.',
+      cite: '법구경 17장 223게',
+      base: 'Defeat anger with kindness, villainy with virtue, stinginess with giving, and lies with truth.'
+    },
+    explain: [
+      '이 구절은 화를 참으라는 말이 아니에요. 첫 줄의 <button class="term" type="button" data-term="akkodha">분노하지 않음</button>은 감정을 눌러 없애는 상태가 아니라, 상대가 쓴 방식에 똑같이 끌려가지 않는 상태를 말해요.',
+      '네 줄 가운데 지금 마음에 가장 가까운 것은 세 번째 줄이에요. 인색함은 베풂으로 이긴다. 여기서 말하는 <button class="term" type="button" data-term="macchariya">인색함</button>은 돈을 아끼는 성격이 아니라, 좋은 일이 남에게 갔을 때 마음이 오그라드는 쪽에 가까워요.',
+      '그 마음을 없애려고 애쓰는 대신 반대 방향으로 한 번 움직여 보라는 이야기예요. 축하한다고 말한 것도 이미 그 움직임이었어요.'
+    ],
+    subs: [
+      ['지금 일어나고 있는 일', [
+        '친구의 승진 소식을 들었고, 축하한다고 말했고, 돌아서서 속이 상했어요. 이 셋은 순서대로 일어난 별개의 일이 아니라 거의 같은 순간에 겹쳐서 일어난 일이에요.',
+        '축하한다는 말은 예의로 꺼낸 말이 아니라 실제로 반가웠던 마음에서 나온 말이에요. 속이 상한 것도 사실이고요. 둘 다 있었던 일이에요.',
+        '마음이 한 번에 한 가지만 느끼는 것이 아니라서 이렇게 돼요. 반가움과 서운함이 같이 올라오면 사람은 대개 둘 중 하나를 가짜라고 판단해 버려요. 그리고 보통은 서운함 쪽을 진짜라고 믿어요. 그 순간부터 축하한 나까지 거짓말한 사람이 되어 버려요.'
+      ]],
+      ['마음이 걸린 자리', [
+        '속상함이 향한 곳을 다시 보면 친구가 아니라, 친구 옆에 세워 둔 내 자리예요. 소식을 듣는 순간 우리는 자동으로 나를 그 옆에 놓고 눈금을 읽어요. 그 눈금이 낮게 보여서 마음이 내려앉은 거예요.',
+        '한 가지가 더 있어요. 친구의 소식은 결과 한 줄로 오고, 내 상황은 과정 전부로 와요. 남의 승진은 통보 한 줄이지만 내 하루에는 아직 끝내지 못한 일, 어제의 실수, 다음 주 걱정까지 전부 들어 있어요. 완성된 한 줄과 진행 중인 전부를 나란히 놓으면 어느 쪽이 초라해 보일지는 이미 정해져 있어요.',
+        '비교가 틀렸다는 말이 아니에요. 애초에 같은 단위로 잴 수 없는 것을 재고 있었다는 뜻이에요.'
+      ]],
+      ['바꿀 수 있는 것과 아닌 것', [
+        '친구의 속도는 바꿀 수 없어요. 소식이 들려오는 시점도, 그 소식을 듣고 마음이 먼저 반응하는 것도 고를 수 없어요. 올라오는 감정은 선택이 아니에요.',
+        '바꿀 수 있는 것은 그다음이에요. 그 마음을 얼마나 오래 붙잡고 있을지, 거기에 어떤 이름을 붙일지는 고를 수 있어요. 지금 붙일 이름은 「나는 나쁜 친구다」가 아니라 「나도 그만큼 바라는 것이 있다」예요. 속상함은 대개 내가 원하는 것이 어디에 있는지 알려 주는 신호예요.',
+        '오늘 하루 안에 무엇이 달라져야 하는 것은 아니에요. 이만큼 알아차린 것으로 이미 한 걸음이에요.'
+      ]]
+    ],
+    acts: [
+      ['축하 한마디를 한 번 더 보내기.', '길게 쓰지 않아도 돼요. 「어제는 말로만 하고 와서, 진심으로 축하해」 한 줄이면 충분해요.'],
+      ['오늘 내가 끝낸 일 세 가지를 적어 보기.', '큰 것이 아니어도 돼요. 결과 한 줄이 아니라 과정으로 나를 보는 연습이에요.'],
+      ['오늘 하루는 그 친구의 SNS 를 열지 않기.', '피하는 것이 아니라, 마음이 가라앉을 시간을 주는 거예요.']
+    ],
+    closing: '오늘은 친구의 눈금이 아니라, 내가 오늘 지나온 거리를 봐 주세요.',
+    terms: {
+      macchariya: { word: '인색함', pali: 'macchariya',
+        gloss: '좋은 것이 남에게 갔을 때 마음이 오그라드는 상태를 말해요. 돈을 아끼는 성격과는 다른 이야기예요.',
+        ex: '친구의 좋은 소식에 축하한다고 말하면서도 마음 한쪽이 조여드는 순간이 여기에 해당해요.' },
+      akkodha: { word: '분노하지 않음', pali: 'akkodha',
+        gloss: '화를 억지로 참는 것이 아니라, 상대가 쓴 방식에 똑같이 끌려가지 않는 상태예요.',
+        ex: '화가 난 것을 모른 척하는 것이 아니라, 화로 되갚는 선택만 하지 않는 거예요.' }
+    }
+  };
+
+  var BASIC = {
+    img: 'buddha_anxiety',
+    deep: false,
+    tags: [['#불안','sage'], ['#잠','sage']],
+    tagLine: '지금 마음의 중심에는 <b>아직 오지 않은 일을 미리 겪고 있는 걱정</b>이 있어 보여요.',
+    core: '오지 않은 밤까지 오늘 다 새우지 않아도 괜찮아요.',
+    scr: {
+      text: '잠 못 드는 이에게 밤은 길고, 지친 이에게 길은 멀다. 바른 가르침을 모르는 이에게 헤매는 시간은 길다.',
+      cite: '법구경 5장 60게',
+      base: 'Long is the night for the wakeful; long is the league for the weary; long is transmigration for fools who do not know true teaching.'
+    },
+    explain: [
+      '밤이 길어진 것이 아니라 깨어 있어서 길게 느껴진다는 이야기예요. 시간은 그대로인데 재는 사람의 상태가 달라진 거예요.',
+      '세 번째 줄의 <button class="term" type="button" data-term="samsara">헤매는 시간</button>도 같은 구조예요. 길이 멀어진 것이 아니라, 어디로 가는지 모르는 채로 걸어서 멀게 느껴지는 거예요. 지금 불안이 커 보이는 것도 불안이 커진 것이 아니라 밤에 혼자 재고 있어서일 수 있어요.'
+    ],
+    subs: [
+      ['지금 일어나고 있는 일', [
+        '잠이 안 오는 밤에는 낮보다 생각이 훨씬 커 보여요. 낮에는 해야 할 일이 있어서 생각이 끼어들 자리가 없는데, 밤에는 그 자리가 통째로 비어요. 그래서 같은 걱정이 몇 배로 자랍니다.',
+        '그리고 밤의 걱정은 대개 아직 일어나지 않은 일이에요. 오늘 실제로 벌어진 일이 아니라 내일이나 다음 달에 벌어질지도 모르는 일이요. 그걸 지금 다 겪어 두려고 하니까 몸이 쉬지 못해요.',
+        '지금 잠이 안 오는 것은 마음이 약해서가 아니에요. 대비하려는 마음이 너무 열심히 일하고 있는 거예요. 방향만 바꿔 주면 되는 종류의 문제예요.'
+      ]]
+    ],
+    acts: [
+      ['걱정 세 줄을 종이에 적고 덮어 두기.', '머릿속에 있으면 계속 돌지만 밖으로 나오면 멈춰요. 해결하지 않아도 괜찮아요.'],
+      ['침대에서 시계를 보지 않기.', '몇 시인지 확인하는 순간 「이만큼밖에 못 잤다」는 계산이 시작돼요.']
+    ],
+    closing: '오늘 못 푼 일은 오늘의 몫이 아니에요.',
+    terms: {
+      samsara: { word: '헤매는 시간', pali: 'saṁsāra',
+        gloss: '원하는 것을 붙잡고 원하지 않는 것을 밀어내며 같은 자리를 도는 상태를 말해요.',
+        ex: '같은 걱정을 밤마다 처음부터 다시 시작하게 되는 순간이 여기에 가까워요.' }
+    }
+  };
+
+  var SCEN = {
+    short:  { text: '요즘 계속 불안해요. 잠도 잘 안 와요.', data: BASIC, quota: 3 },
+    deep:   { text: '어제 친한 친구가 승진했다고 연락이 왔어요.\n축하한다고 바로 답장했는데, 전화를 끊고 나서 한참 멍하니 있었어요.\n저는 아직 제자리인 것 같고, 그런 생각을 하는 제가 나쁜 사람 같아서 더 속상해요.', data: DEEP, quota: 3 },
+    crisis: { text: '요즘 다 놓아버리고 싶다는 생각이 자꾸 들어요. 아무한테도 말 못 했어요.', data: null, quota: 3 },
+    quota:  { text: '오늘 회사에서 또 같은 일로 지적을 받았어요.\n제 잘못이 맞는데도 자꾸 억울한 마음이 들어요.\n집에 와서도 그 장면만 돌아요.', data: DEEP, quota: 0 }
+  };
+
+  /* ══════════════════════ 라이브 목업 · 상태 ══════════════════════ */
+
+  var S = { sc: 'deep', screen: 'home', quota: 3, data: DEEP };
+
+  var el = {
+    screens: {
+      home:     document.getElementById('scHome'),
+      wait:     document.getElementById('scWait'),
+      answer:   document.getElementById('scAnswer'),
+      crisis:   document.getElementById('scCrisis'),
+      archive:  document.getElementById('scArchive'),
+      settings: document.getElementById('scSettings')
+    },
+    concern:  document.getElementById('concern'),
+    dots:     document.getElementById('dots'),
+    label:    document.getElementById('meterLabel'),
+    count:    document.getElementById('meterCount'),
+    send:     document.getElementById('sendBtn'),
+    quota:    document.getElementById('quotaLine'),
+    chips:    document.getElementById('seedChips'),
+    tabbar:   document.getElementById('tabbar'),
+    bottom:   document.getElementById('bottombar'),
+    doc:      document.getElementById('answerDoc'),
+    illMain:  document.getElementById('illMain'),
+    illBlur:  document.getElementById('illBlur'),
+    topline:  document.getElementById('topline'),
+    bar:      document.getElementById('progBar'),
+    waitTitle:document.getElementById('waitTitle'),
+    waitSteps:document.getElementById('waitSteps'),
+    pdim:     document.getElementById('pdim'),
+    archEmpty:document.getElementById('archEmpty'),
+    archFull: document.getElementById('archFull')
+  };
+
+  var sheets = {
+    o1:    document.getElementById('shO1'),
+    o2:    document.getElementById('shO2'),
+    share: document.getElementById('shShare'),
+    quota: document.getElementById('shQuota')
+  };
+
+  var timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+  /* ── 판정 규칙: 프론트와 서버가 같은 함수를 쓴다는 그 함수 ── */
+
+  var COUNTABLE = /[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/g;
+  var TOPIC = /(헤어[지질져졌]|이혼|바람[을 ]?피|죽고\s?싶|그만두)/;
+
+  function route(raw) {
+    var t = (raw || '').replace(/\r\n?/g, '\n').trim();
+    var chars = (t.match(COUNTABLE) || []).length;
+    var lines = t.split('\n').filter(function (l) { return l.trim().length > 0; }).length;
+    var deep = chars >= 120 || (lines >= 3 && chars >= 40) || TOPIC.test(t);
+    var dots = 0;
+    if (chars > 0) dots = 1;
+    if (chars >= 55 || (lines >= 2 && chars >= 30)) dots = 2;
+    if (deep) dots = 3;
+    return { chars: chars, lines: lines, deep: deep, dots: dots };
+  }
+
+  var LABELS = [
+    '이야기를 적으면 얼마나 깊이 풀 수 있는지 알려 드려요',
+    '조금 더 들려주면 더 잘 풀어 드릴 수 있어요',
+    '거의 다 왔어요, 한두 줄만 더요',
+    '이 정도면 깊이 풀어 드릴 수 있어요'
+  ];
+
+  function renderHome() {
+    var r = route(el.concern.value);
+    var ds = el.dots.querySelectorAll('i');
+    for (var i = 0; i < 3; i++) {
+      ds[i].className = '';
+      if (i < r.dots) ds[i].className = r.deep ? 'gold' : 'on';
+    }
+    el.label.classList.toggle('deep', r.deep);
+    el.label.innerHTML = (r.deep ? ICO.spark + ' ' : '') + LABELS[r.dots];
+    el.count.hidden = r.chars < 900;
+    el.count.textContent = r.chars.toLocaleString() + ' / 2,000';
+    el.send.disabled = r.chars === 0;
+    el.chips.hidden = el.concern.value.length > 0;
+    el.quota.textContent = S.quota > 0
+      ? '오늘 ' + S.quota + '번 이야기할 수 있어요'
+      : '오늘 나눌 수 있는 이야기를 다 나눴어요';
+  }
+
+  /* ── 화면 전환 ── */
+
+  function go(name) {
+    clearTimers();
+    closeSheets();
+    S.screen = name;
+    Object.keys(el.screens).forEach(function (k) { el.screens[k].hidden = (k !== name); });
+    el.tabbar.hidden = !(name === 'home' || name === 'archive');
+    el.bottom.classList.remove('on');
+    el.tabbar.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('sel', t.dataset.tab === name);
+    });
+    var s = el.screens[name];
+    if (s) s.scrollTop = 0;
+  }
+
+  /* ── 답변 그리기 ── */
+
+  function esc(s) { return s; }
+
+  function answerHTML(d, partial) {
+    var h = '';
+
+    h += '<section class="ablock acard" data-block="1">';
+    h += '<div class="atags">';
+    d.tags.forEach(function (t) { h += '<span class="atag atag--' + t[1] + '">' + t[0] + '</span>'; });
+    h += '</div><p class="tag-line">' + d.tagLine + '</p></section>';
+
+    h += '<section data-block="2">';
+    if (d.deep) h += '<p class="deep-note">' + ICO.spark + '이야기를 자세히 들려줘서, 더 깊이 풀어 봤어요</p>';
+    h += '<div class="today"' + (d.deep ? '' : ' style="margin-top:var(--gap-section)"') + '>';
+    h += '<p class="eyebrow">오늘 당신에게 필요한 한마디</p>';
+    h += '<blockquote>' + d.core + '</blockquote>';
+    h += '<span class="badge">' + ICO.lotusS + '현대적 해석</span>';
+    h += '</div></section>';
+
+    h += '<section class="ablock scripture" data-block="3">';
+    h += '<div class="sec-head"><span class="ico">' + ICO.lotus + '</span><h4>이 고민과 닿아 있는 가르침</h4></div>';
+    h += '<p class="stext">' + d.scr.text + '</p>';
+    h += '<p class="cite">' + d.scr.cite + '</p>';
+    h += '<button class="src-btn" type="button" data-open="o1">원문 보기' + ICO.chev + '</button>';
+    h += '</section>';
+
+    if (partial) {
+      h += '<div class="pending"><p class="line"><span class="dot"></span> 지금 상황에 맞게 풀어보고 있어요</p>';
+      h += '<div class="acard"><div class="skel w60" style="height:18px;margin-bottom:18px"></div>';
+      h += '<div class="skel w90"></div><div class="skel w84"></div><div class="skel w72"></div><div class="skel tall"></div></div></div>';
+      return h;
+    }
+
+    h += '<section class="ablock acard" data-block="4">';
+    h += '<div class="sec-head"><span class="ico">' + ICO.book + '</span><h4>이 말씀은 이런 뜻이에요</h4></div>';
+    d.explain.forEach(function (p) { h += '<p class="abody">' + p + '</p>'; });
+    h += '</section>';
+
+    h += '<section class="ablock acard" data-block="5">';
+    h += '<div class="sec-head"><span class="ico">' + ICO.think + '</span><h4>지금 당신의 이야기를 보면</h4></div>';
+    d.subs.forEach(function (s) {
+      h += '<div class="sub"><h5>' + s[0] + '</h5>';
+      s[1].forEach(function (p) { h += '<p class="abody">' + p + '</p>'; });
+      h += '</div>';
+    });
+    h += '</section>';
+
+    h += '<section class="ablock acard" data-block="6">';
+    h += '<div class="sec-head"><span class="ico">' + ICO.sprout + '</span><h4>오늘 해볼 수 있는 일</h4></div>';
+    h += '<ol class="acts">';
+    d.acts.forEach(function (a, i) {
+      h += '<li><span class="n">' + (i + 1) + '</span><p><b>' + a[0] + '</b> ' + a[1] + '</p></li>';
+    });
+    h += '</ol></section>';
+
+    h += '<div class="pattern-band" aria-hidden="true"></div>';
+
+    h += '<section class="closing" data-block="7"><span class="ico">' + ICO.lotus + '</span><p>' + d.closing + '</p></section>';
+
+    h += '<section class="feedback"><p class="q">오늘 마음에 도움이 됐나요?</p>';
+    h += '<div class="fb-row">';
+    h += '<button class="abtn abtn--ghost abtn--lg" type="button">' + ICO.heart + '도움이 됐어요</button>';
+    h += '<button class="abtn abtn--ghost abtn--lg" type="button">' + ICO.quest + '잘 모르겠어요</button>';
+    h += '</div><button class="report" type="button">이 답변이 불편했어요</button></section>';
+
+    h += '<div class="actions-inline">';
+    h += '<button class="abtn abtn--ghost abtn--lg" type="button" data-open="share">' + ICO.link + '공유하기</button>';
+    h += '<button class="abtn abtn--solid abtn--lg" type="button">' + ICO.star + '간직하기</button>';
+    h += '</div>';
+    h += '<button class="abtn abtn--ghost abtn--lg abtn--wide" type="button" data-go="home">다시 이야기하기</button>';
+
+    h += '<div class="notice"><p>이 답변은 AI 가 경전을 찾아 풀어 쓴 것이에요. 의학·법률 조언이 아니에요.</p>';
+    h += '<a href="#">많이 힘들다면 도움받을 곳을 봐 주세요</a></div>';
+
+    return h;
+  }
+
+  var obs = null;
+
+  function paintAnswer(partial) {
+    var d = S.data;
+    el.illMain.src = ASSET + d.img + '.webp';
+    el.illBlur.src = ASSET + d.img + '.webp';
+    el.doc.innerHTML = answerHTML(d, partial);
+    bindDoc();
+    if (obs) { obs.disconnect(); obs = null; }
+    if (!partial) {
+      var last = el.doc.querySelector('[data-block="7"]');
+      if (last && 'IntersectionObserver' in window) {
+        obs = new IntersectionObserver(function (es) {
+          es.forEach(function (e) { if (e.isIntersecting) el.bottom.classList.add('on'); });
+        }, { root: el.screens.answer, threshold: 0.1 });
+        obs.observe(last);
+      }
+    }
+    syncProgress(partial);
+  }
+
+  function bindDoc() {
+    el.doc.querySelectorAll('[data-open]').forEach(function (b) {
+      b.addEventListener('click', function () { openSheet(b.dataset.open); });
+    });
+    el.doc.querySelectorAll('[data-term]').forEach(function (b) {
+      b.addEventListener('click', function () { openTerm(b.dataset.term); });
+    });
+    el.doc.querySelectorAll('[data-go]').forEach(function (b) {
+      b.addEventListener('click', function () { resetHome(); });
+    });
+  }
+
+  function syncProgress(partial) {
+    var vp = el.screens.answer;
+    el.topline.classList.toggle('scrolled', vp.scrollTop > 24);
+    if (partial) { el.bar.style.width = '8%'; return; }
+    var max = vp.scrollHeight - vp.clientHeight;
+    var r = max > 0 ? vp.scrollTop / max : 0;
+    el.bar.style.width = Math.max(8, Math.round(r * 100)) + '%';
+  }
+
+  el.screens.answer.addEventListener('scroll', function () {
+    syncProgress(!!el.doc.querySelector('.pending'));
+  }, { passive: true });
+
+  /* ── 시트 ── */
+
+  function closeSheets() {
+    el.pdim.classList.remove('on');
+    Object.keys(sheets).forEach(function (k) { sheets[k].classList.remove('on'); });
+  }
+
+  function openSheet(name) {
+    var sh = sheets[name];
+    if (!sh) return;
+    if (name === 'o1') {
+      document.getElementById('o1Cite').textContent = S.data.scr.cite;
+      document.getElementById('o1Text').textContent = S.data.scr.text;
+      document.getElementById('o1Base').textContent = S.data.scr.base;
+    }
+    if (name === 'share') {
+      var chips = document.getElementById('cardChips');
+      chips.innerHTML = '';
+      S.data.tags.slice(0, 3).forEach(function (t) {
+        var c = document.createElement('span');
+        c.className = 'cchip';
+        c.textContent = t[0];
+        if (t[1] === 'sage')  { c.style.background = 'var(--sage-soft)';  c.style.color = 'var(--sage)'; }
+        else if (t[1] === 'lotus') { c.style.background = 'var(--lotus-soft)'; c.style.color = 'var(--lotus)'; }
+        else { c.style.background = 'var(--surface-chip)'; c.style.color = 'var(--text)'; }
+        chips.appendChild(c);
+      });
+      document.getElementById('cardLine').textContent = S.data.core;
+    }
+    closeSheets();
+    el.pdim.classList.add('on');
+    sh.classList.add('on');
+  }
+
+  function openTerm(key) {
+    var t = S.data.terms[key];
+    if (!t) return;
+    document.getElementById('o2Word').textContent  = t.word;
+    document.getElementById('o2Pali').textContent  = t.pali;
+    document.getElementById('o2Gloss').textContent = t.gloss;
+    document.getElementById('o2Ex').textContent    = t.ex;
+    openSheet('o2');
+  }
+
+  el.pdim.addEventListener('click', closeSheets);
+  document.querySelectorAll('[data-sheet-close]').forEach(function (b) {
+    b.addEventListener('click', closeSheets);
+  });
+
+  /* ── 대기 화면 진행 ── */
+
+  var WAIT_TITLES = [
+    '당신의 이야기를<br>살펴보고 있어요',
+    '닿아 있는 가르침을<br>찾고 있어요'
+  ];
+
+  function setStep(i) {
+    var items = el.waitSteps.querySelectorAll('.step');
+    items.forEach(function (li, n) {
+      li.className = 'step' + (n < i ? ' done' : n === i ? ' now' : '');
+      var dot = li.querySelector('.step-dot');
+      dot.innerHTML = n < i
+        ? '<svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.6 8.4l2.9 2.9 5.9-6.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<span class="step-core"></span>';
+    });
+  }
+
+  function send() {
+    var r = route(el.concern.value);
+    if (r.chars === 0) return;
+
+    if (S.sc === 'crisis') { go('crisis'); return; }
+    if (S.quota <= 0) { openSheet('quota'); return; }
+
+    S.quota -= 1;
+    go('wait');
+    el.waitTitle.innerHTML = WAIT_TITLES[0];
+    setStep(0);
+
+    later(function () {
+      el.waitTitle.innerHTML = WAIT_TITLES[1];
+      setStep(1);
+    }, 1500);
+
+    later(function () {
+      // go() 가 남은 타이머를 지우므로 2차 도착은 이 안에서 다시 건다.
+      go('answer');
+      paintAnswer(true);
+      later(function () {
+        if (S.screen !== 'answer') return;
+        var keep = el.screens.answer.scrollTop;
+        paintAnswer(false);
+        el.screens.answer.scrollTop = keep;
+      }, 3200);
+    }, 3000);
+  }
+
+  el.send.addEventListener('click', send);
+
+  /* ── 시나리오 ── */
+
+  function applyScenario(name) {
+    var s = SCEN[name];
+    if (!s) return;
+    S.sc = name;
+    S.quota = s.quota;
+    S.data = s.data || DEEP;
+    el.concern.value = s.text;
+    el.archEmpty.hidden = true;
+    el.archFull.hidden = false;
+    renderHome();
+    resetHome();
+  }
+
+  function resetHome() {
+    go('home');
+    renderHome();
+  }
+
+  document.querySelectorAll('.demoBar button[data-sc]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.demoBar button[data-sc]').forEach(function (x) {
+        x.classList.toggle('on', x === b);
+      });
+      applyScenario(b.dataset.sc);
+    });
+  });
+
+  document.querySelectorAll('[data-go]').forEach(function (b) {
+    if (b.closest('#answerDoc')) return;
+    b.addEventListener('click', function () {
+      var t = b.dataset.go;
+      go(t);
+      if (t === 'home') renderHome();
+    });
+  });
+
+  el.tabbar.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { go(t.dataset.tab); });
+  });
+
+  document.getElementById('goSettings').addEventListener('click', function () { go('settings'); });
+
+  el.concern.addEventListener('input', renderHome);
+
+  el.chips.querySelectorAll('[data-seed]').forEach(function (c) {
+    c.addEventListener('click', function () {
+      el.concern.value = c.dataset.seed;
+      renderHome();
+      el.concern.focus();
+    });
+  });
+
+  document.getElementById('barShare').addEventListener('click', function () { openSheet('share'); });
+  document.getElementById('barSave').addEventListener('click', function () {
+    el.bottom.classList.remove('on');
+    later(function () { el.bottom.classList.add('on'); }, 900);
+  });
+
+  document.getElementById('watchAd').addEventListener('click', function () {
+    S.quota = 1;
+    closeSheets();
+    renderHome();
+    later(send, 250);
+  });
+
+  /* 폰 안에서 Esc 는 시트만 닫는다 */
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (modal.classList.contains('on')) return;
+    closeSheets();
+  });
+
+  applyScenario('deep');
+})();
+</script>

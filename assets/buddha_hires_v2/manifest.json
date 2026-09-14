@@ -1,0 +1,271 @@
+{
+  "generator": "built-in image_gen",
+  "previous_high_resolution_originals": "Unavailable in referenced conversation attachments; not included. Recovered embedded images are references only.",
+  "assets": [
+    {
+      "file": "images/01-home-open-eyes.png",
+      "bytes": 1529749,
+      "sha256": "42fd3d2b244c5f22ff097f1bb4d195758554de834cd4ead9522ac44177b63f4d",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "images/02-listening.png",
+      "bytes": 1578212,
+      "sha256": "9b7eef2cc44416cab6a8cec5ba4ea711668032647fcde65693a505f8b274cf11",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "images/03-welcome.png",
+      "bytes": 1602725,
+      "sha256": "206b5f08fb122f563a0ac4dd59c2d859795253b6a6a1b1ac301eb00d2dc7b9e2",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "images/04-reading.png",
+      "bytes": 1552361,
+      "sha256": "48a64d7b17c4b7fa8e841af428ff5a2cb77e8a22518e3b9ddfc740f8577fdc87",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "images/05-tea-break.png",
+      "bytes": 1599824,
+      "sha256": "18fc83fe07af7d6bbe53164e0b858180ec0e7237c26b6a8fb81db28f87fa4c26",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "images/06-lotus.png",
+      "bytes": 1525262,
+      "sha256": "96c45ba331fe40685c585c4f5e2a6f148e048dd3c40b9bcb3c1ced6f317f247a",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "new_native_generation"
+    },
+    {
+      "file": "legacy-reference/legacy-01.webp",
+      "bytes": 9908,
+      "sha256": "20dd466eb05af2aa55a87dcf6be6e78e4080619167130f1f3b844363582d6db7",
+      "width": 174,
+      "height": 193,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-02.webp",
+      "bytes": 5448,
+      "sha256": "6f56ec055e1d7f104c09d77126227a5743cced7b2d67fbcf909a04309a3e1d1c",
+      "width": 254,
+      "height": 119,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-03.webp",
+      "bytes": 11180,
+      "sha256": "c604ca967b6dac65566589d0de614cd595ec8be265df0edf4f3b58c7dcc85b41",
+      "width": 175,
+      "height": 185,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-04.webp",
+      "bytes": 10758,
+      "sha256": "ed76dcdaf6c27681a9636baaa31adc4fe36ca70535e3475ffd4db2ab05eafaa4",
+      "width": 178,
+      "height": 193,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-05.webp",
+      "bytes": 4686,
+      "sha256": "6d9d906cece96fdf57b15fd2e67a03413f08fd778239ef98bb6c69ef92ab93e5",
+      "width": 172,
+      "height": 166,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-06.webp",
+      "bytes": 34862,
+      "sha256": "75f2408c00882a3bce1ceb704808ceb0330959e2550f80e63588142c62a1ce52",
+      "width": 272,
+      "height": 531,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-07.webp",
+      "bytes": 15494,
+      "sha256": "0eb403648c715a2b9c266214018e39769e0c71eb94fac45b1148d99583ccfd76",
+      "width": 226,
+      "height": 321,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-08.webp",
+      "bytes": 10446,
+      "sha256": "39e824f405e1bb5bd5807c449c531a3878b1798e752fdd865a44361c04de6c85",
+      "width": 175,
+      "height": 193,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-09.webp",
+      "bytes": 2426,
+      "sha256": "f3b368ba44fbd550a57208408629838a87e9894591a89fd86bf98e67adda7895",
+      "width": 157,
+      "height": 55,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-10.webp",
+      "bytes": 18310,
+      "sha256": "9702cbfb532eaf830e355a7ea0de3b4afa31a71c90619afdbbb3cfce147934e4",
+      "width": 263,
+      "height": 529,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-11.webp",
+      "bytes": 4820,
+      "sha256": "d2ba1441969ed16ad8d63ff07161b4b00c1cfbe10a9e2ee3eca6cd7d78cd4ec6",
+      "width": 366,
+      "height": 55,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-12.webp",
+      "bytes": 11196,
+      "sha256": "3703c7743651b64d6a8688aa5e93e8970a99529de24b657ac1a024fd974d47dd",
+      "width": 260,
+      "height": 312,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-13.webp",
+      "bytes": 8364,
+      "sha256": "0940ed49b9a803af87c6581b157257a59c3e05c13142dbb1739c907f6081befa",
+      "width": 178,
+      "height": 185,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-14.webp",
+      "bytes": 13550,
+      "sha256": "27a6c824a8474ebd77342adeb834f3d4ae71a27122e7ee96af9cf406a875cb0c",
+      "width": 174,
+      "height": 193,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "legacy-reference/legacy-15.webp",
+      "bytes": 15584,
+      "sha256": "d2c345e25932f1382a276330911b811603381d3dafc8ffa25318c2c582768573",
+      "width": 293,
+      "height": 290,
+      "mode": "RGB",
+      "alpha": false,
+      "status": "recovered_low_resolution_reference"
+    },
+    {
+      "file": "original-documents/00 시안 갤러리 (여기부터 연다).html",
+      "bytes": 277794,
+      "sha256": "5cd109c39a193bc5ad6ffa745c74d23d1b6da11d04860420b90a6fb56a863491"
+    },
+    {
+      "file": "original-documents/01 PRD v0.2 (제품 정본 · 눌러 보는 목업).html",
+      "bytes": 419995,
+      "sha256": "fd26c6f8aefabb4445b45706639746da48b247bdc13e0f18b2519f5a63f2a0dd"
+    },
+    {
+      "file": "original-documents/01 스플래시와 첫 진입 (S0).html",
+      "bytes": 164561,
+      "sha256": "faeb71adba7c0f56cd3874c8fbfd89ba56bdfaea0fbd93abd16d8062f1143e25"
+    },
+    {
+      "file": "original-documents/02 통합 개발 계획 (최종 판정 · 충돌하면 이게 이김).md",
+      "bytes": 68157,
+      "sha256": "091a1a3e3051477c55a559a2c9afdf065957b5ce7e9a42c95c3377f7dbe47631"
+    },
+    {
+      "file": "original-documents/02 홈 · 고민 입력 (S1 · 승부처 A).html",
+      "bytes": 97001,
+      "sha256": "d2fc25ddb2f8921a799d62362ffa529f9554987f78aa61e8b6b6eebf3b434d7b"
+    },
+    {
+      "file": "original-documents/03 답변 생성 대기 (S2).html",
+      "bytes": 171135,
+      "sha256": "82de21021ae4f0d10d791210246d64df46478a33778475ef49464c81a2e1d248"
+    },
+    {
+      "file": "original-documents/04 답변 화면 (S2 · 승부처 B).html",
+      "bytes": 109355,
+      "sha256": "a64ce0dde8bc0356c1d9eef13b0d36381affc80b72ef150f2b9778ca98312a66"
+    },
+    {
+      "file": "original-documents/05 위기 안내와 실패 화면 (S2 · S8).html",
+      "bytes": 145648,
+      "sha256": "f09a5353d3625f2a79891191ed7897d74aba3c8235a688fcdb4ffce28b17e413"
+    },
+    {
+      "file": "original-documents/06 보관함과 설정 (S4 · S5 · S6 · O4).html",
+      "bytes": 271776,
+      "sha256": "a596f7baf389907dc90b582a9416f86d3038e92f25da08f4d3a85bb6a79c8b0d"
+    },
+    {
+      "file": "original-documents/07 공유 카드와 랜딩 (O3 · S9).html",
+      "bytes": 241876,
+      "sha256": "c788db76cd65a169356e909ee41e20dce522a13c4c646329ea28fcfd0785d367"
+    },
+    {
+      "file": "prompts.json",
+      "bytes": 6529,
+      "sha256": "d3b4692d05bae7cb53de2eaad17ae0810595d2dd33c6cb077f200323c5477c8e"
+    }
+  ]
+}

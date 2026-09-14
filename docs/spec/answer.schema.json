@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://buddhawords.app/schema/answer-v0.3.json",
+  "title": "부처의 말 · 답변 스키마 v0.3",
+  "description": "LLM 이 내는 것(LlmPass1·LlmPass2·LlmLight·LlmExtension)과 서버가 조립해 클라이언트에 주는 것(ApiAnswer·ApiLight·ApiInvalid·ApiCrisis·ApiExtension)을 나눈다. LLM 출력에는 경전 본문 필드가 없다. 서버가 id 로 DB 에서 채운다. route 별로 스키마가 다르다. crisis·invalid 를 answer 스키마에 억지로 넣지 않는다.",
+  "$defs": {
+    "InputRoute": { "enum": ["light", "normal", "deep", "invalid", "crisis"] },
+    "VisualTheme": { "enum": ["anxiety", "anger", "loss", "comparison", "choice", "sleepless", "attachment", "emptiness", "relationship", "approval"] },
+    "EmotionTag": {
+      "description": "고정 코드 10종. 화면은 앞에 # 을 붙여 그린다. 모델이 새 태그를 만들면 서버가 other 로 접는다",
+      "enum": ["anxiety", "comparison", "approval", "attachment", "anger", "regret", "loneliness", "emptiness", "confusion", "fatigue", "other"]
+    },
+    "ContextFlag": {
+      "description": "excluded_for 값 집합과 일치해야 한다. 빌드 게이트가 검사한다",
+      "enum": ["self_harm", "abuse_victim", "bereavement", "discrimination_victim", "minor"]
+    },
+    "ScriptureRef": { "type": "object", "required": ["id"], "additionalProperties": false, "properties": { "id": { "type": "string", "pattern": "^dhp\\.[0-9]{1,3}$" } } },
+    "Scripture": {
+      "description": "서버가 DB 에서 채운다. text 는 사람이 감수한 문장 그대로다",
+      "type": "object", "required": ["id", "citation", "text"], "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "citation": { "type": "string", "description": "법구경 17장 분노의 장 223게" },
+        "text": { "type": "string" },
+        "terms": { "type": "array", "maxItems": 2, "items": { "type": "object", "required": ["word", "gloss"], "properties": { "word": { "type": "string" }, "gloss": { "type": "string" } } } },
+        "source": { "type": "object", "properties": { "base": { "type": "string" }, "license": { "type": "string" }, "translator": { "type": "string" } } }
+      }
+    },
+    "AnalysisSection": {
+      "type": "object", "required": ["heading", "body"], "additionalProperties": false,
+      "properties": { "heading": { "type": "string", "minLength": 4, "maxLength": 24 }, "body": { "type": "string", "minLength": 120, "maxLength": 700 } }
+    },
+    "Action": {
+      "type": "object", "required": ["title"], "additionalProperties": false,
+      "properties": { "title": { "type": "string", "minLength": 6, "maxLength": 40 }, "why": { "type": "string", "maxLength": 80 } }
+    },
+
+    "LlmPass1": {
+      "title": "1차 패스 출력 (3~5초). 태그 · 오늘의 부처의 말 · 경전 id · 테마",
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "safetyFlag", "contextFlags", "emotionTags", "modernBuddhaMessage", "scriptureIds", "visualTheme"],
+      "properties": {
+        "responseType": { "enum": ["answer", "refusal"], "description": "첫 필드. refusal 이면 나머지는 비운다" },
+        "safetyFlag": { "enum": ["none", "concern", "crisis"] },
+        "contextFlags": { "type": "array", "items": { "$ref": "#/$defs/ContextFlag" } },
+        "emotionTags": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "$ref": "#/$defs/EmotionTag" } },
+        "modernBuddhaMessage": {
+          "type": "string", "minLength": 18, "maxLength": 70,
+          "description": "경구체. 「남의 속도를 좇지 마라. 그 사람의 길은 그 사람의 것이고, 너의 길은 아직 끝나지 않았다.」 화면이 「현대적 풀이」 표시를 붙인다. 부처의 직접 발언처럼 쓰지 않는다"
+        },
+        "scriptureIds": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "type": "string" }, "description": "후보 목록 안의 id 만. 서버가 화이트리스트로 검증한다" },
+        "visualTheme": { "$ref": "#/$defs/VisualTheme" }
+      }
+    },
+    "LlmPass2": {
+      "title": "2차 패스 출력 (약 15~20초). 풀이 · 개인화 분석 · 행동 · 마무리",
+      "type": "object", "additionalProperties": false,
+      "required": ["scriptureExplanation", "personalAnalysis", "actions", "closingMessage"],
+      "properties": {
+        "scriptureExplanation": { "type": "string", "minLength": 150, "maxLength": 420, "description": "해요체. 불교 용어가 나오면 그 자리에서 뜻을 푼다" },
+        "terms": { "type": "array", "maxItems": 2, "items": { "type": "object", "required": ["word", "gloss"], "properties": { "word": { "type": "string" }, "gloss": { "type": "string", "maxLength": 80 } } }, "description": "구절의 modern_gloss 에서 나온 말만" },
+        "personalAnalysis": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "$ref": "#/$defs/AnalysisSection" }, "description": "normal 1개 · deep 2~3개. 상황 구조를 실제로 나눈다. 반복으로 채우지 않는다" },
+        "actions": { "type": "array", "minItems": 1, "maxItems": 3, "items": { "$ref": "#/$defs/Action" } },
+        "closingMessage": { "type": "string", "minLength": 15, "maxLength": 60 }
+      }
+    },
+    "LlmLight": {
+      "title": "LIGHT 답변. 한 번에 끝난다. 경전 RAG 없음",
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "message"],
+      "properties": {
+        "responseType": { "const": "light" },
+        "message": { "type": "string", "minLength": 80, "maxLength": 420, "description": "250~600자 상한을 서버가 잰다. 불교적 관점을 살짝 재미있게. 이모지 0~1개 허용" },
+        "emotionTags": { "type": "array", "maxItems": 2, "items": { "$ref": "#/$defs/EmotionTag" } }
+      }
+    },
+    "LlmExtension": {
+      "title": "Deep Extension (보상형 광고 보상). 다른 경전 1 + 다른 관점 1 + 행동 1",
+      "type": "object", "additionalProperties": false,
+      "required": ["scriptureId", "alternativeAnalysis", "action"],
+      "properties": {
+        "scriptureId": { "type": "string", "description": "1차에서 쓰지 않은 후보 중 하나" },
+        "alternativeAnalysis": { "$ref": "#/$defs/AnalysisSection", "description": "본 답변과 다른 관점. 같은 말을 길게 반복하지 않는다" },
+        "action": { "$ref": "#/$defs/Action" }
+      }
+    },
+
+    "ApiAnswer": {
+      "title": "normal · deep 답변 (조립 후). 화면 7블록 순서와 같다",
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "answerId", "route", "emotionTags", "modernBuddhaMessage", "scriptures", "visualTheme", "extensionAvailable", "pass2"],
+      "properties": {
+        "responseType": { "const": "answer" },
+        "answerId": { "type": "string" },
+        "route": { "enum": ["normal", "deep"] },
+        "routeNote": { "enum": ["promoted_topic", "downgraded_budget"], "description": "promoted_topic: 짧게 쓰셨지만 중요한 이야기라 깊게 봤어요. downgraded_budget: 지금은 답변이 몰려서 간단한 풀이로 드렸어요" },
+        "safety": { "enum": ["none", "concern"] },
+        "emotionTags": { "type": "array", "minItems": 1, "maxItems": 4, "items": { "$ref": "#/$defs/EmotionTag" } },
+        "modernBuddhaMessage": { "type": "string" },
+        "scriptures": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/Scripture" } },
+        "visualTheme": { "$ref": "#/$defs/VisualTheme" },
+        "extensionAvailable": { "type": "boolean", "description": "보상형 광고를 띄울 수 있고(버전·그룹·기기 광고 끄기 아님) 후보 구절이 남아 있을 때만 true" },
+        "pass2": {
+          "oneOf": [
+            { "type": "object", "required": ["status"], "properties": { "status": { "const": "pending" } } },
+            { "type": "object", "required": ["status"], "properties": { "status": { "const": "failed" }, "retryable": { "type": "boolean" } } },
+            { "type": "object", "required": ["status", "scriptureExplanation", "personalAnalysis", "actions", "closingMessage"], "properties": { "status": { "const": "done" }, "scriptureExplanation": { "type": "string" }, "terms": { "type": "array" }, "personalAnalysis": { "type": "array", "items": { "$ref": "#/$defs/AnalysisSection" } }, "actions": { "type": "array", "items": { "$ref": "#/$defs/Action" } }, "closingMessage": { "type": "string" } } }
+          ]
+        },
+        "redactedCount": { "type": "integer", "minimum": 0 },
+        "quota": { "$ref": "#/$defs/Quota" }
+      }
+    },
+    "ApiLight": {
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "answerId", "message", "cta"],
+      "properties": {
+        "responseType": { "const": "light" },
+        "answerId": { "type": "string" },
+        "message": { "type": "string" },
+        "emotionTags": { "type": "array", "items": { "$ref": "#/$defs/EmotionTag" } },
+        "visualTheme": { "const": "choice" },
+        "cta": { "const": "deeper", "description": "화면 고정 문구: 조금 더 진지한 고민이 있다면 세 줄 정도 이야기해보세요. 훨씬 깊게 같이 볼 수 있어요" },
+        "quota": { "$ref": "#/$defs/Quota" }
+      }
+    },
+    "ApiInvalid": {
+      "description": "사용량을 차감하지 않는다. LLM 을 부르지 않는다. 문구는 고정 집합에서 고른다",
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "messageKey", "retryAllowed"],
+      "properties": {
+        "responseType": { "const": "invalid" },
+        "messageKey": { "enum": ["playful", "empty", "injection", "repetition"] },
+        "retryAllowed": { "const": true },
+        "quota": { "$ref": "#/$defs/Quota" }
+      }
+    },
+    "ApiCrisis": {
+      "description": "경전·풀이·행동·광고 없음. 문구는 클라이언트에 고정돼 있다. 서버는 어떤 창구를 위로 올릴지만 준다",
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "channels"],
+      "properties": {
+        "responseType": { "const": "crisis" },
+        "channels": { "type": "array", "items": { "enum": ["109", "madeleine", "1577-0199", "1388", "1366", "112"] }, "description": "위에서부터 그리는 순서. 기본 [109, madeleine]. minor 면 1388, abuse 면 1366·112 추가" },
+        "flags": { "type": "object", "properties": { "minor": { "type": "boolean" }, "abuse": { "type": "boolean" } } }
+      }
+    },
+    "ApiExtension": {
+      "type": "object", "additionalProperties": false,
+      "required": ["responseType", "answerId", "scripture", "alternativeAnalysis", "action"],
+      "properties": {
+        "responseType": { "const": "extension" },
+        "answerId": { "type": "string" },
+        "scripture": { "$ref": "#/$defs/Scripture" },
+        "alternativeAnalysis": { "$ref": "#/$defs/AnalysisSection" },
+        "action": { "$ref": "#/$defs/Action" }
+      }
+    },
+    "Quota": {
+      "description": "사용자 시간대 자정 기준. 첫 고민은 무료, 그다음은 광고를 보고 이어간다. light·invalid·crisis 는 세지 않는다",
+      "type": "object", "required": ["freeUsed", "adContinuesUsed", "adContinuesMax", "resetsAt"],
+      "properties": {
+        "freeUsed": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "adContinuesUsed": { "type": "integer", "minimum": 0 },
+        "adContinuesMax": { "type": "integer", "const": 4 },
+        "resetsAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/ApiAnswer" }, { "$ref": "#/$defs/ApiLight" }, { "$ref": "#/$defs/ApiInvalid" }, { "$ref": "#/$defs/ApiCrisis" }, { "$ref": "#/$defs/ApiExtension" }
+  ]
+}

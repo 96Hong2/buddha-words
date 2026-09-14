@@ -1,0 +1,78 @@
+<!-- ============================================================================
+     부처의 말 · 웹폰트 비차단 로드 스니펫 v1.0
+     화면 파일(design/screens/*.html, design/components/*.html)은 이 블록을
+     <head> 맨 위에 그대로 복사해 붙인다. 고쳐서 쓰지 않는다.
+
+     ■ 왜 이렇게 받나
+     CSS 파일 안의 @import 는 그 시트를 다 받을 때까지 렌더를 막는다.
+     10초 가계부에서 index.css 맨 위의 @import 하나가 첫 그림을 30초 막아 e2e 가
+     간헐 실패했다. 미니앱은 열자마자 보여야 하는 자리라 출시 문제가 된다.
+     그래서 link 를 media="print" 로 받고 onload 에서 media='all' 로 바꾼다.
+     이러면 브라우저가 이 시트를 렌더 차단 자원으로 세지 않는다.
+
+     ■ 못 받아도 읽혀야 한다
+     세 폰트가 전부 실패해도 폴백 스택(Apple SD Gothic Neo, system-ui …)으로 읽힌다.
+     _tokens.css 의 --font-sans · --font-serif 가 그 스택이다.
+
+     ■ URL 확인 (2026-09-13, curl 로 실제 응답 코드를 받아 확인함)
+       200  cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/.../pretendardvariable-dynamic-subset.css
+       200  hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-{Regular,SemiBold,Bold}.woff2
+       200  fonts.googleapis.com/css2?family=Noto+Serif+KR
+       404  cdn.jsdelivr.net/npm/sunn-web-font@1.0.1/SUIT.css  ← 그래서 SUIT 는 받지 않는다
+            SUIT 는 스택에 이름만 남긴다. 기기에 설치된 사용자만 쓰게 된다.
+     ============================================================================ -->
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- 1) Pretendard Variable · 본문과 UI 전부.
+     dynamic-subset 판이라 한글을 조각(약 34KB)으로 나눠 보내고, 브라우저는 화면에 쓴 글자가
+     들어 있는 조각만 받는다. 전체 정적판(Regular 한 벌 766KB)보다 훨씬 가볍다. -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      media="print" onload="this.media='all'">
+
+<!-- 2) Noto Serif KR · MaruBuri 가 실패했을 때 받는 명조 폴백.
+     Google Fonts 의 css2 는 font-display:swap 을 URL 파라미터로 넣어 준다. -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      media="print" onload="this.media='all'">
+
+<!-- 3) MaruBuri · 제목·경전·인용문·오늘의 한마디.
+     네이버가 주는 공식 CSS(hangeul.pstatic.net/hangeul_static/css/maru-buri.css)를 쓰지 않고
+     아래처럼 우리가 직접 @font-face 를 쓴다. 이유가 둘이다.
+       (1) 네이버 CSS 에 font-display 가 없다. 기본값 auto 는 폰트를 받는 동안 글자를 숨긴다.
+           본문이 1,600자를 넘는 앱이라 그 사이 화면이 비면 크게 튄다. swap 으로 덮는다.
+       (2) 네이버 CSS 는 굵기마다 family 이름이 다르다('MaruBuri', 'MaruBuriSemiBold',
+           'MaruBuriBold'). 그대로 두면 font-weight:700 이 가짜 굵기(synthetic bold)를 만들어
+           한글 받침이 뭉갠다. 아래에서 한 이름에 weight 를 묶어 준다.
+     woff2 한 벌이 약 440KB 다. 제목과 인용문에만 쓰므로 Regular 와 Bold 두 벌만 받는다.
+     실제 앱에서는 쓰는 글자만 남긴 서브셋으로 줄인다. -->
+<style>
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-SemiBold.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2');
+  }
+
+  /* 가짜 굵기·가짜 기울임을 끈다. 한글은 합성 굵기에서 받침이 붙어 뭉갠다. */
+  html { font-synthesis-weight: none; font-synthesis-style: none; }
+</style>

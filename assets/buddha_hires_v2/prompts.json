@@ -1,0 +1,32 @@
+[
+  {
+    "name": "01-home-open-eyes",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is a low-resolution UI screenshot: use ONLY its Buddha character as visual identity reference, remove ALL text and UI. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: front-facing seated cross-legged, hands resting naturally in lap, direct friendly gaze. This is the clean replacement for the asymmetric-eye home Buddha.",
+    "usage_ko": "홈 기본 캐릭터, 비대칭 눈 재제작"
+  },
+  {
+    "name": "02-listening",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is the approved master character: preserve exactly its face, proportions, colors and materials. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: Seated cross-legged, one hand resting over heart, other hand on knee, attentive calm empathetic open-eyed gaze.",
+    "usage_ko": "고민 경청과 공감"
+  },
+  {
+    "name": "03-welcome",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is the approved master character: preserve exactly its face, proportions, colors and materials. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: Seated cross-legged, both palms pressed together neatly at chest in greeting, eyes open looking at viewer.",
+    "usage_ko": "첫 방문 인사와 완료 안내"
+  },
+  {
+    "name": "04-reading",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is the approved master character: preserve exactly its face, proportions, colors and materials. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: Seated cross-legged holding a small blank unlettered open cream book with both hands, eyes open looking gently downward toward book.",
+    "usage_ko": "경전 설명과 보관함"
+  },
+  {
+    "name": "05-tea-break",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is the approved master character: preserve exactly its face, proportions, colors and materials. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: Seated cross-legged holding a small sage green ceramic tea cup with both hands, eyes open, peaceful relaxed expression.",
+    "usage_ko": "잠시 쉬어가기"
+  },
+  {
+    "name": "06-lotus",
+    "prompt": "Use case: stylized-concept. Create one standalone high-resolution 2048x2048 production image asset for Korean mini-app '부처의 말'. Reference is the approved master character: preserve exactly its face, proportions, colors and materials. Soft premium 3D clay sculpture, warm matte sandstone beige skin, tan/golden tightly curled hair and ushnisha, elongated ears, rounded gentle face, subtle small smile, warm ochre robe, adorable but dignified proportions. Both eyes OPEN naturally, matching eyelid shape, size and height, balanced dark pupils and gaze; absolutely no wink or asymmetric squint. Soft diffuse studio lighting, restrained shadows, plain warm ivory background, whole character with generous safe margins, no writing, logos, watermark, no interface. Native high resolution crisp smooth edges, do not replicate screenshot pixels. Pose: Seated cross-legged, holding a single delicate pale pink lotus flower by stem in one hand beside chest, other hand on lap, eyes open toward viewer.",
+    "usage_ko": "오늘의 가르침과 공유 카드"
+  }
+]

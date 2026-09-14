@@ -1,0 +1,2415 @@
+<!-- @dsCard group="Overview" name="시안 갤러리 · 부처의 말" -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>부처의 말 · 시안 갤러리</title>
+
+<!-- ============================================================================
+     부처의 말 · 웹폰트 비차단 로드 스니펫 v1.0
+     정본 파일: ~/orca/workspaces/chore/부처의-말/design/foundations/_fonts.html
+     화면 파일(design/screens/*.html, design/components/*.html)은 이 블록을
+     <head> 맨 위에 그대로 복사해 붙인다. 고쳐서 쓰지 않는다.
+
+     ■ 왜 이렇게 받나
+     CSS 파일 안의 @import 는 그 시트를 다 받을 때까지 렌더를 막는다.
+     10초 가계부에서 index.css 맨 위의 @import 하나가 첫 그림을 30초 막아 e2e 가
+     간헐 실패했다. 미니앱은 열자마자 보여야 하는 자리라 출시 문제가 된다.
+     그래서 link 를 media="print" 로 받고 onload 에서 media='all' 로 바꾼다.
+     이러면 브라우저가 이 시트를 렌더 차단 자원으로 세지 않는다.
+
+     ■ 못 받아도 읽혀야 한다
+     세 폰트가 전부 실패해도 폴백 스택(Apple SD Gothic Neo, system-ui …)으로 읽힌다.
+     _tokens.css 의 --font-sans · --font-serif 가 그 스택이다.
+
+     ■ URL 확인 (2026-09-13, curl 로 실제 응답 코드를 받아 확인함)
+       200  cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/.../pretendardvariable-dynamic-subset.css
+       200  hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-{Regular,SemiBold,Bold}.woff2
+       200  fonts.googleapis.com/css2?family=Noto+Serif+KR
+       404  cdn.jsdelivr.net/npm/sunn-web-font@1.0.1/SUIT.css  ← 그래서 SUIT 는 받지 않는다
+            SUIT 는 스택에 이름만 남긴다. 기기에 설치된 사용자만 쓰게 된다.
+     ============================================================================ -->
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://hangeul.pstatic.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- 1) Pretendard Variable · 본문과 UI 전부.
+     dynamic-subset 판이라 한글을 조각(약 34KB)으로 나눠 보내고, 브라우저는 화면에 쓴 글자가
+     들어 있는 조각만 받는다. 전체 정적판(Regular 한 벌 766KB)보다 훨씬 가볍다. -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      media="print" onload="this.media='all'">
+
+<!-- 2) Noto Serif KR · MaruBuri 가 실패했을 때 받는 명조 폴백.
+     Google Fonts 의 css2 는 font-display:swap 을 URL 파라미터로 넣어 준다. -->
+<link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap"
+      media="print" onload="this.media='all'">
+
+<!-- 3) MaruBuri · 제목·경전·인용문·오늘의 한마디.
+     네이버가 주는 공식 CSS(hangeul.pstatic.net/hangeul_static/css/maru-buri.css)를 쓰지 않고
+     아래처럼 우리가 직접 @font-face 를 쓴다. 이유가 둘이다.
+       (1) 네이버 CSS 에 font-display 가 없다. 기본값 auto 는 폰트를 받는 동안 글자를 숨긴다.
+           본문이 1,600자를 넘는 앱이라 그 사이 화면이 비면 크게 튄다. swap 으로 덮는다.
+       (2) 네이버 CSS 는 굵기마다 family 이름이 다르다('MaruBuri', 'MaruBuriSemiBold',
+           'MaruBuriBold'). 그대로 두면 font-weight:700 이 가짜 굵기(synthetic bold)를 만들어
+           한글 받침이 뭉갠다. 아래에서 한 이름에 weight 를 묶어 준다.
+     woff2 한 벌이 약 440KB 다. 제목과 인용문에만 쓰므로 Regular 와 Bold 두 벌만 받는다.
+     실제 앱에서는 쓰는 글자만 남긴 서브셋으로 줄인다. -->
+<style>
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Regular.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-SemiBold.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'MaruBuri';
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+    src: url('https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/MaruBuri-Bold.woff2') format('woff2');
+  }
+
+  /* 가짜 굵기·가짜 기울임을 끈다. 한글은 합성 굵기에서 받침이 붙어 뭉갠다. */
+  html { font-synthesis-weight: none; font-synthesis-style: none; }
+</style>
+
+<style>
+/* ============================================================================
+   부처의 말 · 디자인 토큰 v1.0 (라이트 전용)
+   정본 파일: ~/orca/workspaces/chore/부처의-말/design/foundations/_tokens.css
+
+   이 파일이 색·타이포·간격의 정본이다. 화면 CSS 는 램프(--c-*)를 직접 쓰지 않고
+   의미 토큰만 쓴다. 램프를 직접 쓰면 값이 바뀔 때 그 자리만 안 바뀐다.
+
+   출처: design/assets 의 실제 이미지에서 뽑은 주조색 + 원본 HTML 의 CSS 변수.
+   대비비는 전부 python3 로 WCAG 2.x 상대휘도 공식으로 계산해 통과시킨 값이다.
+   기준: 본문 4.5 · 큰 글씨와 UI 경계 3.0 · 면 대 면 1.20.
+
+   ※ 다크 팔레트는 없다. 통합 개발 계획 X1 이 라이트 전용으로 못 박았다.
+     토스가 그리는 상단바가 라이트 고정이라 본문만 뒤집으면 화면 위아래가 갈라진다.
+   ============================================================================ */
+
+:root {
+
+  /* ── 램프 (원시 토큰) ──────────────────────────────────────────────────
+     에셋 이미지에서 실제로 뽑은 색을 기준으로 단계를 채웠다.
+     sand 는 배경·표면·잉크가 모두 나오는 뼈대다. */
+
+  --c-sand-50:  #FFFAF1;  /* 에셋 paper. 카드·입력칸 */
+  --c-sand-100: #FBF7EF;  /* 에셋 bg. 부처 이미지 매트와 같은 톤 */
+  --c-sand-150: #F6EFE2;  /* 아주 옅은 눌림 */
+  --c-sand-200: #EDE4D3;  /* 앱 배경. 카드와 1.21 로 갈린다 */
+  --c-sand-300: #E4D9C4;  /* 눌린 면 */
+  --c-sand-400: #DCCFB8;  /* 장식 구분선 */
+  --c-sand-500: #C2B096;  /* 비활성 */
+  --c-sand-600: #8A7A61;  /* UI 경계. 배경 위 3.30 */
+  --c-sand-700: #6B5C4E;  /* 보조 글자 */
+  --c-sand-800: #4C4234;  /* 짙은 중립 면 */
+  --c-sand-900: #362C25;  /* 에셋 ink. 본문 */
+
+  --c-gold-50:  #FAF2DE;  /* 아주 옅은 금색 배경 */
+  --c-gold-100: #F2E3C4;  /* 경전 인용면·금색 칩 */
+  --c-gold-200: #E3C388;  /* 짙은 면 위에 놓는 금색 */
+  --c-gold-300: #D3AC60;  /* 장식 */
+  --c-gold-400: #B48A4A;  /* 에셋 gold 원값. 아이콘·큰 글씨 */
+  --c-gold-500: #AE8340;  /* 아이콘·선. 카드 위 3.30 */
+  --c-gold-600: #9E7329;  /* 경전 세로선. 경전면 위 3.35 */
+  --c-gold-700: #8E6B26;  /* 포커스 링 */
+  --c-gold-800: #7E5C1E;  /* 금색 글자·주의 */
+  --c-gold-900: #6B4E19;  /* 금색 눌림 */
+
+  --c-sage-50:  #EFF3EA;
+  --c-sage-100: #DFE7D5;  /* 세이지 칩. 카드 위 1.22 */
+  --c-sage-200: #C3D2B6;
+  --c-sage-300: #9DB08D;
+  --c-sage-400: #7B9169;
+  --c-sage-500: #637C55;
+  --c-sage-600: #4E6543;  /* 세이지 글자·성공 */
+  --c-sage-700: #3D5135;
+  --c-sage-800: #2F3F29;
+
+  --c-lotus-50:  #FDF1F3;
+  --c-lotus-100: #F5DBE0;  /* 연꽃 칩. 카드 위 1.26 */
+  --c-lotus-200: #EDC0C8;
+  --c-lotus-300: #E09FAB;  /* 에셋 연꽃잎 핑크 */
+  --c-lotus-400: #CE7688;
+  --c-lotus-500: #B85568;
+  --c-lotus-600: #9A4356;  /* 연꽃 글자 */
+  --c-lotus-700: #7D3446;
+
+  --c-brown-700: #41382F;  /* 에셋 버튼색. 주 버튼·짙은 면 */
+  --c-brown-800: #2B241D;  /* 버튼 눌림 */
+  --c-red-600:   #A83C33;  /* 오류 */
+
+
+  /* ── 의미 토큰 · 면 ───────────────────────────────────────────────────
+     층은 두 개다. 세 번째 층을 밝기로 만들지 않는다.
+     아이보리에서 세 층을 각각 1.20 으로 벌리면 셋째 층이 흙빛이 된다.
+     층이 하나 더 필요하면 밝기가 아니라 --line 으로 나눈다. */
+
+  --bg:               var(--c-sand-200);  /* 앱 배경 (층 0) */
+  --surface:          var(--c-sand-50);   /* 카드·시트·입력칸 (층 1). 배경과 1.21 */
+  --surface-2:        var(--c-sand-200);  /* 카드 안 인셋. 배경과 같은 톤으로 파인 자리를 만든다 */
+  --surface-pressed:  var(--c-sand-300);  /* 눌림. 잠깐 보이는 상태라 1.20 요건 밖이다 */
+  --surface-chip:     var(--c-sand-200);  /* 중립 칩 */
+  --surface-scripture:var(--c-gold-100);  /* 경전 인용면. 카드와 1.22 */
+  --surface-deep:     var(--c-brown-700); /* 오늘의 한마디 짙은 면 */
+  --surface-illust:   var(--c-sand-100);  /* 부처 이미지 뒤. 이미지에 구워진 매트(#FBF8F2)와 같은 톤 */
+
+  /* ── 의미 토큰 · 글자 ─────────────────────────────────────────────── */
+
+  --text:          var(--c-sand-900);  /* 본문. 배경 10.78 · 카드 13.08 */
+  --text-muted:    var(--c-sand-700);  /* 보조. 배경 5.09 · 카드 6.18 */
+  --text-weak:     #736354;            /* 입력 안내문·비활성 라벨. 배경 4.57 · 카드 5.55 */
+  --text-on-deep:  var(--c-sand-50);   /* 짙은 면 위 글자. 11.03 */
+  --text-on-deep-muted: #D9CDBC;       /* 짙은 면 위 보조. 7.32 */
+
+  /* ── 의미 토큰 · 강조 (금색) ──────────────────────────────────────────
+     이 앱의 강조는 금색 하나다. 경전이 신뢰의 핵심이라 그 자리가 따로 서야 한다.
+     같은 금색이라도 글자용과 면·선용의 값이 다르다. 섞어 쓰면 대비가 무너진다. */
+
+  --accent:         var(--c-gold-500);  /* 아이콘·큰 글씨·선. 카드 위 3.30 */
+  --accent-text:    var(--c-gold-800);  /* 금색 글자. 카드 5.88 · 경전면 4.82 */
+  --accent-rule:    var(--c-gold-600);  /* 경전 인용면 왼쪽 세로선. 경전면 위 3.35 */
+  --accent-pressed: var(--c-gold-900);  /* 금색 눌림 */
+  --accent-soft:    var(--c-gold-100);  /* 금색 약배경. 칩·경전면과 같은 값 */
+  --accent-on-deep: var(--c-gold-200);  /* 짙은 면 위 금색 면. 그 위 글자는 --surface-deep 6.79 */
+
+  /* ── 의미 토큰 · 보조 색 ─────────────────────────────────────────────
+     감정 태그 칩의 색만 담당한다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다. */
+
+  --sage:       var(--c-sage-600);   /* 세이지 글자. 세이지 칩 위 5.06 */
+  --sage-soft:  var(--c-sage-100);   /* 두려움 계열 태그 칩 (#불안 #걱정) */
+  --lotus:      var(--c-lotus-600);  /* 연꽃 글자. 연꽃 칩 위 4.86 */
+  --lotus-soft: var(--c-lotus-100);  /* 관계·욕구 계열 태그 칩 (#집착 #인정욕구) */
+
+  /* ── 의미 토큰 · 선 ─────────────────────────────────────────────────── */
+
+  --line:        var(--c-sand-400);  /* 장식 구분선. 만질 수 없는 선에만 */
+  --line-strong: var(--c-sand-600);  /* 입력칸·토글 등 UI 경계. 배경 3.30 · 카드 4.01 */
+  --focus:       var(--c-gold-700);  /* 포커스 링. 배경 3.89 · 카드 4.72 */
+
+  /* ── 의미 토큰 · 상태 ───────────────────────────────────────────────── */
+
+  --success: var(--c-sage-600);  /* 저장 완료·수행 체크. 배경 5.09 */
+  --caution: var(--c-gold-800);  /* 개인정보 안내 등 주의. 배경 4.84 */
+  --danger:  var(--c-red-600);   /* 오류. 배경 4.95 · 카드 6.01 */
+
+  /* ── 의미 토큰 · 버튼 ───────────────────────────────────────────────── */
+
+  --btn:         var(--c-brown-700);  /* 주 버튼 바닥. 에셋의 버튼색 그대로 */
+  --btn-pressed: var(--c-brown-800);
+  --on-btn:      var(--c-sand-50);    /* 버튼 글자. 11.03 */
+  --btn-ghost-line: var(--c-sand-600);/* 보조 버튼 테두리 */
+
+  --dim: rgba(54, 44, 37, .42);  /* 바텀시트 딤 */
+
+  /* ────────────────────────────────────────────────────────────────────
+     짙은 면 사고를 막는 규칙 (10초 가계부에서 실제로 난 사고)
+
+     원문: "월간 결산을 짙은 세이지 전면으로 바꿨더니 「다음」 버튼이 사라진 것처럼 보였다.
+     버튼 바닥색이 sage-700 인데 배경도 sage-700 이라 대비가 1:1 이 됐다."
+
+     이 앱은 「오늘의 한마디」를 --surface-deep 짙은 면으로 낸다. 그리고 --btn 이
+     --surface-deep 과 **같은 값 #41382F** 이다. 아무 생각 없이 얹으면 그 사고가 그대로 난다.
+
+     C-1  면 토큰을 바꾸는 변경은 그 면 위에 놓인 모든 요소의 토큰을 세어 보고 판정한다.
+     C-2  짙은 면 위에 --btn 을 놓지 않는다. 대비 1.00 이다. 버튼이 통째로 사라진다.
+     C-3  짙은 면 위에 놓을 수 있는 것은 아래 셋뿐이다.
+            --text-on-deep       #FFFAF1  11.03  글자
+            --text-on-deep-muted #D9CDBC   7.32  보조 글자
+            --accent-on-deep     #E3C388   6.79  버튼 바닥 (그 위 글자는 --surface-deep)
+     C-4  금지 조합 (계산값)
+            --btn         #41382F  위  1.00  ← 사고가 나는 그 조합. 버튼이 통째로 사라진다
+            --accent-text #7E5C1E  위  1.88  글자로 못 쓴다
+            --text-muted  #6B5C4E  위  1.78  글자로 못 쓴다
+            --accent      #AE8340  위  3.34  큰 글씨·아이콘만 된다. 본문 글자로 쓰면 4.5 미달
+     C-5  새로 놓고 싶은 색이 생기면 눈이 아니라 계산으로 판정한다.
+          사람 눈은 아이보리 계열에서 2단계 차이를 못 본다.
+     ──────────────────────────────────────────────────────────────────── */
+
+
+  /* ── 타이포 · 스택 ────────────────────────────────────────────────────
+     웹폰트는 _fonts.html 이 비차단으로 받는다. CSS 안의 @import 는 금지다.
+     10초 가계부에서 index.css 의 @import 가 첫 그림을 30초 막은 사고가 있었다.
+     못 받아도 폴백 스택으로 읽혀야 한다. */
+
+  --font-sans: 'Pretendard Variable', 'Pretendard', 'SUIT', 'Apple SD Gothic Neo',
+               -apple-system, BlinkMacSystemFont, system-ui, 'Noto Sans KR', sans-serif;
+  --font-serif: 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
+  --font-serif-bold: 'MaruBuriBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+  --font-serif-semibold: 'MaruBuriSemiBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+
+  /* ── 타이포 · 8단 ─────────────────────────────────────────────────────
+     기준 화면 390px. 좌우 gutter 20 + 카드 padding 20 을 빼면 본문 폭 310px.
+     답변 본문은 1,600~2,500자다. 이 길이를 편하게 읽히게 하는 것이 화면의 첫 목적이다.
+
+     이름         px  행간   자간       굵기  한 줄 글자수(310px)  쓰는 곳
+     display-l    28  1.42  -0.02em    700   약 11자   오늘의 한마디 (짙은 면, serif)
+     display-m    22  1.55  -0.015em   600   약 14자   화면 제목·마지막 한 문장 (serif)
+     title        18  1.45  -0.01em    700   약 17자   답변 섹션 제목 (sans)
+     scripture    17  1.90  +0.01em    400   약 18자   경전 번역문 (serif)
+     body-l       17  1.80   0         500   약 18자   답변 본문 (sans)
+     body         15  1.65   0         500   약 20자   일반 본문·목록
+     label        14  1.20  -0.005em   600   -         칩·버튼·탭 라벨
+     caption      13  1.50   0         500   -         경전 출처·안내문
+
+     본문을 17px 로 올린 근거:
+       16px 면 한 줄 19.4자, 2,500자가 129줄 × 28px = 약 3,600px.
+       17px 면 한 줄 18.2자, 2,500자가 137줄 × 30.6px = 약 4,200px.
+       줄 수는 늘지만 글자가 커져 한 줄을 훑는 속도가 빨라진다. 모바일 390px 에서
+       한 줄 25자 이상은 어차피 불가능하니, 줄 수를 줄이는 대신 글자를 키우는 쪽을 택했다.
+     행간 1.8 근거:
+       한글은 받침이 있어 라틴보다 세로로 빽빽하다. 1,600자를 넘는 글에서 1.6 은 줄이 붙어 보인다.
+       1.8 은 30.6px 로, 문단 사이 간격 16px 과 겹쳐 보이지 않는 최소값이다.
+     굵기 400 은 경전 번역문에만 쓴다.
+       MaruBuri 는 획이 가늘어 500 이 없다. 나머지 sans 본문은 500 을 최소로 한다. */
+
+  --t-display-l: 28px;  --lh-display-l: 1.42;  --ls-display-l: -0.02em;
+  --t-display-m: 22px;  --lh-display-m: 1.55;  --ls-display-m: -0.015em;
+  --t-title:     18px;  --lh-title:     1.45;  --ls-title:     -0.01em;
+  --t-scripture: 17px;  --lh-scripture: 1.90;  --ls-scripture: 0.01em;
+  --t-body-l:    17px;  --lh-body-l:    1.80;  --ls-body-l:    0;
+  --t-body:      15px;  --lh-body:      1.65;  --ls-body:      0;
+  --t-label:     14px;  --lh-label:     1.20;  --ls-label:     -0.005em;
+  --t-caption:   13px;  --lh-caption:   1.50;  --ls-caption:   0;
+
+  /* 8단 밖의 예외 하나. 광고 'Ad' 표기와 법적 고지처럼 읽히지 않아도 되는 자리만. */
+  --t-micro: 11px;  --lh-micro: 1.3;
+
+  --w-regular:  400;  /* 경전 번역문 전용 */
+  --w-medium:   500;
+  --w-semibold: 600;
+  --w-bold:     700;
+
+  /* ── 간격 (4의 배수) ────────────────────────────────────────────────── */
+
+  --s-1: 4px;   --s-2: 8px;   --s-3: 12px;  --s-4: 16px;  --s-5: 20px;
+  --s-6: 24px;  --s-8: 32px;  --s-10: 40px; --s-12: 48px; --s-16: 64px;
+
+  --gutter: 20px;        /* 화면 좌우 기본 여백 */
+  --pad-card: 20px;      /* 카드 안쪽 */
+  --gap-card: 16px;      /* 카드와 카드 사이 */
+  --gap-section: 32px;   /* 답변 섹션 사이. 구조가 있는 답변으로 읽히게 */
+  --gap-para: 16px;      /* 문단 사이 */
+  --tap-min: 44px;       /* 최소 터치 타깃 */
+
+  /* ── 라운드 ──────────────────────────────────────────────────────────
+     부처 이미지에는 반경 약 16px 의 둥근 모서리가 이미 구워져 있다(175px 폭 기준 실측).
+     그래서 --r-image 는 그 값에 맞춘다. 더 작게 주면 구워진 아이보리 매트가 각지게 비친다. */
+
+  --r-pill:   999px;  /* 칩·탭바·게이지 */
+  --r-sheet:  24px;   /* 바텀시트 상단 */
+  --r-card:   20px;   /* 카드 */
+  --r-image:  16px;   /* 부처 일러스트 액자. 이미지에 구워진 반경과 같다 */
+  --r-inset:  16px;   /* 경전 인용면 */
+  --r-button: 14px;   /* 버튼·입력칸 */
+  --r-sm:     10px;
+  --r-xs:     8px;
+  /* 앱 아이콘만 반경 0 이다. 콘솔 규격이 "라운드 모서리 사용 불가"다.
+     우리가 둥글게 만들면 플랫폼 마스킹과 겹쳐 두 번 깎인다. */
+
+  /* ── 그림자 ──────────────────────────────────────────────────────────
+     순검정을 쓰지 않는다. 아이보리 배경 위에서 회색 그림자는 차갑게 뜬다. */
+
+  --sh-card:   0 1px 3px rgba(54, 44, 37, .05), 0 6px 16px rgba(54, 44, 37, .04);
+  --sh-raised: 0 6px 20px rgba(54, 44, 37, .10);
+  --sh-tabbar: 0 4px 18px rgba(54, 44, 37, .13);
+  --sh-sheet:  0 -8px 28px rgba(54, 44, 37, .14);
+
+  /* ── 모션 ───────────────────────────────────────────────────────────── */
+
+  --ease-out:   cubic-bezier(.22, .61, .36, 1);
+  --ease-sheet: cubic-bezier(.32, .72, 0, 1);
+  --dur-press: 90ms;  --dur-fade: 220ms;  --dur-section: 320ms;  --dur-sheet: 220ms;
+}
+
+
+/* ============================================================================
+   에셋 크롭 유틸
+   글자가 구워진 이미지(splash · loading · onboarding · input · empty_state · share_card)는
+   그림만 쓰고 글자는 HTML 로 올린다. 아래 두 방식 중 하나를 쓴다.
+   크롭 좌표는 colors.html 의 이미지 매핑표에 파일별로 적어 두었다.
+   ============================================================================ */
+
+/* 방식 1: 상자로 잘라 쓴다. 이미지 안 글자 영역을 상자 밖으로 밀어낸다.
+   --iw/--ih 는 이미지 원본 크기, --cx/--cy 는 크롭 시작점, --k 는 확대 배율. */
+.asset-crop {
+  --k: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-illust);
+  border-radius: var(--r-image);
+}
+.asset-crop > img {
+  position: absolute;
+  width: calc(var(--iw) * var(--k) * 1px);
+  height: calc(var(--ih) * var(--k) * 1px);
+  left: calc(var(--cx) * var(--k) * -1px);
+  top: calc(var(--cy) * var(--k) * -1px);
+  max-width: none;
+  image-rendering: auto;
+}
+
+/* 방식 2: 그림 위에 글자를 올린다. 원본 글자 자리를 우리 배경색으로 덮고 그 위에 실제 텍스트를 놓는다.
+   덮개는 반드시 불투명 구간을 포함한다. 반투명만 깔면 원본 글자가 비쳐 두 겹으로 읽힌다. */
+.asset-veil { position: relative; overflow: hidden; background: var(--surface-illust); }
+.asset-veil > img { display: block; width: 100%; }
+.asset-veil::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--surface-illust) 0%,
+    var(--surface-illust) var(--veil-solid, 28%),
+    rgba(251, 247, 239, 0) calc(var(--veil-solid, 28%) + 12%)
+  );
+  pointer-events: none;
+}
+
+/* 부처 이미지는 원본이 약 175×190px 이다. 2배를 넘겨 키우면 흐려진다.
+   카드 안 작은 그림·원형 마스크·블러 배경 위 원본 크기 배치로 쓴다.
+   최종 앱에는 고해상도 재생성이 필요하다. */
+.buddha-thumb {
+  width: 128px; height: 128px;
+  border-radius: var(--r-image);
+  object-fit: cover; object-position: 50% 42%;
+  background: var(--surface-illust);
+}
+.buddha-hero {
+  width: 100%; max-width: 350px; aspect-ratio: 1 / 1;
+  border-radius: var(--r-image);
+  object-fit: cover;
+  background: var(--surface-illust);
+}
+</style>
+
+<style>
+/* ============================================================================
+   여기서부터는 이 갤러리 문서 전용 껍데기다. 제품 화면이 아니다.
+
+   왜 별도 변수를 두나: 위 토큰은 라이트 전용이다(X1). 그런데 이 문서는 제품이 아니라
+   내가 읽는 문서라서 다크 모드에서도 읽혀야 한다. 그래서 문서 껍데기용 --g-* 한 벌을
+   따로 두고, 값은 전부 위 램프(--c-*)에서만 꺼내 쓴다. 새 색을 만들지 않는다.
+   제품 화면 안을 흉내 내는 자리(카드 썸네일 바닥 등)는 그대로 앱 토큰을 쓴다.
+   ============================================================================ */
+
+:root {
+  --g-bg:         var(--c-sand-200);
+  --g-surface:    var(--c-sand-50);
+  --g-surface-2:  var(--c-sand-150);
+  --g-text:       var(--c-sand-900);
+  --g-muted:      var(--c-sand-700);
+  --g-weak:       var(--text-weak);
+  --g-line:       var(--c-sand-400);
+  --g-line-soft:  var(--c-sand-300);
+  --g-line-hard:  var(--c-sand-600);
+  --g-accent:     var(--c-gold-800);
+  --g-accent-line:var(--c-gold-500);
+  --g-accent-soft:var(--c-gold-50);
+  --g-chip:       var(--c-sand-200);
+  --g-done:       var(--c-sage-600);
+  --g-done-soft:  var(--c-sage-100);
+  --g-shadow:     var(--sh-card);
+  --g-shadow-up:  var(--sh-raised);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --g-bg:         var(--c-brown-800);
+    --g-surface:    var(--c-sand-900);
+    --g-surface-2:  var(--c-sand-800);
+    --g-text:       var(--c-sand-50);
+    --g-muted:      var(--text-on-deep-muted);
+    --g-weak:       var(--c-sand-500);
+    --g-line:       var(--c-sand-800);
+    --g-line-soft:  var(--c-sand-800);
+    --g-line-hard:  var(--c-sand-600);
+    --g-accent:     var(--c-gold-200);
+    --g-accent-line:var(--c-gold-300);
+    --g-accent-soft:var(--c-sand-800);
+    --g-chip:       var(--c-sand-800);
+    --g-done:       var(--c-sage-200);
+    --g-done-soft:  var(--c-sage-800);
+    --g-shadow:     0 1px 3px rgba(0, 0, 0, .30), 0 8px 22px rgba(0, 0, 0, .22);
+    --g-shadow-up:  0 10px 30px rgba(0, 0, 0, .38);
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--g-bg);
+  color: var(--g-text);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+}
+
+a { color: inherit; }
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--s-10) var(--s-6) var(--s-16);
+}
+
+@media (max-width: 640px) {
+  .wrap { padding: var(--s-6) var(--s-4) var(--s-12); }
+}
+
+/* ── 머리 ─────────────────────────────────────────────────────────────── */
+
+.head {
+  display: flex;
+  gap: var(--s-6);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--s-8);
+}
+
+.head-mark {
+  width: 72px; height: 72px;
+  flex: none;
+  border-radius: var(--r-image);
+  border: 1px solid var(--g-line);
+}
+
+.head-text { flex: 1 1 320px; min-width: 0; }
+
+h1 {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: 32px;
+  line-height: 1.3;
+  letter-spacing: var(--ls-display-l);
+  margin: 0 0 var(--s-2);
+}
+
+.head-sub {
+  margin: 0 0 var(--s-3);
+  color: var(--g-muted);
+  font-size: var(--t-body-l);
+  line-height: 1.6;
+  max-width: 46ch;
+}
+
+.badges { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 5px 11px;
+  border-radius: var(--r-pill);
+  background: var(--g-chip);
+  color: var(--g-muted);
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+}
+
+.badge--gold { background: var(--g-accent-soft); color: var(--g-accent); }
+.badge--done { background: var(--g-done-soft); color: var(--g-done); }
+
+/* ── 진행도 ───────────────────────────────────────────────────────────── */
+
+.progress {
+  background: var(--g-surface);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-card);
+  padding: var(--s-6);
+  box-shadow: var(--g-shadow);
+  margin-bottom: var(--s-12);
+}
+
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-5);
+}
+
+@media (max-width: 720px) { .progress-grid { grid-template-columns: 1fr; } }
+
+.pstep { min-width: 0; }
+
+.pstep-bar {
+  display: block;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--g-chip);
+  overflow: hidden;
+  margin-bottom: var(--s-3);
+}
+.pstep-fill { display: block; height: 100%; border-radius: var(--r-pill); background: var(--g-done); }
+.pstep--wait .pstep-fill { background: var(--g-line-hard); }
+
+.pstep-name {
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-label);
+  margin: 0 0 var(--s-1);
+  display: flex; align-items: center; gap: var(--s-2);
+}
+
+.pstep-num {
+  display: inline-grid; place-items: center;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--g-chip);
+  color: var(--g-muted);
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+}
+.pstep--done .pstep-num { background: var(--g-done-soft); color: var(--g-done); }
+
+.pstep-note { margin: 0; color: var(--g-muted); font-size: var(--t-caption); line-height: 1.55; }
+.pstep-note b { color: var(--g-text); font-weight: var(--w-semibold); }
+
+/* ── 섹션 ─────────────────────────────────────────────────────────────── */
+
+section { margin-bottom: var(--s-16); }
+
+.sec-head { margin-bottom: var(--s-6); }
+
+h2 {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: 24px;
+  line-height: 1.4;
+  letter-spacing: var(--ls-display-m);
+  margin: 0 0 var(--s-2);
+}
+
+.sec-note {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: var(--t-body);
+  line-height: 1.65;
+  max-width: 62ch;
+}
+
+h3 {
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  letter-spacing: .02em;
+  color: var(--g-muted);
+  margin: var(--s-8) 0 var(--s-4);
+  display: flex; align-items: center; gap: var(--s-3);
+}
+h3::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--g-line);
+}
+
+/* ── 마일스톤 타임라인 ────────────────────────────────────────────────── */
+
+.rail-scroll { overflow-x: auto; padding-bottom: var(--s-3); }
+
+.rail {
+  display: flex;
+  gap: var(--s-3);
+  min-width: 880px;
+  position: relative;
+}
+
+.rail::before {
+  content: '';
+  position: absolute;
+  left: 28px; right: 28px; top: 26px;
+  height: 2px;
+  background: var(--g-line);
+}
+
+.ms {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1 1 0;
+  min-width: 118px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ms-dot {
+  position: relative;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--g-surface);
+  border: 2px solid var(--g-line-hard);
+  color: var(--g-muted);
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  margin-bottom: var(--s-3);
+  transition: transform var(--dur-press) var(--ease-out), border-color var(--dur-fade);
+}
+
+.ms:hover .ms-dot, .ms:focus-visible .ms-dot {
+  border-color: var(--g-accent-line);
+  color: var(--g-accent);
+  transform: translateY(-2px);
+}
+
+.ms-name {
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-label);
+  margin: 0 0 var(--s-1);
+  padding-right: var(--s-3);
+}
+
+.ms-meta { margin: 0; color: var(--g-weak); font-size: var(--t-micro); line-height: 1.45; }
+
+.ms-goal {
+  margin: var(--s-2) 0 0;
+  color: var(--g-muted);
+  font-size: var(--t-caption);
+  line-height: 1.5;
+  padding-right: var(--s-3);
+}
+
+.rail-legend {
+  margin: var(--s-4) 0 0;
+  color: var(--g-weak);
+  font-size: var(--t-caption);
+}
+
+/* ── 시안 카드 ────────────────────────────────────────────────────────── */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(324px, 1fr));
+  gap: var(--s-5);
+}
+
+@media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+
+.card {
+  display: flex;
+  gap: var(--s-4);
+  align-items: flex-start;
+  text-align: left;
+  background: var(--g-surface);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-card);
+  padding: var(--s-5);
+  box-shadow: var(--g-shadow);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: transform var(--dur-press) var(--ease-out),
+              box-shadow var(--dur-fade) var(--ease-out),
+              border-color var(--dur-fade);
+}
+
+.card:hover, .card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: var(--g-shadow-up);
+  border-color: var(--g-accent-line);
+}
+
+.card:focus-visible, .ms:focus-visible, .acc-head:focus-visible, .m-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.thumb {
+  width: 88px; height: 88px;
+  flex: none;
+  border-radius: var(--r-image);
+  border: 1px solid var(--g-line);
+  background: var(--surface-illust);
+  overflow: hidden;
+}
+
+/* 크롭해서 쓰는 썸네일은 .asset-crop 이 이미 위치와 배율을 잡는다.
+   여기서 다시 100% 를 걸면 크롭이 풀려 글자가 박힌 영역이 그대로 보인다. */
+.thumb:not(.asset-crop) img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* 이미지가 없는 카드는 앱 팔레트 조각을 그대로 깔아 보여 준다 */
+.thumb--swatch { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.sw { display: block; }
+.sw1 { background: var(--surface); }
+.sw2 { background: var(--surface-scripture); }
+.sw3 { background: var(--sage-soft); }
+.sw4 { background: var(--surface-deep); }
+
+.thumb--kit {
+  display: grid;
+  place-content: center;
+  gap: 7px;
+  background: var(--surface);
+  padding: 0 12px;
+}
+.kit-pill {
+  height: 16px; width: 52px;
+  border-radius: var(--r-pill);
+  background: var(--sage-soft);
+  border: 1px solid var(--c-sage-200);
+}
+.kit-pill.gold { background: var(--accent-soft); border-color: var(--c-gold-300); width: 40px; }
+.kit-btn { height: 20px; width: 64px; border-radius: var(--r-xs); background: var(--btn); }
+
+.card-body { min-width: 0; flex: 1; }
+
+.card-kicker {
+  display: block;
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: .08em;
+  color: var(--g-accent);
+  margin-bottom: var(--s-1);
+}
+
+.card-title {
+  font-size: var(--t-title);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-title);
+  line-height: 1.35;
+  margin: 0 0 var(--s-2);
+}
+
+.card-desc {
+  margin: 0 0 var(--s-3);
+  color: var(--g-muted);
+  font-size: var(--t-caption);
+  line-height: 1.6;
+}
+
+.card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.tag {
+  font-size: var(--t-micro);
+  font-weight: var(--w-semibold);
+  color: var(--g-muted);
+  background: var(--g-chip);
+  border-radius: var(--r-pill);
+  padding: 3px 9px;
+}
+
+.tag--key { background: var(--g-accent-soft); color: var(--g-accent); }
+
+/* 아직 안 그린 것 */
+.card--ghost {
+  background: none;
+  border: 1.5px dashed var(--g-line-hard);
+  box-shadow: none;
+  opacity: .72;
+  cursor: default;
+}
+.card--ghost:hover { transform: none; box-shadow: none; border-color: var(--g-line-hard); }
+.card--ghost .thumb {
+  background: none;
+  border-style: dashed;
+  display: grid;
+  place-items: center;
+  color: var(--g-weak);
+}
+.card--ghost .card-kicker { color: var(--g-weak); }
+/* 흐린 카드는 바닥이 페이지 배경이라, 칩 배경색(=페이지 배경)이 그대로 사라진다 */
+.card--ghost .tag { background: none; border: 1px dashed var(--g-line-hard); color: var(--g-weak); }
+
+/* ── 아코디언 ─────────────────────────────────────────────────────────── */
+
+.acc { border-top: 1px solid var(--g-line); }
+
+.acc-item { border-bottom: 1px solid var(--g-line); }
+
+.acc-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  background: none;
+  border: 0;
+  padding: var(--s-5) var(--s-1);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: var(--tap-min);
+}
+
+.acc-title { flex: 1; font-size: var(--t-body-l); font-weight: var(--w-bold); letter-spacing: var(--ls-title); }
+.acc-count { color: var(--g-weak); font-size: var(--t-caption); font-weight: var(--w-semibold); }
+
+.acc-chev {
+  flex: none;
+  transition: transform var(--dur-fade) var(--ease-out);
+  color: var(--g-muted);
+}
+.acc-item.open .acc-chev { transform: rotate(180deg); }
+
+.acc-panel { display: none; padding: 0 var(--s-1) var(--s-6); }
+.acc-item.open .acc-panel { display: block; }
+
+.rows { display: grid; gap: var(--s-2); }
+
+.row {
+  display: flex;
+  gap: var(--s-4);
+  align-items: flex-start;
+  width: 100%;
+  background: var(--g-surface);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-button);
+  padding: var(--s-4);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+button.row { cursor: pointer; transition: border-color var(--dur-fade), background var(--dur-fade); }
+button.row:hover, button.row:focus-visible { border-color: var(--g-accent-line); background: var(--g-surface-2); }
+button.row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.row-key {
+  flex: none;
+  width: 38px;
+  font-size: var(--t-caption);
+  font-weight: var(--w-bold);
+  color: var(--g-accent);
+  padding-top: 1px;
+}
+
+.row-main { flex: 1; min-width: 0; }
+.row-title { font-size: var(--t-body); font-weight: var(--w-semibold); margin: 0 0 3px; }
+.row-note { margin: 0; color: var(--g-muted); font-size: var(--t-caption); line-height: 1.55; }
+.row-list { margin: 0; padding-left: 1.1em; color: var(--g-muted); font-size: var(--t-caption); line-height: 1.55; }
+.row-list li { margin-bottom: var(--s-1); }
+.row-go { flex: none; color: var(--g-weak); padding-top: 2px; }
+
+/* ── 모달 ─────────────────────────────────────────────────────────────── */
+
+.modal[hidden] { display: none; }
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--s-6);
+}
+
+@media (max-width: 640px) { .modal { padding: 0; align-items: end; } }
+
+.modal-dim { position: absolute; inset: 0; background: var(--dim); backdrop-filter: blur(2px); }
+
+.modal-panel {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: min(86vh, 900px);
+  display: flex;
+  flex-direction: column;
+  background: var(--g-surface);
+  border: 1px solid var(--g-line);
+  border-radius: var(--r-sheet);
+  box-shadow: var(--g-shadow-up);
+  overflow: hidden;
+  animation: pop var(--dur-sheet) var(--ease-sheet);
+}
+
+@media (max-width: 640px) {
+  .modal-panel { max-height: 92vh; border-radius: var(--r-sheet) var(--r-sheet) 0 0; }
+}
+
+@keyframes pop { from { opacity: 0; transform: translateY(14px); } }
+
+.m-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--s-6) var(--s-6) var(--s-4);
+  border-bottom: 1px solid var(--g-line);
+}
+
+.m-head-text { flex: 1; min-width: 0; }
+
+.m-kicker {
+  display: block;
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: .08em;
+  color: var(--g-accent);
+  margin-bottom: var(--s-1);
+}
+
+.m-title {
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  font-weight: var(--w-bold);
+  line-height: 1.4;
+  letter-spacing: var(--ls-display-m);
+  margin: 0;
+}
+
+.m-x {
+  flex: none;
+  width: var(--tap-min); height: var(--tap-min);
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--g-line);
+  background: none;
+  color: var(--g-muted);
+  cursor: pointer;
+}
+.m-x:hover { background: var(--g-surface-2); color: var(--g-text); }
+
+.m-body {
+  overflow-y: auto;
+  padding: var(--s-6);
+  -webkit-overflow-scrolling: touch;
+}
+
+.m-body h4 {
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  letter-spacing: .03em;
+  color: var(--g-accent);
+  margin: var(--s-6) 0 var(--s-3);
+}
+.m-body h4:first-child { margin-top: 0; }
+
+.m-body p { margin: 0 0 var(--s-3); line-height: 1.7; color: var(--g-text); }
+.m-body p.soft { color: var(--g-muted); }
+
+.m-body ul, .m-body ol { margin: 0 0 var(--s-3); padding-left: 1.15em; }
+.m-body li { margin-bottom: var(--s-2); line-height: 1.65; }
+.m-body li b { font-weight: var(--w-semibold); }
+
+.m-body ol.frames { counter-reset: f; list-style: none; padding-left: 0; }
+/* 번호를 flex 로 붙이면 li 안의 글이 익명 flex 항목으로 쪼개져
+   굵은 머리말과 나머지 문장이 두 칸으로 갈린다. 그래서 번호는 절대 배치로 둔다. */
+.m-body ol.frames li {
+  counter-increment: f;
+  position: relative;
+  padding: var(--s-3) 0 var(--s-3) 34px;
+  border-bottom: 1px dashed var(--g-line);
+}
+.m-body ol.frames li:last-child { border-bottom: 0; }
+.m-body ol.frames li::before {
+  content: counter(f);
+  position: absolute;
+  left: 0; top: calc(var(--s-3) + 2px);
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--g-chip);
+  color: var(--g-muted);
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+}
+
+.callout {
+  background: var(--g-surface-2);
+  border-left: 3px solid var(--g-accent-line);
+  border-radius: var(--r-xs);
+  padding: var(--s-4);
+  margin: 0 0 var(--s-3);
+}
+.callout p:last-child { margin-bottom: 0; }
+
+.m-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-4) var(--s-6);
+  border-top: 1px solid var(--g-line);
+  background: var(--g-surface-2);
+}
+
+.m-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-button);
+  border: 1px solid var(--g-line-hard);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--w-semibold);
+  font-size: var(--t-label);
+  cursor: pointer;
+  text-decoration: none;
+}
+.m-btn:hover:not([disabled]) { background: var(--g-surface); }
+.m-btn[disabled] { opacity: .4; cursor: default; }
+/* inline-flex 가 브라우저 기본 [hidden] 을 이겨서 따로 꺼 준다 */
+.m-btn[hidden] { display: none; }
+
+.m-btn--open {
+  margin-left: auto;
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-btn);
+}
+.m-btn--open:hover { background: var(--btn-pressed); border-color: var(--btn-pressed); }
+
+.m-pos { color: var(--g-weak); font-size: var(--t-caption); font-weight: var(--w-semibold); }
+
+.m-hint {
+  width: 100%;
+  margin: 0;
+  color: var(--g-weak);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+}
+
+body.locked { overflow: hidden; }
+
+/* ── 꼬리 ─────────────────────────────────────────────────────────────── */
+
+.foot {
+  border-top: 1px solid var(--g-line);
+  padding-top: var(--s-6);
+  color: var(--g-muted);
+  font-size: var(--t-caption);
+  line-height: 1.7;
+}
+.foot b { color: var(--g-text); font-weight: var(--w-semibold); }
+.foot code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--t-micro);
+  background: var(--g-chip);
+  border-radius: var(--r-xs);
+  padding: 2px 6px;
+}
+.foot ul { padding-left: 1.1em; margin: var(--s-3) 0 0; }
+.foot li { margin-bottom: var(--s-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+  <!-- ══ 머리 ══════════════════════════════════════════════════════════ -->
+  <header class="head">
+    <div class="asset-crop head-mark" style="--iw:172; --ih:166; --cx:46; --cy:10; --k:1;">
+      <img src="assets/logo_lockup.webp" alt="">
+    </div>
+    <div class="head-text">
+      <h1>부처의 말 · 시안 갤러리</h1>
+      <p class="head-sub">
+        고민을 쓰면 검증된 불교 경전을 근거로 풀어 주는 앱인토스 미니앱이다.
+        아래는 착수 전에 만든 화면 시안 전부이고, 카드를 누르면 그 시안을 왜 그렇게 그렸는지와 아직 못 정한 것이 열린다. <b>2026-09-14 v0.3 개편</b>: 광고 두 자리(답변 끝 · 두 번째 고민), 하루 첫 고민 무료, 다섯 갈래 라우터, 경구체 「오늘의 부처의 말」, 이용권 ₩4,900, 홈 카드 둘. 시안 7장의 문구·구조를 그에 맞춰 고쳤다. 정본은 통합 개발 계획 v0.3 이다.
+      </p>
+      <p class="head-sub">
+        <b>번호 읽는 법.</b> 카드의 <code>S·O</code> 번호는 화면 번호이고, 파일 이름의
+        <code>s0</code>~<code>s6</code> 은 묶음 이름이다. 둘은 일부러 다르다.
+        한 파일이 여러 화면을 담기 때문이다(<code>s5-archive-settings.html</code> 하나에 S4·S5·S6 이 들어 있다).
+        번호 정본과 대조표는 <b>통합 개발 계획 1.2절</b>에 있다.
+      </p>
+      <div class="badges">
+        <span class="badge badge--gold">PRD v0.3</span>
+        <span class="badge">앱인토스 WebView 미니앱</span>
+        <span class="badge">라이트 모드 전용</span>
+        <span class="badge">기기 프레임 390 × 844</span>
+        <span class="badge">2026-09-14</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ 진행도 ════════════════════════════════════════════════════════ -->
+  <div class="progress">
+    <div class="progress-grid">
+
+      <div class="pstep pstep--done">
+        <span class="pstep-bar"><span class="pstep-fill" style="width:100%"></span></span>
+        <p class="pstep-name"><span class="pstep-num">1</span> 계획과 적대 검증</p>
+        <p class="pstep-note">
+          여섯 축 조사를 한 벌로 합쳐 <b>통합 개발 계획</b>을 냈다.
+          서로 어긋난 여덟 자리를 X1부터 X8까지 판정으로 닫았고, 2026-09-14 v0.3 이 X9~X22 로 수익화·라우터를 다시 세웠다.
+        </p>
+      </div>
+
+      <div class="pstep pstep--done">
+        <span class="pstep-bar"><span class="pstep-fill" style="width:100%"></span></span>
+        <p class="pstep-name"><span class="pstep-num">2</span> 디자인 시안 (지금 여기)</p>
+        <p class="pstep-note">
+          실제 에셋으로 <b>화면 시안 7장 · 프레임 46개</b>, 컴포넌트 키트와 일러스트 판정, 색 토큰 정본까지 열 장을 그렸다.
+        </p>
+      </div>
+
+      <div class="pstep pstep--wait">
+        <span class="pstep-bar"><span class="pstep-fill" style="width:2%"></span></span>
+        <p class="pstep-name"><span class="pstep-num">3</span> 구현 M0 ~ M6</p>
+        <p class="pstep-note">
+          <b>0 / 7 마일스톤</b>, 약 32 작업일. 아직 착수 전이다.
+          법구경 120구절 감수와 에셋 재제작이 바깥 일정에 걸려 있다.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 마일스톤 타임라인 ══════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <h2>구현은 일곱 걸음이다</h2>
+      <p class="sec-note">
+        완료선을 전부 화면에서 보이는 것으로 적었다. 「구현 완료」는 완료선으로 세지 않는다.
+        걸음을 누르면 그 단계가 무엇을 만들고 무엇으로 끝났다고 말하는지 열린다.
+      </p>
+    </div>
+
+    <div class="rail-scroll">
+      <div class="rail">
+
+        <button class="ms" type="button" data-detail="d-m0" data-group="ms" data-kicker="마일스톤 M0 · 5일" data-title="껍데기와 게이트">
+          <span class="ms-dot">M0</span>
+          <p class="ms-name">껍데기와 게이트</p>
+          <p class="ms-meta">5일 · 선행 없음</p>
+          <p class="ms-goal">빈 앱이 실기기에 뜨고, 막힐 수 있는 답을 미리 받아 둔다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m1" data-group="ms" data-kicker="마일스톤 M1 · 4일" data-title="화면 A · 고민 입력 + 라우터">
+          <span class="ms-dot">M1</span>
+          <p class="ms-name">화면 A · 고민 입력</p>
+          <p class="ms-meta">3일 · M0 다음</p>
+          <p class="ms-goal">짧게 쓰고 마는 사람을 세 줄 이상 쓰게 만든다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m2" data-group="ms" data-kicker="마일스톤 M2 · 6일" data-title="경전 120구절과 검색">
+          <span class="ms-dot">M2</span>
+          <p class="ms-name">경전 120구절과 검색</p>
+          <p class="ms-meta">6일 · 감수가 병목</p>
+          <p class="ms-goal">답변 화면의 재료를 만든다. 데이터가 없으면 화면 B는 껍데기다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m3" data-group="ms" data-kicker="마일스톤 M3 · 6일" data-title="화면 B · 답변 + LIGHT·INVALID">
+          <span class="ms-dot">M3</span>
+          <p class="ms-name">화면 B · 답변</p>
+          <p class="ms-meta">5일 · M1과 M2 다음</p>
+          <p class="ms-goal">2단 요청으로 상단 3블록을 먼저 띄우고 나머지를 채운다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m4" data-group="ms" data-kicker="마일스톤 M4 · 3일" data-title="심사 방어">
+          <span class="ms-dot">M4</span>
+          <p class="ms-name">심사 방어</p>
+          <p class="ms-meta">3일 · M3 다음</p>
+          <p class="ms-goal">반려와 제재 사유를 없앤다. 없으면 못 나가는 것을 채운다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m5" data-group="ms" data-kicker="마일스톤 M5 · 4일" data-title="공유 · 보관 · 홈 카드">
+          <span class="ms-dot">M5</span>
+          <p class="ms-name">공유와 보관</p>
+          <p class="ms-meta">3일 · M3 다음</p>
+          <p class="ms-goal">공유 한 번이 새 사용자 한 명이 되는지 실제로 잰다</p>
+        </button>
+
+        <button class="ms" type="button" data-detail="d-m6" data-group="ms" data-kicker="마일스톤 M6 · 4일 + 심사 대기" data-title="광고 두 자리 · Paywall · 제출">
+          <span class="ms-dot">M6</span>
+          <p class="ms-name">광고 두 자리 · Paywall · 제출</p>
+          <p class="ms-meta">3일 + 심사 대기</p>
+          <p class="ms-goal">보상형 두 자리와 이용권을 잇고 실기기 QA 후 심사에 낸다</p>
+        </button>
+
+      </div>
+    </div>
+    <p class="rail-legend">합계 약 28 작업일. 좁은 화면에서는 타임라인을 옆으로 밀어서 본다.</p>
+  </section>
+
+  <!-- ══ 화면 시안 ══════════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <h2>화면 시안 일곱 장</h2>
+      <p class="sec-note">
+        한 파일이 한 화면이고, 그 안에 상태별 기기 프레임이 나란히 들어 있다.
+        카드를 누르면 목적과 들어 있는 프레임, 그렇게 그린 근거, 아직 못 정한 것이 열리고, 거기서 시안 파일을 바로 열 수 있다.
+      </p>
+    </div>
+
+    <h3>승부처 둘과 그 앞뒤</h3>
+    <div class="cards">
+
+      <button class="card" type="button" data-detail="d-s0" data-group="screen"
+              data-kicker="S0" data-title="스플래시와 첫 진입" data-open="screens/s0-splash-onboarding.html">
+        <div class="asset-crop thumb" style="--iw:272; --ih:531; --cx:5; --cy:255; --k:0.44;">
+          <img src="assets/splash_screen.webp" alt="나무 아래 앉은 부처 일러스트">
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S0 · 첫 1초</span>
+          <p class="card-title">스플래시와 첫 진입</p>
+          <p class="card-desc">처음 연 사람에게 안내 카드를 한 장 보여 주고, 두 번째 방문부터는 그 자리를 비운다. 온보딩 세 장은 만들지 않기로 했다.</p>
+          <div class="card-foot"><span class="tag">프레임 4</span><span class="tag">비채택안 포함</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-s1" data-group="screen"
+              data-kicker="S1 · 승부처 A" data-title="홈 · 고민 입력" data-open="screens/s1-home.html">
+        <div class="asset-crop thumb" style="--iw:260; --ih:312; --cx:150; --cy:122; --k:1;">
+          <img src="assets/input_screen.webp" alt="입력 화면의 부처 일러스트">
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S1 · 승부처 A</span>
+          <p class="card-title">홈 · 고민 입력</p>
+          <p class="card-desc">깊이 인디케이터 점 세 개로 더 쓰게 만드는 화면. 앱의 첫 지표인 Deep Conversion Rate 가 여기 하나에 걸려 있다.</p>
+          <div class="card-foot"><span class="tag tag--key">승부처</span><span class="tag">프레임 4</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-s2" data-group="screen"
+              data-kicker="S2 대기" data-title="답변 생성 대기" data-open="screens/s2-loading.html">
+        <div class="asset-crop thumb" style="--iw:263; --ih:529; --cx:36; --cy:40; --k:0.463;">
+          <img src="assets/loading_screen.webp" alt="연꽃을 든 부처 일러스트">
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S2 대기 · 3초에서 20초 · 문구 넷</span>
+          <p class="card-title">답변 생성 대기</p>
+          <p class="card-desc">1차 응답이 오면 대기 화면이 사라지는 것이 아니라, 상단 세 블록이 먼저 자리를 잡고 그 아래에서만 기다림이 이어진다.</p>
+          <div class="card-foot"><span class="tag">프레임 5</span><span class="tag">펼친 전체 포함</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-s3" data-group="screen"
+              data-kicker="S2 답변 · 승부처 B" data-title="답변 화면" data-open="screens/s3-answer.html">
+        <div class="thumb"><img src="assets/buddha_anxiety.webp" alt="불안 감정의 부처 일러스트"></div>
+        <div class="card-body">
+          <span class="card-kicker">S2 답변 · 승부처 B</span>
+          <p class="card-title">답변 화면</p>
+          <p class="card-desc">2,500자에 가까운 답변을 끝까지 읽히게 만드는 화면. 일곱 블록과 진행선, 마지막에 올라오는 공유 바까지.</p>
+          <div class="card-foot"><span class="tag tag--key">승부처</span><span class="tag">프레임 6</span><span class="tag">본문 약 5,860px</span></div>
+        </div>
+      </button>
+
+    </div>
+
+    <h3>답이 안 나올 때와 그 뒤</h3>
+    <div class="cards">
+
+      <button class="card" type="button" data-detail="d-s4" data-group="screen"
+              data-kicker="S2 위기·실패 · S8" data-title="위기 안내 · 가벼운 입력 · 오류" data-open="screens/s4-safety-errors.html">
+        <div class="thumb"><img src="assets/buddha_sleep.webp" alt="달빛 아래 부처 일러스트"></div>
+        <div class="card-body">
+          <span class="card-kicker">S2 위기·실패 · S8 · 심사가 먼저 보는 자리</span>
+          <p class="card-title">위기 안내 · 오류 · 오프라인</p>
+          <p class="card-desc">죽고 싶다는 말에 경전을 들이대지 않는다. 실패 화면은 전부 「오늘 횟수는 그대로예요」를 먼저 말한다.</p>
+          <div class="card-foot"><span class="tag">프레임 7</span><span class="tag">반쪽 답변 포함</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-s5" data-group="screen"
+              data-kicker="S4 · S5 · S6 · O4 · O5" data-title="보관함 · 이어가기 · Paywall · 설정" data-open="screens/s5-archive-settings.html">
+        <div class="asset-crop thumb" style="--iw:254; --ih:119; --cx:160; --cy:2; --k:1.222;">
+          <img src="assets/empty_state.webp" alt="바위 위 연꽃 일러스트">
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S4 · S5 · S6 · 다시 오게 만드는 자리</span>
+          <p class="card-title">보관함 · 이어가기 · Paywall · 설정</p>
+          <p class="card-desc">결제도 알림도 없이 다시 오게 만든다. 자물쇠 아이콘과 구매 버튼이 화면 어디에도 없다.</p>
+          <div class="card-foot"><span class="tag">프레임 7</span><span class="tag">이어가기 광고 · 이용권 시트</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-s6" data-group="screen"
+              data-kicker="O3 · S9" data-title="공유 카드 · 공유 시트 · 랜딩" data-open="screens/s6-share.html">
+        <div class="asset-crop thumb" style="--iw:172; --ih:166; --cx:46; --cy:10; --k:1;">
+          <img src="assets/logo_lockup.webp" alt="연꽃 로고 마크">
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">O3 · S9 · 새 사용자가 들어오는 문</span>
+          <p class="card-title">공유 카드 · 공유 시트 · 랜딩</p>
+          <p class="card-desc">이미지를 직접 공유할 수 없어서 링크와 미리보기, 사진 저장 세 갈래로 나뉜다. 카드에 사용자 고민 원문은 절대 안 실린다.</p>
+          <div class="card-foot"><span class="tag">프레임 13</span><span class="tag">저장 폴백 4종</span></div>
+        </div>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ══ 컴포넌트와 파운데이션 ══════════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <h2>화면을 만든 부품과 규칙</h2>
+      <p class="sec-note">
+        화면 일곱 장이 같은 부품으로 만들어졌는지 대조하는 자리다. 색과 대비는 눈이 아니라 계산으로 정했다.
+      </p>
+    </div>
+
+    <div class="cards">
+
+      <button class="card" type="button" data-detail="d-kit" data-group="screen"
+              data-kicker="컴포넌트" data-title="컴포넌트 키트" data-open="components/kit.html">
+        <div class="thumb thumb--kit">
+          <span class="kit-pill"></span>
+          <span class="kit-pill gold"></span>
+          <span class="kit-btn"></span>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">부품 13 묶음</span>
+          <p class="card-title">컴포넌트 키트</p>
+          <p class="card-desc">버튼 상태 매트릭스부터 패턴 띠까지. 짙은 면 위에서 버튼이 사라지는 사고를 막는 자리를 실물로 박아 두었다.</p>
+          <div class="card-foot"><span class="tag">살아 있는 입력창 예제</span><span class="tag">대비값 표기</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-illust" data-group="screen"
+              data-kicker="에셋 판정" data-title="일러스트 · 브랜드 · 모션" data-open="components/illustrations.html">
+        <div class="thumb"><img src="assets/buddha_growth.webp" alt="새싹이 트는 성장 일러스트"></div>
+        <div class="card-body">
+          <span class="card-kicker">에셋 판정</span>
+          <p class="card-title">일러스트 · 브랜드 · 모션</p>
+          <p class="card-desc">받은 그림으로 지금 무엇을 할 수 있고 무엇을 다시 만들어야 하는지. 흐려지는 실물을 기각 프레임으로 먼저 보여 준다.</p>
+          <div class="card-foot"><span class="tag">부처 8종 갤러리</span><span class="tag">크롭 좌표 실측</span></div>
+        </div>
+      </button>
+
+      <button class="card" type="button" data-detail="d-colors" data-group="screen"
+              data-kicker="파운데이션" data-title="색 · 타이포 · 에셋 토큰" data-open="foundations/colors.html">
+        <div class="thumb thumb--swatch">
+          <span class="sw sw1"></span><span class="sw sw2"></span>
+          <span class="sw sw3"></span><span class="sw sw4"></span>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">파운데이션</span>
+          <p class="card-title">색 · 타이포 · 에셋 토큰</p>
+          <p class="card-desc">색과 글자의 정본. 34쌍 대비를 페이지가 열릴 때마다 다시 계산해 표로 보여 준다. 미달 0.</p>
+          <div class="card-foot"><span class="tag">고친 값 5개</span><span class="tag">이미지 매핑표</span></div>
+        </div>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- ══ 아직 안 그린 것 ════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <h2>아직 그리지 않은 화면</h2>
+      <p class="sec-note">
+        빠진 자리를 같이 놓아야 전체 진행도가 읽힌다.
+        위 넷은 출시 범위인데 아직 시안이 없는 것이고, 아래 다섯은 MVP에서 일부러 뺀 것이다.
+      </p>
+    </div>
+
+    <h3>출시 범위인데 시안이 없는 것</h3>
+    <div class="cards">
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S7 · M4에서 만든다</span>
+          <p class="card-title">개인정보 안내와 이용약관 본문</p>
+          <p class="card-desc">설정 화면에 들어가는 입구만 그렸다. 국외 이전과 민감정보 취급을 적는 본문 화면이 아직 없다.</p>
+          <div class="card-foot"><span class="tag">앱 안 라우트로 만든다</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M4 5h16v11H8l-4 4z"/><path d="M12 8v4M12 14h.01"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">S8 · M4에서 만든다</span>
+          <p class="card-title">도움받을 곳 단독 화면</p>
+          <p class="card-desc">위기 안내 화면 안의 창구 목록은 그렸다. 설정에서 평소에 들어가는 단독 화면은 아직 없다.</p>
+          <div class="card-foot"><span class="tag">번호는 공식 출처로 확인 후</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M12 3l9 16H3z"/><path d="M12 9v4M12 16h.01"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">O6 · M5에서 만든다</span>
+          <p class="card-title">답변 신고 사유 시트</p>
+          <p class="card-desc">답변 맨 아래 「이 답변이 불편했어요」 줄까지는 그렸다. 누른 뒤 사유 네 개를 고르는 시트가 아직 없다.</p>
+          <div class="card-foot"><span class="tag">답변 id와 사유 코드만 보낸다</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M3 17l5-4 4 3 3-2 6 5"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">M6에서 만든다</span>
+          <p class="card-title">심사 제출용 스크린샷 세트</p>
+          <p class="card-desc">화면이 다 나온 뒤에 만든다. 앱 정보 심사는 번들 검토와 일정이 따로 돌아서 자산이 먼저 있어야 한다.</p>
+          <div class="card-foot"><span class="tag">아이콘 600 × 600 포함</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <h3>MVP에서 일부러 뺀 것</h3>
+    <div class="cards">
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M12 3v18M5 8h14"/><circle cx="12" cy="14" r="4"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">P1</span>
+          <p class="card-title">오늘의 말씀 탭 → 홈 카드로</p>
+          <p class="card-desc">v0.3: 탭은 없지만 홈 하단 「오늘의 한마디」 카드로 들어왔다. daily_ok 구절을 날짜로 고르므로 운영도 LLM 도 없다.</p>
+          <div class="card-foot"><span class="tag">판정 X4</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">P1</span>
+          <p class="card-title">Premium 구독 → 이용권 한 번 결제로</p>
+          <p class="card-desc">v0.3: 구독은 여전히 뺐다. 대신 네 번째 간직하기에 비소모품 「마음 보관함 이용권」 ₩4,900 Paywall 시트가 생겼다(플래그).</p>
+          <div class="card-foot"><span class="tag">판정 X5</span><span class="tag">premium_banner 에셋 보류</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 19a2 2 0 004 0"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">P1</span>
+          <p class="card-title">알림 · 내일 다시 물어보기</p>
+          <p class="card-desc">콘솔 발송 템플릿, 익명키 원문 보관, 토스앱 최소 버전 셋을 한꺼번에 요구한다. 재방문 질문은 화면 안 한 줄로 내렸다.</p>
+          <div class="card-foot"><span class="tag">판정 X5</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">P1</span>
+          <p class="card-title">전면광고와 배너</p>
+          <p class="card-desc">v0.3: 광고는 보상형 두 자리(답변 끝 Extension · 두 번째 고민 이어가기)다. 배너는 없고 전면광고는 콘솔 답 뒤에 이어가기 시트에서 플래그로만.</p>
+          <div class="card-foot"><span class="tag">판정 X2</span><span class="tag">콘솔 문의 ⓓ 대기</span></div>
+        </div>
+      </div>
+
+      <div class="card card--ghost">
+        <div class="thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M20 14a8 8 0 01-10-10 8 8 0 1010 10z"/>
+          </svg>
+        </div>
+        <div class="card-body">
+          <span class="card-kicker">플랫폼 대기</span>
+          <p class="card-title">다크 모드</p>
+          <p class="card-desc">토스가 그리는 상단바가 라이트로 고정이라, 본문만 뒤집으면 화면 위아래가 갈라진다. 다크 팔레트를 아예 만들지 않았다.</p>
+          <div class="card-foot"><span class="tag">판정 X1</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ 접어 둔 목록 ══════════════════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <h2>결정과 남은 것</h2>
+      <p class="sec-note">
+        시안이 지금 모양이 된 이유는 대부분 아래 여덟 판정에서 나왔다. 한 번에 한 묶음만 열린다.
+      </p>
+    </div>
+
+    <div class="acc" id="acc">
+
+      <!-- 판정 -->
+      <div class="acc-item">
+        <button class="acc-head" type="button" aria-expanded="false">
+          <span class="acc-title">축끼리 어긋난 자리와 최종 판정</span>
+          <span class="acc-count">8개</span>
+          <svg class="acc-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-panel">
+          <p class="sec-note" style="margin-bottom:var(--s-4)">여섯 축이 각자 옳은 근거를 들고 서로 반대로 결정한 자리다. 항목을 누르면 무엇이 갈렸고 어느 쪽으로 닫았는지 열린다.</p>
+          <div class="rows">
+
+            <button class="row" type="button" data-detail="d-x1" data-group="x" data-kicker="판정 X1" data-title="라이트 모드 전용으로 간다">
+              <span class="row-key">X1</span>
+              <span class="row-main">
+                <p class="row-title">다크 모드를 만들지 않는다</p>
+                <p class="row-note">다크 팔레트 16쌍과 밤 일러스트 10장을 MVP에서 뺐다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x2" data-group="x" data-kicker="판정 X2" data-title="광고는 보상형 두 자리다 (v0.3)">
+              <span class="row-key">X2</span>
+              <span class="row-main">
+                <p class="row-title">답변 끝 Extension 과 두 번째 고민 이어가기, 보상형 둘</p>
+                <p class="row-note">첫 답변은 광고 없이. 전면·배너는 없다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x3" data-group="x" data-kicker="판정 X3" data-title="답변은 두 번에 나눠 온다">
+              <span class="row-key">X3</span>
+              <span class="row-main">
+                <p class="row-title">2단 요청으로 나눈다</p>
+                <p class="row-note">1차가 3초에서 5초, 2차가 약 20초. 대기 화면과 답변 화면이 여기서 갈렸다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x4" data-group="x" data-kicker="판정 X4" data-title="하단 탭은 두 개다">
+              <span class="row-key">X4</span>
+              <span class="row-main">
+                <p class="row-title">이야기하기와 보관함 둘만 둔다</p>
+                <p class="row-note">오늘의 말씀은 탭이 아니라 홈 카드다 (v0.3)</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x5" data-group="x" data-kicker="판정 X5" data-title="구독과 알림은 없고 이용권만 있다 (v0.3)">
+              <span class="row-key">X5</span>
+              <span class="row-main">
+                <p class="row-title">간직 3회 무료, 네 번째에 이용권 ₩4,900</p>
+                <p class="row-note">비소모품 한 번 결제. 플래그로 끄고 켠다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x6" data-group="x" data-kicker="판정 X6" data-title="법구경만 120구절로 간다">
+              <span class="row-key">X6</span>
+              <span class="row-main">
+                <p class="row-title">경전 규모를 300에서 120으로 줄인다</p>
+                <p class="row-note">감수가 유일한 인력 병목이라 감수자 한 명으로 출시가 서게 맞췄다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x7" data-group="x" data-kicker="판정 X7" data-title="팔리 원문을 번들에서 뺀다">
+              <span class="row-key">X7</span>
+              <span class="row-main">
+                <p class="row-title">원문 필드를 아예 두지 않는다</p>
+                <p class="row-note">화면에 안 싣는 것으로는 부족하다. 저작권이 걸리는 행위는 노출이 아니라 복제다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+            <button class="row" type="button" data-detail="d-x8" data-group="x" data-kicker="판정 X8" data-title="부처 이미지는 고해상 자세 6종이다 (v0.3)">
+              <span class="row-key">X8</span>
+              <span class="row-main">
+                <p class="row-title">도착한 일러스트 8종을 그대로 쓴다</p>
+                <p class="row-note">visualTheme 열거형 10종을 8장에 다대일로 보낸다</p>
+              </span>
+              <span class="row-go"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 지금 결정할 것 -->
+      <div class="acc-item">
+        <button class="acc-head" type="button" aria-expanded="false">
+          <span class="acc-title">지금 결정해야 계획이 움직이는 것</span>
+          <span class="acc-count">6개</span>
+          <svg class="acc-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-panel">
+          <p class="sec-note" style="margin-bottom:var(--s-4)">추천안을 골라도 되고 뒤집어도 된다. 다만 고르지 않으면 M2 뒤가 멈춘다.</p>
+          <div class="rows">
+            <div class="row"><span class="row-key">1</span><span class="row-main">
+              <p class="row-title">법구경 120구절 한글 감수를 누가 하나</p>
+              <p class="row-note">추천: 본인이 직접, 하루 3시간씩 닷새. 외부 감수자를 기다리면 출시가 그 사람 일정이 된다</p></span></div>
+            <div class="row"><span class="row-key">2</span><span class="row-main">
+              <p class="row-title">보관함을 익명키만으로 갈 것인가</p>
+              <p class="row-note">추천: 익명키만. M0 완료선 3번이 재설치 유지 여부를 답해 준다. 안 유지되면 보관함을 P1으로 내린다</p></span></div>
+            <div class="row"><span class="row-key">3</span><span class="row-main">
+              <p class="row-title">광고를 첫 출시에 넣을 것인가 (닫힘)</p>
+              <p class="row-note">2026-09-14 결정: 넣는다. 보상형 두 자리. 첫 답변은 광고 없이</p></span></div>
+            <div class="row"><span class="row-key">4</span><span class="row-main">
+              <p class="row-title">부처 일러스트 8장 재제작을 어떻게 하나</p>
+              <p class="row-note">추천: 받은 8장을 화풍 기준으로 삼아 1290 × 720 이상으로 다시 뽑는다. 단 콘솔 문의 ⓑ 답이 오기 전에는 한 장까지만</p></span></div>
+            <div class="row"><span class="row-key">5</span><span class="row-main">
+              <p class="row-title">긴 답변을 무료로 유지할 것인가</p>
+              <p class="row-note">추천: 유지하되 하루 천장을 4회로 낮추고, M0 모델 실측 뒤에 단가를 다시 본다</p></span></div>
+            <div class="row"><span class="row-key">6</span><span class="row-main">
+              <p class="row-title">첫 심사에 위기 안내 화면을 넣고 낼 것인가</p>
+              <p class="row-note">추천: 넣고 낸다. 빼면 AI 상담 운영 요건을 못 채운다</p></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 아직 못 확인한 것 -->
+      <div class="acc-item">
+        <button class="acc-head" type="button" aria-expanded="false">
+          <span class="acc-title">아직 못 확인한 것</span>
+          <span class="acc-count">3 묶음</span>
+          <svg class="acc-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="acc-panel">
+          <div class="rows">
+            <div class="row"><span class="row-key">M0</span><span class="row-main">
+              <p class="row-title">첫 5일 안에 답이 나오는 것</p>
+              <ul class="row-list">
+                <li>익명키가 재설치 뒤에도 같은 값인가</li>
+                <li>후보 모델 셋의 실제 지연은 몇 초인가</li>
+                <li>자살예방 안내 화면이 민감 콘텐츠 몇 단계인가</li>
+                <li>자체 제작 일러스트가 심사에 걸리는가</li>
+                <li>이 앱이 AI 상담으로 분류되면 무엇을 제출해야 하는가</li>
+                <li>사업자 등록과 정산 정보를 지금 신청할 수 있는가</li>
+                <li>앱 아이콘 규격이 정말 600 × 600 각진 정사각인가</li>
+              </ul></span></div>
+            <div class="row"><span class="row-key">M1~5</span><span class="row-main">
+              <p class="row-title">화면을 만들어야 답이 나오는 것</p>
+              <ul class="row-list">
+                <li>iOS에서 자동 포커스로 키보드가 올라오는가</li>
+                <li>링크 미리보기 이미지가 카톡에서 카드로 뜨는가</li>
+                <li>딥링크 하위 경로가 처음 들어온 주소로 돌아오는가</li>
+                <li>사진 저장이 기기 어디에 실제로 들어가는가</li>
+                <li>문서 제목이 플랫폼 상단바에 반영되는가</li>
+              </ul></span></div>
+            <div class="row"><span class="row-key">열림</span><span class="row-main">
+              <p class="row-title">출시 뒤까지 열어 두는 것</p>
+              <ul class="row-list">
+                <li>앱인토스 광고의 실제 단가와 노출 빈도 상한</li>
+                <li>고민 텍스트를 국외로 보낼 때의 법적 요건</li>
+                <li>CC0 위에 만든 우리 번역에 저작물성이 생기는가</li>
+                <li>종교 콘텐츠 미니앱의 승인 전례가 있는가</li>
+                <li>신고가 쌓였을 때 누가 언제 보고 무엇을 고치는가</li>
+              </ul></span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ 꼬리 ══════════════════════════════════════════════════════════ -->
+  <footer class="foot">
+    <p><b>이 갤러리는 판단용 목업이다. 제품 코드가 아니다.</b>
+      시안 파일은 전부 자기완결형이라 따로 열어도 그대로 돈다. 외부 의존은 웹폰트와 <code>assets/</code> 이미지뿐이다.</p>
+    <ul>
+      <li>화면 시안 <code>design/screens/</code> · 컴포넌트 <code>design/components/</code> · 색과 글자 정본 <code>design/foundations/</code></li>
+      <li>토큰 정본은 <code>foundations/_tokens.css</code>, 폰트 로드 스니펫은 <code>foundations/_fonts.html</code>. 화면 파일은 이 둘을 복사해 쓴다.</li>
+      <li>계획 정본은 <code>docs/plan/00-통합-개발-계획.md</code>. PRD와 충돌하면 그 문서가 이긴다.</li>
+      <li>지금 <code>assets/</code>에 있는 그림은 시안 한 장을 잘라 만든 저해상도 판이다. 번들에 들어가는 것은 M2 기간에 다시 만든다.</li>
+    </ul>
+  </footer>
+
+</div>
+
+<!-- ══ 모달 ════════════════════════════════════════════════════════════ -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-dim" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="m-head">
+      <div class="m-head-text">
+        <span class="m-kicker" id="m-kicker"></span>
+        <h2 class="m-title" id="m-title"></h2>
+      </div>
+      <button class="m-x" type="button" data-close aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="m-body" id="m-body"></div>
+    <div class="m-foot">
+      <button class="m-btn" type="button" id="m-prev">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        이전
+      </button>
+      <span class="m-pos" id="m-pos"></span>
+      <button class="m-btn" type="button" id="m-next">
+        다음
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <a class="m-btn m-btn--open" id="m-open" href="#" target="_blank" rel="noopener">
+        시안 열기
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg>
+      </a>
+      <p class="m-hint">Esc 키, 바깥 어두운 곳 클릭, 오른쪽 위 닫기 버튼 셋 다 됩니다. 좌우 화살표 키로 옆 항목으로 넘어갑니다.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 상세 원문 ═══════════════════════════════════════════════════════
+     상세는 전부 template 안에 둔다. 처음 화면에는 요약만 보이고, 모달이 여기서 꺼내 쓴다.
+     ═══════════════════════════════════════════════════════════════════ -->
+
+<template id="d-s0">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>앱을 처음 연 사람이 여기가 무엇을 하는 곳인지 1초 안에 알게 하고, 두 번째 방문부터는 그 안내를 화면에서 치운다.</p>
+
+  <h4>들어 있는 프레임 4개</h4>
+  <ol class="frames">
+    <li><b>스플래시.</b> 1초 미만. 연꽃 마크와 제목, 「지금, 당신의 마음에 조용히 답합니다」를 전부 HTML 글자로 올리고 나무 아래 부처 그림만 하단에 페이드로 깔았다.</li>
+    <li><b>첫 진입.</b> 안내 카드가 열린 홈. 설정 아이콘과 닫기가 있는 카드, 제목, 입력창, 인디케이터, 개인정보 한 줄, 예시 칩 3개, 전송 버튼, 플로팅 탭바.</li>
+    <li><b>안내를 닫은 뒤.</b> 두 번째 방문부터의 홈. 같은 구성에서 카드만 빠지고 입력창이 한 단 커진다.</li>
+    <li><b>온보딩 3장 넘기기.</b> 비채택안이다. 기기 세 대를 0.46배로 줄여 점선 상자 안에 넣었다. 실제 카피와 점 세 개, 다음·건너뛰기까지 그려서 무엇을 포기했는지 보이게 했다.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>온보딩 세 장을 만들지 않았다. 앱인토스는 진입 직후 전면을 막는 바텀시트를 금지하고, 심사 방어 단계의 완료선 1번이 「앱을 처음 열었을 때 바텀시트가 하나도 안 뜬다」이다. 그래서 첫 진입 안내를 홈 안 카드 한 장으로 내리고, ×로 닫으면 다시 안 나오게 했다.</p>
+  <p>스플래시의 글자는 이미지에 박힌 것을 쓰지 않고 전부 HTML로 다시 올렸다. 받은 <code>splash_screen</code> 에는 제목과 부제가 픽셀로 구워져 있어서 문구를 못 고치고 화면 낭독기도 못 읽는다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>스플래시를 우리가 그릴 수 있는지 모른다. 토스가 미니앱 진입 구간에 자체 화면을 그리면 우리 스플래시와 겹친다. 그래서 프레임 1에 「선택 표기」를 달아 두었고, M0에서 실기기로 확인한 뒤 살릴지 지울지 정한다.</p>
+  </div>
+</template>
+
+<template id="d-s1">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>짧게 쓰고 마는 사람을 세 줄 이상 쓰게 만드는 화면이다. 길게 쓴 고민일수록 답변이 좋아지므로, 이 앱의 첫 지표인 Deep Conversion Rate 가 이 화면 하나에 걸려 있다.</p>
+
+  <h4>들어 있는 프레임 4개</h4>
+  <ol class="frames">
+    <li><b>빈 상태.</b> 키보드가 내려간 모습. 명조 28px 제목 두 줄, 부처 92px, 남은 세로를 다 채우는 입력창, 점 세 개 중 0개, 예시 칩 3개, 비활성 전송 버튼.</li>
+    <li><b>입력 중 · 짧은 고민.</b> 키보드가 272px 올라온다. 제목이 한 줄 22px로 접히고 일러스트가 40px로 줄어든다. 점 1개와 「조금 더 들려주면 더 잘 풀어 드릴 수 있어요」.</li>
+    <li><b>깊이 풀어 드릴 수 있는 상태.</b> 130자쯤 되는 진짜 고민이 일고여덟 줄. 점 세 개가 금색으로 바뀌고 「이 정도면 깊이 풀어 드릴 수 있어요」.</li>
+    <li><b>복귀 카드와 초안 복구.</b> 상단에 「방금 물어본 이야기의 답이 준비됐어요」 카드, 「이어서 쓸 수 있게 남겨 뒀어요」와 지우기, 채워진 입력창, 「오늘 2번 더 이야기할 수 있어요」.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>깊이 인디케이터의 문턱을 글자 수가 아니라 <b>빈 줄이 아닌 줄 3개에 총 40자 이상</b>으로 잡았다. 검증에서 「너무 힘들어요 / 잠도 안 와요 / 어떡하죠」 세 줄을 넣었더니 점이 하나만 켜지는 것이 실제로 재현됐다. 화면은 세 줄을 약속하는데 서버 규칙은 글자 수를 보고 있었다.</p>
+  <p>점 색은 1단계와 2단계가 세이지, 3단계에서 금색으로 한 번만 바뀐다. 단계마다 색이 달라지면 신호가 아니라 장식이 된다. 글자 수는 900자를 넘기 전에는 보이지 않는다. 숫자를 먼저 보여 주면 쓰는 사람이 분량을 의식한다.</p>
+  <p>프레임 밖에 3단계 범례를 0자 포함 네 줄로 따로 두었고, 프레임마다 「왜 이렇게」 캡션을 한 문장씩 붙였다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>iOS에서 자동 포커스로 키보드가 실제로 올라오는지는 실기기에서만 답이 나온다. 안 올라오면 프레임 2의 접힘 규칙(제목이 한 줄로 줄고 일러스트가 작아지는 것)을 다시 잡아야 한다. 지금 시안은 키보드가 올라온다는 전제로 그렸다.</p>
+  </div>
+</template>
+
+<template id="d-s2">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>20초가 넘을 수 있는 기다림을 「멈춘 화면」이 아니라 「진행 중인 화면」으로 보이게 한다.</p>
+
+  <h4>들어 있는 프레임 5개</h4>
+  <ol class="frames">
+    <li><b>요청 1 시작.</b> 0초에서 2초. 크롭한 부처 그림과 「당신의 이야기를 살펴보고 있어요」, 4단계 목록에서 1번이 진행 중.</li>
+    <li><b>요청 1 후반.</b> 2초에서 5초. 「닿아 있는 가르침을 찾고 있어요」. 1번에 체크가 붙고 2번이 진행 중.</li>
+    <li><b>요청 2 진행.</b> 5초에서 20초. 이 화면이 핵심이다. 부처 일러스트·마음 태그·오늘의 한마디·경전이 이미 떠 있고, 그 아래 대기 카드에서만 문구가 돈다. 내용이 1,463px라 프레임 안에서 스크롤한다.</li>
+    <li><b>20초 초과.</b> 스크롤을 내린 자리. 위 경전 카드가 잘려 나가고 「조금만 더 기다려 주세요, 거의 다 왔어요」와 남은 단계 두 줄, 스켈레톤이 보인다.</li>
+    <li><b>3번의 펼친 전체 버전.</b> 844px를 넘는 부분까지 한 장으로 편 것.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>이 화면은 답변을 두 번에 나눠 받기로 한 판정(X3)이 만든 자리다. 1차가 3초에서 5초 만에 끝나면 대기 화면이 사라지는 것이 아니라, 마음 태그·오늘의 한마디·경전 세 블록이 먼저 자리를 잡고 그 아래에서만 기다림이 이어진다. 그래서 프레임 3이 가장 중요하고, 사용자는 5초 뒤부터 읽을 것이 생긴다.</p>
+  <p>4단계 목록은 장식이 아니라 실제 요청 경계에 붙는다. 진행 신호가 없는데 단계만 그리면 그건 거짓말하는 화면이다.</p>
+  <p>광고가 없다. 기다리는 동안 광고를 넣자는 안이 있었지만, 광고는 답변이 끝난 뒤와 두 번째 고민 앞 두 자리뿐이다. 대기 화면 광고는 플랫폼 정책도 막는다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>20초 문구가 뜨는 시점은 M0의 모델 실측으로 정해진다. 후보 모델 셋에 같은 프롬프트를 쏴 첫 토큰까지 걸리는 시간을 재고, 40초를 넘기면 2차 출력 상한을 2,000자로 내린다. 지금 시안의 5초와 20초는 가정값이다.</p>
+  </div>
+</template>
+
+<template id="d-s3">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>2,500자에 가까운 답변을 끝까지 읽히게 만든다. Answer Completion Rate 가 이 화면에 걸려 있다.</p>
+
+  <h4>들어 있는 프레임 6개</h4>
+  <ol class="frames">
+    <li><b>1차 도착 직후.</b> 상단 세 블록만 있다. 부처 이미지, 마음 태그, 오늘의 한마디, 경전. 그 아래는 「지금 상황에 맞게 풀어보고 있어요」와 스켈레톤.</li>
+    <li><b>전부 도착 · 첫 화면.</b> 스크롤 0의 모습. 스크롤하지 않아도 그림과 마음 태그, 오늘의 한마디까지 들어온다.</li>
+    <li><b>당신의 이야기를 읽는 중.</b> 소제목 세 개 중 두 번째 자리, 진행선 47%.</li>
+    <li><b>마지막 한마디와 하단 바.</b> 마지막 블록이 화면에 들어올 때 공유·간직 바가 아래에서 올라온다.</li>
+    <li><b>경전 원문 시트.</b> 딤과 바텀시트를 펼친 상태.</li>
+    <li><b>펼친 전체 버전.</b> 프레임 높이를 풀어 본문 약 5,860px를 한 장으로.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>본문 17px에 행간 1.8, 섹션 사이 32px는 2,500자를 기준으로 역산한 값이다. 검증에서 원래 1,300자로 계산돼 있던 것을 실제 분량으로 다시 냈다. 「당신의 이야기」를 소제목 세 개로 쪼개고 2px 진행선을 붙인 것이 그 대응이다.</p>
+  <p>하단 공유·간직 바는 처음부터 떠 있지 않고 마지막 한마디가 화면에 들어올 때 올라온다. 읽기 전에 공유 버튼을 보여 주면 읽기를 방해한다.</p>
+  <p>AI 생성 배지는 스크롤 어느 자리에서나 화면 안에 있다. 심사 완료선이 그렇게 적혀 있다. 경전 인용면은 테두리를 두르지 않고 왼쪽 세로선 하나로만 구분한다. 사방을 두르면 화면이 칸으로 쪼개진다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>부처 일러스트가 아직 175px짜리다. 이 화면의 자리는 가로 100%에 높이 200px 고정이라 지금 파일을 그대로 쓰면 2배 넘게 늘어나 윤곽이 뭉갠다. 1290 × 720 이상 재제작본이 이 단계 착수 전에 와야 한다.</p>
+  </div>
+</template>
+
+<template id="d-s4">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>답이 안 나오는 경우를 화면으로 다 그려 둔다. 심사에서 먼저 보는 자리이고, 실제로 사용자가 가장 불안한 순간이다.</p>
+
+  <h4>들어 있는 프레임 7개</h4>
+  <ol class="frames">
+    <li><b>위기 안내.</b> 전송 직후 경전 답변 대신 뜬다. 부처 104px 원형과 「지금 많이 힘드신 것 같아요」, 창구 세 줄, 112와 119 인셋, 「가까이에 있는 사람에게」 한 줄. 하단에 다른 이야기 쓰기와 닫기 고정.</li>
+    <li><b>위기 안내 펼친 전체.</b> 같은 화면을 편 것. 실측 약 990px라 한 화면을 넘는다.</li>
+    <li><b>답변 생성 실패.</b> 60초 뒤. 연꽃 그림과 「지금은 답을 만들지 못했어요」, 세이지 칩으로 「오늘 이야기할 수 있는 횟수는 그대로 3번이에요」.</li>
+    <li><b>반쪽 답변.</b> 2차 요청만 실패한 경우. 진행선이 46%에서 멈추고 상단 세 블록은 그대로 남는다. 아래 점선 카드에 「나머지 풀이를 못 불러왔어요」와 「다시 받아도 오늘 횟수는 줄지 않아요」.</li>
+    <li><b>반쪽 답변 펼친 전체.</b> 실측 약 1,500px.</li>
+    <li><b>오프라인.</b> 얇은 배너와 「쓰던 이야기는 그대로 있어요」. 147자 고민이 든 입력칸을 잠그지 않고, 전송 버튼만 「연결을 기다리는 중이에요」로 바꾼다.</li>
+    <li><b>답할 수 없는 요청.</b> 「이 이야기는 제가 풀어 드리기 어려워요」와 할 수 있는 일의 범위, 횟수 유지 칩.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>위기 화면은 자해 주제를 한 글자도 묘사하지 않고 창구 안내만 한다. 이탈 버튼은 「닫기」와 「다른 이야기 쓰기」 둘뿐이고, 답변 생성 경로로 가지 않는다. 검증에서 이 버튼이 답변 생성으로 이어지는 설계가 잡혔다.</p>
+  <p>실패 화면은 전부 횟수 이야기를 먼저 한다. 사용자가 실패에서 가장 먼저 걱정하는 것이 「내 하루 세 번 중 하나가 날아갔나」이기 때문이다.</p>
+  <p>반쪽 답변을 실패로 접지 않는다. 1차로 받은 세 블록은 이미 읽을 만한 내용이라 그대로 남기고, 다시 받기는 같은 키로 2차만 부른다. 횟수는 다시 깎지 않는다.</p>
+  <p>오프라인에서 입력칸을 잠그지 않는 것도 결정이다. 연결이 끊겼다고 쓰던 글을 못 만지게 하면 쓰던 사람이 떠난다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>자살예방 안내 화면이 민감 콘텐츠 몇 단계로 분류되는지 모른다. M0의 콘솔 서면 문의 ⓐ 항목이다. 진입 전 안내 화면이 강제로 붙으면 첫 진입부터 답변까지의 흐름을 통째로 다시 그려야 한다.</p>
+  </div>
+</template>
+
+<template id="d-s5">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>결제도 알림도 없이 다시 오게 만든다. 보관함과 설정, 그리고 하루 세 번을 다 쓴 뒤의 시트가 여기 모여 있다.</p>
+
+  <h4>들어 있는 프레임 7개</h4>
+  <ol class="frames">
+    <li><b>보관함 빈 상태.</b> 연꽃을 원형 마스크로 두고 「아직 저장한 내용이 없어요」, 다음에 할 일을 알려 주는 버튼 하나.</li>
+    <li><b>보관함 채워진 상태.</b> 오늘 답변과 간직한 말씀 3개. 카드마다 날짜·마음 태그·한마디 첫 줄·부처 썸네일 68px. 지난 이야기는 점선과 블러 영역으로.</li>
+    <li><b>보관함 펼친 전체.</b> 목록 끝에 연꽃 패턴 가로 띠를 깔아 「여기가 끝」을 알린다.</li>
+    <li><b>O5 Paywall.</b> 네 번째 간직하기. 「마음에 남은 말을 계속 간직할까요?」 이용권 ₩4,900 한 번 결제. 닫기 셋.</li>
+    <li><b>O4 이어가기 시트.</b> 같은 날 두 번째 고민부터. 「짧은 광고 후 다음 이야기를 들어드릴게요」. 출구 셋: 광고 보고 이어가기, 오늘 답변 다시 보기, 닫기.</li>
+    <li><b>앱 설정.</b> 안내와 문의 두 묶음. 바닥에 연꽃 마크와 「버전 1.0.0 · 답변은 AI가 만들어요」. 알림 토글이 없고 광고 자리도 없다.</li>
+    <li><b>앱 정보 시트.</b> 판·앱 버전·토스앱 버전·배포 ID·익명키 앞 6자와 이 기기 광고 끄기 스위치.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>Paywall 시트를 통째로 뺐다(X5). 그래서 자물쇠 아이콘과 구매 버튼이 화면 어디에도 없고, 지난 기록은 점선과 블러 영역 위 한 문장으로만 알린다. 잠긴 것을 보여 주고 열쇠를 파는 화면이 아니라, 지금 볼 수 있는 것을 말해 주는 화면이다.</p>
+  <p>소진 시트의 출구는 반드시 셋이다. 나갈 길이 하나뿐인 시트는 출시 불가 사유다. 그리고 앱 전체에서 광고는 이 자리 하나뿐이다(X2). 버튼 라벨에 「광고 보고」라고 적혀 있어서 사용자가 광고를 예상하고 누른다.</p>
+  <p>앱 정보 시트에 익명키 앞 6자를 보여 주는 것은 재설치 뒤에 값이 같은지 눈으로 대조하기 위해서다. 시트 안에 「이 값들은 화면에만 보여 주고 로그로도 서버로도 보내지 않아요」를 적어 두었다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>익명키가 앱을 지우고 다시 깔아도 같은 값인지 모른다. M0 완료선 3번이 이것을 답한다. 안 유지되면 보관함 자체가 P1으로 내려가고, 하루 세 번 상한도 새기 시작한다.</p>
+  </div>
+</template>
+
+<template id="d-s6">
+  <h4>무엇을 하는 화면인가</h4>
+  <p>공유 한 번이 새 사용자 한 명이 되게 한다. 카드 규격, 저장 실패 폴백, 링크를 받은 사람이 보는 랜딩까지 한 파일에 있다.</p>
+
+  <h4>들어 있는 프레임 13개</h4>
+  <ol class="frames">
+    <li><b>공유 옵션 시트 2장.</b> 기본값(오늘의 한마디만)과 「경전과 함께」로 바꾼 뒤. 옵션마다 실제 문구가 든 88 × 96 썸네일.</li>
+    <li><b>공유 카드 3종.</b> 한마디만 · 경전과 함께 · 오늘 해볼 일과 함께. 1080 × 1350을 0.361배로 줄인 390 × 487.</li>
+    <li><b>공유 카드 규격 가이드.</b> 안전 영역을 점선으로 긋고, 글자 수 구간별 3단계 크기를 실물 샘플로 나란히.</li>
+    <li><b>공유 링크 랜딩 2장.</b> 프레임 안 스크롤 판과 펼친 전체(실측 1,335px). 탭바가 없고 회원가입도 없다.</li>
+    <li><b>랜딩 만료 상태.</b> 「이 말씀은 더 볼 수 없어요」. 막다른 길로 끝내지 않고 다음 행동을 준다.</li>
+    <li><b>저장 폴백 3종.</b> 사진 권한 거부 · 구버전이라 저장 기능이 없음 · 카드 생성 실패로 텍스트 공유만 남는 경우.</li>
+    <li><b>저장 성공 토스트.</b> 짙은 면 위 금색 아이콘.</li>
+  </ol>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>이미지를 직접 공유할 수 없다. 링크를 만들고, 미리보기 이미지를 붙이고, 사진 저장은 따로 부르는 세 갈래다. 그래서 폴백을 토스앱 버전과 사진 권한 두 축으로 그렸다. 검증에서 이 둘이 한 축으로 합쳐져 있었고 권한 선언 자체가 빠져 있었다.</p>
+  <p>카드에 사용자 고민 원문은 어떤 경우에도 안 실린다. 불륜·자살충동·회사 험담이 평문으로 들어오는 입력이라, 저장도 공유도 하지 않는 것이 가장 싼 방어다.</p>
+  <p>받은 <code>share_card</code> 에셋은 인용문·출처·로고·QR이 전부 픽셀로 박혀 있다. 그대로 쓰면 답변마다 같은 글이 나가므로 구도만 참고하고 카드는 HTML로 새로 그렸다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>미리보기 이미지가 카톡에서 실제로 카드로 뜨는지는 M5에서만 답이 나온다. 안 뜨면 텍스트 전용으로 내리고 공유를 통한 성장 기대치를 낮춘다.</p>
+    <p>공유 옵션 세 개는 MVP에서 「오늘의 한마디만」 하나로 고정된다. 그래서 옵션 시트 두 장은 지금 쓰는 화면이 아니라 P1 대비 시안이다. 이 시안을 근거로 옵션을 되살리자는 판단이 나오면 계획 4절을 먼저 고쳐야 한다.</p>
+  </div>
+</template>
+
+<template id="d-kit">
+  <h4>무엇을 하는 문서인가</h4>
+  <p>화면 일곱 장이 같은 부품으로 만들어졌는지 한자리에서 대조한다. 부품마다 상태를 전부 펼쳐 두어, 새 화면을 그릴 때 여기서 골라 쓰게 했다.</p>
+
+  <h4>들어 있는 13 묶음</h4>
+  <ul>
+    <li><b>버튼.</b> 종류 4개와 상태 5개의 매트릭스. 짙은 면 위에 올릴 수 있는 두 예와 올리면 안 되는 예를 대비값과 함께 나란히.</li>
+    <li><b>입력창.</b> 5상태와, 실제로 쳐 볼 수 있는 살아 있는 예제 하나. 자동 높이·깊이 판정·글자 수가 실제로 연동된다.</li>
+    <li><b>깊이 인디케이터와 마음 태그 칩.</b> 감정 10종을 색 세 갈래로 묶은 배정표와 대비값까지.</li>
+    <li><b>카드 다섯 종과 바텀 시트, 플로팅 탭바.</b> 경전 카드의 테두리 규칙과 시트 닫는 법 셋이 여기 있다.</li>
+    <li><b>AI 생성 배지와 출처 표기, 진행선, 토스트 4종.</b></li>
+    <li><b>빈 상태 블록, 구분선, 패턴 띠 4종.</b> 띠마다 쓰는 자리와 지킬 것을 함께 적었다.</li>
+  </ul>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <div class="callout">
+    <p><b>버튼이 통째로 사라지는 사고를 막는 자리를 01번에 실물로 박았다.</b> 주 버튼 바닥색과 오늘의 한마디 짙은 면이 둘 다 같은 값이다. 아무 생각 없이 얹으면 대비가 1.00이 되어 버튼이 배경에 녹는다. 10초 가계부에서 똑같은 구조로 사고가 났었다. 그래서 짙은 면 위에 놓을 수 있는 것은 셋뿐이라고 못 박고, 금지 조합을 계산값과 함께 화면에 적어 두었다.</p>
+  </div>
+  <p>바텀 시트에는 닫는 법 셋을 시트 안에 글로도 적었다. 나갈 길이 하나뿐인 시트는 심사에서 걸린다.</p>
+  <p>예시 칩과 마음 태그 칩은 색이 아니라 모양으로 갈랐다. 예시 칩은 알약 테두리에 더하기 표시, 마음 태그는 채워진 면이다. 색만으로 구분하면 색을 못 보는 사람에게는 같은 것이 된다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>탭바가 두 개인 것은 플랫폼 최소치를 겨우 맞춘 것이다. 오늘의 말씀이 P1으로 들어오면 3탭이 되므로 탭 폭과 아이콘 크기를 다시 재야 한다.</p>
+  </div>
+</template>
+
+<template id="d-illust">
+  <h4>무엇을 하는 문서인가</h4>
+  <p>받은 에셋으로 지금 무엇을 할 수 있고 무엇을 다시 만들어야 하는지를 한 장에서 판정한다. 재제작 발주서 역할도 겸한다.</p>
+
+  <h4>들어 있는 6절</h4>
+  <ul>
+    <li><b>1절.</b> 부처 일러스트 8종 갤러리. 카드를 누르면 보이는 것·읽혀야 할 뜻·받는 테마·재생성 변수·고칠 것이 모달로 열린다. 열거형 10종을 8장에 보내는 매핑표 11행도 여기 있다.</li>
+    <li><b>2절.</b> 흐려지는 실물을 기각 프레임으로 먼저 놓고, 원본 크기 그대로 쓰는 방식 셋을 대안으로 세웠다.</li>
+    <li><b>3절.</b> 재생성용 고정 블록(화풍·팔레트·인물·출력·제외 항목)과 8장 각각의 장면·광원·고칠 것. 인수 검사 5항과 종교 표현 금지 7항.</li>
+    <li><b>4절.</b> 앱 아이콘 규격 대조와 로고 마크 크롭, 로고타이프 HTML 재현 3종.</li>
+    <li><b>5절.</b> 글자가 구워진 에셋 5장의 크롭 전후 비교와 좌표.</li>
+    <li><b>6절.</b> 모션 데모 7종과, 움직임을 줄이는 설정을 흉내 내는 스위치.</li>
+  </ul>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>부처 이미지는 173에서 193px 사이다. 390px 폭에 늘리면 2.19배라 윤곽이 뭉갠다. 말로 「흐리다」고 적는 대신 2절 맨 앞에 늘린 실물을 그대로 놓았다. 눈으로 보면 논쟁이 끝난다.</p>
+  <p>그 뒤에 1.00배로 쓰는 방식 셋을 세웠다. 같은 이미지를 크게 흐려 배경으로 깔고 원본을 그 위에 얹는 방식, 패턴 띠 위에 원형 마스크를 올리는 방식, 좌우로 나눠 썸네일로 쓰는 방식이다. 셋 다 확대하지 않는다.</p>
+  <p>글자가 구워진 5장은 크롭 좌표를 실측해 전후로 남겼다. 문구를 픽셀로 박아 두면 고칠 수도 없고 낭독기도 못 읽는다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>자체 제작한 부처 일러스트가 「3D 그래픽은 플랫폼 제공 모듈만」 조항에 걸리는지 모른다. M0의 콘솔 문의 ⓑ 항목이다. 걸리면 일러스트를 빼고 글자와 색만으로 답변 화면을 세우는 안이 따로 필요하다. 그래서 답이 오기 전에는 재생성을 화풍 기준 한 장까지만 만든다.</p>
+  </div>
+</template>
+
+<template id="d-colors">
+  <h4>무엇을 하는 문서인가</h4>
+  <p>색·글자·간격의 정본이다. 화면 파일은 여기서 나온 변수만 쓰고 값을 직접 적지 않는다.</p>
+
+  <h4>들어 있는 것</h4>
+  <ul>
+    <li>원시 색 램프와 의미 토큰 전체. 화면 CSS는 램프를 직접 쓰지 않고 의미 토큰만 쓴다.</li>
+    <li>대비 34쌍 계산표. 페이지가 열릴 때마다 같은 계산을 다시 돌려 표로 보여 준다.</li>
+    <li>짙은 면 위에 올려도 되는 것과 안 되는 것을 나란히 그린 자리.</li>
+    <li>타이포 8단과 각 단을 어디에 쓰는지, 그리고 그 크기를 고른 계산 근거.</li>
+    <li>에셋 21장 전수표: 실제 크기, 글자 포함 여부, 쓰는 방식, 글자 없는 영역 좌표.</li>
+  </ul>
+
+  <h4>왜 이렇게 그렸나</h4>
+  <p>눈이 아니라 계산으로 정했다. 첫 계산에서 5쌍이 기준 미달이라 색을 고쳤는데, 그중 하나가 에셋 원본의 배경색이었다. 원래 값은 카드와 대비 1.03이라 두 층이 아예 안 갈렸다. 사람 눈은 아이보리 계열에서 두 단계 차이를 못 본다.</p>
+  <p>면을 두 층으로 고정했다. 아이보리에서 세 층을 각각 1.20으로 벌리려면 셋째 층이 흙빛까지 내려가 에셋의 인상이 깨진다. 층이 하나 더 필요한 자리는 밝기가 아니라 선으로 나눈다.</p>
+  <p>본문을 17px로 올리고 행간을 1.8로 잡은 것도 계산이다. 2,500자를 390px 폭에서 읽는 상황을 기준으로, 줄 수를 줄이는 대신 글자를 키우는 쪽을 택했다.</p>
+
+  <h4>아직 못 정한 것</h4>
+  <div class="callout">
+    <p>다크 팔레트는 만들지 않는다(X1). 플랫폼이 상단바 테마를 열어 주면 그때 다시 본다. 참고로 지금 보고 있는 이 갤러리 문서만 다크에서도 읽히게 별도 껍데기 색을 두었다. 제품 화면에는 그 색이 들어가지 않는다.</p>
+  </div>
+</template>
+
+<!-- ── 마일스톤 상세 ─────────────────────────────────────────────────── -->
+
+<template id="d-m0">
+  <h4>이 단계의 목표</h4>
+  <p>빈 앱이 실기기에 뜨게 하고, 나중에 우리를 막을 수 있는 답을 미리 받아 둔다. 사람의 승인을 기다리는 일이라 첫날 오전에 건다.</p>
+
+  <h4>첫날 오전에 거는 것</h4>
+  <ul>
+    <li><b>사업자 등록 신청.</b> 광고 예상 수익이 5,000원을 넘을 때까지 승인을 못 받으면 앱이 중단된다. 승인에 약 이틀 걸리는데 지금 사업자 등록이 없다.</li>
+    <li><b>정산 정보 등록</b>(검토 영업일 2~3일), 보상형 광고 그룹 신청, 앱 등록, 인증서 발급 요청.</li>
+    <li><b>콘솔 서면 문의 4건.</b> ⓐ 자살예방 안내 화면의 민감 콘텐츠 단계 ⓑ 자체 제작 일러스트가 3D 그래픽 조항에 걸리는가 ⓒ AI 상담으로 분류되면 문서 제출이 필요한가 ⓓ 라벨에 광고를 명시한 전면광고도 「예상 못 한 순간」 조항에 걸리는가.</li>
+  </ul>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>10초 가계부 껍데기 복제: 브릿지 경계·공급자·API 계층·오류 경계·뒤로가기·탭바·배포 스크립트·CI 잡. 도메인 코드는 안 가져온다.</li>
+    <li>행동 로그 한 벌. 로그에 싣는 값은 id와 열거값, 숫자뿐이고 고민 원문·답변 본문·경전 본문은 어떤 이벤트에도 안 싣는다.</li>
+    <li>앱 설정 화면과 홈 우상단 설정 아이콘. 이게 없으면 뒤 화면들이 코드에만 있고 손으로 못 간다.</li>
+    <li>서버 기동과 자동 백업, 오류율 알림. 하루 지출 10달러에서 경고, 20달러에서 새 요청 차단.</li>
+    <li>e2e 골격: 테스트마다 다른 익명키를 넣는 장치와 LLM 스텁 다이얼. 익명키 격리가 없으면 두 번째 테스트부터 전부 막힌다.</li>
+    <li>앱 아이콘 정사각 마스터와 에셋 재제작 발주.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>QR로 연 실기기에서 앱이 열리고 빈 홈과 탭바 두 개가 보인다.</li>
+    <li>앱을 지우고 다시 깔아 앱 정보를 열었을 때 <b>익명키 앞 6자가 같은지 두 값을 눈으로 대조</b>한다. 보관함 설계 전체가 이 답에 걸려 있다.</li>
+    <li>같은 e2e 스펙을 연달아 세 번 돌려도 막히지 않는다.</li>
+    <li>예산 문 임계값을 0으로 임시로 내려 보면 배지가 뜨고 홈 전송 버튼이 안내 문구로 바뀐다.</li>
+  </ul>
+</template>
+
+<template id="d-m1">
+  <h4>이 단계의 목표</h4>
+  <p>고민 입력 화면을 끝낸다. 짧게 쓰고 마는 사람을 세 줄 이상 쓰게 만드는 것이 전부다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>홈 화면 한 벌: 서비스 한 줄, 제목, 자동 높이 입력창, 깊이 인디케이터, 개인정보 한 줄, 예시 칩 3개, 전송 버튼.</li>
+    <li>깊이 판정 함수. 프론트와 서버가 같은 코드를 쓴다. 승격 조건은 빈 줄 아닌 줄 3개에 총 40자, 또는 120자, 또는 주제 사전 히트.</li>
+    <li>경계값 테스트 벡터를 함수 실행 출력으로 <b>생성</b>한다. 손으로 적지 않는다. 검증에서 손으로 쓴 표 아홉 행 중 다섯이 틀려 있었다.</li>
+    <li>초안 임시저장 24시간과 복귀 카드. 답변은 아직 고정 JSON 스텁이 준다.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>세 줄을 쓰면 점이 셋 켜진다. <b>「너무 힘들어요 / 잠도 안 와요 / 어떡하죠」 세 줄로도 점이 셋</b>이다.</li>
+    <li>900자를 넘기 전에는 글자 수가 안 보이고, 넘으면 나타난다.</li>
+    <li>앱을 껐다 다시 열면 쓰던 고민이 그대로 있다.</li>
+    <li>전송 실패를 일부러 만들어도 입력 내용이 지워지지 않는다.</li>
+  </ul>
+</template>
+
+<template id="d-m2">
+  <h4>이 단계의 목표</h4>
+  <p>답변 화면의 재료를 만든다. 경전 데이터가 없으면 화면 B는 껍데기라서, 화면보다 데이터를 먼저 세운다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>CC0 영역본을 우리가 한국어로 옮기고 <b>사람이 감수</b>한 법구경 120구절. 라이선스가 문서로 확정되기 전에는 데이터베이스에 한 글자도 안 넣는다.</li>
+    <li>감수 기준: 기준본 셋을 대조하고 갈리는 자리는 주석을 반드시 남긴다. 「주의사항 검토함」과 「주의사항 없음」을 다른 필드로 분리한다.</li>
+    <li>빌드 게이트. 태그마다 최소 개수, 원문 필드가 비어 있는지, 감수자와 감수일이 채워졌는지, 직전 커밋보다 승인 구절이 줄지 않았는지를 코드가 센다.</li>
+    <li>검색: 안전 스크린 뒤 태그 필터를 통과한 12~20개를 <b>전부</b> 다음 단계로 넘긴다. 규칙 점수 단계를 없앴다. 관련성을 못 보는 규칙이 관련성 판단자보다 먼저 후보를 깎고 있었다.</li>
+    <li>에셋 재제작을 이 기간에 끝낸다. 부처 일러스트 8종과 글자 없는 배경본 3장.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>개발용 라우트에 고민 문장을 넣으면 분류 결과와 후보 구절이 출처와 함께 한 화면에 뜬다. 답변 화면은 아직 없어도 된다.</li>
+    <li>한 태그의 구절을 일부러 8개로 줄이면 <b>CI가 빨간색으로 실패</b>한다. 일부러 깨뜨려 확인은 여기 한 곳에서만 한다.</li>
+    <li><b>감수자가 아닌 사람이</b> 무작위 10구절을 원문과 나란히 읽었을 때 뜻이 어긋난 것이 0건이다.</li>
+    <li>재제작한 일러스트 8장을 답변 화면 자리에 띄워 보고 윤곽과 그라데이션 경계가 뭉개지지 않는다.</li>
+  </ul>
+</template>
+
+<template id="d-m3">
+  <h4>이 단계의 목표</h4>
+  <p>답변 화면을 끝낸다. 두 번에 나눠 받는 파이프라인이 여기서 처음 실제로 돈다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li><b>요청 1</b>(3~5초): 결정론적 안전 스크린을 먼저 돌리고, 1차 분류가 마음 태그·오늘의 한마디·구절 id를 낸다. 서버가 후보를 검증해 데이터베이스 원문으로 조립한다. 여기서 사용량을 예약으로 올린다.</li>
+    <li><b>요청 2</b>(약 20초): 구절 id를 클라이언트 값이 아니라 1차에서 저장해 둔 행에서 읽는다. 클라이언트가 보낸 id가 그 행과 다르면 거부한다. 우리가 준 범위 밖의 경전이 나가지 못하게 하는 마지막 방어선이다.</li>
+    <li>2차가 실패하면 전체를 실패로 보지 않고 상단 세 블록을 남긴다. 다시 받기는 같은 키로 2차만 부르고 사용량을 다시 깎지 않는다.</li>
+    <li>불교 용어 풀이. 2차 출력에 용어 0~2개를 담고, 지어내지 않고 구절에 붙은 현대어 풀이에서 나온 말만 쓴다.</li>
+    <li>위기 분기. 안전 스크린이나 1차 분류가 위기로 판정하면 본 답변 모델을 <b>부르지 않고</b> 고정 문구 화면으로 간다.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>진짜 고민을 쓰면 <b>5초 안에 마음 태그와 오늘의 한마디가 보이고</b> 나머지가 그 아래에 채워진다.</li>
+    <li>답변의 경전 출처와 본문이 앞 단계 디버그 화면에서 본 값과 <b>글자 그대로 같다</b>.</li>
+    <li>구절 id를 개발자 도구로 바꿔 보내면 요청이 거부되고 엉뚱한 경전이 실린 답변이 나오지 않는다.</li>
+    <li>같은 고민을 세 번 동시에 쏴도 사용 횟수가 1만 줄어든다.</li>
+    <li>로그에 세 이벤트가 순서대로 찍히고, 세 페이로드 어디에도 고민 원문과 답변 본문이 없다.</li>
+  </ul>
+</template>
+
+<template id="d-m4">
+  <h4>이 단계의 목표</h4>
+  <p>반려와 제재 사유를 없앤다. 만들어서 좋아지는 단계가 아니라, 없으면 못 나가는 것을 채우는 단계다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>생성형 AI 고지 세 자리: 입력창 위 한 줄, 답변 상단 상시 배지, 공유 카드 표기.</li>
+    <li>거절 경로. 답할 수 없는 요청에는 억지 답변 대신 고정 거절 문구가 나간다.</li>
+    <li>개인정보 안내와 이용약관을 <b>앱 안 화면</b>으로 만든다. 국외 이전과 민감정보 취급을 적는다. 자사 사이트로 내보내면 조항에 걸린다.</li>
+    <li>도움받을 곳 화면. 번호는 공식 출처로 확인한 뒤 적는다.</li>
+    <li>사용량 방어: 하루 3회, 분당 2회, 입력 2,000자, 본문 크기 제한, 전역 일일 예산 문.</li>
+    <li><b>하루 3회의 기준 시각을 사용자 시간대 자정으로 못 박는다.</b> 첫 사용 후 24시간이 아니다. 소진 시트의 「내일 아침이면」이라는 문구가 이 기준을 전제한다.</li>
+    <li>답변 신고 경로. 서버로 가는 것은 답변 id와 사유 코드뿐이다.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>앱을 처음 열었을 때 바텀시트가 <b>하나도</b> 안 뜬다.</li>
+    <li>답변 화면 어디를 스크롤해도 AI 생성 배지가 화면 안에 있다.</li>
+    <li>우회하는 요청을 넣으면 경전 답변이 아니라 거절 문구가 뜬다.</li>
+    <li>신고 요청 본문에 답변 id와 사유 코드 말고는 아무것도 없다.</li>
+    <li>기기 시간을 다음 날로 넘기면 횟수가 3으로 돌아오고, 같은 날 안에서 시간만 옮기면 돌아오지 않는다.</li>
+  </ul>
+</template>
+
+<template id="d-m5">
+  <h4>이 단계의 목표</h4>
+  <p>공유 한 번이 새 사용자 한 명이 되는지 실제로 잰다. 여기서 두 지표가 처음 숫자로 나온다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>공유 카드를 서버가 그린다. 저장용 큰 판과 링크 미리보기용 판 두 벌. 추측할 수 없는 긴 키로 올린다.</li>
+    <li>바탕은 글자 없는 배경본을 깔고 한마디·출처·워드마크는 서버가 글자로 얹는다. 받은 에셋을 그대로 쓰면 답변마다 같은 글이 나간다.</li>
+    <li>링크를 만들고 메시지로 보내는 두 단계. 이미지 저장은 따로 부르고, 폴백은 앱 버전과 사진 권한 두 축으로 나눈다.</li>
+    <li>공유 링크 랜딩. 처음 들어온 주소를 한 번 읽고 지운다.</li>
+    <li>보관함: 오늘 답변과 무료 저장 3회. 지난 기록은 흐리게, 시트 없음.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>공유하기를 누르면 카드 미리보기가 뜨고, 거기 내 고민 문장이 <b>없다</b>.</li>
+    <li>링크를 메신저로 보내면 미리보기에 카드 이미지가 뜬다. 안 뜨면 그 사실을 적고 텍스트 전용으로 내린다.</li>
+    <li>그 링크를 다른 기기에서 열면 홈이 아니라 공유 랜딩이 뜬다.</li>
+    <li>별을 세 번 누르면 셋이 쌓이고 네 번째에 안내 시트가 뜬다.</li>
+    <li>로그에 공유 클릭·공유 완료·간직 클릭이 순서대로 찍히고, 취소하면 완료가 안 찍힌다.</li>
+  </ul>
+</template>
+
+<template id="d-m6">
+  <h4>이 단계의 목표</h4>
+  <p>광고 한 자리를 붙이고 실기기 QA를 마친 뒤 심사에 낸다.</p>
+
+  <h4>만드는 것</h4>
+  <ul>
+    <li>보상형 광고 한 자리. 소진 시트에 들어갈 때 로드하고, 버튼 라벨은 「광고 보고 한 번 더 이야기하기」. 보상은 실제로 끝까지 본 경우에만 준다.</li>
+    <li>이 기기 광고 끄기 스위치를 보상형에도 건다.</li>
+    <li>실기기 QA 7건: 실광고 재생, 익명키 실발급, 이미지 색감, 딥링크, 키보드, 재설치 후 익명키 등.</li>
+    <li>다관점 리뷰를 PR 직전에 <b>한 번만</b> 돌린다. 오류만 즉시 고치고 경고는 모아서 한 번에.</li>
+    <li>콘솔 제출: 번들, 앱 정보(아이콘·이름·소개·카테고리), 스크린샷 세트.</li>
+    <li>콘솔 지표 화면에서 핵심 네 지표의 분모와 분자가 실제로 읽히는지 확인한다.</li>
+  </ul>
+
+  <h4>이걸로 끝났다고 말한다</h4>
+  <ul>
+    <li>광고를 끝까지 보면 횟수가 1 늘고, 중간에 닫으면 안 는다.</li>
+    <li>광고를 못 띄우는 구버전에서도 버튼이 멈추지 않고 시트가 닫힌다.</li>
+    <li>번들이 「출시 준비됨」으로 바뀌고, <b>앱 정보 심사도 승인</b>으로 바뀐다. 번들만 통과해서는 못 나간다.</li>
+    <li>아이콘을 홈 화면 크기로 줄여 놓고 봤을 때 글자와 형태가 뭉개지지 않는다.</li>
+    <li>네 지표의 분모와 분자가 전부 0이 아닌 숫자로 보인다.</li>
+  </ul>
+</template>
+
+<!-- ── 판정 상세 ─────────────────────────────────────────────────────── -->
+
+<template id="d-x1">
+  <h4>무엇이 갈렸나</h4>
+  <p>화면 축은 다크 모드를 만들지 않기로 했는데, 비주얼 축은 이미 다크 팔레트 16쌍과 밤 일러스트 10장을 확정해 둔 상태였다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>라이트 전용.</b> 다크 토큰과 밤 이미지 10장을 MVP에서 뺐다.</p>
+  <h4>근거</h4>
+  <p>10초 가계부 설정 파일 실측에서 상단 네비게이션 테마가 라이트로 고정돼 있었다. 플랫폼이 그리는 상단바를 라이트로 두고 본문만 뒤집으면 화면 위아래가 갈라진다. 우리가 고를 수 있는 자리가 아니다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>색 토큰 파일에 다크 팔레트가 아예 없다. 부처 이미지도 낮 8장뿐이다. 다만 지금 보는 이 갤러리 문서만 다크에서도 읽히게 별도 껍데기 색을 두었고, 제품 화면에는 그 색이 들어가지 않는다.</p>
+</template>
+
+<template id="d-x2">
+  <h4>무엇이 갈렸나</h4>
+  <p>화면 축은 전면광고를 빼고 보상형 둘을 두자고 했고, 제약 감사는 정반대로 전면 하나만 켜고 보상형을 빼라고 했다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>보상형 한 자리만.</b> 사용량 소진 시트에서만 띄운다. 전면·배너·추가 가르침 전부 제외.</p>
+  <h4>근거</h4>
+  <p>둘 다 「한 화면에 광고 트리거 하나」라는 점은 같았다. 전면을 뺀 근거는 하나뿐이다. 버튼 라벨에 광고가 없어서 사용자가 예상하지 못한 순간에 광고를 만나는데, 이것이 출시 불가 조항이다. 보상형은 「광고 보고」라고 적힌 버튼을 사용자가 스스로 누른다.</p>
+  <div class="callout">
+    <p>근거가 하나뿐이라서 <b>라벨에 광고를 명시한 전면광고는 다시 후보가 된다.</b> M0 콘솔 문의 ⓓ가 그것을 묻는다. 「가능」이라는 답이 오면 전면광고를 다시 올린다.</p>
+  </div>
+  <h4>시안에 남은 흔적</h4>
+  <p>화면 일곱 장 어디에도 광고 영역이 없다. 소진 시트의 첫 버튼 하나가 앱 전체의 유일한 광고 트리거다.</p>
+</template>
+
+<template id="d-x3">
+  <h4>무엇이 갈렸나</h4>
+  <p>화면 축은 답변이 통째로 한 번에 온다고 봤다. 라우팅 축은 글자 단위 스트리밍과 부분 파서가 필수라고 했고, 아키텍처 축은 그냥 한 번 보내고 한 번 받는 방식으로 그렸다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>두 번에 나눠 요청한다.</b> 1차가 3초에서 5초 만에 상단 세 블록을 먼저 그리고, 2차가 약 20초 동안 나머지를 아래에 채운다.</p>
+  <h4>근거</h4>
+  <p>스트리밍과 길이 재생성은 같은 요청에서 양립하지 않는다. 그리고 한 번 보내고 한 번 받는 방식으로는 진행 신호를 줄 수 없다. 두 문제를 동시에 푸는 것이 두 번 나누기다. 관용 파서와 폴링 저장소가 통째로 사라지는 것이 덤이다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>대기 화면의 세 번째 프레임이 이 판정 그대로다. 답변 화면의 첫 프레임도 상단 세 블록만 있는 상태로 따로 그렸다. 실패 화면에는 「반쪽 답변」이라는 상태가 새로 생겼다.</p>
+</template>
+
+<template id="d-x4">
+  <h4>무엇이 갈렸나</h4>
+  <p>화면 축은 탭 세 개(홈·오늘의 말씀·보관함)였고, 제약 감사는 오늘의 말씀 탭을 운영 부담으로 지목했다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>탭 두 개.</b> 이야기하기와 보관함. 오늘의 말씀은 P1.</p>
+  <h4>근거</h4>
+  <p>플랫폼 최소 탭 수가 둘이라 규정은 만족한다. 매일 구절을 채우는 운영이 붙는데, 그 운영이 출시를 막을 이유가 없다. 데이터 스키마에는 「매일 쓸 수 있는 구절」 표시만 남겨 두어 나중에 켜면 된다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>모든 화면의 플로팅 탭바가 두 칸이다. 자물쇠 아이콘도 함께 사라졌다.</p>
+</template>
+
+<template id="d-x5">
+  <h4>무엇이 갈렸나</h4>
+  <p>화면 축은 보관함에 결제 유도 시트를 두자고 했고, 제약 감사는 결제를 빼고 「3회 체험에 알림받기」로 가자고 했다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>결제도 알림도 뺀다.</b> 무료 저장 3회와 오늘 답변 열람. 지난 기록 영역만 흐리게 두고 시트는 없다.</p>
+  <h4>근거</h4>
+  <p>알림은 콘솔 발송 템플릿과 익명키 원문 보관, 그리고 가장 높은 최소 앱 버전 셋을 한꺼번에 요구한다. 셋 다 MVP 밖이다. 결제는 사업자 등록과 정산 검토, 수수료, 심사 아홉 항목이 앞을 막는다. 검증되지 않은 가치에 결제부터 짓는 셈이 된다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>보관함 화면에 자물쇠와 구매 버튼이 한 개도 없다. 설정 화면에 알림 토글이 없다. 받은 <code>premium_banner</code> 에셋은 쓰지 않고 참고 자산으로만 둔다.</p>
+</template>
+
+<template id="d-x6">
+  <h4>무엇이 갈렸나</h4>
+  <p>데이터 축은 300구절로 시작하자고 했고, 그 축의 검증은 법구경만 120구절로 줄이라고 했다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>법구경만 120구절.</b> 같은 구절이 연달아 나오지 않게 하는 간격도 5로 낮췄다.</p>
+  <h4>근거</h4>
+  <p>감수가 유일한 인력 병목이다. 300구절이면 25시간에서 50시간인데, 그 추정 자체도 최소 두 배 과대로 판정됐다. 120구절로 줄이면 10시간에서 20시간이 되어 감수자 한 명으로 출시가 선다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>시안의 경전 인용문은 전부 법구경이다. 다른 경전 이름이 화면에 한 번도 안 나온다.</p>
+</template>
+
+<template id="d-x7">
+  <h4>무엇이 갈렸나</h4>
+  <p>데이터 축은 팔리 원문을 화면에 싣지 않되 데이터 안에는 담아 두자고 했다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>번들에서 완전히 뺀다.</b> 원문 텍스트 필드 자체를 두지 않고, 그 필드가 비어 있는지 빌드가 검사한다.</p>
+  <h4>근거</h4>
+  <p>저작권이 걸리는 행위는 노출이 아니라 복제와 배포다. 필드 이름을 바꿔도 같은 텍스트가 같은 앱 파일에 실려 나간다. 화면에 안 보이니 괜찮다는 판단은 성립하지 않는다.</p>
+  <h4>시안에 남은 흔적</h4>
+  <p>경전 원문 시트에 팔리 원문 자리가 없다. 시트에는 우리 번역문과 출처, 그리고 어느 영역본을 옮겼는지만 적는다.</p>
+</template>
+
+<template id="d-x8">
+  <h4>무엇이 갈렸나</h4>
+  <p>그래픽 규칙은 이미지를 한 장만 두자고 했고, 비주얼 축은 감정 10종에 낮과 밤을 곱해 20장으로 잡았다.</p>
+  <h4>어느 쪽으로 닫았나</h4>
+  <p><b>여덟 장.</b> 실제로 도착한 부처 일러스트 8종을 라이트 한 벌로 쓰고, 화면이 고르는 열거형 10종을 8장에 다대일로 보낸다.</p>
+  <h4>근거</h4>
+  <p>라이트 전용 판정(X1)으로 밤 10장이 사라졌다. 남은 낮 10장 중 원래 장면이 정의된 것은 6개였는데, 실제로 받은 에셋에는 관계와 성장까지 8종이 그려져 있었다. 그린 것이 있는 쪽을 따랐다.</p>
+  <div class="callout">
+    <p>이미지는 사용자가 쓴 한국어 태그로 고르지 않는다. 영문 열거형 하나로만 고르고, 값이 비었거나 오타면 「고민·선택」 그림으로 떨어진다. 그 그림은 어떤 고민에도 어긋나지 않는 유일한 장면이라 기본값으로 삼았다.</p>
+  </div>
+  <h4>시안에 남은 흔적</h4>
+  <p>일러스트 문서 1절에 8장 갤러리와 매핑표 11행이 있다. 답변 화면과 대기 화면, 보관함 카드가 전부 이 8장에서 그림을 고른다.</p>
+</template>
+
+
+<script>
+(function () {
+  'use strict';
+
+  var modal   = document.getElementById('modal');
+  var mKicker = document.getElementById('m-kicker');
+  var mTitle  = document.getElementById('m-title');
+  var mBody   = document.getElementById('m-body');
+  var mPos    = document.getElementById('m-pos');
+  var mPrev   = document.getElementById('m-prev');
+  var mNext   = document.getElementById('m-next');
+  var mOpen   = document.getElementById('m-open');
+
+  var triggers = Array.prototype.slice.call(document.querySelectorAll('[data-detail]'));
+  var current  = null;   // 지금 열린 트리거
+  var lastFocus = null;  // 모달을 연 자리로 돌아가기 위해 기억한다
+
+  function siblings(el) {
+    var g = el.getAttribute('data-group');
+    return triggers.filter(function (t) { return t.getAttribute('data-group') === g; });
+  }
+
+  function render(el) {
+    var tpl = document.getElementById(el.getAttribute('data-detail'));
+    if (!tpl) return;
+
+    current = el;
+    mKicker.textContent = el.getAttribute('data-kicker') || '';
+    mTitle.textContent  = el.getAttribute('data-title') || '';
+
+    mBody.innerHTML = '';
+    mBody.appendChild(tpl.content.cloneNode(true));
+    mBody.scrollTop = 0;
+
+    var href = el.getAttribute('data-open');
+    if (href) {
+      mOpen.href = href;
+      mOpen.hidden = false;
+    } else {
+      mOpen.hidden = true;
+    }
+
+    var list = siblings(el);
+    var i = list.indexOf(el);
+    mPos.textContent = (i + 1) + ' / ' + list.length;
+    mPrev.disabled = list.length < 2;
+    mNext.disabled = list.length < 2;
+  }
+
+  function open(el) {
+    lastFocus = el;
+    render(el);
+    modal.hidden = false;
+    document.body.classList.add('locked');
+    mNext.focus();
+  }
+
+  function close() {
+    modal.hidden = true;
+    document.body.classList.remove('locked');
+    current = null;
+    if (lastFocus) { lastFocus.focus(); lastFocus = null; }
+  }
+
+  function step(dir) {
+    if (!current) return;
+    var list = siblings(current);
+    var i = list.indexOf(current);
+    // 끝에서 반대쪽으로 돌아온다. 막다른 길을 만들지 않는다.
+    render(list[(i + dir + list.length) % list.length]);
+  }
+
+  triggers.forEach(function (t) {
+    t.addEventListener('click', function () { open(t); });
+  });
+
+  mPrev.addEventListener('click', function () { step(-1); });
+  mNext.addEventListener('click', function () { step(1); });
+
+  // 닫는 길 셋: 딤 클릭 · 닫기 버튼 · Esc
+  modal.addEventListener('click', function (e) {
+    if (e.target.closest('[data-close]')) close();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (modal.hidden) return;
+    if (e.key === 'Escape')     { close(); }
+    if (e.key === 'ArrowLeft')  { step(-1); }
+    if (e.key === 'ArrowRight') { step(1); }
+  });
+
+  // 아코디언: 한 번에 하나만 열어 둔다. 여러 개가 열리면 훑는 의미가 사라진다.
+  var items = Array.prototype.slice.call(document.querySelectorAll('.acc-item'));
+  items.forEach(function (item) {
+    var head = item.querySelector('.acc-head');
+    head.addEventListener('click', function () {
+      var willOpen = !item.classList.contains('open');
+      items.forEach(function (o) {
+        o.classList.remove('open');
+        o.querySelector('.acc-head').setAttribute('aria-expanded', 'false');
+      });
+      if (willOpen) {
+        item.classList.add('open');
+        head.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

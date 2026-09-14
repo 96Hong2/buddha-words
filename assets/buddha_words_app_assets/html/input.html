@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부처의 말 - 고민 입력</title>
+<style>
+:root{
+  --bg:#fbf7ef;
+  --paper:#fffaf1;
+  --ink:#362c25;
+  --muted:#8a7a6c;
+  --gold:#b48a4a;
+  --line:#e9dfd1;
+  --font-display:"MaruBuri","Noto Serif KR","AppleMyungjo",serif;
+  --font-ui:"Pretendard","SUIT","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-ui);
+}
+.phone{
+  width:min(390px,100vw); min-height:100vh; margin:auto; background:var(--paper);
+  position:relative; overflow:hidden;
+}
+h1,h2,.quote{font-family:var(--font-display)}
+button{
+  font:inherit;border:0;border-radius:18px;padding:15px 18px;
+  background:#41382f;color:#fff;font-weight:700;cursor:pointer;
+}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.tag{
+  display:inline-block;padding:7px 11px;margin:3px;border-radius:999px;
+  background:#efe8dc;color:#655649;font-size:13px;
+}
+.card{
+  margin:16px;border:1px solid var(--line);background:rgba(255,255,255,.75);
+  border-radius:22px;padding:18px;
+}
+</style>
+</head>
+<body>
+<div class="phone" style="padding:34px 22px 28px">
+  <h1 style="font-size:27px;margin:10px 0 6px">무슨 일이 있었나요?</h1>
+  <p class="small" style="font-size:15px">편하게 이야기해주세요.<br>자세히 이야기할수록 더 깊은 답을 드릴 수 있어요.</p>
+  <img src="../images/input_screen.webp" style="display:block;width:180px;margin:14px auto 4px;border-radius:24px" alt="">
+  <textarea id="q" placeholder="여기에 당신의 이야기를 적어주세요..."
+    style="width:100%;height:170px;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:#fffdf8;font:15px/1.65 var(--font-ui);resize:none"></textarea>
+  <div id="hint" class="small" style="margin:8px 4px">✨ 세 줄 이상 작성하면 더 깊고 자세한 풀이를 받을 수 있어요.</div>
+  <button style="width:100%;margin-top:10px">부처의 말 들어보기</button>
+</div>
+<script>
+const q=document.querySelector('#q'), h=document.querySelector('#hint');
+q.addEventListener('input',()=>{
+ const s=q.value.trim(), sentences=(s.match(/[.!?。]|\n/g)||[]).length;
+ const deep=s.length>=120 || sentences>=3;
+ h.textContent=deep?'✨ 깊은 풀이 준비 완료':'✨ 세 줄 이상 작성하면 더 깊고 자세한 풀이를 받을 수 있어요.';
+});
+</script>
+</body>
+</html>

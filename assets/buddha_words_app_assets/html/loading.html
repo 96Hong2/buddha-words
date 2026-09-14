@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>부처의 말 - 생성 중</title>
+<style>
+:root{
+  --bg:#fbf7ef;
+  --paper:#fffaf1;
+  --ink:#362c25;
+  --muted:#8a7a6c;
+  --gold:#b48a4a;
+  --line:#e9dfd1;
+  --font-display:"MaruBuri","Noto Serif KR","AppleMyungjo",serif;
+  --font-ui:"Pretendard","SUIT","Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-ui);
+}
+.phone{
+  width:min(390px,100vw); min-height:100vh; margin:auto; background:var(--paper);
+  position:relative; overflow:hidden;
+}
+h1,h2,.quote{font-family:var(--font-display)}
+button{
+  font:inherit;border:0;border-radius:18px;padding:15px 18px;
+  background:#41382f;color:#fff;font-weight:700;cursor:pointer;
+}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.tag{
+  display:inline-block;padding:7px 11px;margin:3px;border-radius:999px;
+  background:#efe8dc;color:#655649;font-size:13px;
+}
+.card{
+  margin:16px;border:1px solid var(--line);background:rgba(255,255,255,.75);
+  border-radius:22px;padding:18px;
+}
+</style>
+</head>
+<body>
+<div class="phone" style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:28px;text-align:center">
+  <img src="../images/buddha_anxiety.webp" style="width:230px;border-radius:30px;box-shadow:0 16px 60px #b7a38344" alt="">
+  <h1 style="font-size:25px;margin:25px 0 8px">당신의 이야기를 살펴보고 있어요</h1>
+  <div id="step" class="small" style="font-size:15px">마음을 이해하는 중이에요</div>
+  <div style="margin-top:28px;width:170px;height:5px;background:#eee3d4;border-radius:99px;overflow:hidden">
+    <div style="width:58%;height:100%;background:#b99b68;border-radius:99px"></div>
+  </div>
+</div>
+<script>
+const steps=['마음을 이해하는 중이에요','관련된 가르침을 찾고 있어요','당신의 상황에 맞게 풀어보고 있어요','오늘 해볼 일을 정리하고 있어요'];
+let i=0; setInterval(()=>document.querySelector('#step').textContent=steps[++i%steps.length],1600);
+</script>
+</body>
+</html>

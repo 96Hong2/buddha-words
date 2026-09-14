@@ -1,0 +1,296 @@
+{
+  "splash_screen": {
+    "png": "images/splash_screen.png",
+    "webp": "images/splash_screen.webp",
+    "size": [
+      272,
+      531
+    ],
+    "source_crop": [
+      18,
+      32,
+      290,
+      563
+    ]
+  },
+  "app_icon": {
+    "png": "images/app_icon.png",
+    "webp": "images/app_icon.webp",
+    "size": [
+      148,
+      146
+    ],
+    "source_crop": [
+      326,
+      40,
+      474,
+      186
+    ]
+  },
+  "logo_lockup": {
+    "png": "images/logo_lockup.png",
+    "webp": "images/logo_lockup.webp",
+    "size": [
+      172,
+      166
+    ],
+    "source_crop": [
+      308,
+      300,
+      480,
+      466
+    ]
+  },
+  "buddha_anxiety": {
+    "png": "images/buddha_anxiety.png",
+    "webp": "images/buddha_anxiety.webp",
+    "size": [
+      178,
+      185
+    ],
+    "source_crop": [
+      511,
+      33,
+      689,
+      218
+    ]
+  },
+  "buddha_anger": {
+    "png": "images/buddha_anger.png",
+    "webp": "images/buddha_anger.webp",
+    "size": [
+      173,
+      185
+    ],
+    "source_crop": [
+      697,
+      33,
+      870,
+      218
+    ]
+  },
+  "buddha_loss": {
+    "png": "images/buddha_loss.png",
+    "webp": "images/buddha_loss.webp",
+    "size": [
+      174,
+      185
+    ],
+    "source_crop": [
+      878,
+      33,
+      1052,
+      218
+    ]
+  },
+  "buddha_comparison": {
+    "png": "images/buddha_comparison.png",
+    "webp": "images/buddha_comparison.webp",
+    "size": [
+      175,
+      185
+    ],
+    "source_crop": [
+      1060,
+      33,
+      1235,
+      218
+    ]
+  },
+  "buddha_choice": {
+    "png": "images/buddha_choice.png",
+    "webp": "images/buddha_choice.webp",
+    "size": [
+      178,
+      193
+    ],
+    "source_crop": [
+      511,
+      280,
+      689,
+      473
+    ]
+  },
+  "buddha_sleep": {
+    "png": "images/buddha_sleep.png",
+    "webp": "images/buddha_sleep.webp",
+    "size": [
+      174,
+      193
+    ],
+    "source_crop": [
+      697,
+      280,
+      871,
+      473
+    ]
+  },
+  "buddha_relationship": {
+    "png": "images/buddha_relationship.png",
+    "webp": "images/buddha_relationship.webp",
+    "size": [
+      174,
+      193
+    ],
+    "source_crop": [
+      879,
+      280,
+      1053,
+      473
+    ]
+  },
+  "buddha_growth": {
+    "png": "images/buddha_growth.png",
+    "webp": "images/buddha_growth.webp",
+    "size": [
+      175,
+      193
+    ],
+    "source_crop": [
+      1060,
+      280,
+      1235,
+      473
+    ]
+  },
+  "loading_screen": {
+    "png": "images/loading_screen.png",
+    "webp": "images/loading_screen.webp",
+    "size": [
+      263,
+      529
+    ],
+    "source_crop": [
+      1256,
+      33,
+      1519,
+      562
+    ]
+  },
+  "onboarding_screen": {
+    "png": "images/onboarding_screen.png",
+    "webp": "images/onboarding_screen.webp",
+    "size": [
+      226,
+      321
+    ],
+    "source_crop": [
+      18,
+      601,
+      244,
+      922
+    ]
+  },
+  "input_screen": {
+    "png": "images/input_screen.png",
+    "webp": "images/input_screen.webp",
+    "size": [
+      260,
+      312
+    ],
+    "source_crop": [
+      260,
+      602,
+      520,
+      914
+    ]
+  },
+  "share_card": {
+    "png": "images/share_card.png",
+    "webp": "images/share_card.webp",
+    "size": [
+      293,
+      290
+    ],
+    "source_crop": [
+      952,
+      600,
+      1245,
+      890
+    ]
+  },
+  "premium_banner": {
+    "png": "images/premium_banner.png",
+    "webp": "images/premium_banner.webp",
+    "size": [
+      259,
+      288
+    ],
+    "source_crop": [
+      1260,
+      600,
+      1519,
+      888
+    ]
+  },
+  "empty_state": {
+    "png": "images/empty_state.png",
+    "webp": "images/empty_state.webp",
+    "size": [
+      254,
+      119
+    ],
+    "source_crop": [
+      1265,
+      897,
+      1519,
+      1016
+    ]
+  },
+  "pattern_lotus": {
+    "png": "images/pattern_lotus.png",
+    "webp": "images/pattern_lotus.webp",
+    "size": [
+      366,
+      55
+    ],
+    "source_crop": [
+      20,
+      956,
+      386,
+      1011
+    ]
+  },
+  "pattern_leaves": {
+    "png": "images/pattern_leaves.png",
+    "webp": "images/pattern_leaves.webp",
+    "size": [
+      181,
+      55
+    ],
+    "source_crop": [
+      385,
+      956,
+      566,
+      1011
+    ]
+  },
+  "pattern_petals": {
+    "png": "images/pattern_petals.png",
+    "webp": "images/pattern_petals.webp",
+    "size": [
+      158,
+      55
+    ],
+    "source_crop": [
+      565,
+      956,
+      723,
+      1011
+    ]
+  },
+  "pattern_ripple": {
+    "png": "images/pattern_ripple.png",
+    "webp": "images/pattern_ripple.webp",
+    "size": [
+      157,
+      55
+    ],
+    "source_crop": [
+      721,
+      956,
+      878,
+      1011
+    ]
+  }
+}
