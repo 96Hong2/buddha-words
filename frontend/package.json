@@ -13,7 +13,10 @@
     "e2e": "playwright test",
     "e2e:shots": "playwright test --config playwright.shots.config.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check:spec": "node ../tools/check_spec.mjs",
+    "check:router": "node --experimental-strip-types ../spec/router.test.ts",
+    "verify": "npm run check:spec && npm run check:router && npm run typecheck && npm run e2e"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "^3.2.0",

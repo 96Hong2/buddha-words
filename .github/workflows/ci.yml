@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  spec:
+    name: 정본 게이트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '26' }
+      # spec/ 과 docs/spec/ 이 갈라지면 여기서 멈춘다
+      - run: node tools/check_spec.mjs
+      # 라우터 픽스처 25건. 「방법을 묻는 글이 위로 답변으로 승격되면 실패」가 그 안에 있다
+      - run: node --experimental-strip-types spec/router.test.ts
+
+  frontend:
+    name: 프론트
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: frontend }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '26', cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps chromium
+      # 검증은 e2e 한 겹이다. 목으로 격리한 단위 테스트는 만들지 않는다
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: 화면-증명
+          path: frontend/e2e/shots
+
+  backend:
+    name: 백엔드
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: backend }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - run: uv run ruff check .
+      # 프론트와 같은 픽스처 파일을 돌린다. 규칙이 갈라지면 여기서 잡힌다
+      - run: uv run pytest -q
