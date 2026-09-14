@@ -6,13 +6,13 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { routeByRules, merge, needsClassifier, depthIndicator, type RouteDecision, type ClassifierVerdict } from './router.ts';
+import { routeByRules, merge, needsClassifier, depthIndicator, escalateToSolace, type RouteDecision, type ClassifierVerdict } from './router.ts';
 
 type Case = {
   name: string;
   input: string;
   verdict?: ClassifierVerdict | null;
-  expect: { route?: string; rules?: string; final?: string; stage?: string; useRag?: boolean; modelTier?: string; floor?: string; flagsInclude?: string[] };
+  expect: { route?: string; rules?: string; final?: string; stage?: string; useRag?: boolean; modelTier?: string; floor?: string; flagsInclude?: string[]; crisisLevel?: string; solace?: 'allowed' | 'blocked'; solaceTier?: string };
   note?: string;
 };
 
@@ -35,6 +35,14 @@ for (const c of cases) {
   if (e.modelTier && final.modelTier !== e.modelTier) problems.push(`modelTier ${final.modelTier} ≠ ${e.modelTier}`);
   if (e.floor && rules.floor !== e.floor) problems.push(`floor ${rules.floor} ≠ ${e.floor}`);
   for (const f of e.flagsInclude ?? []) if (!(final.flags as Record<string, boolean>)[f]) problems.push(`flag ${f} 가 서지 않았다`);
+  if (e.crisisLevel && final.crisisLevel !== e.crisisLevel) problems.push(`crisisLevel ${final.crisisLevel} ≠ ${e.crisisLevel}`);
+  if (e.solace) {
+    const up = escalateToSolace(final);
+    if (e.solace === 'blocked' && up) problems.push('위로 답변으로 넘어가면 안 되는 글이 통과했다');
+    if (e.solace === 'allowed' && !up) problems.push('위로 답변으로 넘어가야 하는 글이 막혔다');
+    if (up && e.solaceTier && up.modelTier !== e.solaceTier) problems.push(`solace tier ${up.modelTier} ≠ ${e.solaceTier}`);
+    if (up && up.route !== 'solace') problems.push(`승격 결과가 solace 가 아니다 (${up.route})`);
+  }
   const mark = problems.length ? '✗' : '✓';
   if (problems.length) failed++;
   rows.push(`${mark} ${c.name.padEnd(28)} rules=${rules.route}(${rules.confidence}) final=${final.route}/${final.stage} tier=${final.modelTier} rag=${final.useRag} chars=${rules.counts.chars} lines=${rules.counts.lines}${problems.length ? '\n    ' + problems.join('; ') : ''}`);

@@ -14,10 +14,20 @@
  * 합치는 규칙(merge): crisis 는 위로만 간다. invalid 는 rules 만 정한다.
  * 승격 바닥(floor)은 classifier 가 그 아래로 내리지 못한다.
  *
+ * crisis 는 두 결로 나뉜다(v0.3.1).
+ *   acute    방법·수단을 찾거나 계획·시도를 말한 경우. 창구 안내만 띄우고 모델을 부르지 않는다.
+ *   distress 「죽고 싶다」처럼 고통을 말한 경우. 창구 안내를 먼저 띄우되,
+ *            글쓴이가 스스로 「그래도 이야기를 들어주세요」를 누르면 escalateToSolace 로 위로 답변을 연다.
+ * 이 승격은 escalateToSolace 를 거쳐야만 일어난다. rules 도 classifier 도 solace 를 직접 반환하지 않는다.
+ * acute 는 그 함수가 막으므로 어떤 경로로도 모델에 닿지 않는다.
+ *
  * 이 파일은 의존성이 없다. `node --experimental-strip-types docs/spec/router.test.ts` 로 픽스처를 돈다.
  */
 
-export type InputRoute = 'light' | 'normal' | 'deep' | 'invalid' | 'crisis';
+export type InputRoute = 'light' | 'normal' | 'deep' | 'invalid' | 'crisis' | 'solace';
+
+/** crisis 의 결. acute 는 모델을 부르지 않는다 */
+export type CrisisLevel = 'acute' | 'distress';
 export type ModelTier = 'none' | 'cheap' | 'standard' | 'premium';
 
 export type RouteFlags = {
@@ -40,6 +50,8 @@ export type RouteDecision = {
   floor: InputRoute | null;
   /** classifier 에게 넘길 힌트. 사용자에게 보이지 않는다 */
   hints: string[];
+  /** route 가 crisis 일 때만 채운다. acute 는 escalateToSolace 가 거부한다 */
+  crisisLevel: CrisisLevel | null;
 };
 
 /** classifier(2층)가 돌려주는 값. 스키마 strict. 본문을 쓰지 않는다 */
@@ -100,6 +112,16 @@ const CRISIS_STRONG = [
 const CRISIS_SOFT = [
   /죽고\s?싶/, /살아있기\s?싫/, /사라지고\s?싶/, /살기\s?싫/, /없어지고\s?싶/, /세상.{0,4}떠나고\s?싶/,
 ];
+/**
+ * 방법·수단을 찾는 물음. 걸리면 무조건 acute 라서 어떤 경로로도 모델에 닿지 않는다.
+ * 「소설이다 · 참고용이다」 같은 우회 전제를 붙여도 같은 자리에서 걸린다.
+ */
+const CRISIS_METHOD = [
+  /(어떻게|어떤|무슨|무엇|뭘|뭐로|방법|수단).{0,10}(죽|자살|자해)/,
+  /(죽는|자살|자해|목매|목\s?매).{0,4}(방법|법|수단|요령)/,
+  /(먹으면|마시면|하면).{0,6}(죽|안\s?깨)/, /몇\s?(알|정|개).{0,8}(죽|위험|치사)/, /치사(량|율)/,
+  /(안\s?아프게|고통\s?없이|편하게).{0,8}(죽|가는)/,
+];
 /** 관용 표현. 위기 사전보다 먼저 본다 */
 const CRISIS_EXCLUDE = [
   /때려치우|때려치고/, /죽겠(다|어|네|어요)/, /죽을\s?만큼/, /죽는\s?줄/, /죽을\s?것\s?같/, /죽도록/,
@@ -146,9 +168,12 @@ function latinLooksRandom(text: string): boolean {
 
 const TIER: Record<InputRoute, ModelTier> = {
   invalid: 'none', crisis: 'none', light: 'cheap', normal: 'cheap', deep: 'premium',
+  // 위로 답변은 분석이 아니라 문장의 결이 전부라 값싼 등급으로 내리지 않는다
+  solace: 'standard',
 };
 const RAG: Record<InputRoute, boolean> = {
   invalid: false, crisis: false, light: false, normal: true, deep: true,
+  solace: true,
 };
 
 function decide(route: InputRoute, stage: RouteDecision['stage'], confidence: number, base: Omit<RouteDecision, 'route' | 'stage' | 'confidence' | 'useRag' | 'modelTier'>): RouteDecision {
@@ -172,7 +197,7 @@ export function routeByRules(raw: string): RouteDecision {
     lowEntropy: chars >= 40 && uniq < 0.18,
     injection: INJECTION.some((re) => re.test(text)),
   };
-  const base = { reasons, flags, counts, floor: null as InputRoute | null, hints };
+  const base = { reasons, flags, counts, floor: null as InputRoute | null, hints, crisisLevel: null as CrisisLevel | null };
 
   // 1. 웃음·이모지만 → 가벼운 답. 빈 입력·기호만 → invalid
   if (text && (LAUGH_ONLY.test(text) || EMOJI_ONLY.test(text))) {
@@ -190,10 +215,18 @@ export function routeByRules(raw: string): RouteDecision {
   }
   // 3. 위기. 제외 패턴을 먼저 본다. 제외에 걸려도 힌트는 남긴다
   const excluded = CRISIS_EXCLUDE.some((re) => re.test(compact) || re.test(text));
+  const method = CRISIS_METHOD.some((re) => re.test(compact));
   const strong = CRISIS_STRONG.some((re) => re.test(compact));
   const soft = CRISIS_SOFT.some((re) => re.test(compact));
+  // 방법을 묻는 글은 관용 표현 제외를 적용하지 않는다
+  if (method) {
+    reasons.push('crisis_method');
+    base.crisisLevel = 'acute';
+    return decide('crisis', 'rules', 0.97, base);
+  }
   if (!excluded && strong) {
     reasons.push('crisis_strong');
+    base.crisisLevel = 'acute';
     return decide('crisis', 'rules', 0.9, base);
   }
   if ((strong || soft) && excluded) hints.push('crisis_pattern_but_idiom');
@@ -201,6 +234,7 @@ export function routeByRules(raw: string): RouteDecision {
     reasons.push('crisis_soft');
     hints.push('crisis_candidate');
     base.floor = 'normal';
+    base.crisisLevel = 'distress';
     // 확정은 classifier. rules 임시 판정은 crisis 로 두어 분류 실패 시 안전한 쪽으로 간다
     return decide('crisis', 'rules', 0.6, base);
   }
@@ -264,7 +298,11 @@ export function merge(rules: RouteDecision, verdict: ClassifierVerdict | null): 
   }
   const reasons = [...rules.reasons, ...verdict.reasons.map((r) => `clf:${r}`)];
   // crisis 는 어느 층이든 올리면 올라간다. 내리는 것은 rules 가 crisis_soft 였고 classifier 가 none 일 때만
-  if (verdict.route === 'crisis') return decide('crisis', 'classifier', Math.max(verdict.confidence, 0.7), { ...rules, flags, reasons });
+  if (verdict.route === 'crisis') {
+    // rules 가 acute 로 못박았으면 그대로 둔다. classifier 가 새로 올린 것은 distress 로 받는다
+    const level: CrisisLevel = rules.crisisLevel === 'acute' ? 'acute' : 'distress';
+    return decide('crisis', 'classifier', Math.max(verdict.confidence, 0.7), { ...rules, flags, reasons, crisisLevel: level });
+  }
   if (rules.route === 'crisis' && rules.floor === 'normal' && verdict.confidence < 0.6) {
     // 확신 없는 「관용 표현」 판정은 믿지 않는다. 안전한 쪽으로 남긴다
     return decide('crisis', 'classifier', 0.6, { ...rules, flags, reasons: [...reasons, 'crisis_kept_low_confidence'] });
@@ -276,6 +314,24 @@ export function merge(rules: RouteDecision, verdict: ClassifierVerdict | null): 
   // 승격 바닥
   if (rules.floor && ORDER.indexOf(route) < ORDER.indexOf(rules.floor)) { route = rules.floor; reasons.push('floor_applied'); }
   return decide(route, 'classifier', verdict.confidence, { ...rules, flags, reasons });
+}
+
+/**
+ * 위기 안내를 본 사람이 「그래도 이야기를 들어주세요」를 눌렀을 때만 부른다.
+ * distress 만 통과한다. acute 는 여기서 막히므로 방법·수단을 물은 글은 모델에 닿지 않는다.
+ * 통과해도 답변 규격이 다르다. 분석·행동 지침 없이 위로 한 겹과 창구 카드만 나간다(LENGTH_POLICY.solace).
+ * 프론트가 혼자 부르지 않는다. 서버가 같은 원문으로 다시 판정해 같은 답을 얻어야 연다.
+ */
+export function escalateToSolace(d: RouteDecision): RouteDecision | null {
+  if (d.route !== 'crisis') return null;
+  if (d.crisisLevel !== 'distress') return null;
+  return {
+    ...d,
+    route: 'solace',
+    modelTier: TIER.solace,
+    useRag: RAG.solace,
+    reasons: [...d.reasons, 'user_asked_to_continue'],
+  };
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -298,4 +354,25 @@ export const LENGTH_POLICY = {
   light:  { total: [250, 600],  scriptures: 0, analysisSections: 0, actions: [0, 1] },
   normal: { total: [700, 1100], scriptures: 1, analysisSections: 1, actions: [1, 2] },
   deep:   { total: [1300, 2000], scriptures: [1, 2], analysisSections: [2, 3], actions: [1, 3] },
+  /**
+   * 위로 답변. 짧게 쓴다. 상황을 해석하지 않고 지금 무엇을 하라고도 말하지 않는다.
+   * action 하나는 「물 한 잔」 「창문 열기」 「그 사람에게 전화」 수준의 몸으로 하는 것만 허용한다.
+   */
+  solace: { total: [300, 650], scriptures: 1, analysisSections: 0, actions: [0, 1] },
 } as const;
+
+/**
+ * 위로 답변이 절대 담으면 안 되는 것. 생성 뒤 이 검사를 통과해야 화면에 나간다.
+ * 걸리면 문장을 고치지 않고 통째로 버린 뒤 고정 문구로 대체하고 사건을 남긴다.
+ * 앱인토스 「AI 채팅·상담」 3) 폭력·자해·자살: 방법 설명·구체적 묘사·모방 가능한 표현 금지.
+ */
+export const SOLACE_FORBIDDEN = [
+  /방법|수단|요령|치사|약을?\s?(모으|먹)|번개탄|목을?\s?매|손목|뛰어내리/,
+  /어떻게\s?(죽|하면\s?죽)/, /고통\s?없이|안\s?아프게/,
+  /(죽는|떠나는)\s?것도\s?(하나의|한)\s?(선택|방법)/, /이해(해요|합니다|가\s?가)/,
+];
+
+/** 위로 답변이 검사에 걸렸을 때 대신 내보내는 고정 문장. 모델을 다시 부르지 않는다 */
+export const SOLACE_FALLBACK =
+  '지금 여기까지 이야기해 주신 것만으로도 충분히 애쓰셨어요.\n' +
+  '이 마음은 혼자 들기에 너무 무거워요. 아래 번호로 지금 연락해 보셔요.';

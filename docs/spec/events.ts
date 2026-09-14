@@ -19,7 +19,11 @@ export const EVENTS = {
   input_type_normal:   { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
   input_type_deep:     { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
   invalid_input:       { params: ['message_key'] as const },
-  crisis_detected:     { params: ['stage', 'minor', 'abuse'] as const },
+  crisis_detected:     { params: ['stage', 'level', 'minor', 'abuse'] as const },          // level: acute | distress
+  crisis_continue_click:{ params: ['level'] as const },                                    // 「그래도 이야기를 들어주세요」. acute 에서는 버튼 자체가 없다
+  crisis_exit:         { params: ['level', 'exit'] as const },                             // exit: channel_call | channel_sns | rewrite | close
+  solace_generated:    { params: ['elapsed_bucket_ms'] as const },
+  solace_blocked:      { params: ['reason'] as const },                                    // reason: forbidden_phrase | schema | provider. 고정 문구로 바꿔 내보냈다
   model_route:         { params: ['route', 'model_tier', 'use_rag', 'confidence_bucket', 'floor_applied'] as const },
   model_cost_estimate: { params: ['route', 'model_tier', 'input_tokens_bucket', 'output_tokens_bucket', 'cost_bucket_usd'] as const },
   // 답변
@@ -48,8 +52,9 @@ export const EVENTS = {
   purchase_complete:   { params: ['sku', 'amount_krw'] as const },
   purchase_fail:       { params: ['sku', 'error_code'] as const },
   // 리텐션
-  daily_quote_impression:{ params: ['quote_id'] as const },
-  daily_quote_open:    { params: ['quote_id'] as const },
+  daily_quote_impression:{ params: ['quote_id', 'surface'] as const },                     // surface: entry_card | home_card
+  daily_quote_open:    { params: ['quote_id', 'surface'] as const },
+  entry_card_dismiss:  { params: ['quote_id', 'how'] as const },                           // how: cta | close | backdrop | back
   recall_card_impression:{ params: ['days_since'] as const },
   recall_card_click:   { params: ['days_since'] as const },
   // 실패

@@ -875,6 +875,9 @@ p.body:last-child { margin-bottom: 0; }
 /* ── 문서 흐름의 공유·간직 ───────────────────────────────────────────── */
 
 .actions-inline { display: flex; gap: var(--s-2); margin-top: var(--gap-section); }
+/* v0.3.1 · 공유하기·간직하기와 다시 이야기하기 사이에 숨 쉴 자리를 둔다 */
+.again { margin-top: var(--s-7); padding-top: var(--s-5); border-top: 1px solid var(--line); text-align: center; }
+.again p { margin: 0 0 var(--s-4); font-size: var(--t-body); line-height: var(--lh-body); color: var(--text-muted); }
 .btn {
   flex: 1;
   min-height: var(--tap-min);
@@ -1367,7 +1370,7 @@ p.body:last-child { margin-bottom: 0; }
     <div class="ext-card" data-block="ext">
       <p class="eyebrow">조금 더 깊게 보고 싶다면</p>
       <p>같은 이야기를 <b>다른 경전과 다른 관점</b>으로 한 번 더 봐요. 새 경전 하나, 다른 해석 하나, 행동 하나가 이 아래에 붙어요. 같은 말을 길게 반복하지 않아요.</p>
-      <button class="ad-btn" type="button"><span class="ad-tag">광고</span>🎬 광고 보고 다른 관점 하나 더 보기</button>
+      <button class="ad-btn" type="button"><span class="ad-tag">광고</span> 보고 다른 관점 하나 더 보기</button>
     </div>
 
     <!-- 피드백 -->
@@ -1397,7 +1400,8 @@ p.body:last-child { margin-bottom: 0; }
         간직하기
       </button>
     </div>
-    <button class="btn btn--ghost btn--wide" type="button">다시 이야기하기</button>
+    <div class="again"><p>오늘 또 마음에 걸리는 일이 생기면 언제든 다시 오셔요</p>
+        <button class="btn btn--ghost btn--wide" type="button">다시 이야기하기</button></div>
 
     <!-- AI 고지 -->
     <div class="notice">
