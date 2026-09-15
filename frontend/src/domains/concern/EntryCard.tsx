@@ -1,7 +1,7 @@
 import { useOverlayBackClose } from '../../app/providers';
 import type { DailyQuote } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { sceneForScreen } from '../../shared/visual/scene';
+import { artForScreen } from '../../shared/visual/scene';
 
 /** 오늘 이미 띄웠는지 적어 두는 자리. 값은 마지막으로 띄운 날짜(YYYY-MM-DD) 하나다 */
 const SEEN_KEY = 'buddha.entryCard.v1';
@@ -40,7 +40,7 @@ export interface EntryCardProps {
  * 닫기 버튼 · 바깥 · 뒤로가기 · 「이야기 시작하기」 넷 중 무엇으로든 닫힌다.
  */
 export function EntryCard({ quote, showDailyNote, onDismiss }: EntryCardProps) {
-  const scene = sceneForScreen('dailyQuote');
+  const art = artForScreen('entryCard');
 
   useOverlayBackClose(true, () => onDismiss('back'));
 
@@ -81,8 +81,8 @@ export function EntryCard({ quote, showDailyNote, onDismiss }: EntryCardProps) {
           </svg>
         </button>
 
-        <div className="ec-stage" style={{ background: scene?.backdrop }}>
-          {scene != null && <img src={scene.src} alt="" />}
+        <div className="ec-stage">
+          <img src={art.src} alt={art.alt} />
         </div>
 
         <p className="ec-k">오늘의 한마디</p>

@@ -446,11 +446,10 @@
 }
 
 .entry-card .ec-stage img {
-  height: 178px;
-  width: auto;
-  max-width: 96%;
-  object-fit: contain;
-  mix-blend-mode: multiply;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
 }
 
 .entry-card .ec-k {

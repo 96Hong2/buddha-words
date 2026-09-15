@@ -456,16 +456,13 @@
   overflow: hidden;
   background: var(--surface-illust);
 }
+/* 배경까지 그려진 한 장이라 영역을 꽉 채운다. 부처 얼굴이 잘리지 않게 위쪽을 더 남긴다 */
 .ans .illust .main {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: auto;
-  max-width: 62%;
+  display: block;
+  width: 100%;
   height: 100%;
-  object-fit: contain;
-  mix-blend-mode: multiply;
+  object-fit: cover;
+  object-position: center 42%;
 }
 .ans .illust::after {
   content: '';

@@ -153,3 +153,15 @@
   line-height: var(--lh-caption);
   color: var(--text-weak);
 }
+
+/* 시트 맨 위 장면. 배경까지 그려진 한 장이라 영역을 채운다 */
+.daily-sheet__art {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  object-position: center 42%;
+  border-radius: 16px;
+  margin-bottom: var(--s-4);
+  background: var(--surface-illust);
+}

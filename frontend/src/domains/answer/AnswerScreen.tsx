@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { useAnalytics } from '../../shared/analytics';
 import type { ApiAnswer } from '../../shared/api';
 import { useSession } from '../../shared/session';
-import { sceneForTheme, type Pose } from '../../shared/visual/scene';
+import { artForTheme } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 
@@ -12,16 +12,6 @@ import { AnswerBody } from './AnswerBody';
 import { InvalidAnswer } from './InvalidAnswer';
 import { LightAnswer } from './LightAnswer';
 import './answer.css';
-
-/** 표정은 늘 평온하다. 상황은 자세와 배경 시간대가 말한다 */
-const POSE_ALT: Record<Pose, string> = {
-  open_eyes: '정면을 바라보며 앉아 있는 부처',
-  listening: '한 손을 가슴에 얹고 듣고 있는 부처',
-  welcome: '합장한 부처',
-  reading: '책을 내려다보는 부처',
-  tea: '찻잔을 든 부처',
-  lotus: '연꽃을 바라보는 부처',
-};
 
 /** 완독 판정. 답변 하나에 한 번씩만 찍는다 */
 const READ_MARKS = [
@@ -45,7 +35,7 @@ export interface AnswerScreenProps {
 
 function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenProps) {
   const analytics = useAnalytics();
-  const scene = sceneForTheme(answer.visualTheme);
+  const art = artForTheme(answer.visualTheme);
 
   const [progress, setProgress] = useState(6);
   const [scrolled, setScrolled] = useState(false);
@@ -126,8 +116,8 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
         </span>
       </div>
 
-      <div className="illust" style={{ background: scene.backdrop }}>
-        <img className="main" src={scene.src} alt={POSE_ALT[scene.pose]} />
+      <div className="illust">
+        <img className="main" src={art.src} alt={art.alt} />
       </div>
 
       <AnswerBody answer={answer} closingRef={closingRef} {...wires} />

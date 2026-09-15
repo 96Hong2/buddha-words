@@ -9,6 +9,7 @@ import { useOverlayBackClose } from '../../app/providers';
 import type { DailyQuote } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { BottomSheet } from '../../shared/ui';
+import { artForScreen } from '../../shared/visual/scene';
 
 import './daily.css';
 
@@ -24,10 +25,12 @@ export interface DailyQuoteSheetProps {
 
 export function DailyQuoteSheet({ open, quote, onClose, onStart }: DailyQuoteSheetProps) {
   useOverlayBackClose(open, onClose);
+  const art = artForScreen('dailyQuote');
 
   return (
     <BottomSheet open={open} onClose={onClose} ariaLabel={TITLE} className="daily-sheet">
       <div {...testId(TEST_IDS.dailySheet)}>
+        <img className="daily-sheet__art" src={art.src} alt={art.alt} />
         <h2 className="daily-sheet__title">{TITLE}</h2>
         <p className="daily-sheet__verse">{quote.line}</p>
         <p className="daily-sheet__cite">{quote.scripture.citation}</p>
