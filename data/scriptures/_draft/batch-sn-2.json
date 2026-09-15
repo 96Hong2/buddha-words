@@ -1,0 +1,594 @@
+{
+  "batch": "sn-2",
+  "source_note": "상윳따 니까야 확장분 20편. 1차 25편이 가져가지 않은 경만 골랐고 같은 경이 겹치는 자리는 없다. 20편 모두 SuttaCentral API(bilarasuttas, Bhikkhu Sujato 영역 CC0)로 uid·경 제목·본문 단락을 직접 확인한 뒤 그 기준본에서 우리 말로 새로 옮겼다. 기존 한국어 번역본은 참고하지 않았다. 산문경은 카드 한 장 길이가 되도록 핵심 대목만 잘랐고 어느 대목인지는 citation_ko 와 base_note 에 적었다. 1차가 anxiety·anger 로 쏠려 이번에는 comparison·money·apathy·uncertainty·regret 를 의식해 채웠다. 교리 나열과 자해·자살 소재는 뺐고, 태생에 따라 사람을 나누는 SN 3:21 같은 대목도 상담에 쓰기 어려워 제외했다. 검증 회차에서 SN 7:3 은 게송 세 짝 가운데 두 짝이 이미 쓴 SN 7:2 와 글자 그대로 같아(sn7.3:3.1-4.4 = sn7.2:5.1-6.4) 빼고, 사과와 용서를 다루는 SN 11:24 로 바꿨다.",
+  "items": [
+    {
+      "id": "sn.1.34",
+      "citation_ko": "상윳따 니까야 1:34 「없다 경」, 바람이 우울을 낳는다는 게송 대목",
+      "ref": "sn1.34",
+      "ko_text": "바라는 마음에서 우울이 나고 바라는 마음에서 괴로움이 난다. 바라는 마음이 걷히면 우울이 걷히고, 우울이 걷히면 괴로움도 걷힌다. 세상의 예쁜 것들이 욕망인 것은 아니다. 사람의 욕망은 탐내는 마음이다. 세상의 예쁜 것들은 그 자리에 그대로 있고, 깨어 있는 이는 그것을 향한 바람을 걷어 낸다.",
+      "base_note": "Sujato 영역 'Gloom is born of desire; suffering is born of desire; when desire is removed, gloom is removed'(sn1.34:3.1-3.3)와 'The world’s pretty things aren’t sensual pleasures. Greedy intention is a person’s sensual pleasure. The world’s pretty things stay just as they are, but the attentive remove desire for them'(sn1.34:4.1-4.4), 두 게송을 이어 붙여 기준본으로 삼았다.",
+      "modern_gloss": "남이 가진 것 자체가 나를 깎는 게 아니다. 그것을 보며 일어나는 내 마음이 나를 깎는다. 세상은 그대로 두고 내 쪽을 본다.",
+      "retrieval_text": "친구의 집이나 연봉, 다른 사람의 SNS를 보고 마음이 무너질 때. 가지지 못한 것 때문에 내 삶이 초라해 보일 때",
+      "tags_primary": [
+        "comparison",
+        "money"
+      ],
+      "themes": [
+        "비교",
+        "욕망",
+        "마음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "세상의 예쁜 것들은 그 자리에 그대로 있다. 흔들리는 건 내 쪽이다",
+      "terms": [
+        {
+          "word": "바라는 마음",
+          "gloss": "무언가를 꼭 가져야 한다고 달라붙는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "가지고 싶은 마음 자체를 나무라는 말로 읽히기 쉽다. 바람을 없애라는 게 아니라 거기 묶이지 말라는 쪽으로 풀어야 한다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "경 번호와 게송 위치는 SuttaCentral 에서 확인했다. 다만 이 경은 여러 천신과 부처님이 번갈아 게송을 읊는 구성이고 영역본에 화자 표시가 없어, 인용한 두 게송을 누가 읊었는지는 단정하지 못했다. 한국어 경 이름 「없다 경」도 역본마다 다르게 옮긴다."
+    },
+    {
+      "id": "sn.1.51",
+      "citation_ko": "상윳따 니까야 1:51 「늙음 경」, 천신의 물음과 부처님의 답 게송",
+      "ref": "sn1.51",
+      "ko_text": "늙어서도 좋은 것은 무엇입니까. 자리를 잡으면 좋은 것은 무엇입니까. 사람의 재산은 무엇입니까. 도둑이 가져가기 어려운 것은 무엇입니까. 늙어서도 좋은 것은 바르게 사는 것이다. 자리를 잡으면 좋은 것은 믿음이다. 사람의 재산은 지혜다. 도둑이 가져가기 어려운 것은 쌓아 온 선함이다.",
+      "base_note": "Sujato 영역 'What’s still good in old age?… Ethics are still good in old age. Faith is good when grounded. Wisdom is people’s treasure. Merit’s hard for thieves to take'(sn1.51:1.1-2.4) 전문을 기준본으로 삼았다. 'merit'(공덕)은 뜻이 통하도록 '쌓아 온 선함' 으로 풀었다.",
+      "modern_gloss": "잔고는 늘었다 줄고 직함은 떼어 갈 수 있다. 가져갈 수 없는 재산이 무엇인지 한 번 세어 본다.",
+      "retrieval_text": "모아 놓은 돈도 없고 내세울 경력도 없어서 나이 드는 게 두려울 때. 가진 것이 사라지면 나에게 무엇이 남나 싶을 때",
+      "tags_primary": [
+        "money",
+        "uncertainty"
+      ],
+      "themes": [
+        "재산",
+        "지혜",
+        "나이듦"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "지혜는 사람의 재산이고, 쌓아 온 선함은 도둑도 가져가지 못한다",
+      "terms": [
+        {
+          "word": "공덕",
+          "gloss": "살면서 해 온 좋은 일이 내 안에 쌓인 것이에요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.1.53",
+      "citation_ko": "상윳따 니까야 1:53 「벗 경」, 천신의 물음과 부처님의 답 게송",
+      "ref": "sn1.53",
+      "ko_text": "길 위에서는 무엇이 벗입니까. 집에서는 무엇이 벗입니까. 일이 생겼을 때는 무엇이 벗입니까. 다음 생에는 무엇이 벗입니까. 길 위에서는 함께 가는 무리가 벗이다. 집에서는 어머니가 벗이다. 일이 생겼을 때는 그때마다 곁에 서 주는 사람이 벗이다. 다음 생에는 스스로 해 온 좋은 일이 벗이다.",
+      "base_note": "Sujato 영역 'Who’s your friend while journeying?… A caravan is your friend while journeying. Mother is your friend at home. An ally in time of need is a friend time and again. But the good deeds you’ve done yourself, that’s your friend in lives to come'(sn1.53:1.1-2.6) 전문을 기준본으로 삼았다. 'caravan' 은 함께 길을 가던 상단을 가리켜 '함께 가는 무리' 로 풀었다.",
+      "modern_gloss": "자리마다 벗이 다르다. 지금 내 자리에서 곁에 있어 줄 사람이 누구인지 먼저 세어 본다.",
+      "retrieval_text": "혼자라고 느껴질 때. 힘든 일이 생겼는데 연락할 사람이 떠오르지 않을 때. 관계가 끊긴 뒤 외로움이 길어질 때",
+      "tags_primary": [
+        "relationship",
+        "loss"
+      ],
+      "themes": [
+        "벗",
+        "외로움",
+        "곁"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "먼 길에는 길동무가 벗이고, 급할 때는 곁에 서 주는 사람이 벗이다",
+      "terms": [],
+      "cautions": [
+        "집에서는 어머니가 벗이라는 대목이 가족과 사이가 나쁜 사람에게는 아프게 닿을 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.2.26",
+      "citation_ko": "상윳따 니까야 2:26 「로히땃사 경」, 걸어서는 세상 끝에 닿을 수 없다는 대목",
+      "ref": "sn2.26",
+      "ko_text": "로히땃사가 물었다. 태어남도 늙음도 죽음도 없는 곳으로 걸어가서 세상의 끝에 닿을 수 있습니까. 부처님이 답했다. 걸어가서 세상의 끝에 닿을 수는 없다. 그러나 세상의 끝에 닿지 않고서는 괴로움도 끝나지 않는다. 나는 이 한 길 남짓한 몸, 느끼고 생각하는 이 몸 안에서 세상과 세상이 일어나는 자리와 세상이 그치는 자리와 그리로 가는 길을 말한다.",
+      "base_note": "Sujato 영역 'I say it’s not possible to know or see or reach the end of the world by traveling'(sn2.26:3.1), 'For it is in this fathom-long carcass with its perception and mind that I describe the world, its origin, its cessation, and the practice that leads to its cessation'(sn2.26:5.2), 'without reaching the end of the world, there’s no release from suffering'(sn2.26:6.3-6.4) 를 이어 옮겼다. 하늘을 날아 백 년을 달렸다는 로히땃사의 전생 이야기는 길어서 줄였다.",
+      "modern_gloss": "장소를 바꾸면 끝날 것 같지만 들고 가는 것이 나 자신이라 그대로 따라온다. 옮기기 전에 무엇을 들고 있는지 본다.",
+      "retrieval_text": "회사를 옮기거나 이사를 가거나 멀리 떠나면 지금 이 괴로움이 끝날 것 같을 때. 다 버리고 도망치고 싶을 때",
+      "tags_primary": [
+        "uncertainty",
+        "apathy"
+      ],
+      "themes": [
+        "도피",
+        "지금 여기",
+        "변화"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "세상의 끝은 걸어서 닿을 수 없다. 그 끝은 이 몸과 마음 안에 있다",
+      "terms": [
+        {
+          "word": "한 길 남짓한 몸",
+          "gloss": "사람 키만 한 이 몸을 가리키는 옛 표현이에요"
+        }
+      ],
+      "cautions": [
+        "환경을 바꾸는 일이 소용없다는 말로 읽힐 수 있다. 떠나는 선택 자체를 말리는 대목이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.3.1",
+      "citation_ko": "상윳따 니까야 3:1 「젊은이 경」, 어리다고 얕보지 말라는 네 가지 대목",
+      "ref": "sn3.1",
+      "ko_text": "왕이 물었다. 그대는 나이도 어리고 출가한 지도 얼마 되지 않았는데 어떻게 그런 말을 하는가. 부처님이 답했다. 왕이여, 어리다는 이유로 얕보거나 업신여겨서는 안 되는 것이 넷이다. 왕가의 젊은이와 뱀과 불과 수행자다. 불은 처음에 작아도 땔감을 만나면 크게 번져 어리석은 이를 태운다. 자기에게 무엇이 이로운지 아는 사람은 이 넷을 늘 제대로 대한다.",
+      "base_note": "Sujato 영역 'these four things should not be looked down upon or disparaged because they are young'(sn3.1:3.1-3.7), 불에 관한 게송 'A fire devours a vast amount… For once it gets fuel it’ll become a big conflagration. It’ll lash out and burn the fool'(sn3.1:9.1-10.4), 맺음 게송 'That’s why an astute person, seeing what’s good for themselves, would always treat these properly'(sn3.1:13.1-13.6) 을 골라 옮겼다. 왕가의 젊은이와 뱀에 관한 게송은 길어서 줄였다.",
+      "modern_gloss": "경력이 짧다는 게 실력이 없다는 뜻은 아니다. 남이 나를 어리게 볼 때도, 내가 누군가를 어리게 볼 때도 같다.",
+      "retrieval_text": "나이가 어리거나 경력이 짧다는 이유로 무시당할 때. 회의에서 내 의견이 가볍게 넘겨질 때. 나보다 어린 사람의 말을 인정하기 싫을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "무시",
+        "경력",
+        "존중"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "젊다는 이유로 얕보지 않는다. 불은 작다고 작은 불이 아니다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.3.2",
+      "citation_ko": "상윳따 니까야 3:2 「사람 경」, 안에서 생겨나 자기를 해친다는 게송",
+      "ref": "sn3.2",
+      "ko_text": "왕이여, 사람 안에서 생겨나 그 사람을 해치고 괴롭게 하는 것이 셋이다. 탐냄과 성냄과 어리석음이다. 탐냄과 성냄과 어리석음은 자기 안에서 생겨나 마음이 상한 사람을 해친다. 대나무가 제가 맺은 열매에 꺾이는 것과 같다.",
+      "base_note": "Sujato 영역 'Greed, hate, and delusion… arise inside a person for their harm, suffering, and discomfort'(sn3.2:2.1-2.6)와 게송 'When greed, hate, and delusion, originate inside oneself, they harm a person of wicked heart, as a bamboo is destroyed by its own fruit'(sn3.2:3.1-3.4) 을 이어 옮겼다. 대나무는 열매를 맺고 나면 말라 죽는다.",
+      "modern_gloss": "나를 무너뜨리는 것이 바깥에만 있는 게 아니다. 화를 키운 자리가 내 안이면 수습도 그 자리에서 시작한다.",
+      "retrieval_text": "욱해서 한 말 때문에 일을 망쳤을 때. 화를 못 참고 관계를 깨뜨린 뒤 후회할 때. 나를 망치는 게 결국 내 성질인 것 같을 때",
+      "tags_primary": [
+        "anger",
+        "regret"
+      ],
+      "themes": [
+        "성냄",
+        "자책",
+        "원인"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "대나무가 제가 맺은 열매에 꺾이듯, 나를 꺾는 것도 내 안에서 자란다",
+      "terms": [
+        {
+          "word": "어리석음",
+          "gloss": "상황을 잘못 보고 있는 줄도 모르는 상태를 뜻해요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.3.4",
+      "citation_ko": "상윳따 니까야 3:4 「사랑스러운 이 경」, 누가 자기를 사랑하는 사람인가 하는 대목",
+      "ref": "sn3.4",
+      "ko_text": "몸과 말과 마음으로 나쁜 일을 하는 사람은 자기를 사랑하지 않는 사람이다. 입으로 나는 나를 사랑한다고 말해도 그렇지 않다. 자기를 원수 대하듯 하기 때문이다. 몸과 말과 마음으로 좋은 일을 하는 사람은 자기를 사랑하는 사람이다. 나는 나를 사랑하지 않는다고 말해도 그렇지 않다. 자기를 아끼는 사람 대하듯 하기 때문이다. 자기가 사랑스러운 줄 안다면 자기를 나쁜 일에 묶지 않는다.",
+      "base_note": "Sujato 영역 sn3.4:1.6-1.19 파세나디 왕의 생각과 sn3.4:3.1-3.2 게송 'If you knew your self as beloved, you’d not yoke yourself to wickedness' 를 이어 옮겼다. 죽을 때 무엇을 가져가는가를 묻는 뒷부분 게송은 잘랐다.",
+      "modern_gloss": "나를 아낀다는 말은 마음가짐보다 내가 나를 어떻게 다루는지에서 드러난다. 함부로 굴린 하루가 쌓이면 마음도 따라간다.",
+      "retrieval_text": "스스로를 미워하고 몰아붙일 때. 나를 아끼는 방법을 모르겠을 때. 자책이 심해 잠도 끼니도 돌보지 않게 될 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "자기돌봄",
+        "자책",
+        "행동"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "나를 사랑하는 사람이라면 나를 나쁜 일에 묶어 두지 않는다",
+      "terms": [],
+      "cautions": [
+        "나쁜 일을 한 사람은 자기를 사랑하지 않는 것이라는 대목이 자책을 더 키울 수 있다. 지난 일을 따지기보다 앞으로 나를 어떻게 대할지로 읽어야 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.3.15",
+      "citation_ko": "상윳따 니까야 3:15 「전쟁 경」(두 번째), 빼앗는 자가 빼앗긴다는 게송",
+      "ref": "sn3.15",
+      "ko_text": "사람은 제 뜻대로 되는 동안 계속 빼앗는다. 그러나 남이 그를 빼앗는 때가 오면 빼앗던 자가 빼앗긴다. 어리석은 이는 저지른 일이 아직 익지 않은 동안 제가 단단한 땅 위에 서 있다고 여긴다. 그 일이 익으면 괴로움에 빠진다. 죽이는 자는 죽이는 자를 만들고, 이기는 자는 이기려는 자를 만들고, 욕하는 자는 욕을 만들고, 괴롭히는 자는 괴롭히는 자를 만든다.",
+      "base_note": "Sujato 영역 'A man goes on plundering as long as it serves his ends. But as soon as others plunder him, the plunderer is plundered'(sn3.15:7.1-7.4), 'For the fool thinks they’re on solid ground, so long as their wickedness has not ripened'(sn3.15:8.1-8.3), 'A killer creates a killer; a conqueror creates a conqueror; an abuser creates abuse, and a bully creates a bully'(sn3.15:9.1-9.6) 세 게송을 옮겼다. 두 왕의 전쟁 이야기는 줄였다.",
+      "modern_gloss": "되갚아 주고 싶은 마음은 끝이 나지 않는다. 이긴 자리에는 다음에 이기려는 사람이 선다.",
+      "retrieval_text": "나를 짓밟은 사람에게 똑같이 되갚아 주고 싶을 때. 복수심이 머릿속을 떠나지 않을 때. 당한 만큼 갚아야 풀릴 것 같을 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "복수",
+        "되갚음",
+        "결과"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "이기는 사람은 다음에 이기려는 사람을 만든다",
+      "terms": [],
+      "cautions": [
+        "부당한 일을 당해도 참으라는 말로 읽힐 수 있다. 되갚는 마음이 나를 어디로 데려가는지 보는 대목이지, 피해를 덮으라는 말이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.3.17",
+      "citation_ko": "상윳따 니까야 3:17 「게으르지 않음 경」, 코끼리 발자국 비유 대목",
+      "ref": "sn3.17",
+      "ko_text": "왕이여, 이번 생과 다음 생의 이로움을 함께 잡아 주는 하나가 있다. 게으르지 않음이다. 걸어 다니는 모든 짐승의 발자국이 코끼리 발자국 안에 다 들어간다. 그래서 코끼리 발자국을 가장 크다고 한다. 그와 같이 게으르지 않음 하나가 이번 생의 이로움과 다음 생의 이로움을 함께 잡아 준다.",
+      "base_note": "Sujato 영역 'Diligence, Great King, is one thing that secures benefits for both this life and lives to come. The footprints of all creatures that walk can fit inside an elephant’s footprint'(sn3.17:4.1-4.5) 대목을 옮겼다. 'diligence'(appamāda)는 부지런히 몰아붙인다기보다 놓치지 않고 깨어 있다는 뜻이라 '게으르지 않음' 으로 두었다.",
+      "modern_gloss": "큰 결심 하나보다 오늘 놓지 않는 쪽이 멀리 간다. 발자국 크기는 매일 딛는 데서 나온다.",
+      "retrieval_text": "아무것도 하기 싫고 손에 잡히지 않을 때. 뭐부터 해야 할지 몰라 며칠째 미루고 있을 때. 습관이 자꾸 무너질 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "꾸준함",
+        "시작",
+        "일상"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "게으르지 않음 하나가 코끼리 발자국처럼 나머지를 다 품는다",
+      "terms": [
+        {
+          "word": "게으르지 않음",
+          "gloss": "부지런히 몰아붙인다기보다, 해야 할 것을 놓치지 않고 깨어 있다는 뜻이에요"
+        }
+      ],
+      "cautions": [
+        "번아웃으로 멈춰 선 사람에게는 더 하라는 채찍으로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.4.13",
+      "citation_ko": "상윳따 니까야 4:13 「나무 조각 경」, 누워 있는 부처님을 마라가 조롱하는 대목",
+      "ref": "sn4.13",
+      "ko_text": "부처님이 나무 조각에 발을 다쳐 몹시 아팠다. 그러나 마음을 챙겨 흔들리지 않고 견뎠다. 옷을 네 겹으로 접어 깔고 오른쪽으로 누웠다. 그때 마라가 다가와 말했다. 힘이 없어 누웠는가. 할 일을 다 못 해 놓고 무슨 잠인가. 부처님이 답했다. 힘이 없어 누운 것이 아니다. 가슴에 화살이 박힌 사람도 잠을 잔다. 화살을 뽑은 내가 왜 못 자겠는가. 나는 긴장한 채 깨어 있지도 않고 잠드는 것을 겁내지도 않는다.",
+      "base_note": "Sujato 영역 sn4.13:1.3-1.6 다친 발을 견디는 대목, 마라의 게송 'Are you feeble that you lie down?… why this sleeping, sleepyhead?'(sn4.13:2.1-2.4), 부처님의 답 'Even those with a dart stuck in the breast… So why not I, whose dart is drawn out? I don’t lie awake tense, nor do I fear to sleep'(sn4.13:4.1-5.1) 을 이어 옮겼다.",
+      "modern_gloss": "쉬려고 누우면 꼭 한마디 거드는 목소리가 있다. 그 목소리가 나인지 나를 흔드는 쪽인지 먼저 구분한다.",
+      "retrieval_text": "쉬는 동안에도 죄책감이 들어 마음 편히 못 쉴 때. 아무것도 못 한 하루가 스스로 한심할 때. 몸이 아파 누워 있는데 마음이 더 불편할 때",
+      "tags_primary": [
+        "apathy",
+        "regret"
+      ],
+      "themes": [
+        "쉼",
+        "자책",
+        "마음챙김"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [
+        {
+          "word": "마라",
+          "gloss": "마음을 흔들어 주저앉히는 쪽을 사람처럼 그린 이름이에요"
+        }
+      ],
+      "cautions": [
+        "아픈 것을 참으라는 말로 읽히기 쉽다. 통증을 견디라는 대목이 아니라, 아픈 김에 덧붙는 마음의 몫을 줄이는 대목이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.4.20",
+      "citation_ko": "상윳따 니까야 4:20 「통치 경」, 황금 산 게송 대목",
+      "ref": "sn4.20",
+      "ko_text": "마라가 말했다. 당신이 마음만 먹으면 저 히말라야를 통째로 황금으로 바꿀 수 있습니다. 그러니 다스리십시오. 부처님이 답했다. 황금으로 된 산이 있고 그것이 둘이 되어도 한 사람에게는 모자란다. 이것을 아는 사람은 바르게 산다. 괴로움이 어디에서 오는지 본 사람이 어떻게 그쪽으로 기울겠는가.",
+      "base_note": "Sujato 영역 마라의 제안(sn4.20:2.1-2.4)과 게송 'Take a golden mountain, entirely of native gold, and double it, it’s still not enough for one! Knowing this, live a moral life. When a personage has seen where suffering comes from how could they incline toward sensual pleasures?'(sn4.20:3.1-4.2) 를 이어 옮겼다.",
+      "modern_gloss": "얼마를 모으면 마음이 놓일지 정해 둔 적이 있는지 본다. 그 선은 닿으면 또 옮겨 간다.",
+      "retrieval_text": "돈을 벌어도 불안이 가시지 않을 때. 연봉이 올랐는데 마음은 그대로일 때. 얼마를 모아야 안심할 수 있을지 모를 때",
+      "tags_primary": [
+        "money",
+        "comparison"
+      ],
+      "themes": [
+        "돈",
+        "만족",
+        "끝없음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "황금 산이 통째로 둘이 되어도 한 사람에게는 모자란다",
+      "terms": [],
+      "cautions": [
+        "돈을 벌려는 마음 자체를 나무라는 말로 읽힐 수 있다. 벌지 말라가 아니라 어디가 끝인지 정해 두라는 쪽으로 읽어야 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.7.9",
+      "citation_ko": "상윳따 니까야 7:9 「순다리까 경」, 태생을 묻지 말라는 게송 대목",
+      "ref": "sn7.9",
+      "ko_text": "바라문이 물었다. 당신은 태생이 무엇입니까. 부처님이 답했다. 태생을 묻지 말고 행실을 물어라. 불은 아무 나뭇가지에서나 일어난다. 낮은 집안에서 태어났어도 흔들리지 않는 사람은 부끄러움을 아는 잘 길든 말과 같다. 진실에 길들고 길들임을 마쳐 그 길을 끝까지 간 사람, 바라문이 공양할 자리는 거기다.",
+      "base_note": "Sujato 영역 'Don’t ask about birth, ask about conduct; for the fire of Jātaveda is born from sticks. A steadfast sage, even though from a low class family, is a thoroughbred checked by conscience'(sn7.9:3.1-3.4)와 'Tamed by truth, fulfilled by taming, a complete knowledge master who has completed the spiritual journey, that’s who a sacrificer should woo, and offer a timely oblation'(sn7.9:4.1-4.4) 를 이어 옮겼다. 'Jātaveda' 는 불의 옛 이름이라 그냥 불로 두었다.",
+      "modern_gloss": "어디서 왔는지가 아니라 지금 어떻게 하고 있는지가 사람을 말한다. 불은 나무의 종류를 따지지 않는다.",
+      "retrieval_text": "학벌이나 집안, 출신 회사 때문에 주눅이 들 때. 나보다 좋은 배경을 가진 사람들 사이에서 초라해질 때. 시작점이 달라 따라잡을 수 없을 것 같을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "출신",
+        "비교",
+        "행실"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "태생을 묻지 말고 행실을 물어라. 불은 아무 나뭇가지에서나 일어난다",
+      "terms": [
+        {
+          "word": "바라문",
+          "gloss": "당시 인도에서 태생으로 지위가 정해지던 사제 계급이에요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.7.10",
+      "citation_ko": "상윳따 니까야 7:10 「많은 딸 경」, 잃어버린 소 열네 마리 대목",
+      "ref": "sn7.10",
+      "ko_text": "소 열네 마리를 잃고 엿새째 찾아다니던 바라문이 숲에 조용히 앉은 부처님을 보고 말했다. 이 수행자는 엿새째 잃어버린 소 열네 마리가 없으니 저렇게 편안하겠지. 잎이 한두 장만 남도록 망가진 참깨 밭도 없고, 빈 곳간에서 신나게 뛰노는 쥐도 없고, 새벽부터 찾아와 갚으라고 하는 빚쟁이도 없으니 저렇게 편안하겠지. 부처님이 답했다. 바라문이여, 그대 말이 맞다. 나에게는 그것이 없다. 그래서 나는 편안하다.",
+      "base_note": "Sujato 영역 바라문의 게송(sn7.10:2.1-8.4)과 부처님의 답 게송(sn7.10:9.1-15.4)에서 소, 참깨 밭, 빈 곳간, 빚쟁이 네 가지만 골라 옮겼다. 아내와 딸들을 두고 말하는 대목은 오늘 읽기에 거칠어 뺐다.",
+      "modern_gloss": "가진 것이 늘수록 지킬 것이 늘고 잃을 일도 는다. 지금 나를 잠 못 들게 하는 것이 무엇인지 하나씩 적어 본다.",
+      "retrieval_text": "빚이나 이자 때문에 밤에 잠이 오지 않을 때. 돈 걱정이 머리에서 떠나지 않을 때. 잃을까 봐 불안해 아무것도 즐기지 못할 때",
+      "tags_primary": [
+        "money",
+        "anxiety"
+      ],
+      "themes": [
+        "걱정",
+        "소유",
+        "빚"
+      ],
+      "difficulty": "easy",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "가난하면 마음이 편하다는 말로 읽힐 수 있다. 생계 걱정을 가볍게 여기는 대목이 아니라, 무엇을 붙들고 있어서 불안한지를 보는 대목이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.7.11",
+      "citation_ko": "상윳따 니까야 7:11 「밭 가는 바라드와자 경」, 믿음이 내 씨앗이라는 게송",
+      "ref": "sn7.11",
+      "ko_text": "농부가 말했다. 나는 밭을 갈고 씨를 뿌린 다음에 먹는다. 당신도 밭을 갈고 씨를 뿌린 다음에 먹어라. 부처님이 답했다. 나도 밭을 갈고 씨를 뿌린 다음에 먹는다. 믿음이 내 씨앗이고 정성이 밭에 내리는 비다. 지혜가 내 멍에이자 쟁기다. 부끄러움을 아는 마음이 끌채고 마음이 끈이며 알아차림이 보습이자 몰이 막대다. 꾸준한 힘이 내 소라서 돌아서는 법 없이 나를 실어 간다. 슬픔 없는 곳으로 간다.",
+      "base_note": "Sujato 영역 농부와의 문답(sn7.11:2.1-3.4), 'Faith is my seed, fervor my rain, and wisdom is my yoke and plough. Conscience is my draft-pole, mind my strap, mindfulness my plowshare and goad'(sn7.11:4.1-4.4), 'Energy is my harnessed beast, transporting me to sanctuary from the yoke. Without turning back, it goes to where there is no sorrow'(sn7.11:6.1-6.4) 를 이어 옮겼다. 쟁기 부품 이름은 우리말 농기구 이름으로 바꿨다.",
+      "modern_gloss": "눈에 보이는 수확이 없는 날에도 밭은 갈리고 있다. 지금 내가 무엇을 뿌리고 있는지부터 확인한다.",
+      "retrieval_text": "열심히 하는데 아무 성과가 보이지 않을 때. 남들은 결과를 내는데 나만 제자리 같을 때. 지금 하는 일이 어디로 가는지 모를 때",
+      "tags_primary": [
+        "uncertainty",
+        "apathy"
+      ],
+      "themes": [
+        "노력",
+        "과정",
+        "일"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [
+        {
+          "word": "보습",
+          "gloss": "쟁기 끝에 달려 땅을 파고 드는 쇠붙이예요"
+        },
+        {
+          "word": "끌채",
+          "gloss": "수레나 쟁기를 소에 이어 주는 긴 나무 막대예요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.7.14",
+      "citation_ko": "상윳따 니까야 7:14 「큰 부자 경」, 아들들에게 쫓겨난 늙은 바라문 대목",
+      "ref": "sn7.14",
+      "ko_text": "해진 옷을 입은 늙은 바라문이 말했다. 아들이 넷인데 며느리들이 시켜서 저를 집에서 내보냈습니다. 부처님이 게송을 알려 주었다. 태어났을 때 기뻤고 잘되기를 바랐다. 그런데 며느리가 시키니 나를 내쫓았다. 늙었다고 나를 내던지는 저들은 아들의 모습을 한 것일 뿐이다. 차라리 이 지팡이가 저 아들들보다 낫다. 어두운 길에서는 앞장서 주고 깊은 물에서는 디딜 곳을 찾아 준다. 비틀거릴 때 다시 서게 해 준다.",
+      "base_note": "Sujato 영역 늙은 바라문의 사정(sn7.14:2.1-2.4), 게송 'I was overjoyed when they were born… They’re monsters in the shape of sons, throwing me out as I’ve grown old'(sn7.14:3.1-4.4), 'Even my staff is better than those disobedient sons… By the wonderful power of this staff, when I stumble, I stand firm again'(sn7.14:5.1-6.4) 를 이어 옮겼다. 'monsters in the shape of sons' 는 뜻이 통하도록 '아들의 모습을 한 것일 뿐' 으로 옮겼다.",
+      "modern_gloss": "가족이라는 이름이 저절로 곁을 지켜 주지는 않는다. 그럴 때는 나를 실제로 받쳐 주는 것이 무엇인지 세어 본다.",
+      "retrieval_text": "믿었던 가족에게 서운함을 넘어 배신감을 느낄 때. 자식이나 부모에게 기대했다가 마음이 무너질 때. 가족 안에서 혼자가 된 것 같을 때",
+      "tags_primary": [
+        "relationship",
+        "loss"
+      ],
+      "themes": [
+        "가족",
+        "배신감",
+        "의지"
+      ],
+      "difficulty": "easy",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "가족을 원망해도 된다는 말로만 읽힐 수 있다. 경에서는 이 게송을 들은 아들들이 아버지를 다시 모셔 갔다는 뒷이야기가 이어진다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.9.11",
+      "citation_ko": "상윳따 니까야 9:11 「좋지 않은 생각 경」, 숲의 신이 수행자를 흔들어 깨우는 게송",
+      "ref": "sn9.11",
+      "ko_text": "숲에서 지내던 수행자가 낮에 앉아 좋지 않은 생각에 잠겼다. 그 숲의 신이 딱하게 여겨 다가와 말했다. 마음을 이치에 맞지 않게 쓰는 바람에 그대는 제 생각에 삼켜졌다. 그 쓰임을 놓고 생각을 이치에 맞게 돌려라. 스승과 가르침과 함께 가는 이들과 그대가 지켜 온 것을 떠올려라. 그러면 반가움이 일고 기쁨과 편안함도 따라온다. 그 말에 수행자는 정신이 들었다.",
+      "base_note": "Sujato 영역 'Because of irrational application of mind, you’re consumed by your thoughts. When you’ve given up irrationality, make sure your thoughts are rational'(sn9.11:2.1-2.4), 'Thinking about the Teacher, the teaching, the Saṅgha, and your own ethics, you’ll find gladness, and rapture and bliss as well'(sn9.11:3.1-3.5), 앞뒤 상황 대목을 이어 옮겼다.",
+      "modern_gloss": "생각이 나를 끌고 다니는 날에는 생각을 이기려 들기보다 무엇에 마음을 대고 있는지를 바꾼다.",
+      "retrieval_text": "안 좋은 생각이 꼬리를 물고 멈추지 않을 때. 밤마다 같은 장면을 곱씹을 때. 혼자 있으면 생각이 자꾸 나쁜 쪽으로 갈 때",
+      "tags_primary": [
+        "regret",
+        "anxiety"
+      ],
+      "themes": [
+        "곱씹음",
+        "생각",
+        "마음챙김"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [
+        {
+          "word": "이치에 맞지 않게 마음을 쓴다",
+          "gloss": "상황을 사실대로 보지 않고 한쪽으로만 몰아 생각하는 것을 말해요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.10.12",
+      "citation_ko": "상윳따 니까야 10:12 「알라와까 경」, 재산과 좋은 이름과 벗을 어떻게 얻는가 하는 문답",
+      "ref": "sn10.12",
+      "ko_text": "야차가 물었다. 사람의 가장 좋은 재산은 무엇입니까. 무엇이 가장 단맛입니까. 부처님이 답했다. 믿음이 사람의 가장 좋은 재산이다. 진실이 가장 단맛이다. 지혜로 사는 사람을 가장 잘 사는 사람이라 한다. 야차가 다시 물었다. 재산은 어떻게 얻습니까. 좋은 이름은 어떻게 얻습니까. 벗은 어떻게 지킵니까. 부처님이 답했다. 맡은 일을 책임지고 알맞게 움직이며 힘써 일하면 재산을 얻는다. 진실하면 좋은 이름을 얻는다. 벗은 베풀어서 지킨다.",
+      "base_note": "Sujato 영역 'Faith here is a person’s best wealth… Truth is the sweetest taste of all. The one they say has the best life lives by wisdom'(sn10.12:3.1-3.4), 'How do you earn wealth? How do you get a good reputation? How do you hold on to friends?'(sn10.12:6.2-6.4), 'Being responsible, acting appropriately, and working hard you earn wealth. Truthfulness wins you a good reputation. You hold on to friends by giving'(sn10.12:8.1-8.4) 를 이어 옮겼다. 야차가 부처님을 위협하는 앞부분은 잘랐다.",
+      "modern_gloss": "돈과 평판과 사람은 각각 다른 방식으로 쌓인다. 셋을 같은 방법으로 얻으려다 셋 다 놓치기 쉽다.",
+      "retrieval_text": "돈도 인맥도 평판도 없다고 느껴질 때. 어떻게 벌어야 할지, 어떻게 사람을 곁에 둬야 할지 막막할 때. 기반이 하나도 없는 것 같을 때",
+      "tags_primary": [
+        "money",
+        "relationship"
+      ],
+      "themes": [
+        "재산",
+        "신뢰",
+        "베풂"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "좋은 이름은 진실해서 얻고, 벗은 베풀어서 지킨다",
+      "terms": [
+        {
+          "word": "야차",
+          "gloss": "옛 인도에서 숲이나 마을에 산다고 여긴 정령이에요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.11.24",
+      "citation_ko": "상윳따 니까야 11:24 「잘못 경」, 어리석은 두 사람과 삭까의 게송 대목",
+      "ref": "sn11.24",
+      "ko_text": "두 수행자가 다투었다. 한 사람이 자기 잘못을 말했는데 다른 사람이 받아 주지 않았다. 부처님이 말했다. 어리석은 사람이 둘이다. 자기 잘못을 잘못인 줄 모르는 사람과, 잘못을 말하는 사람을 제대로 받아 주지 않는 사람이다. 지혜로운 사람도 둘이다. 자기 잘못을 잘못인 줄 아는 사람과, 잘못을 말하는 사람을 제대로 받아 주는 사람이다. 삭까가 읊은 게송이 있다. 화에 끌려가지 마라. 사이가 상하게 두지 마라. 나무랄 것 없는 사람을 나무라지 말고 등 뒤에서 말하지 마라. 화는 산이 무너지듯 그 사람을 덮친다.",
+      "base_note": "Sujato 영역 'there are two fools. One who doesn’t recognize when they’ve made a mistake. And one who doesn’t properly accept the confession of someone who’s made a mistake'(sn11.24:2.1-2.6)와 삭까의 게송 'Control your anger; don’t let friendships decay. Don’t blame the blameless, and don’t backbite. For anger crushes bad people like a mountain'(sn11.24:4.1-4.6) 을 이어 옮겼다. 'bad people' 은 사람을 편 갈라 보는 말로 읽히지 않도록 '그 사람' 으로 두었다.",
+      "modern_gloss": "사과하는 일과 사과를 받아 주는 일은 서로 다른 힘이다. 한쪽만 해내서는 관계가 제자리로 돌아오지 않는다.",
+      "retrieval_text": "사과했는데 상대가 받아 주지 않아 답답할 때. 사과를 받고도 마음이 풀리지 않아 그대로 두고 있을 때. 다툰 뒤 누가 먼저 손을 내밀지 재고 있을 때",
+      "tags_primary": [
+        "relationship",
+        "anger"
+      ],
+      "themes": [
+        "사과",
+        "용서",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "화에 끌려가지 마라. 그 화가 오래 이어 온 사이를 상하게 한다",
+      "terms": [
+        {
+          "word": "삭까",
+          "gloss": "신들의 왕으로 불리는 존재예요. 경에 자주 나오는 이름이에요"
+        }
+      ],
+      "cautions": [
+        "사과를 받아 주지 않는 쪽만 나무라는 말로 읽힐 수 있다. 크게 다친 일을 당장 용서하라는 대목은 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": "경 번호와 게송 위치는 SuttaCentral 에서 확인했다. 한국어 경 이름은 역본마다 「잘못 경」·「허물 경」 등으로 달리 옮긴다."
+    },
+    {
+      "id": "sn.46.55",
+      "citation_ko": "상윳따 니까야 46:55 「상가라와 경」, 다섯 가지 물그릇 비유 대목",
+      "ref": "sn46.55",
+      "ko_text": "바라문이 물었다. 왜 오래 외운 것도 떠오르지 않는 때가 있고, 오래 묵힌 것도 훤히 떠오르는 때가 있습니까. 부처님이 답했다. 마음이 갖고 싶은 것에 잠겨 있을 때는 물감을 푼 물그릇과 같다. 들여다보아도 제 얼굴이 보이지 않는다. 미움에 잠겨 있을 때는 펄펄 끓는 물과 같고, 늘어지고 졸릴 때는 물풀이 뒤덮은 물과 같고, 들뜨고 후회할 때는 바람에 흔들리는 물과 같고, 의심에 잠겨 있을 때는 어둠 속에 놓인 흙탕물과 같다. 물이 맑고 흔들림 없이 밝은 데 놓이면 그제야 제 얼굴이 보인다.",
+      "base_note": "Sujato 영역 바라문의 물음(sn46.55:2.1-3.1)과 다섯 물그릇 비유(sn46.55:4.1, 6.1, 8.1, 10.1, 12.1), 맑은 물그릇 대목(sn46.55:22.1) 을 카드 한 장 길이로 줄여 옮겼다. 원문은 다섯 가지를 각각 길게 되풀이한다.",
+      "modern_gloss": "판단이 안 서는 날은 머리가 나빠진 게 아니라 물이 흐린 것이다. 흙탕물은 휘저어서가 아니라 가라앉혀서 맑아진다.",
+      "retrieval_text": "중요한 결정을 앞두고 머리가 하얘질 때. 마음이 뒤숭숭해 아무 판단도 서지 않을 때. 화가 나거나 불안할 때 평소 하던 일도 안 될 때",
+      "tags_primary": [
+        "indecision",
+        "anxiety"
+      ],
+      "themes": [
+        "판단",
+        "마음상태",
+        "기다림"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "물감을 푼 물그릇에는 제 얼굴이 비치지 않는다",
+      "terms": [
+        {
+          "word": "들뜸과 후회",
+          "gloss": "마음이 붕 떠서 가라앉지 않거나 지난 일을 계속 곱씹는 상태예요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "sn.56.31",
+      "citation_ko": "상윳따 니까야 56:31 「싱사빠 숲 경」, 손안의 나뭇잎 비유 대목",
+      "ref": "sn56.31",
+      "ko_text": "부처님이 싱사빠 나뭇잎 몇 장을 손에 쥐고 물었다. 내 손에 있는 잎과 저 숲의 잎 가운데 어느 쪽이 많은가. 손에 있는 잎은 얼마 되지 않고 숲의 잎이 훨씬 많습니다. 그와 같다. 내가 알고 있으나 말하지 않은 것이 훨씬 많고 말한 것은 얼마 되지 않는다. 왜 말하지 않았는가. 도움이 되지 않고 삶을 바꾸지 못하기 때문이다. 내가 말한 것은 괴로움과 괴로움이 일어나는 자리와 괴로움이 그치는 자리와 그리로 가는 길이다.",
+      "base_note": "Sujato 영역 'Which is more: the few leaves in my hand, or those in the grove above?'(sn56.31:1.5), 'There are far more leaves in the grove above'(sn56.31:1.7), 'there is much more that I have directly known but have not explained to you. What I have explained is a tiny amount'(sn56.31:1.8) 를 포함한 첫 단락을 옮겼다.",
+      "modern_gloss": "다 알아야 움직일 수 있는 건 아니다. 손에 쥘 잎 몇 장이면 오늘 갈 길은 정해진다.",
+      "retrieval_text": "모든 가능성을 다 따져 보느라 결정을 못 할 때. 정보를 더 모아야 할 것 같아 계속 미룰 때. 답을 다 알아야 시작할 수 있을 것 같을 때",
+      "tags_primary": [
+        "uncertainty",
+        "indecision"
+      ],
+      "themes": [
+        "선택",
+        "필요한 만큼",
+        "실천"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "숲의 잎은 헤아릴 수 없지만, 길을 가는 데는 손에 쥔 몇 장이면 된다",
+      "terms": [
+        {
+          "word": "싱사빠",
+          "gloss": "인도에 자라는 나무예요. 영어로는 로즈우드라고 불러요"
+        }
+      ],
+      "cautions": [
+        "알 필요 없다는 말로 읽힐 수 있다. 원문은 지금 살아가는 데 도움이 되는 것을 먼저 고른다는 뜻이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    }
+  ]
+}

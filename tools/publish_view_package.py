@@ -77,6 +77,7 @@ DIR_ASSET  = "04 일러스트와 에셋"
 DIR_RAW    = os.path.join(DIR_ASSET, "05 받은 원본 패키지 전체 (webp · 매니페스트 · HTML 예시)")
 DIR_SPEC   = "05 코드 스펙과 저장소 씨앗 (개발 착수 때 그대로 쓴다)"
 DIR_SEED   = os.path.join(DIR_SPEC, "07 저장소 씨앗 (CLAUDE.md · AGENTS.md · rules)")
+DIR_SUTRA  = "06 경전 감수본 (400구절 · 감수 대상)"
 
 
 def px(path):
@@ -101,11 +102,11 @@ def main():
         sys.exit("design-inline/ 이 없다. python3 tools/inline_assets.py 를 먼저 돌린다.")
 
     # 내가 만든 것만 지운다. 04 는 통째로 지우지 않는다(사람이 「고해상도 에셋」을 따로 둔다).
-    for d in [DIR_PRD, DIR_SCREEN, DIR_TOKEN, DIR_SPEC]:
+    for d in [DIR_PRD, DIR_SCREEN, DIR_TOKEN, DIR_SPEC, DIR_SUTRA]:
         clear(d)
     for g in list(ASSET_GROUPS) + [os.path.basename(DIR_RAW)]:
         clear(os.path.join(DIR_ASSET, g))
-    for d in [DIR_PRD, DIR_ORIG, DIR_SCREEN, DIR_TOKEN, DIR_ASSET, DIR_RAW, DIR_SPEC, DIR_SEED]:
+    for d in [DIR_PRD, DIR_ORIG, DIR_SCREEN, DIR_TOKEN, DIR_ASSET, DIR_RAW, DIR_SPEC, DIR_SEED, DIR_SUTRA]:
         os.makedirs(os.path.join(DST, d), exist_ok=True)
 
     cp, n = shutil.copy2, 0
@@ -166,6 +167,15 @@ def main():
     rules_dst = os.path.join(DST, DIR_SEED, "rules (.claude 폴더에 넣는다)")
     shutil.copytree(f"{seed}/.claude/rules", rules_dst, dirs_exist_ok=True)
     n += len(SPECS) + 2
+
+    # 06 경전 감수본
+    cp(f"{ROOT}/data/scriptures/경전 감수본 (초안).md",
+       f"{DST}/{DIR_SUTRA}/경전 감수본 400구절 (초안).md")
+    draft = f"{ROOT}/data/scriptures/_draft"
+    if os.path.isdir(draft):
+        shutil.copytree(draft, os.path.join(DST, DIR_SUTRA, "초안 원본 (JSON · 감수 뒤 다시 조립할 때 쓴다)"),
+                        dirs_exist_ok=True)
+    n += 1
 
     # 갤러리 링크가 실제 파일을 가리키는지 확인한다
     base = os.path.join(DST, DIR_SCREEN)

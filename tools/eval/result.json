@@ -1,0 +1,646 @@
+[
+ {
+  "id": "q01",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.8,
+  "rr": 1.0,
+  "hit": [
+   "maha.yuanjue.illusion",
+   "mn.18",
+   "snp.3.8.574",
+   "ud.2.9"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q02",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.25,
+  "r20": 0.25,
+  "rr": 1.0,
+  "hit": [
+   "snp.4.6.807"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q03",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.6,
+  "r20": 1.0,
+  "rr": 1.0,
+  "hit": [
+   "an.7.6",
+   "dhp.172",
+   "dhp.219",
+   "dhp.365",
+   "mn.135"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q04",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.6,
+  "rr": 1.0,
+  "hit": [
+   "an.2.33",
+   "kr.wonhyo.faithcommentary",
+   "snp.2.9.324"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q05",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 1.0,
+  "r20": 1.0,
+  "rr": 1.0,
+  "hit": [
+   "an.3.65",
+   "an.4.192",
+   "an.4.55"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q06",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.6,
+  "rr": 1.0,
+  "hit": [
+   "an.3.35",
+   "dhp.42",
+   "snp.4.10.851"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q07",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.25,
+  "r20": 0.75,
+  "rr": 1.0,
+  "hit": [
+   "an.6.45",
+   "dhp.292",
+   "mn.63"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q08",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.6,
+  "rr": 1.0,
+  "hit": [
+   "an.6.49",
+   "dhp.171",
+   "dhp.199"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q09",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.2,
+  "r20": 0.4,
+  "rr": 1.0,
+  "hit": [
+   "dhp.258",
+   "dhp.304"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q10",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.25,
+  "r20": 0.25,
+  "rr": 0.5,
+  "hit": [
+   "snp.1.3.42"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q11",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.25,
+  "r20": 0.5,
+  "rr": 1.0,
+  "hit": [
+   "an.7.36",
+   "iti.27"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q12",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.0,
+  "r20": 0.833,
+  "rr": 0.167,
+  "hit": [
+   "dhp.290",
+   "dhp.314",
+   "snp.2.9.324",
+   "snp.4.10.851",
+   "thag.3.15"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q13",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.5,
+  "r20": 0.667,
+  "rr": 1.0,
+  "hit": [
+   "maha.yuanjue.illusion",
+   "mn.19",
+   "sn.36.6",
+   "ud.4.1"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q14",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.5,
+  "r20": 0.667,
+  "rr": 1.0,
+  "hit": [
+   "dhp.232",
+   "iti.88",
+   "maha.samantabhadra.repentance",
+   "sn.3.2"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q15",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.8,
+  "rr": 1.0,
+  "hit": [
+   "an.5.29",
+   "dhp.168",
+   "dhp.327",
+   "iti.34"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q16",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.4,
+  "r20": 0.6,
+  "rr": 1.0,
+  "hit": [
+   "dhp.258",
+   "dhp.369",
+   "kr.seosan.seonga.onething"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q17",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.5,
+  "r20": 0.833,
+  "rr": 1.0,
+  "hit": [
+   "dhp.2",
+   "dhp.217",
+   "dhp.219",
+   "dhp.24",
+   "dhp.304"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q18",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.2,
+  "r20": 0.2,
+  "rr": 0.5,
+  "hit": [
+   "dhp.348"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q19",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.2,
+  "r20": 0.4,
+  "rr": 1.0,
+  "hit": [
+   "dhp.34",
+   "snp.3.11.712"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q20",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.714,
+  "r20": 0.857,
+  "rr": 1.0,
+  "hit": [
+   "an.7.64",
+   "dhp.129",
+   "dhp.222",
+   "dhp.232",
+   "snp.1.1.1",
+   "snp.3.3.451"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q21",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.333,
+  "r20": 1.0,
+  "rr": 0.333,
+  "hit": [
+   "an.4.45",
+   "kr.jinul.xiuxin.outside",
+   "maha.platform.3",
+   "maha.surangama.yajnadatta",
+   "sn.35.241",
+   "snp.1.3.42"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q22",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.167,
+  "r20": 0.167,
+  "rr": 0.5,
+  "hit": [
+   "maha.vimala.5"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q23",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.2,
+  "r20": 0.6,
+  "rr": 0.5,
+  "hit": [
+   "an.3.100",
+   "dhp.58",
+   "dn.16.island"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q24",
+  "kind": "event",
+  "pool": "draft",
+  "r5": 0.333,
+  "r20": 0.667,
+  "rr": 0.5,
+  "hit": [
+   "mn.28",
+   "sn.55.21",
+   "snp.3.11.712",
+   "zen.zhaozhou.tea"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q25",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.333,
+  "r20": 0.833,
+  "rr": 0.5,
+  "hit": [
+   "an.3.40",
+   "dhp.77",
+   "dhp.81",
+   "snp.4.10.855",
+   "thag.2.20"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q26",
+  "kind": "feeling",
+  "pool": "draft",
+  "r5": 0.5,
+  "r20": 0.833,
+  "rr": 1.0,
+  "hit": [
+   "dhp.251",
+   "dhp.334",
+   "mn.82",
+   "sn.22.22",
+   "snp.3.1.424"
+  ],
+  "candidates": 20
+ },
+ {
+  "id": "q01",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q02",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 15
+ },
+ {
+  "id": "q03",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 15
+ },
+ {
+  "id": "q04",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.2,
+  "r20": 0.2,
+  "rr": 1.0,
+  "hit": [
+   "an.2.33"
+  ],
+  "candidates": 16
+ },
+ {
+  "id": "q05",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q06",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q07",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q08",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.2,
+  "rr": 0.1,
+  "hit": [
+   "sn.1.34"
+  ],
+  "candidates": 16
+ },
+ {
+  "id": "q09",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q10",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q11",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 13
+ },
+ {
+  "id": "q12",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q13",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 12
+ },
+ {
+  "id": "q14",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 13
+ },
+ {
+  "id": "q15",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q16",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q17",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q18",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.2,
+  "r20": 0.2,
+  "rr": 0.5,
+  "hit": [
+   "zen.zhaozhou.fangxia"
+  ],
+  "candidates": 16
+ },
+ {
+  "id": "q19",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q20",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q21",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.167,
+  "r20": 0.167,
+  "rr": 0.5,
+  "hit": [
+   "maha.platform.3"
+  ],
+  "candidates": 16
+ },
+ {
+  "id": "q22",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q23",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.2,
+  "r20": 0.2,
+  "rr": 1.0,
+  "hit": [
+   "dhp.58"
+  ],
+  "candidates": 16
+ },
+ {
+  "id": "q24",
+  "kind": "event",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q25",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ },
+ {
+  "id": "q26",
+  "kind": "feeling",
+  "pool": "approved",
+  "r5": 0.0,
+  "r20": 0.0,
+  "rr": 0.0,
+  "hit": [],
+  "candidates": 16
+ }
+]

@@ -1,0 +1,471 @@
+/* ============================================================================
+   safety 도메인 · 위기 안내 · 위로 답변 · 실패 화면
+   값은 전부 tokens.css 의 의미 토큰에서 가져온다. 여기서 색을 새로 정하지 않는다.
+   시안: design/screens/s4-safety-errors.html
+   ============================================================================ */
+
+/* ── 화면 뼈대 ─────────────────────────────────────────────────────────── */
+
+.sf-screen {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.sf-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sf-screen :is(a, button):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sf-body {
+  padding: 0 var(--gutter);
+}
+
+.sf-foot {
+  flex: 0 0 auto;
+  padding: var(--s-4) var(--gutter) var(--s-6);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border-top: 1px solid var(--line);
+}
+
+.sf-ic {
+  flex: 0 0 auto;
+  display: block;
+}
+
+/* ── 글자 ──────────────────────────────────────────────────────────────── */
+
+.sf-h-screen {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  color: var(--text);
+}
+
+.sf-lead {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.sf-p-body {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+
+/* ── 버튼 ──────────────────────────────────────────────────────────────── */
+
+.sf-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0 var(--s-4);
+  border: 0;
+  border-radius: var(--r-button);
+  font-family: var(--font-sans);
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+  cursor: pointer;
+}
+
+.sf-btn--primary {
+  background: var(--btn);
+  color: var(--on-btn);
+}
+
+.sf-btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--btn-ghost-line);
+}
+
+.sf-btn--quiet {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--sh-card);
+}
+
+.sf-btn[disabled] {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text-weak);
+  cursor: default;
+}
+
+/* ── 위기 안내 ─────────────────────────────────────────────────────────── */
+
+.sf-crisis-top {
+  padding: var(--s-8) var(--gutter) var(--s-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sf-crisis-top .sf-lead {
+  max-width: 30ch;
+}
+
+.sf-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.sf-line-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-button);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.sf-line-item--lead {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--on-btn);
+}
+
+.sf-line-ic {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sf-line-item--lead .sf-line-ic {
+  background: var(--accent-on-deep);
+  color: var(--surface-deep);
+}
+
+.sf-line-txt {
+  min-width: 0;
+}
+
+.sf-line-name,
+.sf-line-num,
+.sf-line-sub {
+  display: block;
+}
+
+.sf-line-name {
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+}
+
+.sf-line-num {
+  margin-top: 3px;
+  font-size: var(--t-body-l);
+  font-weight: var(--w-bold);
+  letter-spacing: -0.01em;
+}
+
+.sf-line-sub {
+  margin-top: 3px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+.sf-line-item--lead .sf-line-sub {
+  color: var(--text-on-deep-muted);
+}
+
+.sf-urgent {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+}
+
+.sf-urgent-ic {
+  color: var(--caution);
+  margin-top: 1px;
+}
+
+/* 이어 듣기 묶음. distress 에만 있고 acute 에는 통째로 없다 */
+.sf-crisis-more {
+  margin: var(--s-5) 0 0;
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.sf-crisis-more .sf-p-body {
+  margin: 0 0 var(--s-3);
+  color: var(--text-muted);
+}
+
+.sf-crisis-failure {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--danger);
+}
+
+.sf-crisis-keep {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: var(--s-3) 0 var(--s-6);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.sf-crisis-keep svg {
+  flex: none;
+  color: var(--sage);
+}
+
+/* ── 위로 답변 ─────────────────────────────────────────────────────────── */
+
+.sf-solace {
+  padding: var(--gutter);
+}
+
+.sf-sc-band {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--accent-soft);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text);
+  font-weight: var(--w-semibold);
+}
+
+/* 답변 위에 붙는 띠와 아래에 붙는 띠의 여백 방향이 다르다 */
+.sf-sc-band--top {
+  margin: 0 0 var(--s-4);
+}
+
+.sf-sc-band--bottom {
+  margin: var(--s-4) 0 0;
+}
+
+.sf-sc-band a {
+  color: var(--accent-text);
+  text-decoration: none;
+  font-weight: var(--w-bold);
+  white-space: nowrap;
+}
+
+.sf-sc-card {
+  padding: var(--pad-card);
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+}
+
+.sf-sc-open {
+  margin: 0;
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  color: var(--text);
+  /* 고정 문구는 줄을 나눠 쓴다 */
+  white-space: pre-line;
+}
+
+.sf-sc-card blockquote {
+  margin: var(--s-5) 0 0;
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--surface-illust);
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.sf-sc-cite {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-micro);
+  color: var(--text-weak);
+  text-align: right;
+}
+
+.sf-sc-close {
+  margin: var(--s-5) 0 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.sf-sc-micro {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-micro);
+  line-height: 1.6;
+  color: var(--text-weak);
+  text-align: center;
+}
+
+/* ── 전면 안내형 실패 화면 ─────────────────────────────────────────────── */
+
+.sf-state {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: var(--s-8) var(--gutter) var(--s-10);
+}
+
+.sf-state .sf-h-screen {
+  max-width: 18ch;
+}
+
+.sf-state .sf-lead {
+  max-width: 26ch;
+}
+
+.sf-state-note {
+  margin-top: var(--s-6);
+}
+
+.sf-chip-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  color: var(--sage);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+}
+
+/* ── 오프라인 ──────────────────────────────────────────────────────────── */
+
+.sf-net-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px var(--gutter);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+}
+
+.sf-keep {
+  margin: var(--s-4) var(--gutter) 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+}
+
+.sf-keep .sf-ic {
+  color: var(--sage);
+  margin-top: 2px;
+}
+
+.sf-keep p {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--sage);
+}
+
+/* ── 반쪽 답변 ─────────────────────────────────────────────────────────── */
+
+.sf-half-fail {
+  margin-top: var(--gap-section);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-card);
+  background: var(--surface-2);
+  padding: var(--s-6) var(--s-5);
+  text-align: center;
+}
+
+.sf-h-mini {
+  margin: 0;
+  font-size: var(--t-title);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-title);
+  color: var(--text);
+}
+
+.sf-half-fail .sf-p-body {
+  margin-top: var(--s-2);
+  color: var(--text-muted);
+}
+
+.sf-half-fail .sf-btn {
+  margin-top: var(--s-5);
+}
+
+.sf-skeleton {
+  margin-top: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sf-skeleton i {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--line);
+}
+
+.sf-skeleton i:nth-child(2) {
+  width: 84%;
+}
+
+.sf-skeleton i:nth-child(3) {
+  width: 62%;
+}

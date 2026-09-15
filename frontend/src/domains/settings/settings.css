@@ -1,0 +1,421 @@
+/* 설정 · 앱 정보 · 개인정보 안내 · 도움받을 곳. 의미 토큰만 쓴다. */
+
+.set-screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.set-pad {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter) var(--s-10);
+}
+
+.set-title {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  margin: var(--s-6) 0 var(--s-2);
+}
+
+.set-sub {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-5);
+}
+
+.set-group {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+  margin: var(--s-6) 0 var(--s-2) var(--s-1);
+}
+
+/* ── 목록 ─────────────────────────────────────────────────────────────── */
+
+.set-list {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+  overflow: hidden;
+}
+
+.set-item,
+.set-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.set-item + .set-item,
+.set-line + .set-line,
+/* 읽기만 하는 줄 아래에 누르는 줄이 올 때도 경계가 보여야 한다 */
+.set-line + .set-item {
+  border-top: 1px solid var(--line);
+}
+
+/* 누르는 중에는 다시 누르지 못한다. 흐리게 두되 글자는 읽히게 */
+.set-item:disabled {
+  opacity: 0.6;
+}
+
+.set-item:active {
+  background: var(--surface-pressed);
+}
+
+.set-item:focus-visible,
+.set-line:focus-visible,
+.set-switch:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.set-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.set-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.set-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.set-item-title {
+  display: block;
+  font-size: var(--t-body);
+  line-height: 1.35;
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+
+.set-item-desc {
+  display: block;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+  margin-top: 2px;
+}
+
+.set-value {
+  flex: 0 0 auto;
+  font-size: var(--t-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-semibold);
+}
+
+.set-chev {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--text-weak);
+}
+
+.set-chev svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── 바닥 워드마크 ────────────────────────────────────────────────────── */
+
+.set-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding: var(--s-12) 0 var(--s-8);
+}
+
+.set-foot-mark {
+  width: 72px;
+  height: 72px;
+}
+
+.set-foot-name {
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  font-size: var(--t-body);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.set-foot-ver {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--text-weak);
+}
+
+/* ── 값 카드 (앱 정보 · 개인정보 안내) ────────────────────────────────── */
+
+.set-card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--s-2) var(--pad-card) var(--s-4);
+  box-shadow: var(--sh-card);
+  margin-bottom: var(--gap-card);
+}
+
+.set-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+}
+
+.set-kv + .set-kv {
+  border-top: 1px solid var(--line);
+}
+
+.set-kv-k {
+  font-size: var(--t-body);
+  color: var(--text-muted);
+  font-weight: var(--w-medium);
+  flex: 0 0 auto;
+}
+
+.set-kv-v {
+  font-size: var(--t-body);
+  color: var(--text);
+  font-weight: var(--w-semibold);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.set-kv-v--mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.set-badge-sandbox {
+  display: inline-block;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  color: var(--caution);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  padding: 3px 8px;
+  margin-left: var(--s-2);
+}
+
+.set-badge-open {
+  display: inline-block;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--success);
+  background: var(--sage-soft);
+  border-radius: var(--r-pill);
+  padding: 3px 10px;
+}
+
+.set-badge-open--closed {
+  color: var(--text-muted);
+  background: var(--surface-chip);
+}
+
+/* ── 스위치 ───────────────────────────────────────────────────────────── */
+
+.set-switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4) 0 var(--s-2);
+  border-top: 1px solid var(--line);
+  margin-top: var(--s-2);
+}
+
+.set-switch {
+  flex: 0 0 auto;
+  position: relative;
+  width: 52px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  transition: background var(--dur-press) var(--ease-out);
+}
+
+.set-switch--on {
+  background: var(--sage);
+}
+
+.set-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(54, 44, 37, 0.25);
+  transition: left var(--dur-press) var(--ease-out);
+}
+
+.set-switch--on .set-switch-knob {
+  left: 23px;
+}
+
+.set-hint {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+  text-align: center;
+}
+
+/* ── 안내문 (개인정보 안내 · 이용약관) ────────────────────────────────── */
+
+.set-doc {
+  padding: var(--pad-card);
+}
+
+.set-doc-title {
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  margin: 0 0 var(--s-3);
+}
+
+.set-doc-lead {
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-2);
+}
+
+.set-doc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.set-doc-list li {
+  position: relative;
+  padding-left: 14px;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.set-doc-list li + li {
+  margin-top: var(--s-2);
+}
+
+.set-doc-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ── 창구 ─────────────────────────────────────────────────────────────── */
+
+.set-line {
+  align-items: flex-start;
+  padding: var(--s-4);
+}
+
+.set-line-icon {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.set-line-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.set-line-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.set-line-name {
+  display: block;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-medium);
+}
+
+.set-line-how {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: 1.25;
+  font-weight: var(--w-bold);
+  color: var(--text);
+  margin: 2px 0;
+}
+
+.set-line-desc {
+  display: block;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+.set-urgent {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--gap-card);
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--surface-2);
+}
+
+.set-urgent svg {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  color: var(--caution);
+}
+
+.set-urgent-text {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text);
+  font-weight: var(--w-medium);
+}

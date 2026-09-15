@@ -1,0 +1,192 @@
+/* 홈 카드 둘과 오늘의 한마디 시트. 값은 시안(design/screens/s1-home.html) 그대로다. */
+
+.daily-card,
+.recall-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--surface);
+  box-shadow: var(--sh-card);
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+}
+
+.daily-card__face {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--surface-illust);
+}
+
+.daily-card__text,
+.recall-card__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.daily-card__key,
+.recall-card__key {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+
+/* 「오늘의 한마디 · 현대적 해석」 뒷말. 같은 줄에 두어 카드 높이를 늘리지 않는다 */
+.daily-card__key .daily-card__ai {
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.daily-card__line,
+.recall-card__line {
+  font-family: var(--font-serif);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* 회고 카드는 답이 카드 안에서 끝나므로 버튼 줄이 아래로 떨어진다 */
+.recall-card {
+  flex-wrap: wrap;
+}
+
+.recall-card__buttons {
+  display: flex;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+.recall-card__buttons button {
+  position: relative;
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--btn-ghost-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+
+/* 보이는 높이가 44px 이 안 되는 버튼은 닿는 영역만 넓힌다 */
+.recall-card__buttons button::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--tap-min);
+  transform: translateY(-50%);
+}
+
+.daily-sheet__title {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.daily-sheet__verse {
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+  white-space: pre-line;
+}
+
+/* 한마디가 AI 문장임을 그 자리에서 알린다. 아래 경전 원문과 성격이 다르다 */
+.daily-sheet__ai {
+  margin: 0 0 var(--s-6);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.daily-sheet__lab {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  color: var(--text-weak);
+}
+
+/* 출처는 한마디가 아니라 원문에 붙는다. 그래서 원문 블록 바로 아래에 온다 */
+.daily-sheet__cite {
+  margin: var(--s-3) 0 var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}
+
+.daily-sheet__origin {
+  margin: 0;
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-inset);
+  background: var(--surface-scripture);
+}
+
+.daily-sheet__origin p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-regular);
+  font-size: var(--t-scripture);
+  line-height: var(--lh-scripture);
+  letter-spacing: var(--ls-scripture);
+  color: var(--text);
+}
+
+.daily-sheet__cta {
+  width: 100%;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-label);
+  font-weight: var(--w-semibold);
+}
+
+.daily-sheet__hint {
+  margin: var(--s-3) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+/* 시트 맨 위 장면. 배경까지 그려진 한 장이라 영역을 채운다 */
+.daily-sheet__art {
+  display: block;
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  object-position: center 42%;
+  border-radius: 16px;
+  margin-bottom: var(--s-4);
+  background: var(--surface-illust);
+}

@@ -1,0 +1,529 @@
+/*
+ * 홈(고민 입력) 화면.
+ * 시안 design/screens/s1-home.html 의 「화면 안쪽」만 옮겼다. 폰 프레임·키보드 블록은 목업 껍데기라 옮기지 않는다.
+ * 모든 규칙을 .home-screen 아래에 둔다. 도메인마다 같은 이름(.hero · .send · .field)을 쓰기 때문이다.
+ */
+
+.home-screen {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* 한글은 단어 중간에서 끊기면 읽는 속도가 크게 떨어진다 */
+  word-break: keep-all;
+}
+
+/* 본문. 플로팅 탭바(24 + 64)가 떠 있으므로 그 높이만큼 아래를 비운다 */
+.home-screen .body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter) 104px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.home-screen .body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ── 서비스 한 줄 + 설정 ─────────────────────────────────────────────────── */
+
+.home-screen .svc {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  height: 52px;
+}
+
+.home-screen .svc-line {
+  margin: 0;
+  white-space: nowrap;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.home-screen .svc-line b {
+  font-family: var(--font-serif);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+
+.home-screen .svc-line i {
+  font-style: normal;
+  padding: 0 5px;
+  color: var(--line-strong);
+}
+
+.home-screen .icon-btn {
+  flex: none;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin-right: -10px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+/* ── 제목 ────────────────────────────────────────────────────────────────── */
+
+.home-screen .hero {
+  flex: none;
+  margin: var(--s-3) 0 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-l);
+  line-height: var(--lh-display-l);
+  letter-spacing: var(--ls-display-l);
+  color: var(--text);
+}
+
+/* 키보드가 올라오면 제목이 한 줄로 접히고 입력 묶음이 위로 붙는다 */
+.home-screen .hero-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+}
+
+.home-screen .hero-row .hero {
+  margin: 0;
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+}
+
+.home-screen .lead-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.home-screen .lead-row .hero {
+  margin: 0;
+}
+
+.home-screen .home-face {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--r-image);
+  object-fit: cover;
+  background: var(--surface-illust);
+  flex: none;
+  margin-left: auto;
+}
+
+.home-screen .home-face--sm {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+/* ── 입력 묶음 ───────────────────────────────────────────────────────────── */
+
+.home-screen .cluster {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--s-3);
+}
+
+.home-screen .draft {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.home-screen .draft button {
+  border: 0;
+  background: none;
+  padding: 4px 2px;
+  font-family: inherit;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/*
+ * 쓰는 만큼 늘고, 한계에 닿으면 칸 안에서 스크롤한다.
+ * 높이는 자바스크립트가 scrollHeight 로 넣고, 아래 두 값이 그것을 위아래에서 잡는다.
+ */
+.home-screen .field {
+  flex: 0 0 auto;
+  width: 100%;
+  display: block;
+  resize: none;
+  margin-top: var(--s-4);
+  min-height: 132px;
+  max-height: 236px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-button);
+  padding: var(--s-4);
+  font-family: inherit;
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+
+.home-screen .field::placeholder {
+  color: var(--text-weak);
+}
+
+.home-screen .field:focus {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 1px var(--focus);
+}
+
+/* ── 인디케이터 줄 ───────────────────────────────────────────────────────── */
+
+.home-screen .meter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 22px;
+  margin-top: var(--s-3);
+}
+
+.home-screen .dots {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+.home-screen .dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--line-strong);
+  /* 한 칸씩 차오르는 것이 보이게. 움직임을 줄이는 설정이면 index.css 가 꺼 준다 */
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.home-screen .dots i.on {
+  background: var(--sage);
+  border-color: var(--sage);
+}
+
+.home-screen .dots i.gold {
+  background: var(--accent-text);
+  border-color: var(--accent-text);
+}
+
+.home-screen .meter-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.home-screen .meter-label.deep {
+  color: var(--accent-text);
+}
+
+/* ── 예시 칩 ─────────────────────────────────────────────────────────────── */
+
+.home-screen .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+}
+
+.home-screen .chip {
+  height: 36px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+}
+
+/* ── 전송 버튼 ───────────────────────────────────────────────────────────── */
+
+.home-screen .send {
+  width: 100%;
+  height: 56px;
+  margin-top: var(--s-5);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-body-l);
+  font-weight: var(--w-semibold);
+  line-height: 1.2;
+}
+
+.home-screen .send[disabled] {
+  background: var(--surface);
+  color: var(--text-weak);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  cursor: default;
+}
+
+.home-screen .micro {
+  margin: var(--s-2) 0 0;
+  text-align: center;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--text-weak);
+}
+
+.home-screen .micro .nb {
+  white-space: nowrap;
+}
+
+/* ── 복귀 카드 ───────────────────────────────────────────────────────────── */
+
+.home-screen .recall {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+}
+
+.home-screen .recall p {
+  margin: 0;
+  flex: 1;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-semibold);
+  color: var(--text);
+}
+
+.home-screen .recall button {
+  flex: none;
+  height: 36px;
+  padding: 0 6px 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+}
+
+/* ── 홈 카드 자리. 카드 자체는 daily 도메인이 그린다 ─────────────────────── */
+
+.home-screen .home-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+}
+
+/* ── 플로팅 탭바 (SDK·TDS 가 주지 않아 직접 그린다) ──────────────────────── */
+
+.home-screen .tabbar {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  box-shadow: var(--sh-tabbar);
+}
+
+.home-screen .tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 120px;
+  height: 48px;
+  border: 0;
+  background: none;
+  padding: 0;
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  letter-spacing: var(--ls-label);
+  color: var(--text-muted);
+}
+
+.home-screen .tab.sel {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* ── 진입 카드 ───────────────────────────────────────────────────────────── */
+/* 바텀시트가 아니라 화면 가운데 카드다. 배경에 홈이 그대로 비친다 */
+
+.entry-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 36, 29, 0.32);
+  z-index: 4;
+  border: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.entry-card {
+  word-break: keep-all;
+  position: fixed;
+  z-index: 5;
+  /* 뷰포트 기준이라 기둥 바깥 여백을 더해 준다. 실기기 폭에서는 0 이다 */
+  left: calc(16px + var(--app-gap));
+  right: calc(16px + var(--app-gap));
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 358px;
+  margin: 0 auto;
+  background: var(--surface);
+  border-radius: 24px;
+  box-shadow: 0 18px 48px rgba(43, 36, 29, 0.22);
+  padding: var(--s-5) var(--s-5) var(--s-4);
+  text-align: center;
+}
+
+.entry-card .ec-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+}
+
+.entry-card .ec-stage {
+  height: 186px;
+  margin: 2px auto var(--s-4);
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.entry-card .ec-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+.entry-card .ec-k {
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--accent-text);
+}
+
+.entry-card .ec-verse {
+  margin: var(--s-3) 0 0;
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: 21px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.entry-card .ec-gloss {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.entry-card .ec-cite {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-micro);
+  color: var(--text-weak);
+}
+
+.entry-card .ec-cta {
+  width: 100%;
+  height: 56px;
+  margin-top: var(--s-5);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-body-l);
+  font-weight: var(--w-semibold);
+  line-height: 1.2;
+}
+
+.entry-card .ec-foot {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-micro);
+  color: var(--text-weak);
+}
+
+/* 보이는 높이가 44px 미만인 버튼은 닿는 영역만 넓힌다 */
+.home-screen :is(.chip, .recall button, .draft button) {
+  position: relative;
+}
+
+.home-screen :is(.chip, .recall button, .draft button)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--tap-min);
+  transform: translateY(-50%);
+}
+
+.home-screen :is(button, [tabindex]):focus-visible,
+.entry-card button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

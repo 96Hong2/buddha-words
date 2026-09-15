@@ -1,0 +1,1186 @@
+{
+  "batch": "dhp-d",
+  "source_note": "법구경 14장(부처의 장)부터 26장(바라문의 장)까지에서 45구절을 더 골랐다. 먼저 나온 dhp-a·dhp-b·dhp-c 묶음의 105구절과 id 및 문장을 대조해 겹치지 않는 것만 골랐고, 게송 번호와 장 이름은 SuttaCentral bilara-data 의 팔리 원문(root-pli-ms)과 Bhikkhu Sujato 영역본(CC0)을 직접 받아 대조했다. 넘기기 전 45건의 게송 번호와 장 범위를 기준본으로 한 번 더 전수 대조했다. 한국어는 그 영역과 팔리를 보고 새로 옮긴 초안이고 기존 한글 번역본은 참고하지 않았다. 고르는 기준은 비교·돈·무기력·진로·자책처럼 1차에서 얇았던 자리에 닿느냐였다. 지옥과 계율 조문, 살생·간통 대목, 자해·자살로 읽힐 수 있는 대목은 뺐다. 긴 게송은 앞 구절만 잘라 옮기고 어디까지 잘랐는지 citation_ko 와 base_note 에 적었으며, 짝을 이루는 게송(219~220, 244~245, 249~250, 328~329, 345~346)은 한 장으로 묶고 대표 번호를 id 로 썼다.",
+  "items": [
+    {
+      "id": "dhp.182",
+      "citation_ko": "법구경 14장 부처의 장 182게",
+      "ref": "dhp182",
+      "ko_text": "사람으로 태어나는 일이 어렵고, 죽는 몸으로 살아가는 일이 어렵다. 바른 가르침을 듣는 일이 어렵고, 깨달은 이가 세상에 나는 일이 어렵다.",
+      "base_note": "Sujato 영역: \"It's hard to gain a human birth; the life of mortals is hard; it's hard to hear the true teaching; the arising of Buddhas is hard.\" 팔리 Kiccho manussapaṭilābho, kicchaṁ maccāna jīvitaṁ. kiccha 는 '얻기 어렵다'와 '고되다'를 함께 담는 말이라 네 구를 '어렵다'로 통일해 옮겼다.",
+      "modern_gloss": "사는 게 고된 것은 내가 약해서가 아니다. 원래 어려운 일을 하고 있는 중이다.",
+      "retrieval_text": "사는 게 왜 이렇게 힘든지 모르겠을 때. 다들 잘 사는 것 같은데 나만 버거운 것 같은 상황. 하루를 버티는 것 자체가 벅찰 때",
+      "tags_primary": [
+        "apathy",
+        "uncertainty"
+      ],
+      "themes": [
+        "삶",
+        "무게",
+        "버팀",
+        "의미"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "사는 일은 원래 어렵다. 내가 약해서가 아니다",
+      "terms": [],
+      "cautions": [
+        "힘든 게 당연하니 참으라는 말로 읽히지 않게. 견디라는 요구가 아니라 지금 상태를 탓하지 말라는 쪽이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.184",
+      "citation_ko": "법구경 14장 부처의 장 184게 (앞 두 구)",
+      "ref": "dhp184",
+      "ko_text": "견디고 참는 것이 으뜸가는 수행이다. 다 꺼진 자리가 으뜸이라고 깨달은 이들은 말한다.",
+      "base_note": "Sujato 영역: \"Patient acceptance is the ultimate fervor. Extinguishment is the ultimate, say the Buddhas.\" 뒤 두 구는 남을 해치는 이는 출가자가 아니라는 대목이라 뺐다. 팔리 Khantī paramaṁ tapo titikkhā. tapo 는 몸을 태우는 고행을 가리키는 말이라 '수행'으로 옮겼다.",
+      "modern_gloss": "참는 것이 약해서 못 받아치는 게 아니라 가장 힘든 수행이라는 말이다. 안 터뜨리고 있는 지금이 이미 하고 있는 일이다.",
+      "retrieval_text": "화가 치미는데 터뜨리지 못하고 삼키고 있을 때. 참는 내가 바보 같아서 억울한 상황. 받아치고 싶은 마음을 누르고 있을 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "분노",
+        "인내",
+        "억울함",
+        "수행"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "부당한 대우를 계속 참으라는 말로 쓰이지 않게. 참는 것과 그냥 두는 것은 다르다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.186",
+      "citation_ko": "법구경 14장 부처의 장 186게",
+      "ref": "dhp186",
+      "ko_text": "돈이 비처럼 쏟아져도 욕망은 채워지지 않는다. 욕망은 단맛이 적고 괴로움이 많다. 아는 사람은 그것을 안다.",
+      "base_note": "Sujato 영역: \"Even if it were raining money, you'd not be sated in sensual pleasures. An astute person understands that sensual pleasures offer little gratification and much suffering.\" 팔리 Na kahāpaṇavassena, titti kāmesu vijjati. kahāpaṇa 는 당시 화폐라 '돈'으로 옮겼다.",
+      "modern_gloss": "액수가 문제가 아니라 채워지는 방식이 문제다. 더 벌어도 같은 자리에 서 있게 되는 이유다.",
+      "retrieval_text": "연봉이 올랐는데도 마음이 그대로일 때. 돈만 더 있으면 괜찮아질 거라 믿고 계속 미룰 때. 사고 나면 잠깐 좋고 곧 시들해지는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "돈",
+        "욕망",
+        "만족",
+        "소비"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "돈이 비처럼 쏟아져도 욕망은 채워지지 않는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.199",
+      "citation_ko": "법구경 15장 안락의 장 199게",
+      "ref": "dhp199",
+      "ko_text": "참 편안하게 산다. 애타는 사람들 속에서 애태우지 않고 산다. 안달하는 사람들 사이에서 우리는 안달하지 않고 지낸다.",
+      "base_note": "Sujato 영역: \"Let us live so very happily, content among the greedy. Among greedy humans, let us live content.\" 팔리 ussuka 는 '욕심'보다 '들떠 서두름'에 가까워 '애태우다, 안달하다'로 옮겼다. Sujato 는 이 말을 greedy(탐하는)로 옮겼으니 결이 다르다.",
+      "modern_gloss": "다들 달려가니까 나도 달려야 할 것 같은 자리에서, 안 달리는 선택지가 실제로 있다는 말이다.",
+      "retrieval_text": "동기들이 집을 사고 이직하는 걸 보며 조급해질 때. 남들 속도에 맞추려다 지치는 상황. 뒤처지는 것 같아 마음이 급해질 때",
+      "tags_primary": [
+        "comparison",
+        "money"
+      ],
+      "themes": [
+        "조급함",
+        "비교",
+        "속도",
+        "만족"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "다들 달려가도 나까지 안달하지는 않는다",
+      "terms": [],
+      "cautions": [
+        "1차 묶음의 197게 카드와 문장 틀이 거의 같다. 둘 다 내보내면 같은 카드로 보인다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "ussuka 를 Sujato 는 '탐하는'으로, 옛 주석은 '분주한'으로 읽는다. 여기서는 뒤쪽을 택했으니 감수 때 어느 결로 낼지 정해야 한다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.201",
+      "citation_ko": "법구경 15장 안락의 장 201게",
+      "ref": "dhp201",
+      "ko_text": "이기면 원한이 생기고 지면 잠을 설친다. 이김과 짐을 다 내려놓은 사람은 편안히 잠든다.",
+      "base_note": "Sujato 영역: \"Victory breeds enmity; the defeated sleep badly. The peaceful sleep at ease, having left victory and defeat behind.\" 팔리 Jayaṁ veraṁ pasavati, dukkhaṁ seti parājito.",
+      "modern_gloss": "이겨도 뒤끝이 남고 져도 잠이 안 온다. 그 판에서 내려오는 선택이 따로 있다.",
+      "retrieval_text": "동료와 경쟁 구도에 몰려 이겨야만 할 것 같을 때. 말싸움에서 이겼는데도 개운하지 않은 상황. 누가 더 잘났나를 두고 계속 신경이 쓰일 때",
+      "tags_primary": [
+        "comparison",
+        "anger"
+      ],
+      "themes": [
+        "경쟁",
+        "승패",
+        "원한",
+        "평온"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "이기면 원한이 남고 지면 잠을 설친다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.211",
+      "citation_ko": "법구경 16장 사랑하는 것의 장 211게",
+      "ref": "dhp211",
+      "ko_text": "그러니 무엇도 꼭 붙들지 마라. 아끼던 것과 갈라서는 일은 아프다. 아끼는 것도 미워하는 것도 없는 사람에게는 매듭이 없다.",
+      "base_note": "Sujato 영역: \"Therefore don't hold anything dear, for it's bad to lose those you love. No ties are found in they who hold nothing loved or loathed.\" 팔리 piyaṁ na kayirātha 를 '사랑하지 마라'가 아니라 '꼭 붙들지 마라'로 옮겼다. 앞 게송들에서 이어지는 대목이다.",
+      "modern_gloss": "사람을 사랑하지 말라는 말이 아니라, 붙들어 쥔 만큼 놓을 때 아프다는 말이다.",
+      "retrieval_text": "헤어지고 나서 그 사람 생각이 계속 날 때. 소중한 것을 잃을까 봐 미리 불안한 상황. 관계에 매달리는 나를 보게 될 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "이별",
+        "집착",
+        "상실",
+        "놓아줌"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "사람을 사랑하지 말라는 말로 읽히기 쉽다. 정을 끊으라는 게 아니라 붙들어 쥔 손을 보라는 대목이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.217",
+      "citation_ko": "법구경 16장 사랑하는 것의 장 217게",
+      "ref": "dhp217",
+      "ko_text": "지킬 것을 지키고 볼 줄 알며, 바르게 서서 참을 말하고, 제 할 일을 제 손으로 하는 사람. 사람들은 그런 이를 아낀다.",
+      "base_note": "Sujato 영역: \"One accomplished in virtue and vision, firmly principled, and truthful, doing oneself what ought be done: that's who the people love.\" 팔리 Attano kamma kubbānaṁ, taṁ jano kurute piyaṁ. sīla(계)를 '지킬 것을 지킨다'로 풀었다.",
+      "modern_gloss": "사랑받으려고 애쓴 사람이 아니라 제 할 일을 한 사람이 결국 아낌을 받는다.",
+      "retrieval_text": "잘 보이려고 애쓰는데 관계가 겉도는 것 같을 때. 미움받을까 봐 눈치를 보는 상황. 인정받고 싶어서 무리하게 되는 마음",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "인정",
+        "신뢰",
+        "제 할 일",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "제 할 일을 하는 사람이 결국 아낌을 받는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.219",
+      "citation_ko": "법구경 16장 사랑하는 것의 장 219~220게",
+      "ref": "dhp219",
+      "ko_text": "오래 떠나 있던 사람이 먼 길에서 무사히 돌아오면 가족과 벗들이 반겨 맞는다. 좋은 일을 해 둔 사람도 그렇게, 그가 쌓아 둔 것들이 그를 맞는다.",
+      "base_note": "Sujato 영역: \"When a man returns safely after a long time spent abroad, family, friends, and loved ones celebrate his return.\" / \"Just so, when one who has done good goes from this world to the next, their good deeds receive them there, as family welcomes home one they love.\" 두 게송이 한 비유라 한 장으로 묶었다.",
+      "modern_gloss": "지금 아무도 안 알아주는 것 같아도, 해 둔 것은 사라지지 않고 어딘가에서 나를 기다린다.",
+      "retrieval_text": "열심히 했는데 아무도 알아주지 않는 것 같을 때. 이게 다 무슨 소용인가 싶어 힘이 빠지는 상황. 오래 준비한 것이 결과로 안 보일 때",
+      "tags_primary": [
+        "uncertainty",
+        "apathy"
+      ],
+      "themes": [
+        "보람",
+        "쌓임",
+        "기다림",
+        "귀환"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "해 둔 것은 사라지지 않고 어딘가에서 나를 기다린다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "원 게송 220은 죽은 뒤 다음 생에서 공덕이 맞아 준다는 내생 이야기다. 지금 삶 쪽으로 좁혀 옮겼으니 감수 때 이 폭을 봐야 한다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.221",
+      "citation_ko": "법구경 17장 분노의 장 221게",
+      "ref": "dhp221",
+      "ko_text": "화를 놓고 잘난 마음을 놓아라. 매인 것을 다 지나가라. 가진 것에 들러붙지 않는 사람에게는 괴로움이 내려앉지 않는다.",
+      "base_note": "Sujato 영역: \"Give up anger, get rid of conceit, and escape every fetter. Sufferings don't befall one who has nothing, not clinging to name and form.\" 팔리 nāmarūpa(이름과 형태)는 교리 용어라 '가진 것'으로 풀어 옮겼다.",
+      "modern_gloss": "화의 뒤에는 대개 '내가 이런 대접을 받을 사람이 아닌데'가 있다. 그 자리를 같이 봐야 화가 내려간다.",
+      "retrieval_text": "무시당한 것 같아 화가 가라앉지 않을 때. 자존심이 상해서 계속 곱씹는 상황. 사과를 받아야 끝날 것 같은 마음이 들 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "분노",
+        "자만",
+        "자존심",
+        "놓아줌"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "화 뒤에 숨은 잘난 마음까지 같이 본다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "nāmarūpa 를 '가진 것'으로 푼 폭이 크다. 원 뜻은 몸과 마음을 이루는 것 전체라 감수 때 다른 말을 고를 수 있다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.224",
+      "citation_ko": "법구경 17장 분노의 장 224게",
+      "ref": "dhp224",
+      "ko_text": "참을 말하고, 화내지 말고, 청하면 적더라도 나눠라. 이 세 가지면 좋은 자리에 이른다.",
+      "base_note": "Sujato 영역: \"Speak the truth, do not be angry, and give when asked, if only a little. By these three means, you may enter the presence of the gods.\" 팔리 gacche devāna santike 는 '신들 곁에 간다'인데 '좋은 자리에 이른다'로 옮겼다.",
+      "modern_gloss": "대단한 걸 하라는 게 아니다. 사실대로 말하고, 성질내지 않고, 조금이라도 나누는 것. 오늘 할 수 있는 크기다.",
+      "retrieval_text": "사람 대하는 게 어렵고 뭘 어떻게 해야 할지 모르겠을 때. 관계에서 기본부터 다시 세우고 싶은 상황. 좋은 사람이 되고 싶은데 방법이 막막할 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "관계",
+        "정직",
+        "나눔",
+        "기본"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "사실대로 말하고, 성내지 않고, 조금이라도 나눈다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.232",
+      "citation_ko": "법구경 17장 분노의 장 232게",
+      "ref": "dhp232",
+      "ko_text": "말에서 터지는 화를 지켜라. 입을 단속하라. 말로 짓는 나쁜 일을 놓고 말로 좋은 일을 하라.",
+      "base_note": "Sujato 영역: \"Guard against ill-tempered words, be restrained in speech. Giving up bad verbal conduct, conduct yourself well in speech.\" 팔리 Vacīpakopaṁ rakkheyya. pakopa 는 '끓어오름'이라 '터지는 화'로 옮겼다.",
+      "modern_gloss": "화가 가장 먼저 새는 곳이 입이다. 마음을 다 정리하지 못해도 말 한 마디는 붙잡을 수 있다.",
+      "retrieval_text": "욱해서 한 말 때문에 관계가 틀어졌을 때. 메시지를 보내고 나서 후회하는 상황. 화가 날 때 말이 먼저 튀어나가는 버릇",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "말",
+        "분노",
+        "후회",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "마음을 못 붙잡아도 말 한 마디는 붙잡는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.236",
+      "citation_ko": "법구경 18장 더러움의 장 236게",
+      "ref": "dhp236",
+      "ko_text": "너 자신을 섬으로 만들어라. 서둘러 힘쓰고 지혜로워져라. 때를 벗고 흠을 덜면 고귀한 이들의 자리에 이른다.",
+      "base_note": "Sujato 영역: \"Make an island of yourself! Swiftly strive, learn to be wise! Purged of stains, flawless, you'll go to the heavenly realm of the noble ones.\" 팔리 dīpa 는 '섬'과 '등불' 둘로 읽히는데 Sujato 를 따라 '섬'으로 옮겼다.",
+      "modern_gloss": "물이 차오를 때 딛고 설 땅을 밖에서 찾지 말고 내 안에 만들라는 말이다.",
+      "retrieval_text": "기댈 곳이 없어 막막할 때. 아무도 내 상황을 대신 정리해 주지 않는다는 걸 알았을 때. 다시 시작해야 하는데 발 디딜 데가 없는 상황",
+      "tags_primary": [
+        "apathy",
+        "uncertainty"
+      ],
+      "themes": [
+        "자립",
+        "시작",
+        "기댈 곳",
+        "힘"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "딛고 설 땅은 밖이 아니라 내 안에 만든다",
+      "terms": [
+        {
+          "word": "섬",
+          "gloss": "물이 차올라도 잠기지 않는 땅이라는 뜻이에요. 기댈 자리를 말해요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.241",
+      "citation_ko": "법구경 18장 더러움의 장 241게",
+      "ref": "dhp241",
+      "ko_text": "외우지 않으면 배운 것에 때가 끼고, 돌보지 않으면 집에 때가 낀다. 게으름은 아름다움의 때이고, 흘려보냄은 지키는 이의 때다.",
+      "base_note": "Sujato 영역: \"Not rehearsing is the stain of hymns. The stain of houses is neglect. Laziness is the stain of beauty. A guard's stain is negligence.\" 팔리 mantā 는 본래 베다 구절이라 '배운 것'으로 넓혀 옮겼다.",
+      "modern_gloss": "쓰지 않으면 녹슨다. 무너진 게 아니라 손을 놓은 자리에 때가 앉은 것뿐이다.",
+      "retrieval_text": "하던 것을 손에서 놓은 지 오래되어 실력이 줄었을 때. 집도 몸도 방치한 것 같아 막막한 상황. 다시 시작하기가 엄두가 안 날 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "게으름",
+        "유지",
+        "습관",
+        "회복"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "무너진 게 아니라 손 놓은 자리에 때가 앉은 것이다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.244",
+      "citation_ko": "법구경 18장 더러움의 장 244~245게",
+      "ref": "dhp244",
+      "ko_text": "부끄러움을 모르는 사람은 쉽게 산다. 까마귀처럼 들이대고 밀치고 함부로 하며 산다. 부끄러움을 아는 사람은 어렵게 산다. 늘 깨끗한 쪽을 찾고, 달라붙지 않고 함부로 하지 않으며 산다.",
+      "base_note": "Sujato 영역: \"Life is easy for the shameless. With all the rude courage of a crow, they live pushy, rude, and corrupt.\" / \"Life is hard for the conscientious, always seeking purity, neither clinging nor rude, pure of livelihood and discerning.\" 두 게송이 한 쌍이라 묶었다. 팔리 kākasūra(까마귀 같은 용기)는 뻔뻔함을 가리키는 관용구다.",
+      "modern_gloss": "뻔뻔한 사람이 잘 사는 것처럼 보이는 건 착시가 아니다. 실제로 그쪽이 쉽다. 어려운 쪽을 고른 값이 지금의 피곤함이다.",
+      "retrieval_text": "뻔뻔한 사람이 더 잘 나가는 걸 보며 억울할 때. 나만 손해 보는 것 같아 지치는 상황. 착하게 사는 게 바보 같이 느껴질 때",
+      "tags_primary": [
+        "comparison",
+        "regret"
+      ],
+      "themes": [
+        "억울함",
+        "양심",
+        "손해",
+        "기준"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "어려운 쪽을 고른 값이 지금의 피곤함이다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "244게의 kākasūra, dhaṁsin, pakkhandin 은 옛 주석마다 풀이가 갈리는 말이다. 뻔뻔함 쪽으로 통일해 옮겼다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.249",
+      "citation_ko": "법구경 18장 더러움의 장 249~250게",
+      "ref": "dhp249",
+      "ko_text": "사람들은 제 믿음만큼, 제 마음이 가는 만큼 준다. 남이 받은 밥과 마실 것에 마음이 상하는 사람은 낮에도 밤에도 마음이 가라앉지 않는다. 그것을 뿌리째 끊어 낸 사람은 낮에도 밤에도 마음이 가라앉는다.",
+      "base_note": "Sujato 영역: \"The people give according to their faith, according to their confidence. If you get upset over that, over others' food and drink, you'll not, by day or by night, become immersed in samādhi.\" / 250게가 그 반대를 잇는다. 팔리 maṅku 는 '주눅 들고 언짢아짐'이라 '마음이 상하다'로, samādhi 는 '마음이 가라앉음'으로 풀었다.",
+      "modern_gloss": "남이 더 받은 게 신경 쓰이는 동안은 내 것을 못 누린다. 비교가 밥맛을 뺏는다.",
+      "retrieval_text": "동료가 더 좋은 평가를 받아 신경이 쓰일 때. 남의 연봉이나 인정이 자꾸 눈에 들어오는 상황. 내가 덜 받은 것 같아 억울할 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "시기",
+        "비교",
+        "평가",
+        "평온"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "남이 더 받은 게 신경 쓰이는 동안은 내 것을 못 누린다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "maṅku 를 '마음이 상함'으로, samādhi 를 '마음이 가라앉음'으로 푼 폭이 있다. 원 대목은 탁발 음식을 두고 하는 말이다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.253",
+      "citation_ko": "법구경 18장 더러움의 장 253게",
+      "ref": "dhp253",
+      "ko_text": "남의 허물만 보고 늘 트집 잡는 사람은 마음에 낀 것이 도리어 자란다. 그는 그것을 덜어내는 자리에서 멀다.",
+      "base_note": "Sujato 영역: \"When you look for the flaws of others, always finding fault, your defilements only grow, you're far from ending defilements.\" 팔리 āsava 는 '스며 고인 것'이라 '마음에 낀 것'으로 옮겼다.",
+      "modern_gloss": "남의 흠을 찾는 동안 내 마음이 먼저 거칠어진다. 상대가 잘못한 게 사실이어도 그렇다.",
+      "retrieval_text": "같이 일하는 사람의 흠만 보이고 계속 거슬릴 때. 뒷말을 하고 나서 개운하지 않은 상황. 미운 사람 생각이 하루 종일 떠나지 않을 때",
+      "tags_primary": [
+        "relationship",
+        "anger"
+      ],
+      "themes": [
+        "흠",
+        "판단",
+        "미움",
+        "마음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남의 흠을 찾는 동안 내 마음이 먼저 거칠어진다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.256",
+      "citation_ko": "법구경 19장 법에 선 이의 장 256게",
+      "ref": "dhp256",
+      "ko_text": "성급히 결론을 내린다고 바른 사람이 되는 게 아니다. 지혜로운 이는 옳은 쪽과 그른 쪽을 둘 다 저울에 올린다.",
+      "base_note": "Sujato 영역: \"You don't become just by passing hasty judgment. An astute person evaluates both what is pertinent and what is irrelevant.\" 팔리 attha 와 anattha 를 '옳은 쪽과 그른 쪽'으로 옮겼다. 다음 게송 257이 같은 이야기를 잇는다.",
+      "modern_gloss": "빨리 정하는 것과 잘 정하는 것은 다르다. 반대쪽 근거를 한 번은 세워 봐야 한다.",
+      "retrieval_text": "결정을 빨리 내려야 한다는 압박을 받을 때. 한쪽 말만 듣고 판단하려는 자신을 볼 때. 중요한 선택 앞에서 뭘 따져야 할지 모르겠는 상황",
+      "tags_primary": [
+        "indecision"
+      ],
+      "themes": [
+        "판단",
+        "결정",
+        "공정",
+        "근거"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "빨리 정하는 것과 잘 정하는 것은 다르다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.259",
+      "citation_ko": "법구경 19장 법에 선 이의 장 259게",
+      "ref": "dhp259",
+      "ko_text": "많이 외운다고 가르침을 지닌 사람이 아니다. 적게 듣고도 그것을 몸으로 보는 사람, 그가 가르침을 지닌 사람이다.",
+      "base_note": "Sujato 영역: \"You're not one who has memorized the teaching just because you recite a lot. Someone who directly sees the teaching after hearing only a little is truly one who has memorized the teaching, for they can never forget it.\" 팔리 dhammaṁ kāyena passati(가르침을 몸으로 본다)를 그대로 살렸다.",
+      "modern_gloss": "아는 양이 실력이 아니다. 하나라도 몸으로 해 본 사람이 앞선다.",
+      "retrieval_text": "남들은 많이 아는 것 같아 주눅이 들 때. 강의와 책만 쌓이고 실제로 한 게 없는 것 같은 상황. 말 잘하는 사람 앞에서 작아질 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "앎",
+        "실천",
+        "비교",
+        "배움"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "아는 양이 아니라 몸으로 해 본 것이 남는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.260",
+      "citation_ko": "법구경 19장 법에 선 이의 장 260게",
+      "ref": "dhp260",
+      "ko_text": "머리가 희어졌다고 어른이 되는 게 아니다. 나이만 익은 사람을 두고 헛되이 늙었다고 한다.",
+      "base_note": "Sujato 영역: \"You don't become a senior by getting some grey hairs; for one ripe only in age, is said to have aged in vain.\" 팔리 thera 는 출가 연차가 오래된 이를 가리키는데 일반 뜻인 '어른'으로 옮겼다. 다음 게송 261이 무엇이 어른을 만드는지 잇는다.",
+      "modern_gloss": "시간이 지나간 것과 내가 자란 것은 다른 일이다. 늦었다고 느낀다면 아직 늦지 않았다는 뜻이기도 하다.",
+      "retrieval_text": "나이만 먹고 이룬 게 없는 것 같을 때. 또래와 견주어 뒤처졌다고 느끼는 상황. 이 나이에 다시 시작해도 되나 싶을 때",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "나이",
+        "성장",
+        "진로",
+        "비교"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "시간이 지나간 것과 내가 자란 것은 다른 일이다",
+      "terms": [],
+      "cautions": [
+        "나이 든 사람을 깎는 말로 읽히지 않게. 나이를 근거로 스스로를 몰아세우지 말라는 쪽이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.262",
+      "citation_ko": "법구경 19장 법에 선 이의 장 262게",
+      "ref": "dhp262",
+      "ko_text": "말솜씨가 좋다고, 얼굴이 곱다고 좋은 사람이 되는 게 아니다. 시기하고 인색하고 속이는 마음이 남아 있다면.",
+      "base_note": "Sujato 영역: \"Not by mere enunciation, or a beautiful complexion does a person become holy, if they're jealous, stingy, and devious.\" 팔리 sādhurūpa 를 '좋은 사람'으로 옮겼다.",
+      "modern_gloss": "겉으로 드러나는 것에 밀린다고 느낄 때, 사람을 가르는 자리는 거기가 아니라는 말이다.",
+      "retrieval_text": "말 잘하고 외모 좋은 사람에게 밀린다고 느낄 때. SNS에서 남의 모습과 나를 견주게 되는 상황. 나는 왜 저렇게 못 하나 싶어 작아질 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "외모",
+        "말솜씨",
+        "비교",
+        "사람됨"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "사람을 가르는 자리는 말솜씨도 얼굴도 아니다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.280",
+      "citation_ko": "법구경 20장 길의 장 280게",
+      "ref": "dhp280",
+      "ko_text": "일어설 때에 일어서지 않고, 젊고 힘이 있으면서 게으름에 붙잡힌 사람. 생각이 가라앉고 마음이 처진 사람은 지혜로 길을 찾지 못한다.",
+      "base_note": "Sujato 영역: \"They don't get going when it's time to start; they're young and strong, but given to sloth. Their mind depressed in sunken thought, lazy and slothful, they can't discern the path.\" 팔리 saṁsannasaṅkappamano 는 '생각이 가라앉은 마음'이다.",
+      "modern_gloss": "힘이 없어서 못 움직이는 게 아니라, 안 움직이는 동안 길이 안 보이는 것이다. 순서가 반대다.",
+      "retrieval_text": "해야 할 걸 알면서 몸이 안 움직일 때. 하루를 통째로 흘려보내고 자책하는 상황. 진로를 정해야 하는데 아무것도 손에 안 잡힐 때",
+      "tags_primary": [
+        "apathy",
+        "uncertainty"
+      ],
+      "themes": [
+        "게으름",
+        "시작",
+        "진로",
+        "움직임"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "우울로 몸이 안 움직이는 상태를 게으름으로 몰지 않게. 의지 문제로만 읽히면 위험한 구절이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.292",
+      "citation_ko": "법구경 21장 여러 가지의 장 292게",
+      "ref": "dhp292",
+      "ko_text": "해야 할 일은 내던져 두고 하지 않아도 될 일을 한다. 우쭐하고 흘려보내는 사람에게는 마음에 낀 것이 자란다.",
+      "base_note": "Sujato 영역: \"They dump what should be done, and do what should not be done. For the insolent and the negligent, their defilements only grow.\" 팔리 unnaḷa 는 '속 빈 갈대처럼 뻣뻣하다'라 '우쭐하다'로 옮겼다. 다음 게송 293이 그 반대를 잇는다.",
+      "modern_gloss": "미루는 동안 우리는 딴 일을 열심히 한다. 게으른 게 아니라 방향이 바뀐 것이다.",
+      "retrieval_text": "중요한 일을 미루고 딴 일만 붙잡고 있을 때. 마감이 다가오는데 자꾸 다른 걸 하는 상황. 하루를 바쁘게 보냈는데 정작 할 일은 그대로일 때",
+      "tags_primary": [
+        "apathy",
+        "regret"
+      ],
+      "themes": [
+        "미루기",
+        "우선순위",
+        "자책",
+        "집중"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "미루는 동안 우리는 딴 일을 열심히 한다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "unnaḷa 를 '우쭐함'으로 옮겼는데 '거만함', '속이 빈 채 뻣뻣함'으로도 읽힌다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.303",
+      "citation_ko": "법구경 21장 여러 가지의 장 303게",
+      "ref": "dhp303",
+      "ko_text": "믿음이 있고 지킬 것을 지키는 사람, 이름과 살림을 함께 지닌 사람은 어느 자리에 가든 그곳에서 대접받는다.",
+      "base_note": "Sujato 영역: \"One who is faithful, accomplished in ethics, blessed with fame and wealth, is honored in whatever place they frequent.\" 팔리 yasobhoga 는 '명성과 재물'이라 '이름과 살림'으로 옮겼다.",
+      "modern_gloss": "돈과 평판을 나쁘게 보지 않는 대목이다. 다만 대접받는 사람을 세울 때 믿음과 지킴을 재물과 나란히 놓는다.",
+      "retrieval_text": "돈이 없어서 사람 대접을 못 받는다고 느낄 때. 형편 때문에 자리를 피하게 되는 상황. 벌이가 곧 내 값처럼 느껴질 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "돈",
+        "평판",
+        "자존감",
+        "순서"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "재물이 많은 사람이 더 훌륭하다는 말로 읽히지 않게. 원문은 믿음과 지킴을 재물과 나란히 세우지 순서를 매기지 않는다",
+        "돈이 없어 위축된 사람에게는 위로가 아니라 상처가 될 수 있다. money 자리에 쓸지 감수 때 다시 볼 것"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.304",
+      "citation_ko": "법구경 21장 여러 가지의 장 304게",
+      "ref": "dhp304",
+      "ko_text": "좋은 사람은 멀리서도 드러난다. 눈 덮인 산처럼. 그렇지 않은 이는 가까이 있어도 보이지 않는다. 밤에 쏜 화살처럼.",
+      "base_note": "Sujato 영역: \"The good shine from afar, like the Himalayan peaks, but the wicked are not seen, like arrows scattered in the night.\" 팔리 himavantova pabbato 를 '눈 덮인 산'으로 옮겼다.",
+      "modern_gloss": "지금 아무도 안 알아준다고 없는 사람이 되는 건 아니다. 멀리서 보이는 것은 소리가 아니라 부피다.",
+      "retrieval_text": "티를 안 내니 아무도 알아주지 않는 것 같을 때. 목소리 큰 사람만 인정받는 것 같은 상황. 조용히 일하는 내가 손해 보는 것 같을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "드러남",
+        "인정",
+        "조용함",
+        "시간"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "멀리서 보이는 것은 소리가 아니라 부피다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.305",
+      "citation_ko": "법구경 21장 여러 가지의 장 305게",
+      "ref": "dhp305",
+      "ko_text": "혼자 앉고 혼자 눕고 게으르지 않게 혼자 걷는다. 혼자서 자신을 다스리는 사람은 숲 끝자락에서도 즐겁다.",
+      "base_note": "Sujato 영역: \"Sitting alone, sleeping alone, tirelessly wandering alone; one who tames themselves alone would delight within a forest.\" 팔리 vanante ramito siyā 는 '숲 끝자락에서 즐거워한다'이다.",
+      "modern_gloss": "혼자인 것과 외로운 것은 다르다. 혼자 있는 시간을 쓸 줄 알면 그 시간이 내 편이 된다.",
+      "retrieval_text": "주말 내내 혼자라 마음이 가라앉을 때. 사람들과 있어도 겉도는 것 같은 상황. 혼자 지내는 시간이 길어져 불안할 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "혼자",
+        "고요",
+        "자립",
+        "시간"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "혼자 있는 것과 외로운 것은 다른 일이다",
+      "terms": [],
+      "cautions": [
+        "사람을 만나지 말라는 말이 아니다. 관계에서 도망치는 근거로 읽히지 않게"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.315",
+      "citation_ko": "법구경 22장 지옥의 장 315게 (앞 네 구)",
+      "ref": "dhp315",
+      "ko_text": "변두리 성을 안팎으로 지키듯 그렇게 자신을 지켜라. 이 순간을 흘려보내지 마라.",
+      "base_note": "Sujato 영역: \"As a frontier city is guarded inside and out, so you should ward yourselves, don't let the moment pass you by.\" 뒤 두 구는 때를 놓치면 지옥에서 슬퍼한다는 대목이라 뺐다. 팔리 khaṇo vo mā upaccagā.",
+      "modern_gloss": "지킬 것은 밖만이 아니다. 안쪽이 무너지면 성벽은 소용이 없다. 그리고 그 일은 오늘 하는 것이다.",
+      "retrieval_text": "결정을 자꾸 미루다 때를 놓칠까 불안할 때. 나중에 하자며 하루하루를 흘려보내는 상황. 마음도 몸도 방치하고 있다고 느낄 때",
+      "tags_primary": [
+        "anxiety",
+        "indecision"
+      ],
+      "themes": [
+        "때",
+        "미루기",
+        "지킴",
+        "지금"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "지킬 것은 밖만이 아니다. 이 순간을 흘려보내지 마라",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.316",
+      "citation_ko": "법구경 22장 지옥의 장 316게 (앞 두 구)",
+      "ref": "dhp316",
+      "ko_text": "부끄러워할 것이 아닌 일에 부끄러워하고, 부끄러워할 일에는 부끄러워하지 않는다. 눈이 어긋나면 그렇게 된다.",
+      "base_note": "Sujato 영역: \"Unashamed of what is shameful, ashamed of what is not shameful; beings who uphold wrong view go to a bad place.\" 팔리 차례(Alajjitāye lajjanti, lajjitāye na lajjare)를 따라 앞뒤를 바꿔 옮겼다. 뒤 두 구는 삿된 견해와 나쁜 갈 곳을 말하는 대목이라 '눈이 어긋나면 그렇게 된다'로 줄였다.",
+      "modern_gloss": "죄책감이 늘 정확한 곳에 붙는 건 아니다. 부끄러워하는 그 일이 정말 부끄러운 일인지부터 봐야 한다.",
+      "retrieval_text": "별것 아닌 일로 오래 자책할 때. 거절한 것, 쉰 것, 도움을 청한 것에 죄책감이 들 때. 내 잘못이 아닌 일까지 내 탓으로 돌리는 상황",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "자책",
+        "부끄러움",
+        "기준",
+        "자기이해"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "부끄러워하는 그 일이 정말 부끄러운 일인지부터 본다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.317",
+      "citation_ko": "법구경 22장 지옥의 장 317게 (앞 두 구)",
+      "ref": "dhp317",
+      "ko_text": "두려워할 것이 없는 데서 두려움을 보고, 정작 두려워할 것에서는 두려움을 보지 못한다. 눈이 어긋나면 그렇게 된다.",
+      "base_note": "Sujato 영역: \"Seeing danger where there is none, and blind to the actual danger; beings who uphold wrong view go to a bad place.\" 316게와 짝을 이루는 게송이고, 뒤 두 구는 같은 이유로 줄였다.",
+      "modern_gloss": "불안은 늘 사실을 가리키지 않는다. 지금 무서운 것과 실제로 위험한 것을 따로 적어 보면 다르다.",
+      "retrieval_text": "별일 아닌 것에 심장이 뛰고 잠이 안 올 때. 최악을 계속 상상하게 되는 상황. 정작 중요한 일은 미뤄 두고 엉뚱한 걸 걱정할 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "불안",
+        "두려움",
+        "사실",
+        "분별"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "지금 무서운 것과 실제로 위험한 것은 다르다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.326",
+      "citation_ko": "법구경 23장 코끼리의 장 326게",
+      "ref": "dhp326",
+      "ko_text": "예전에 이 마음은 가고 싶은 대로, 끌리는 대로, 편한 대로 돌아다녔다. 이제 나는 마음을 제대로 잡겠다. 코끼리 다루는 이가 갈고리로 잡듯이.",
+      "base_note": "Sujato 영역: \"In the past my mind wandered how it wished, where it liked, as it pleased. Now I'll carefully guide it, as a trainer with a hook guides a rutting elephant.\" 팔리 hatthippabhinna 는 발정 난 코끼리다.",
+      "modern_gloss": "마음을 없애겠다는 게 아니라 고삐를 쥐겠다는 말이다. 코끼리는 여전히 코끼리다.",
+      "retrieval_text": "생각이 꼬리를 물어 잠이 안 올 때. 마음이 하루 종일 딴 데 가 있는 상황. 감정에 끌려다니는 것 같아 지칠 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "마음",
+        "생각",
+        "다스림",
+        "습관"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "마음을 없애는 게 아니라 고삐를 쥐는 일이다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.328",
+      "citation_ko": "법구경 23장 코끼리의 장 328~329게",
+      "ref": "dhp328",
+      "ko_text": "지혜롭고 곧은 벗을 만나거든 어려움을 함께 넘으며 그와 같이 가라. 마음을 놓고, 깨어서. 그런 벗을 못 만나거든 나라를 버린 왕처럼 홀로 가라.",
+      "base_note": "Sujato 영역: \"If you find an alert companion, an attentive friend to live happily together, then, overcoming all adversities, wander with them, joyful and mindful.\" / \"If you find no alert companion... then, like a king who flees his conquered realm, wander alone like a tusker in the wilds.\" 두 게송이 한 쌍이라 묶었고 329게의 코끼리 비유는 줄였다.",
+      "modern_gloss": "같이 갈 사람이 있으면 같이 가고, 없으면 혼자 가는 게 맞다. 아무나 붙잡고 가는 것이 제일 나쁘다.",
+      "retrieval_text": "마음 맞지 않는 사람들과 억지로 어울릴 때. 혼자가 될까 봐 불편한 관계를 놓지 못하는 상황. 누구와 함께 갈지 정해야 할 때",
+      "tags_primary": [
+        "relationship",
+        "indecision"
+      ],
+      "themes": [
+        "벗",
+        "동행",
+        "혼자",
+        "선택"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "같이 갈 사람이 없으면 혼자 가는 편이 낫다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.331",
+      "citation_ko": "법구경 23장 코끼리의 장 331게",
+      "ref": "dhp331",
+      "ko_text": "일이 닥쳤을 때 곁에 벗이 있으면 좋다. 있는 것으로 넉넉해할 줄 알면 좋다. 삶이 다할 때 해 둔 좋은 일이 있으면 좋고, 괴로움을 다 내려놓으면 좋다.",
+      "base_note": "Sujato 영역: \"A friend in need is a blessing; it's a blessing to be content with whatever; good deeds are a blessing at the end of life, and giving up all suffering is a blessing.\" 팔리 tuṭṭhī sukhā yā itarītarena 는 '이것이든 저것이든 있는 것으로 만족함'이다.",
+      "modern_gloss": "좋은 삶의 목록이 짧다. 곤란할 때 부를 사람 하나, 있는 것으로 넉넉해하는 마음.",
+      "retrieval_text": "돈이 부족해 마음이 조급할 때. 힘든 일이 생겼는데 부를 사람이 떠오르지 않는 상황. 남과 형편을 견주게 될 때",
+      "tags_primary": [
+        "money",
+        "relationship"
+      ],
+      "themes": [
+        "만족",
+        "벗",
+        "살림",
+        "곤란"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "곤란할 때 부를 사람 하나, 있는 것으로 넉넉한 마음",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.332",
+      "citation_ko": "법구경 23장 코끼리의 장 332게 (앞 두 구)",
+      "ref": "dhp332",
+      "ko_text": "이 세상에서 어머니를 살피는 일이 즐거움이고, 아버지를 살피는 일도 즐거움이다.",
+      "base_note": "Sujato 영역: \"In this world it's a blessing to serve one's mother and one's father. And it's a blessing also to serve ascetics and brahmins.\" 뒤 두 구는 수행자와 바라문을 섬기는 대목이라 뺐다. 팔리 matteyyatā 는 '어머니를 잘 섬김'이다.",
+      "modern_gloss": "큰 효도를 말하는 게 아니다. 전화 한 통, 같이 먹는 밥 한 끼가 이 게송이 말하는 크기다.",
+      "retrieval_text": "부모와 사이가 서먹해 연락을 미룰 때. 가족에게 잘 못한 것 같아 마음이 무거운 상황. 부모가 나이 드는 걸 보며 마음이 복잡할 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "가족",
+        "부모",
+        "돌봄",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "부모를 살피는 일은 전화 한 통 크기로도 된다",
+      "terms": [],
+      "cautions": [
+        "부모와의 관계가 안전하지 않은 사람에게는 부담이 된다. 의무로 읽히지 않게"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.334",
+      "citation_ko": "법구경 24장 갈애의 장 334게",
+      "ref": "dhp334",
+      "ko_text": "흘려보내며 사는 사람에게 목마름은 덩굴처럼 자란다. 숲에서 열매를 탐내는 원숭이처럼 이것에서 저것으로 건너뛴다.",
+      "base_note": "Sujato 영역: \"When a man lives heedlessly, craving grows in them like a camel's foot creeper. They jump from one thing to the next, like a langur greedy for fruit in a forest grove.\" 팔리 māluvā 는 나무를 감고 올라가 말려 죽이는 덩굴이다. taṇhā 를 '목마름'으로 옮겼다.",
+      "modern_gloss": "하나를 얻으면 다음 가지가 보인다. 문제는 가진 양이 아니라 건너뛰는 속도다.",
+      "retrieval_text": "사고 나면 곧 다음 걸 사고 싶어질 때. 목표를 이뤄도 금방 허전해지는 상황. 계속 더 벌어야 할 것 같아 쉬지 못할 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "욕망",
+        "소비",
+        "만족",
+        "속도"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "문제는 가진 양이 아니라 건너뛰는 속도다",
+      "terms": [
+        {
+          "word": "목마름",
+          "gloss": "팔리어 탄하(taṇhā)를 옮긴 말이에요. 채워도 또 생기는 갈증 같은 마음이에요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.336",
+      "citation_ko": "법구경 24장 갈애의 장 336게",
+      "ref": "dhp336",
+      "ko_text": "넘어서기 어려운 이 목마름을 이겨 낸 사람에게서는 슬픔이 떨어져 나간다. 연잎에서 물방울이 구르듯.",
+      "base_note": "Sujato 영역: \"But whoever prevails over this wretched craving, so hard to get over in the world, their sorrows fall from them, like a drop from a lotus-leaf.\" 팔리 udabinduva pokkharā.",
+      "modern_gloss": "연잎은 물을 밀어내지 않는다. 얹혔다가 구를 뿐이다. 슬픔도 그렇게 지나갈 자리를 만들 수 있다.",
+      "retrieval_text": "잃은 것이 계속 마음에 얹혀 있을 때. 놓아야 한다는 걸 알면서도 못 놓는 상황. 슬픔이 언제 끝날지 몰라 막막할 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "슬픔",
+        "놓아줌",
+        "회복",
+        "목마름"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "연잎은 물을 밀어내지 않는다. 구르게 둘 뿐이다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.344",
+      "citation_ko": "법구경 24장 갈애의 장 344게",
+      "ref": "dhp344",
+      "ko_text": "덤불에서 벗어나 놓고 다시 덤불로 달려간다. 풀려난 사람이 제 발로 묶이러 간다. 저 사람을 좀 보라.",
+      "base_note": "Sujato 영역: \"Unsnarled, they set out for the jungle, then they run right back to the jungle they left behind. Just look at this individual! Freed, they run to bondage.\" 팔리 vana 는 '숲'과 '욕망'을 겹쳐 쓴 말놀이라 '덤불'로 옮겼다. 옮긴 폭이 큰 자리다.",
+      "modern_gloss": "나온 데로 다시 걸어 들어가는 일은 흔하다. 그 길이 낯익다는 것 말고 다른 이유가 없을 때가 많다.",
+      "retrieval_text": "헤어진 사람에게 다시 연락하고 싶을 때. 그만두겠다고 한 습관으로 돌아가는 상황. 같은 문제를 반복하는 자신이 미울 때",
+      "tags_primary": [
+        "relationship",
+        "regret"
+      ],
+      "themes": [
+        "반복",
+        "관계",
+        "습관",
+        "되돌아감"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "나온 데로 다시 걸어 들어가는 일은 흔하다",
+      "terms": [],
+      "cautions": [
+        "돌아간 자신을 비난하는 말로 읽히지 않게. 비웃음이 아니라 알아차림 쪽이다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "vana 의 말놀이(숲/욕망)를 '덤불' 하나로 옮겨 원문의 겹뜻이 얇아졌다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.345",
+      "citation_ko": "법구경 24장 갈애의 장 345~346게",
+      "ref": "dhp345",
+      "ko_text": "쇠나 나무나 밧줄로 만든 것은 단단한 묶임이 아니라고 지혜로운 이들은 말한다. 보석과 귀걸이에 마음이 물들고 자식과 짝을 걱정하는 그것을 단단한 묶임이라 한다. 느슨해 보이지만 풀기 어렵고 사람을 끌어내린다.",
+      "base_note": "Sujato 영역: \"The attentive say that shackle is not strong that's made of iron, wood, or knots. But obsession with jeweled earrings, concern for your partners and children:\" / \"this, say the attentive, is a strong shackle dragging the indulgent down, hard to escape.\" 346게 뒤 두 구는 출가를 말하는 대목이라 뺐다. 팔리 dāresu 는 본래 아내를 가리키는데 '짝'으로 옮겼다.",
+      "modern_gloss": "사람을 묶는 건 대개 나쁜 것이 아니라 아끼는 것이다. 그래서 풀기가 어렵다.",
+      "retrieval_text": "가족을 생각하면 그만둘 수 없어 버티고만 있을 때. 대출과 생활비 때문에 선택지가 없다고 느끼는 상황. 지킬 게 많아 숨이 막힐 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "돈",
+        "가족",
+        "책임",
+        "묶임"
+      ],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "가족을 버리라는 말이 아니다. 아끼는 마음이 어디서 나를 조이는지 보라는 대목이다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "dāra 를 '짝'으로 옮겨 원문의 남성 화자 시점을 지웠다. 출가를 권하는 결론부를 뺐으니 감수 때 잘라낸 폭을 봐야 한다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.356",
+      "citation_ko": "법구경 24장 갈애의 장 356게 (앞 두 구)",
+      "ref": "dhp356",
+      "ko_text": "잡초가 밭을 망치듯 탐냄이 사람을 망친다.",
+      "base_note": "Sujato 영역: \"Weeds are the bane of crops, but greed is these folk's bane. That's why a gift to one rid of greed is so very fruitful.\" 뒤 두 구는 보시 공덕을 말하는 대목이라 뺐다. 팔리 Tiṇadosāni khettāni, rāgadosā ayaṁ pajā.",
+      "modern_gloss": "밭이 나빠서 농사가 안 되는 게 아니다. 잡초가 양분을 먼저 먹는다. 마음도 그렇다.",
+      "retrieval_text": "돈 생각이 다른 걸 다 덮어 버릴 때. 더 가지려다 정작 중요한 걸 놓치는 상황. 마음이 늘 무언가에 쫓기는 것 같을 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "탐냄",
+        "돈",
+        "마음",
+        "균형"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "밭이 나쁜 게 아니라 잡초가 양분을 먼저 먹는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.363",
+      "citation_ko": "법구경 25장 비구의 장 363게",
+      "ref": "dhp363",
+      "ko_text": "입을 단속하고, 새겨서 말하고, 들뜨지 않는 사람. 뜻과 결을 밝혀 말하는 사람. 그의 말은 달다.",
+      "base_note": "Sujato 영역: \"When a mendicant of restrained mouth, thoughtful in counsel, not restless, explains the text and its meaning, their words are sweet.\" 팔리 mantabhāṇī 는 '헤아려 말함'이고, 주어인 bhikkhu(수행자)는 일반 자리에 닿게 뺐다.",
+      "modern_gloss": "말을 잘하는 것과 말이 단 것은 다르다. 단 말은 대개 덜 말한 사람에게서 나온다.",
+      "retrieval_text": "말실수로 관계가 어색해졌을 때. 회의에서 말을 어떻게 해야 할지 모르겠는 상황. 하고 싶은 말이 많은데 다 뱉고 후회할 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "말",
+        "절제",
+        "신뢰",
+        "대화"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "단 말은 대개 덜 말한 사람에게서 나온다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.366",
+      "citation_ko": "법구경 25장 비구의 장 366게",
+      "ref": "dhp366",
+      "ko_text": "얻은 것이 적어도 제 몫을 업신여기지 않는다면, 맑게 살고 게으르지 않은 그를 신들도 칭찬한다.",
+      "base_note": "팔리 Appalābhopi ce bhikkhu, salābhaṁ nātimaññati 는 '적게 얻은 이가 제가 얻은 것을 업신여기지 않는다'로도, '얻은 것이 많은 이가 적게 얻은 이를 업신여기지 않는다'로도 읽힌다. Sujato 영역은 뒤쪽을 택했다: \"If a mendicant is poor in offerings, the well-to-do ought not look down on them. For the gods indeed praise them, who are tireless and pure of livelihood.\" 여기서는 옛 주석을 따라 앞쪽으로 옮겼다.",
+      "modern_gloss": "적게 버는 것보다 제가 번 것을 하찮게 여기는 마음이 사람을 더 깎는다.",
+      "retrieval_text": "월급이 적어 스스로가 초라하게 느껴질 때. 남의 벌이와 견주다 기운이 빠지는 상황. 내가 하는 일이 값어치 없게 느껴질 때",
+      "tags_primary": [
+        "money",
+        "comparison"
+      ],
+      "themes": [
+        "벌이",
+        "자존감",
+        "비교",
+        "몫"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [],
+      "confidence": "low",
+      "confidence_note": "구문이 두 갈래로 읽히는 자리다. 기준본인 Sujato 영역과 다른 쪽을 택했으니 감수 때 어느 쪽으로 낼지 먼저 정해야 한다. 게송 번호(366)와 장(25장 비구의 장)은 기준본에서 확인했다"
+    },
+    {
+      "id": "dhp.369",
+      "citation_ko": "법구경 25장 비구의 장 369게",
+      "ref": "dhp369",
+      "ko_text": "이 배의 물을 퍼내라. 물을 퍼내면 배는 가볍게 나아간다. 탐냄과 미움을 끊고 나면 그다음은 고요다.",
+      "base_note": "Sujato 영역: \"Bail out this boat, mendicant! When bailed out it will float lightly. Having cut off desire and hate, you shall reach extinguishment.\" 부르는 말인 '수행자여'는 뺐고 nibbāna 를 '고요'로 옮겼다.",
+      "modern_gloss": "더 실을 생각부터 하지 말고 먼저 퍼내라는 말이다. 가벼워지는 것은 덜어낸 다음에 온다.",
+      "retrieval_text": "할 일이 너무 많아 아무것도 못 시작할 때. 번아웃이 와서 손가락 하나 까딱하기 싫은 상황. 계획을 더 세우는데도 나아가지 않을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "번아웃",
+        "덜어냄",
+        "가벼움",
+        "시작"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "짐을 더 싣기 전에 먼저 퍼내야 할 것이 있다",
+      "terms": [
+        {
+          "word": "고요",
+          "gloss": "열반(니르바나)을 옮긴 말이에요. 불이 꺼지듯 들끓음이 가라앉은 자리를 뜻해요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.377",
+      "citation_ko": "법구경 25장 비구의 장 377게",
+      "ref": "dhp377",
+      "ko_text": "재스민이 시든 꽃을 떨구듯 탐냄과 미움을 그렇게 떨구어라.",
+      "base_note": "Sujato 영역: \"As a jasmine sheds its withered flowers, O mendicants, shed greed and hate.\" 팔리 vassikā 는 재스민 종류의 꽃이다. 부르는 말인 '비구들이여'는 뺐다.",
+      "modern_gloss": "꽃은 억지로 뜯기지 않는다. 다 핀 뒤에 떨어진다. 감정도 대개 그 순서를 따른다.",
+      "retrieval_text": "미련이 남아 계속 붙잡고 있을 때. 미운 마음이 오래가서 지치는 상황. 이제 놓아야 하는 걸 아는데 방법을 모를 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "놓아줌",
+        "미련",
+        "미움",
+        "때"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "꽃은 억지로 뜯기지 않는다. 다 핀 뒤에 떨어진다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.387",
+      "citation_ko": "법구경 26장 바라문의 장 387게 (앞 네 구)",
+      "ref": "dhp387",
+      "ko_text": "해는 낮에 빛나고 달은 밤에 빛난다. 갑옷을 입으면 무사가 빛나고, 앉아 고요해지면 수행자가 빛난다.",
+      "base_note": "Sujato 영역: \"The sun blazes by day, the moon radiates at night, the aristocrat shines in armor, and the brahmin shines in absorption. But all day and all night, the Buddha blazes with glory.\" 뒤 두 구는 부처를 기리는 대목이라 뺐다. 팔리 jhāyī 는 '선정에 든 이'라 '앉아 고요해지면'으로 풀었다.",
+      "modern_gloss": "빛나는 때와 자리가 저마다 다르다. 남의 시간대에 서서 나를 재고 있었는지 볼 일이다.",
+      "retrieval_text": "또래가 앞서가는 것 같아 초조할 때. 내 차례는 오지 않을 것 같은 상황. 남의 기준으로 나를 재게 될 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "때",
+        "비교",
+        "자리",
+        "차례"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "해와 달은 서로의 시간대에서 겨루지 않는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.394",
+      "citation_ko": "법구경 26장 바라문의 장 394게",
+      "ref": "dhp394",
+      "ko_text": "헝클어진 머리가 무슨 소용인가. 걸친 가죽옷이 무슨 소용인가. 속은 덤불인데 겉만 문지르고 있다.",
+      "base_note": "Sujato 영역: \"Why the matted hair, you simpleton, and why the skin of deer? The tangle is inside you, yet you polish up your outsides.\" 당시 고행자의 차림을 가리키는 대목이다. 부르는 말인 dummedha(어리석은 이여)는 빼고 옮겼다.",
+      "modern_gloss": "겉을 고치는 일이 제일 빠르고 티가 난다. 그래서 자주 그것부터 한다.",
+      "retrieval_text": "남에게 보이는 모습만 신경 쓰고 있을 때. SNS에 올릴 만한 삶을 꾸미느라 지치는 상황. 정작 속은 엉망인데 겉만 정리하고 있을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "겉모습",
+        "속",
+        "꾸밈",
+        "정직"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "겉을 고치는 일이 제일 빠르고 티가 난다",
+      "terms": [],
+      "cautions": [
+        "스스로를 몰아세우는 말로 쓰이지 않게. 꾸미는 일을 나무라는 게 아니라 순서를 묻는 대목이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.396",
+      "citation_ko": "법구경 26장 바라문의 장 396게",
+      "ref": "dhp396",
+      "ko_text": "어느 어머니에게서 났는지로 나는 그를 귀한 사람이라 부르지 않는다. 가진 것에 매여 있다면 이름만 그런 것이다. 쥔 것도 붙잡을 것도 없는 사람, 나는 그를 귀한 사람이라 부른다.",
+      "base_note": "Sujato 영역: \"I don't call someone a brahmin after the mother's womb they're born from. If they still have attachments, they're just someone who says 'worthy'. Having nothing, taking nothing: that's who I declare a brahmin.\" 팔리 brāhmaṇa 는 태생 계급 이름이자 이 장에서는 '참으로 귀한 사람'을 뜻해 뒤쪽으로 옮겼다. bhovādi 는 태생만 바라문인 이를 비꼬는 말이다.",
+      "modern_gloss": "사람의 값은 어디서 났는지로 정해지지 않는다. 이 말은 남을 볼 때만이 아니라 나를 볼 때도 같다.",
+      "retrieval_text": "집안이나 학교 때문에 기가 죽을 때. 출발선이 다르다고 느껴 억울한 상황. 배경으로 사람을 재는 자리에 있을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "출신",
+        "배경",
+        "값어치",
+        "편견"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "사람의 값은 어디서 났는지로 정해지지 않는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "bhovādi(그대여 하고 부르는 자)를 '이름만 그런 것'으로 풀었다. 원문은 태생만 바라문인 이를 비꼬는 말이라 감수 때 더 나은 우리말을 고를 수 있다. 게송 번호는 확인했다"
+    },
+    {
+      "id": "dhp.406",
+      "citation_ko": "법구경 26장 바라문의 장 406게",
+      "ref": "dhp406",
+      "ko_text": "맞서는 이들 속에서 맞서지 않고, 주먹을 든 이들 속에서 가라앉아 있고, 움켜쥔 이들 속에서 움켜쥐지 않는 사람. 나는 그를 귀한 사람이라 부른다.",
+      "base_note": "Sujato 영역: \"Not fighting among those who fight, quenched among those who have taken up arms, not grasping among those who grasp: that's who I declare a brahmin.\" 팔리 attadaṇḍesu 는 '몽둥이를 든 이들 사이에서'다. brāhmaṇa 는 26장의 뜻을 따라 '귀한 사람'으로 옮겼다.",
+      "modern_gloss": "모두가 날을 세운 자리에서 혼자 날을 세우지 않는 것. 지는 게 아니라 그 판에 들어가지 않는 것이다.",
+      "retrieval_text": "팀 전체가 예민해져 서로 날을 세울 때. 싸움 분위기에 휘말려 나도 같이 거칠어지는 상황. 다들 챙기는 자리에서 나만 손해 볼까 불안할 때",
+      "tags_primary": [
+        "relationship",
+        "anger"
+      ],
+      "themes": [
+        "갈등",
+        "평정",
+        "휘말림",
+        "거리"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "모두가 날을 세운 자리에서 혼자 날을 세우지 않는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    }
+  ]
+}

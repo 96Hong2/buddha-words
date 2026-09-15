@@ -1,0 +1,202 @@
+{
+  "_note": "경전 검색 평가 세트. 고민 글 하나에 실제로 어울리는 구절 id 를 짝지은 것이다. 정답은 seed.json 의 retrieval_text 를 직접 읽고 골랐고 지어내지 않았다. 검색을 고친 뒤 이 파일로 Recall@5 · Recall@20 · MRR 을 다시 잰다. 재는 자리는 tools/eval_retrieval.py 다. 정답을 늘리거나 줄여 숫자를 좋게 만들지 않는다.",
+  "_fields": {
+    "concern": "사람이 실제로 쓸 법한 고민 글",
+    "kind": "event = 사건을 적은 글, feeling = 마음 상태를 적은 글",
+    "relevant": "그 고민에 어울리는 구절 id"
+  },
+  "cases": [
+    {
+      "id": "layoff-rumor",
+      "kind": "event",
+      "concern": "회사에서 갑자기 구조조정 이야기가 나왔어요. 아직 제 이름이 나온 건 아닌데 아침마다 출근할 때 오늘 불려 가는 건 아닐까 싶어서 심장이 뛰어요. 월세랑 대출은 계속 나가는데 어떻게 해야 할지 모르겠어요.",
+      "relevant": ["dhp.317", "maha.yuanjue.illusion", "snp.3.8.574", "snp.4.16.970", "snp.1.2.25", "ud.2.9"]
+    },
+    {
+      "id": "boss-ignores",
+      "kind": "event",
+      "concern": "팀장님이 회의에서 제 의견을 계속 무시하세요. 제가 낸 안을 다른 사람 것처럼 말한 적도 있고요. 이런 데서 계속 일하는 게 맞나 싶어서 그만둘까 고민이에요.",
+      "relevant": ["dhp.74", "dhp.54", "dhp.304", "sn.3.1", "dn.31.work", "thig.12.1"]
+    },
+    {
+      "id": "debt-interest",
+      "kind": "event",
+      "concern": "카드값이랑 대출 이자가 매달 빠져나가는데 통장은 늘 마이너스예요. 밤에 누우면 숫자만 떠올라서 잠이 안 와요.",
+      "relevant": ["an.6.45", "sn.7.10", "snp.4.16.970", "an.8.54", "dn.31.wealth", "thag.1.1"]
+    },
+    {
+      "id": "father-died",
+      "kind": "event",
+      "concern": "아버지가 두 달 전에 돌아가셨어요. 장례 치를 때는 정신없어서 몰랐는데 요즘은 길을 걷다가도 갑자기 눈물이 나요. 더 자주 찾아뵐걸 그랬다는 생각만 들어요.",
+      "relevant": ["dhp.47", "sn.3.22", "dhp.83", "mn.87", "thig.3.5", "snp.3.8.584", "dn.16.ananda"]
+    },
+    {
+      "id": "job-offer-hesitate",
+      "kind": "event",
+      "concern": "지금 회사 3년 다녔는데 이직 제안이 왔어요. 연봉은 조금 오르는데 안정적인 지금을 놓기가 무서워요. 몇 주째 결정을 못 하고 있어요.",
+      "relevant": ["dhp.290", "dhp.35", "snp.2.9.324", "sn.1.1", "snp.2.4.261", "zen.wumen.46"]
+    },
+    {
+      "id": "sns-compare",
+      "kind": "feeling",
+      "concern": "인스타를 보다 보면 다들 집 사고 결혼하고 잘 사는 것 같은데 저만 제자리인 것 같아서 마음이 쿵 내려앉아요.",
+      "relevant": ["dhp.365", "snp.4.10.855", "sn.1.34", "dhp.199", "snp.4.9.842", "maha.diamond.5"]
+    },
+    {
+      "id": "rumination-night",
+      "kind": "feeling",
+      "concern": "자려고 누우면 생각이 꼬리를 물어요. 낮에 한 말실수 같은 게 계속 떠올라서 새벽 세 시까지 뒤척여요.",
+      "relevant": ["an.3.35", "mn.20", "sn.9.11", "dhp.326", "ud.4.1", "maha.platform.4", "snp.3.10.657"]
+    },
+    {
+      "id": "mother-fight",
+      "kind": "event",
+      "concern": "엄마랑 통화만 하면 싸워요. 그런데 엄마가 이제 일흔이신 걸 생각하면 이러고 있는 제가 못된 것 같아서 마음이 무거워요.",
+      "relevant": ["dn.31.parents", "dhp.332", "an.2.33", "an.3.31"]
+    },
+    {
+      "id": "breakup-lingering",
+      "kind": "event",
+      "concern": "3년 만난 사람과 헤어진 지 두 달 됐는데 아직도 연락하고 싶어요. 번호를 지웠다가 다시 저장하기를 몇 번이나 했어요.",
+      "relevant": ["dhp.285", "dhp.344", "dhp.211", "dhp.377", "ud.8.8", "dhp.336"]
+    },
+    {
+      "id": "burnout-bed",
+      "kind": "feeling",
+      "concern": "주말 내내 침대에서 못 일어났어요. 해야 할 건 쌓여 있는데 손가락 하나 까딱하기가 싫어요.",
+      "relevant": ["snp.2.10.331", "dhp.369", "dhp.327", "snp.1.6.96", "dhp.168", "an.5.29", "iti.34"]
+    },
+    {
+      "id": "put-down-in-meeting",
+      "kind": "event",
+      "concern": "어제 회의에서 선배가 사람들 앞에서 저를 깎아내렸어요. 하루 종일 그 말이 맴돌고 똑같이 되갚아 주고 싶은 생각만 들어요.",
+      "relevant": ["sn.7.2", "dhp.320", "mn.62", "dhp.223", "sn.3.15", "an.7.64"]
+    },
+    {
+      "id": "caregiver-drained",
+      "kind": "event",
+      "concern": "아이 둘 키우면서 시부모님 병원도 제가 모시고 다녀요. 정작 제 몸은 어디가 아픈지도 모르겠어요.",
+      "relevant": ["sn.47.19", "snp.2.8.319", "dhp.157", "thig.2.3", "dhp.166", "an.6.16"]
+    },
+    {
+      "id": "job-hunt-stuck",
+      "kind": "event",
+      "concern": "졸업하고 1년째 취업이 안 돼요. 친구들은 다 자리를 잡았는데 저만 아직 아무것도 아닌 것 같아요.",
+      "relevant": ["dhp.156", "mn.107", "dhp.152", "sn.35.241", "dhp.387", "zen.linji.trueman"]
+    },
+    {
+      "id": "exam-failed",
+      "kind": "event",
+      "concern": "3년 준비한 시험에서 또 떨어졌어요. 이번엔 다 될 것 같았는데 마지막에 어긋나서 가슴이 내려앉았어요. 다시 책상에 앉을 엄두가 안 나요.",
+      "relevant": ["snp.4.1.767", "dhp.279", "sn.7.11", "dhp.122", "an.3.91", "kr.jinul.jeonghye.ground"]
+    },
+    {
+      "id": "hated-coworker",
+      "kind": "event",
+      "concern": "매일 봐야 하는 동료가 있는데 그 사람 얼굴만 봐도 속이 뒤집혀요. 좋게 보려고 해도 안 돼요.",
+      "relevant": ["an.5.162", "an.5.161", "dhp.253", "sn.42.1", "iti.88", "ud.3.6"]
+    },
+    {
+      "id": "procrastinate",
+      "kind": "feeling",
+      "concern": "머리로는 다 아는데 몸이 안 움직여요. 오늘도 하루 종일 딴짓만 하다가 끝났고 그런 저를 또 탓하고 있어요.",
+      "relevant": ["dhp.280", "dhp.292", "dhp.116", "iti.34", "dn.31.idle", "an.6.19", "dhp.372"]
+    },
+    {
+      "id": "unread-message",
+      "kind": "event",
+      "concern": "친구한테 카톡 보낸 지 이틀이 지났는데 답이 없어요. 제가 뭘 잘못했나 싶어서 대화를 몇 번이나 다시 읽었어요.",
+      "relevant": ["sn.35.95", "mn.18", "ud.1.10", "dhp.317"]
+    },
+    {
+      "id": "salary-small",
+      "kind": "event",
+      "concern": "친구는 성과급으로 천만 원 받았다는데 제 월급은 3년째 그대로예요. 제가 하는 일이 값어치가 없는 것 같아요.",
+      "relevant": ["dhp.366", "dhp.204", "dhp.249", "snp.2.6.274", "an.7.6", "sn.17.2"]
+    },
+    {
+      "id": "health-recheck",
+      "kind": "event",
+      "concern": "건강검진에서 재검사 통보를 받았어요. 결과 나오기까지 일주일인데 그동안 최악의 경우만 상상하게 돼요.",
+      "relevant": ["sn.55.21", "maha.yuanjue.illusion", "snp.3.8.574", "dhp.317", "snp.3.11.712"]
+    },
+    {
+      "id": "lonely-sick",
+      "kind": "feeling",
+      "concern": "지난주에 크게 아팠는데 연락할 사람이 아무도 떠오르지 않았어요. 사람들 사이에 있어도 혼자인 것 같아요.",
+      "relevant": ["sn.1.53", "dhp.331", "snp.1.3.35", "dhp.305", "iti.17", "thag.10.2"]
+    },
+    {
+      "id": "harsh-on-self",
+      "kind": "feeling",
+      "concern": "친구가 실수하면 괜찮다고 말해 주는데 제가 실수하면 며칠씩 저를 못 견디겠어요.",
+      "relevant": ["dhp.159", "sn.3.4", "dhp.316", "maha.platform.1", "sn.36.6", "dhp.379"]
+    },
+    {
+      "id": "shopping-empty",
+      "kind": "event",
+      "concern": "월급 받으면 바로 뭘 사요. 살 땐 좋은데 택배 뜯고 나면 또 허전해서 장바구니를 채우고 있어요.",
+      "relevant": ["mn.54", "dhp.334", "dhp.171", "dhp.186", "mn.82"]
+    },
+    {
+      "id": "noisy-neighbor-move",
+      "kind": "event",
+      "concern": "윗집 소음 때문에 1년 넘게 시달렸어요. 이사 가면 나아질까 싶다가도 어디를 가도 똑같을 것 같아서 결정을 못 하겠어요.",
+      "relevant": ["dhp.98", "sn.2.26", "an.4.45", "maha.lotus.3"]
+    },
+    {
+      "id": "marriage-doubt",
+      "kind": "event",
+      "concern": "결혼을 앞두고 있는데 같이 살 집 문제로 계속 부딪쳐요. 사이가 나쁜 건 아닌데 이 사람이랑 평생 갈 수 있을지 모르겠어요.",
+      "relevant": ["an.4.55", "an.4.53", "sn.3.8", "snp.2.3.255"]
+    },
+    {
+      "id": "conscience-vs-pay",
+      "kind": "event",
+      "concern": "회사가 하는 일이 떳떳하지 않아요. 알면서도 월급 때문에 계속 다니고 있는데 출근길이 너무 무거워요.",
+      "relevant": ["an.5.177", "dhp.49", "an.4.62", "zen.linji.master", "snp.1.2.25", "dhp.84"]
+    },
+    {
+      "id": "too-late-to-start",
+      "kind": "feeling",
+      "concern": "서른다섯에 새로 공부를 시작하려니 너무 늦은 것 같아요. 남들은 이미 자리 잡았는데 저만 처음부터라니 엄두가 안 나요.",
+      "relevant": ["thig.5.8", "dhp.260", "dhp.172", "dhp.112", "sn.3.25"]
+    },
+    {
+      "id": "said-too-much",
+      "kind": "event",
+      "concern": "어제 남편이랑 싸우다가 하지 말아야 할 말을 했어요. 이기려고 뱉은 말인데 지금은 후회돼요.",
+      "relevant": ["dhp.133", "dhp.232", "sn.3.2", "dhp.222", "snp.3.10.657", "sn.11.24"]
+    },
+    {
+      "id": "approval-swing",
+      "kind": "feeling",
+      "concern": "칭찬 한마디에 들떴다가 지적 하나에 하루가 무너져요. 남들이 저를 어떻게 보는지에 너무 휘둘려요.",
+      "relevant": ["dhp.81", "snp.1.12.213", "thag.2.20", "an.8.6", "dhp.227", "snp.2.4.268"]
+    },
+    {
+      "id": "school-background",
+      "kind": "event",
+      "concern": "회사에 다들 명문대 출신인데 저만 지방대예요. 출신 얘기가 나올까 봐 회식 자리가 불편해요.",
+      "relevant": ["sn.7.9", "dhp.393", "dhp.396", "snp.1.7.136", "dhp.58", "an.4.85"]
+    },
+    {
+      "id": "same-pattern-again",
+      "kind": "feeling",
+      "concern": "사람만 바뀌고 똑같은 문제가 반복돼요. 고쳤다고 생각한 습관도 어느새 돌아와 있고요.",
+      "relevant": ["dhp.338", "dhp.153", "kr.jinul.xiuxin.gradual", "dhp.344", "an.4.113", "dhp.239"]
+    },
+    {
+      "id": "pet-died",
+      "kind": "event",
+      "concern": "13년 키운 강아지를 지난달에 보냈어요. 사람을 잃은 것도 아닌데 이렇게까지 힘들어하는 제가 이상한가 싶어요.",
+      "relevant": ["mn.87", "sn.15.3", "ud.8.8", "thig.3.5", "dhp.83", "mn.66"]
+    },
+    {
+      "id": "deposit-lost",
+      "kind": "event",
+      "concern": "전세금을 못 돌려받게 생겼어요. 5년 모은 돈인데 한순간에 날아가게 생겨서 밤마다 잠이 안 와요.",
+      "relevant": ["dhp.170", "mn.28", "sn.7.10", "snp.4.16.970", "snp.1.2.19", "snp.4.1.767"]
+    }
+  ]
+}

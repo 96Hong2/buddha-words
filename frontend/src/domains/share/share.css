@@ -1,0 +1,624 @@
+/*
+ * 공유 시트 · 공유 카드 · 공유 링크 랜딩.
+ * 값은 design/screens/s6-share.html 과 같다. 색·간격·글꼴은 tokens.css 의 의미 토큰만 쓴다.
+ */
+
+/* ══════════ 공유 카드 ══════════
+   서버가 1080 × 1620 으로 렌더할 판을 화면에서도 같은 비율로 그린다.
+   안쪽은 390 × 585 로 짜고 --sh-card-scale 로 통째로 키우거나 줄인다. */
+
+.sh-card {
+  position: relative;
+  width: calc(390px * var(--sh-card-scale, 1));
+  aspect-ratio: 1080 / 1620;
+  border-radius: 18px;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  color: var(--text);
+}
+
+/* 종이 베일. 부처 그림 뒤 노을빛 위에 아이보리를 덮어 글자가 읽히게 한다 */
+.sh-card__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(251, 247, 239, 0) 0%,
+    rgba(255, 250, 241, 0.72) 9%,
+    rgba(255, 250, 241, 0.93) 20%,
+    rgba(255, 250, 241, 0.94) 62%,
+    rgba(251, 247, 239, 0.9) 100%
+  );
+}
+
+.sh-card__in {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 390px;
+  height: 585px;
+  transform: scale(var(--sh-card-scale, 1));
+  transform-origin: 0 0;
+  /* 「경전 원문」 머리와 AI 표시 두 줄이 들어와 위아래를 조금씩 줄였다.
+     경전이 다섯 줄까지 오는 선문답에서도 한 줄 풀이가 안 잘리게 한다 */
+  padding: 31px 32px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 글이 길어져도 브랜드 줄이 카드 밖으로 밀려나지 않게 여기서 먼저 줄어든다.
+   서버 카드는 그림 띠가 남는 자리를 가져가 아래가 비지 않는다. 화면 미리보기는 그림이
+   고정 크기라, 짧은 구절에서 아래가 크게 비지 않도록 글 뭉치를 세로 가운데에 둔다 */
+.sh-card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sh-card__face {
+  flex: 0 0 auto;
+  width: 118px;
+  height: 118px;
+  margin: 0 auto 10px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.sh-card__quote {
+  margin-top: 10px;
+  text-align: center;
+  background: var(--surface-scripture);
+  border-top: 1px solid var(--accent-rule);
+  border-radius: 11.6px;
+  padding: 13px 13px 11px;
+}
+
+.sh-card__quote .sh-card__qlab {
+  margin: 0 0 7px;
+  font-family: var(--font-sans);
+  font-size: 10.4px;
+  line-height: 1.2;
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
+}
+
+.sh-card__quote p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 12.6px;
+  line-height: 1.75;
+  font-weight: var(--w-regular);
+  color: var(--text);
+}
+
+/* 경전이 카드의 주인공이라 짧은 구절은 크게 세운다. 긴 구절은 자르지 않고 네 단계로 낮춘다.
+   경계와 크기는 서버 렌더(card.py VERSE_STEPS)와 같은 값이다 */
+.sh-card__quote p.sh-card__verse--xl {
+  font-size: 19.4px;
+  line-height: 1.62;
+}
+.sh-card__quote p.sh-card__verse--l {
+  font-size: 16.4px;
+  line-height: 1.68;
+}
+.sh-card__quote p.sh-card__verse--m {
+  font-size: 14.2px;
+  line-height: 1.72;
+}
+.sh-card__quote p.sh-card__verse--s {
+  font-size: 12.6px;
+  line-height: 1.75;
+}
+
+/* 누가 한 말인지. 카드에서 가장 잘못 읽히기 쉬운 줄이라 본문 다음으로 키웠다 */
+.sh-card__quote cite {
+  display: block;
+  margin-top: 7px;
+  font-style: normal;
+  font-family: var(--font-sans);
+  font-size: 11.6px;
+  line-height: 1.4;
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}
+
+.sh-card__gloss {
+  margin: 10px 0 0;
+  font-size: 12.4px;
+  line-height: 1.66;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* 심사 요건인 생성 표기. 무엇이 AI 문장인지는 한마디 밑줄과 경전 상자가 이미 갈라 놓았다 */
+.sh-card__ai {
+  flex: none;
+  margin: 0;
+  padding-bottom: 9px;
+  font-size: 10.4px;
+  line-height: 1.4;
+  font-weight: var(--w-semibold);
+  color: var(--text-weak);
+  text-align: right;
+}
+
+.sh-card__brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.sh-card__mark {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sh-card__wordmark {
+  font-family: var(--font-serif);
+  font-size: 11.6px;
+  font-weight: var(--w-bold);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.sh-card__tagline {
+  margin: 2px 0 0;
+  font-size: 8.7px;
+  line-height: 1.5;
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+/* ══════════ 버튼 ══════════ */
+
+.sh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: var(--tap-min);
+  height: 52px;
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: var(--font-sans);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-label);
+}
+
+.sh-btn:active { background: var(--btn-pressed); }
+
+.sh-btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1.5px solid var(--btn-ghost-line);
+}
+
+.sh-btn--ghost:active { background: var(--surface-pressed); }
+
+.sh-btn--sm { height: 44px; }
+
+.sh-btn:disabled {
+  opacity: 0.45;
+}
+
+.sh-btn:focus-visible,
+.sh-sheet__grab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ══════════ 공유 옵션 시트 (O3) ══════════ */
+
+.sh-sheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.sh-sheet__dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+}
+
+/* 딤은 화면 전체를 덮고 판만 앱 기둥 안에 든다 */
+.sh-sheet {
+  position: absolute;
+  left: var(--app-gap);
+  right: var(--app-gap);
+  bottom: 0;
+  max-height: 92%;
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--sh-sheet);
+  padding: 10px var(--gutter) calc(28px + var(--safe-bottom, 0px));
+}
+
+/* 손잡이가 곧 닫기다. 막대는 시안 그대로 두고 손가락이 닿는 넓이만 넓힌다 */
+.sh-sheet__grab {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.sh-sheet__grab::before {
+  content: '';
+  position: absolute;
+  inset: -20px 0;
+}
+
+.sh-sheet__grab i {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+.sh-sheet__title {
+  margin: 0 0 7px;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-sheet__safe {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 18px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--sage);
+}
+
+/* 고를 것이 없으니 나갈 카드 실물을 줄여서 그대로 보여 준다 */
+.sh-sheet__preview {
+  --sh-card-scale: 0.72;
+  width: fit-content;
+  margin: 0 auto;
+  border-radius: 13px;
+  overflow: hidden;
+  box-shadow: var(--sh-raised);
+}
+
+.sh-sheet__preview .sh-card {
+  border-radius: 13px;
+}
+
+.sh-sheet__btns {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+/* ══════════ 이미지 저장 폴백 ══════════ */
+
+.sh-fall-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gutter);
+}
+
+.sh-fall__dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+}
+
+.sh-fall {
+  position: relative;
+  width: 330px;
+  max-width: 100%;
+  background: var(--surface);
+  border-radius: var(--r-sheet);
+  box-shadow: var(--sh-raised);
+  padding: 22px 20px 20px;
+  font-family: var(--font-sans);
+  color: var(--text);
+}
+
+.sh-fall__ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.sh-fall__ico--caution { background: var(--accent-soft); }
+.sh-fall__ico--danger { background: var(--lotus-soft); }
+
+.sh-fall__t {
+  margin: 0 0 7px;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-fall__d {
+  margin: 0 0 18px;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.sh-fall__btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sh-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  width: 330px;
+  /* 앱 기둥보다 넓어지지 않는다. 실기기 폭에서는 계산값이 예전과 같다 */
+  max-width: calc(min(100%, var(--app-max)) - 40px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-deep);
+  border-radius: var(--r-button);
+  padding: 15px 18px;
+  box-shadow: var(--sh-raised);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  font-weight: var(--w-semibold);
+  color: var(--text-on-deep);
+}
+
+/* ══════════ 공유 링크 랜딩 (S9) ══════════ */
+
+.sh-land {
+  min-height: 100%;
+  padding: 26px var(--gutter) 34px;
+}
+
+.sh-land__from {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.sh-land__illust {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.sh-land__illust img {
+  width: 152px;
+  height: 152px;
+  border-radius: var(--r-image);
+  object-fit: contain;
+  background: var(--surface-illust);
+}
+
+.sh-land__cta {
+  margin: 0 0 12px;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-land__ctasub {
+  margin: -4px 0 var(--s-3);
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.sh-land__field {
+  display: block;
+  width: 100%;
+  min-height: 108px;
+  margin-bottom: 12px;
+  padding: 15px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-button);
+  font-family: var(--font-sans);
+  font-size: var(--t-body-l);
+  line-height: var(--lh-body-l);
+  font-weight: var(--w-medium);
+  color: var(--text);
+  resize: none;
+}
+
+.sh-land__field::placeholder { color: var(--text-weak); }
+
+.sh-land__field:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 연꽃 문양 한 줄. 입력 묶음과 경전을 갈라 준다 */
+.sh-land__rule {
+  height: 34px;
+  margin: var(--s-8) calc(var(--gutter) * -1) var(--s-6);
+  background: url('/assets/pattern_lotus.webp') center / 390px auto no-repeat;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 26%, #000 74%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 34%, #000 66%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 26%, #000 74%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 34%, #000 66%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  opacity: 0.82;
+}
+
+.sh-land__card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  padding: var(--pad-card);
+  box-shadow: var(--sh-card);
+  margin-bottom: var(--gap-card);
+}
+
+.sh-land__h {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-land__p {
+  margin: 0 0 var(--gap-para);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text);
+}
+
+.sh-land__p:last-child { margin-bottom: 0; }
+
+.sh-land__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 14px 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  color: var(--sage);
+}
+
+.sh-land__ai {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-medium);
+  color: var(--text-weak);
+}
+
+/* 막다른 길을 만들지 않는다. 만료된 링크에도 이야기할 자리를 둔다 */
+.sh-land__expired {
+  margin: 84px 0 0;
+  text-align: center;
+}
+
+.sh-land__expired-illust {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  background: var(--surface-illust);
+}
+
+.sh-land__expired h2 {
+  margin: 22px 0 10px;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-land__expired p {
+  margin: 0 auto 28px;
+  max-width: 264px;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.sh-land__scripture {
+  background: var(--surface-scripture);
+  border-left: 3px solid var(--accent-rule);
+  border-radius: var(--r-inset);
+  padding: 16px 16px 14px;
+}
+
+.sh-land__scripture .sh-land__sclab {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  color: var(--accent-text);
+}
+
+.sh-land__scripture p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-scripture);
+  line-height: var(--lh-scripture);
+  letter-spacing: var(--ls-scripture);
+  font-weight: var(--w-regular);
+  color: var(--text);
+}
+
+.sh-land__scripture cite {
+  display: block;
+  margin-top: 9px;
+  font-family: var(--font-sans);
+  font-style: normal;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}

@@ -1,0 +1,32 @@
+[project]
+name = "buddha-words-backend"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "pillow>=11.3.0",
+    # 공유 링크가 배포에서도 살려면 Cloud SQL PostgreSQL 에 담아야 한다(domains/share/store.py).
+    # psycopg3 를 고른 이유: 드라이버 하나로 끝나고(SQLAlchemy·asyncpg 를 더 끌고 오지 않는다),
+    # 계획 문서가 못 박은 SQLAlchemy 2 가 나중에 붙을 때 그대로 쓰는 드라이버다.
+    # binary 는 빌드 도구 없이 바퀴로 깔린다. Cloud Run 이미지가 얇아진다
+    "psycopg[binary]>=3.2.0",
+    "pydantic-settings>=2.15.0",
+    "python-json-logger>=4.2.0",
+    "regex>=2026.1.15",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[dependency-groups]
+dev = ["jsonschema>=4.26.0", "pytest>=9.1.1", "ruff>=0.16.5"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

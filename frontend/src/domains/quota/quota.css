@@ -1,0 +1,183 @@
+/* 이어가기 시트와 천장 안내. 값은 시안(design/screens/s5-archive-settings.html) 그대로다. */
+
+.continue-sheet__title {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.continue-sheet__sub {
+  margin: 0 0 var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.continue-sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* 광고 버튼. 배지 말고는 어디에도 광고라는 글자를 두지 않는다 */
+.continue-sheet__ad {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-bold);
+}
+
+.continue-sheet__ad[disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.continue-sheet__ad svg {
+  flex: none;
+}
+
+.continue-sheet__badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  margin-right: var(--s-1);
+  border-radius: var(--r-xs);
+  background: var(--ad-tag-bg);
+  color: var(--ad-tag-text);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+}
+
+.continue-sheet__note {
+  margin: var(--s-2) 0 var(--s-3);
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.continue-sheet__ghost,
+.continue-sheet__plain {
+  min-height: var(--tap-min);
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  border-radius: var(--r-button);
+  font-family: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.continue-sheet__ghost {
+  background: var(--surface);
+  border: 1px solid var(--btn-ghost-line);
+  color: var(--text);
+}
+
+.continue-sheet__plain {
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+}
+
+.continue-sheet__hint {
+  margin: var(--s-3) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+/* ── 천장 카드 ───────────────────────────────────────────────────────────
+   오늘 몫을 다 쓴 자리. 「끝」이라고만 적힌 알림이 아니라 지금 갈 수 있는 곳을 같이 둔다.
+   버튼은 셋 다 같은 무게다. 돈 쓰는 쪽을 크게 그려 두지 않는다. */
+
+.quota-wall {
+  margin-top: var(--s-4);
+  padding: var(--s-5);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+}
+
+.quota-wall__title {
+  margin: 0;
+  text-align: center;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.quota-wall__reset {
+  margin: var(--s-2) 0 0;
+  text-align: center;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.quota-wall__acts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.quota-wall__act {
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--btn-ghost-line);
+  border-radius: var(--r-button);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.quota-wall__act:active {
+  background: var(--surface-pressed);
+}
+
+/* 이용권이 여는 것은 보관함이다. 두 문장이라 가운데 정렬하지 않는다 */
+.quota-wall__pass {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.quota-wall__foot {
+  margin: var(--s-3) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}

@@ -1,0 +1,652 @@
+{
+  "batch": "misc-2",
+  "source_note": "이띠웃따까 7경, 우다나 3경, 테라가타 4경, 테리가타 5경, 모두 20구절을 SuttaCentral 의 Bhikkhu Sujato 영역본(CC0)에서 직접 받아 확인한 뒤 우리 말로 새로 옮겼다. 경 번호, 품 이름, 화자 이름을 모두 원문 조회로 대조했다. 이띠웃따까는 요청대로 성냄(88), 인색과 나눔(26), 게으름(34), 부끄러움을 아는 마음(42)을 넣었고 좋은 벗(17)과 자애 수행(27)은 1차에서 이미 썼으므로 복을 두려워하지 말라는 22경으로 대신했다. 우다나는 2장과 3장과 7장에서 골랐다. 3장 4경의 바위산 게송은 이미 1차에 들어간 법구경 81게와 그림도 뜻도 겹쳐서 빼고 3장 6경을 넣었다. 4장 이하의 열반 게송처럼 교리만 서술한 대목은 뺐다. 109경(강물 비유)은 풀이 가운데 여성을 악어와 괴물에 빗댄 대목이 있어 뺐고, 테리가타 10장 1경 키사고타미와 14장 1경 수바는 자해를 언급하는 대목이 있어 1차와 같은 이유로 뺐다. 태그는 1차의 쏠림을 감안해 비교, 돈, 무기력, 진로, 자책 쪽을 의식해서 채웠다.",
+  "items": [
+    {
+      "id": "iti.6",
+      "citation_ko": "이띠웃따까 6경 자만, 한 가지를 놓으라는 대목과 맺음 게송",
+      "ref": "iti6",
+      "ko_text": "한 가지를 놓아라. 자만 한 가지다. 자만에 취한 사람은 나쁜 자리로 간다. 제 안의 자만을 있는 그대로 알아본 이는 그것을 놓는다. 놓은 뒤로는 그 자리로 다시 돌아가지 않는다.",
+      "base_note": "Sujato 영역: 'Drunk on conceit, beings go to a bad place. Having rightly understood that conceit, the discerning give it up.' 남과 견주어 나를 세우는 뜻이 함께 있는 māna 를 자만으로 옮겼다. 다시 돌아오지 않는다는 불환의 뜻은 교리 용어를 빼고 그 자리로 다시 돌아가지 않는다로 풀었다.",
+      "modern_gloss": "자만은 내가 잘났다는 생각만이 아니다. 나를 남과 견주어 위아래로 세우는 버릇 전부다. 위에 놓든 아래에 놓든 재는 순간부터 마음이 취한다.",
+      "retrieval_text": "동기나 친구와 나를 자꾸 견주게 될 때. 남보다 못하다는 생각에 기가 죽을 때. 내가 더 낫다고 생각하면서도 마음이 계속 불편할 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "자만",
+        "비교",
+        "열등감",
+        "교만"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남과 견주어 나를 세우는 버릇, 그 취기가 자만이다",
+      "terms": [
+        {
+          "word": "자만",
+          "gloss": "나를 남과 견주어 높거나 낮게 매기는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "자신감을 갖지 말라는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.22",
+      "citation_ko": "이띠웃따까 22경 자애, 복을 두려워하지 말라는 대목과 맺음 게송",
+      "ref": "iti22",
+      "ko_text": "복 짓기를 두려워하지 말라. 복이라는 말은 곧 행복을 가리킨다. 바라던 것, 마음에 드는 것, 반가운 것을 가리키는 말이다. 나도 오래 쌓은 복의 결과를 오래 누렸다. 좋은 일만 익혀라. 그 열매가 앞에 놓인다. 베풂과 바른 몸가짐과 자애를 기르는 일, 이 셋이 행복을 낳는다.",
+      "base_note": "Sujato 영역의 'Mendicants, don’t fear good deeds. For \"good deeds\" is a term for happiness' 와 맺음 게송 'Giving and moral conduct, developing a mind of love' 를 이어 붙였다. 일곱 해 동안 자애를 닦아 여러 생을 났다는 전생 이야기 대목은 카드 길이에 맞춰 뺐다.",
+      "modern_gloss": "지금 하는 작은 선이 아무 쓸모없어 보일 때가 있다. 복은 나중에 받는 상이 아니라 그 일을 하는 동안 이미 쌓이는 쪽에 가깝다.",
+      "retrieval_text": "착하게 사는 게 손해처럼 느껴질 때. 남을 도와도 돌아오는 것이 없다고 느낄 때. 뭘 해도 의미가 없는 것 같아 아무것도 하기 싫을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "선행",
+        "보람",
+        "자애",
+        "무기력"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "복이라는 말은 결국 행복을 가리키는 다른 이름이다",
+      "terms": [
+        {
+          "word": "복",
+          "gloss": "좋은 일을 해서 쌓이는 좋은 결과를 뜻해요"
+        },
+        {
+          "word": "자애",
+          "gloss": "상대가 잘되기를 바라는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "착한 일을 하면 보상이 온다는 거래로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.26",
+      "citation_ko": "이띠웃따까 26경 나눔, 나눔의 열매를 안다면 대목",
+      "ref": "iti26",
+      "ko_text": "내가 아는 만큼 사람들이 나눔의 열매를 안다면, 주지 않고 먼저 먹는 일이 없을 것이고 인색이라는 때가 마음을 덮지도 않을 것이다. 받을 이가 있다면 마지막 한 입까지도 나누지 않고는 먹지 않을 것이다. 그 열매를 모르기 때문에 주지 않고 먼저 먹고, 인색의 때가 마음을 덮는다.",
+      "base_note": "Sujato 영역: 'if sentient beings only knew, as I do, the fruit of giving and sharing, they would not eat without first giving, and the stain of stinginess would not occupy their minds.' 뒤에 붙은 천상에 난다는 게송 대목은 뺐다.",
+      "modern_gloss": "인색은 가진 것이 적어서 생기기보다 줄어드는 것이 무서워서 생긴다. 나눠 본 사람만 나눠도 줄지 않는 것이 있다는 걸 안다.",
+      "retrieval_text": "돈 쓰는 게 아까워 마음이 자꾸 좁아질 때. 남에게 베풀고 나서 손해 본 기분이 들 때. 형편이 빠듯해 누구도 챙길 여유가 없다고 느낄 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "나눔",
+        "인색",
+        "돈",
+        "베풂"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "나눔의 열매를 알았다면 누구도 혼자 먼저 먹지 않았을 것이다",
+      "terms": [
+        {
+          "word": "인색",
+          "gloss": "가진 것을 내놓기 아까워하는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "형편이 어려운 사람에게 더 내놓으라는 압박으로 읽힐 수 있다",
+        "많이 베풀면 복을 받는다는 거래로 좁게 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.31",
+      "citation_ko": "이띠웃따까 31경 태우지 않는 것, 두 가지 대목",
+      "ref": "iti31",
+      "ko_text": "두 가지는 사람을 태우지 않는다. 나쁜 짓을 하지 않았다는 것, 그리고 좋은 일을 해 두었다는 것이다. 나는 좋은 일을 했다고 여기며 그는 태워지지 않는다. 나는 나쁜 짓을 하지 않았다고 여기며 그는 태워지지 않는다.",
+      "base_note": "Sujato 영역: 'These two things are not mortifying.' 팔리어 tapanīya 를 후회로 바로 옮기지 않고 태운다는 본뜻을 살렸다. 짝이 되는 30경은 지옥에 난다는 게송이 붙어 있어 겁을 주는 쪽으로 읽히기 쉬워 이 경을 골랐다.",
+      "modern_gloss": "후회는 지난 일을 계속 다시 태우는 불이다. 불을 끄는 방법은 지난 일을 고쳐 쓰는 게 아니라 오늘 태울 거리를 하나 덜 만드는 것이다.",
+      "retrieval_text": "예전에 한 일이 자꾸 떠올라 밤에 잠이 오지 않을 때. 그때 왜 그랬을까 하며 스스로를 계속 탓할 때. 후회를 줄이려면 지금 무엇을 해야 할지 모를 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "후회",
+        "자책",
+        "양심",
+        "지난 일"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "오늘 태울 거리를 하나 덜 만드는 것이 후회를 끄는 방법이다",
+      "terms": [],
+      "cautions": [
+        "이미 저지른 일이 있는 사람에게는 이제 길이 없다는 말로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.34",
+      "citation_ko": "이띠웃따까 34경 부지런함, 맺음 게송",
+      "ref": "iti34",
+      "ko_text": "부지런하지도 조심하지도 않고, 게으르고 힘이 없고, 흐리멍덩하고 졸음에 차 있고, 부끄러움도 헤아림도 없는 사람은 가장 높은 깨달음을 겪을 수 없다. 깨어 있고 살피고 마음을 모으는 사람, 부지런하고 조심하고 게으르지 않은 사람은 태어남과 늙음의 매듭을 끊고 바로 이 삶에서 깨달음에 이른다.",
+      "base_note": "Sujato 영역의 맺음 게송을 옮겼다. 'Neither keen nor prudent, lazy, lacking energy, full of dullness and drowsiness... such a mendicant is incapable of experiencing the highest awakening.'",
+      "modern_gloss": "여기서 게으름은 느긋함이 아니라 마음이 흐려져 힘이 안 실리는 상태다. 힘을 되찾는 첫 걸음은 지금 깨어 있는 것 하나뿐이다.",
+      "retrieval_text": "아무것도 하기 싫고 하루가 흐리게 지나갈 때. 잠만 자고 무기력에서 못 빠져나올 때. 해야 할 걸 알면서도 몸이 움직이지 않을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "무기력",
+        "게으름",
+        "번아웃",
+        "부지런함"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "흐리멍덩한 하루를 깨우는 것은 지금 깨어 있음 하나다",
+      "terms": [
+        {
+          "word": "조심",
+          "gloss": "내 행동이 남기는 결과를 헤아려 삼가는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "우울이나 번아웃으로 힘이 없는 사람에게 게으르다고 몰아붙이는 말로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.42",
+      "citation_ko": "이띠웃따까 42경 밝은 것, 세상을 지키는 두 가지 대목",
+      "ref": "iti42",
+      "ko_text": "두 가지 밝은 것이 세상을 지킨다. 부끄러움을 아는 마음과 조심하는 마음이다. 이 둘이 세상을 지키지 않는다면 어머니도 이모도 스승의 아내도 알아보지 못하고, 세상은 짐승 무리처럼 흐트러질 것이다. 이 둘이 지키기에 사람들은 서로의 자리를 알아본다.",
+      "base_note": "Sujato 영역의 conscience(hiri)와 prudence(ottappa)를 각각 제 안에서 부끄러워하는 마음, 결과를 헤아려 조심하는 마음으로 옮겼다. 원문이 염소와 닭과 개를 차례로 드는 대목은 짐승 무리로 줄였다.",
+      "modern_gloss": "부끄러움은 나를 깎아내리는 감정이 아니라 선을 넘지 않게 잡아 주는 난간이다. 이게 없는 사람이 편해 보여도 그 편함이 관계를 무너뜨린다.",
+      "retrieval_text": "염치없이 구는 사람 때문에 지칠 때. 나만 예의를 지키느라 손해 보는 기분이 들 때. 서로 지켜야 할 선이 무너진 관계를 어떻게 해야 할지 모를 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "부끄러움",
+        "염치",
+        "관계",
+        "예의"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "부끄러움과 조심함, 이 둘이 세상을 지키는 밝은 것이다",
+      "terms": [
+        {
+          "word": "부끄러움을 아는 마음",
+          "gloss": "남이 보지 않아도 스스로 부끄러워할 줄 아는 마음이에요"
+        },
+        {
+          "word": "조심하는 마음",
+          "gloss": "내 행동이 남길 결과가 두려워 삼가는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "수치심이 심한 사람에게는 더 부끄러워하라는 말로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.88",
+      "citation_ko": "이띠웃따까 88경 안의 때, 성냄 대목",
+      "ref": "iti88",
+      "ko_text": "안에 있는 때가 셋이다. 탐냄과 성냄과 어리석음이다. 이것은 안에 있는 적이고 안에 있는 원수다. 성냄은 해를 부르고 마음을 뒤집는다. 성난 사람은 제 안에서 일어나는 위험을 알아보지 못한다. 성냄을 놓은 이는 건드려도 성내지 않는다. 잘 익은 야자열매가 꼭지에서 떨어지듯 성냄이 그에게서 떨어진다.",
+      "base_note": "Sujato 영역에서 성냄 대목만 골라 옮겼다. 'Hate falls off them like a ripe palmyra fruit from its stem.' 탐냄 대목의 연잎 물방울 비유와 어리석음 대목은 카드 길이에 맞춰 뺐다.",
+      "modern_gloss": "성이 날 때 진짜 적은 앞에 있는 사람이 아니라 안에서 판을 뒤집는 감정이다. 상대를 이겨도 이 적은 그대로 남는다.",
+      "retrieval_text": "누가 건드리기만 해도 화가 치밀 때. 화를 내고 나서 더 괴로워질 때. 누군가를 미워하는 마음이 나를 갉아먹는다고 느낄 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "분노",
+        "미움",
+        "감정",
+        "다스림"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "잘 익은 열매가 꼭지에서 떨어지듯, 성냄도 그렇게 떨어진다",
+      "terms": [
+        {
+          "word": "야자열매",
+          "gloss": "팔미라야자 열매예요. 다 익으면 건드리지 않아도 저절로 떨어져요"
+        }
+      ],
+      "cautions": [
+        "화를 내면 안 된다는 억압으로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.2.9",
+      "citation_ko": "우다나 2장 9경 위사카, 뜻대로 되지 않은 송사 뒤에 한 게송",
+      "ref": "ud2.9",
+      "ko_text": "위사카가 빠세나디 왕과 얽힌 일로 애쓰다가 뜻대로 되지 않은 채 한낮에 부처를 찾아왔다. 부처가 말했다. 남의 손에 달린 것은 모두 괴롭고 제 손에 달린 것은 모두 편하다. 함께 묶인 일은 두 쪽 모두를 고달프게 한다. 멍에는 벗어나기가 어렵다.",
+      "base_note": "Sujato 영역: 'All under another’s control is suffering, all under one’s own authority is pleasing; what’s shared is stressful for both parties, for yokes are hard to escape.' 왕의 처분이 기대에 못 미쳤다는 산문 대목은 한 문장으로 줄였다.",
+      "modern_gloss": "결정권이 남에게 있는 일에 마음을 다 걸면 그만큼 끌려다닌다. 내 손에 있는 칸이 어디까지인지부터 그어 보는 게 먼저다.",
+      "retrieval_text": "회사 일이 내 뜻대로 되지 않아 답답할 때. 결정권은 없는데 책임만 지는 자리에 있을 때. 돈이나 계약 문제가 남의 판단에 달려 있어 불안할 때",
+      "tags_primary": [
+        "uncertainty",
+        "money"
+      ],
+      "themes": [
+        "직장",
+        "권한",
+        "돈",
+        "의존"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남의 손에 달린 것은 괴롭고 제 손에 달린 것은 편하다",
+      "terms": [
+        {
+          "word": "위사카",
+          "gloss": "부처 당시 사왓티에 살던 이름난 여성 후원자예요"
+        },
+        {
+          "word": "멍에",
+          "gloss": "소 두 마리를 한데 묶어 수레를 끌게 하는 나무틀이에요"
+        }
+      ],
+      "cautions": [
+        "함께 하는 일은 다 나쁘다는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.2.10",
+      "citation_ko": "우다나 2장 10경 밧디야, 왕이었을 때와 지금을 견주는 대목",
+      "ref": "ud2.10",
+      "ko_text": "왕족이었던 밧디야는 숲에서도 나무 아래에서도 빈집에서도 아, 행복하다 하고 되뇌었다. 부처가 까닭을 묻자 그가 말했다. 예전에 나라를 다스릴 때는 안팎으로 지키는 사람을 두었는데도 늘 두렵고 겁이 나고 의심스러웠습니다. 지금은 혼자 숲에 있어도 두렵지 않습니다. 걸식으로 지내며 사슴처럼 마음이 가볍습니다.",
+      "base_note": "Sujato 영역: 'although I was guarded and defended in this way, I remained fearful, scared, suspicious, and nervous... I live relaxed, unruffled, surviving on charity, my heart free as a wild deer.' 다른 비구들이 그를 오해했다는 앞 대목은 줄였다.",
+      "modern_gloss": "지킬 것이 늘어날수록 두려움도 같이 늘어난다. 두려움이 줄어드는 건 더 가질 때가 아니라 지켜야 할 것이 줄 때다.",
+      "retrieval_text": "가진 것을 잃을까 봐 늘 불안할 때. 자리나 성과를 지키느라 마음을 못 놓을 때. 남들이 부러워하는 자리에 있는데 전혀 행복하지 않을 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "불안",
+        "소유",
+        "지위",
+        "가벼움"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "걸식",
+          "gloss": "수행자가 집집을 돌며 밥을 얻어 먹는 일이에요"
+        }
+      ],
+      "cautions": [
+        "가진 것을 다 버려야 한다는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.3.6",
+      "citation_ko": "우다나 3장 6경 삘린다왓차, 거친 말버릇을 두고 부처가 한 말",
+      "ref": "ud3.6",
+      "ko_text": "삘린다왓차는 비구들을 부를 때마다 이 천한 것들아 하고 불렀다. 비구들이 부처에게 그 일을 알렸다. 부처가 그를 불러 사실을 확인하고는 비구들에게 말했다. 왓차를 나무라지 말라. 그는 미워서 그렇게 부르는 것이 아니다. 오래도록 그렇게 부르며 살아온 입버릇이다.",
+      "base_note": "Sujato 영역: 'Mendicants, don’t complain about the mendicant Vaccha. He doesn’t address the mendicants as “lowlifes” out of hate.' 오백 생 동안 브라만 집안에 났다는 전생 설명은 카드 길이에 맞춰 입버릇 한 마디로 줄였다. 맺음 게송은 누가 참 브라만인가를 말하는 대목이라 뺐다.",
+      "modern_gloss": "말투가 거친 사람을 모두 미움으로 읽으면 내가 먼저 지친다. 그 말이 나를 겨눈 것인지 그 사람의 오래된 버릇인지는 나눠 볼 수 있다.",
+      "retrieval_text": "상대의 말투가 거칠어서 상처받을 때. 저 사람이 나를 싫어하는 것 같아 계속 신경 쓰일 때. 직장에서 퉁명스러운 사람과 매일 부딪힐 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "말투",
+        "오해",
+        "관계",
+        "해석"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "삘린다왓차",
+          "gloss": "부처의 제자 가운데 한 사람으로, 말버릇이 거칠기로 알려졌어요"
+        }
+      ],
+      "cautions": [
+        "막말이나 무례를 감싸 주는 근거로 쓰일 수 있다",
+        "실제로 상대가 나를 무시하는 경우까지 내 해석 탓으로 돌리면 안 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.7.5",
+      "citation_ko": "우다나 7장 5경 라꾼다까 밧디야 둘째 경, 업신여김을 받던 비구를 두고 한 말",
+      "ref": "ud7.5",
+      "ko_text": "밧디야가 여러 비구 뒤를 따라 걸어왔다. 그는 키가 작고 볼품없다는 이유로 대개의 비구들에게 업신여김을 받던 사람이었다. 부처가 비구들에게 말했다. 저기 오는 비구가 보이는가. 저 사람은 크게 힘 있는 이다. 그가 이르지 못한 자리를 찾기가 오히려 어렵다. 그는 이미 이 삶에서 갈 데까지 간 사람이다.",
+      "base_note": "Sujato 영역의 'ugly, unsightly, deformed, and despised by most of the mendicants' 는 생김새를 흉보는 말 그대로 옮기지 않고 업신여김을 받았다는 사실 쪽으로 옮겼다. 맺음 게송인 한 바퀴 수레 비유는 뜻이 뚜렷하지 않아 산문 대목만 카드에 담았다.",
+      "modern_gloss": "사람을 알아보지 못하는 건 그 사람의 문제가 아니라 보는 눈의 문제다. 지금 나를 낮춰 보는 시선도 그렇다.",
+      "retrieval_text": "외모나 조건 때문에 무시당한다고 느낄 때. 남들이 나를 낮춰 보는 것 같아 위축될 때. 겉으로 보이는 것만으로 평가받는다고 느낄 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "외모",
+        "편견",
+        "무시",
+        "자존감"
+      ],
+      "difficulty": "easy",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "라꾼다까 밧디야",
+          "gloss": "키가 작아 라꾼다까(작은 이)라 불리던 부처의 제자예요"
+        },
+        {
+          "word": "비구",
+          "gloss": "출가한 남자 수행자예요"
+        }
+      ],
+      "cautions": [
+        "생김새를 흉보는 표현이 원문에 그대로 있어 옮기면서 덜어냈다",
+        "속이 훌륭하면 겉은 상관없다는 위로로 납작하게 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thag.2.20",
+      "citation_ko": "테라가타 2장 20경 시리마 장로의 게송",
+      "ref": "thag2.20",
+      "ko_text": "마음이 가라앉지 않은 사람을 남들이 칭찬한들 그 칭찬은 헛되다. 그에게는 가라앉음이 없기 때문이다. 마음이 가라앉은 사람을 남들이 헐뜯은들 그 헐뜯음도 헛되다. 그에게는 가라앉음이 있기 때문이다.",
+      "base_note": "Sujato 영역: 'If others praise one who has no immersion, they praise in vain... If others criticize one who does have immersion, they criticize in vain.' immersion(samādhi)을 마음이 가라앉음으로 옮겼다.",
+      "modern_gloss": "남의 평가는 내 안에 있는 것을 바꾸지 못한다. 칭찬도 비난도 내가 지금 어떤 상태인지 알려 주는 정보가 아니다.",
+      "retrieval_text": "남의 말 한마디에 하루가 무너질 때. 나를 헐뜯는 말을 며칠씩 곱씹게 될 때. 칭찬을 들어도 불안하고 비난을 들으면 무너질 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "평판",
+        "비난",
+        "칭찬",
+        "시선"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "칭찬도 헐뜯음도 그 사람 안에 있는 것을 바꾸지 못한다",
+      "terms": [
+        {
+          "word": "가라앉음",
+          "gloss": "마음이 흩어지지 않고 한자리에 고요히 모인 상태예요"
+        }
+      ],
+      "cautions": [
+        "남의 말은 전부 무시해도 된다는 뜻으로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thag.3.15",
+      "citation_ko": "테라가타 3장 15경 하리따 장로의 게송, 앞의 두 연",
+      "ref": "thag3.15",
+      "ko_text": "먼저 해야 할 일을 나중에 하려는 사람은 행복의 씨앗을 잃고, 뒤에 가서 후회에 시달린다. 할 일만 말하고 하지 않을 일은 말하지 말라. 말만 하고 하지 않는 사람은 지혜로운 이들이 알아본다.",
+      "base_note": "Sujato 영역: 'Whoever wishes to do afterwards tasks they should have done before has lost the causes for happiness, and afterwards they’re tormented by regrets.' 마지막 연인 열반 찬탄 대목은 고민 상담에 닿지 않아 뺐다.",
+      "modern_gloss": "미루는 마음은 지금 편하려고 생기지만 결국 후회라는 더 비싼 값을 치른다. 오늘 옮길 수 있는 한 칸만 옮겨 둔다.",
+      "retrieval_text": "해야 할 일을 자꾸 미루다 마감에 몰릴 때. 그때 했더라면 하고 지난 일을 후회할 때. 말만 해 놓고 정작 시작하지 못할 때",
+      "tags_primary": [
+        "regret",
+        "indecision"
+      ],
+      "themes": [
+        "미루기",
+        "후회",
+        "실행",
+        "말과 행동"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "나중에 하려는 마음이 먼저 행복의 씨앗을 가져간다",
+      "terms": [],
+      "cautions": [
+        "미루는 사람을 게으르다고 몰아붙이는 말로 읽힐 수 있다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "본문은 SuttaCentral Sujato 판 3장 15경에서 확인했다. 다만 똑같은 게송이 3장 3경 바꿀라 장로 편에도 그대로 실려 있어, 누구의 말로 적을지는 감수자가 정하는 편이 낫다."
+    },
+    {
+      "id": "thag.10.2",
+      "citation_ko": "테라가타 10장 2경 에까위하리야 장로의 게송, 홀로 머묾을 말하는 앞 대목",
+      "ref": "thag10.2",
+      "ko_text": "앞에도 뒤에도 아무도 없다면, 숲에 홀로 머무는 것은 아주 좋은 일이다. 자, 나는 홀로 가겠다. 부처가 기린 그 숲으로. 홀로 굳게 머무는 것은 수행자에게 즐거운 일이다. 이것이 내가 하려는 일이니 뜻대로 되기를. 나는 내 힘으로 해내겠다. 남의 몫을 대신해 줄 수 있는 사람은 없기 때문이다.",
+      "base_note": "Sujato 영역의 앞 연들과 'I’ll make it happen myself, for no one can do another’s duty' 연을 이어 붙였다. 숲 풍경을 길게 그린 연들은 카드 길이에 맞춰 뺐다.",
+      "modern_gloss": "혼자인 것과 외로운 것은 다르다. 곁에 아무도 없는 시간이 처음에는 비어 보이지만, 내 몫을 내가 할 수 있는 자리이기도 하다.",
+      "retrieval_text": "곁에 있던 사람이 떠나 혼자 남았을 때. 혼자 있는 시간을 견디기 힘들 때. 아무도 내 일을 대신해 주지 않는다는 걸 알게 됐을 때",
+      "tags_primary": [
+        "loss",
+        "apathy"
+      ],
+      "themes": [
+        "홀로",
+        "외로움",
+        "자립",
+        "이별"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "앞에도 뒤에도 아무도 없다면, 홀로 머무는 것도 좋은 일이다",
+      "terms": [],
+      "cautions": [
+        "사람을 멀리하라는 말로 읽힐 수 있다",
+        "도움이 필요한 사람에게 고립을 견디라는 말로 들리면 위험하다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thag.12.2",
+      "citation_ko": "테라가타 12장 2경 수니따 장로의 게송, 앞의 여섯 연",
+      "ref": "thag12.2",
+      "ko_text": "나는 낮은 집안에 태어났다. 가난했고 먹을 것이 적었다. 하는 일도 천했다. 시든 꽃을 치우는 일이었다. 사람들은 나를 피했고 나는 업신여김을 받았다. 나는 마음을 낮추고 많은 사람에게 절을 했다. 그러다 부처를 보았다. 나는 들고 있던 것을 내려놓고 다가가 절했다. 그는 나를 가엾이 여겨 걸음을 멈추어 주었다.",
+      "base_note": "Sujato 영역: 'I was born in a low-class family. We were poor, with little to eat. My job was lowly: I threw out the old flowers. Shunned by people, I was disregarded and held in contempt.' 뒤에 이어지는 출가와 깨달음 대목은 카드 길이에 맞춰 뺐다.",
+      "modern_gloss": "그의 삶이 바뀐 건 형편이 좋아져서가 아니다. 자기를 천하게 여기던 시선 앞에서 걸음을 멈춰 준 사람이 하나 있었다.",
+      "retrieval_text": "집안 형편이나 하는 일 때문에 위축될 때. 사람들이 나를 피한다고 느낄 때. 가난 때문에 스스로를 낮게 보게 될 때",
+      "tags_primary": [
+        "comparison",
+        "money"
+      ],
+      "themes": [
+        "가난",
+        "신분",
+        "차별",
+        "자존감"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "수니따",
+          "gloss": "거리의 시든 꽃을 치우던 사람으로, 당시 가장 낮은 신분이었어요"
+        }
+      ],
+      "cautions": [
+        "출신은 상관없다는 말로 납작하게 읽히면 지금 겪는 차별이 지워진다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thig.2.3",
+      "citation_ko": "테리가타 2장 3경 수망갈라 어머니의 게송",
+      "ref": "thig2.3",
+      "ko_text": "잘 풀려났다, 참 잘 풀려났다. 절굿공이에서 이렇게 잘 풀려났다. 부끄러운 줄 모르던 남편에게서도 풀려났다. 탐냄과 성냄이 지글거리며 타던 것을 나는 눌러 끈다. 나무 아래로 가서 앉아, 아 이 편안함 하며 나는 행복하게 머문다.",
+      "base_note": "Sujato 영역: 'I’m well freed, well freed, so very well freed from the pestle!... Having gone to the root of a tree, I meditate happily, thinking, \"Oh, what bliss!\"' 남편과 절구를 두고 든 두 비유는 영역본마다 달라 빼고 옮겼다.",
+      "modern_gloss": "매일 같은 자리에서 같은 일을 반복하다 보면 그게 내 전부인 것 같다. 그 자리에서 한 발만 나와도 숨 쉴 자리가 생긴다.",
+      "retrieval_text": "매일 같은 일을 반복하다 지쳤을 때. 집안일이나 돌봄이 끝이 없다고 느낄 때. 내 삶이 여기서 더 나아가지 않을 것 같을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "반복",
+        "고된 일",
+        "벗어남",
+        "돌봄"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "절굿공이",
+          "gloss": "곡식을 찧는 나무 방망이예요. 당시 여성이 매일 하던 고된 집안일을 가리켜요"
+        }
+      ],
+      "cautions": [
+        "결혼 생활을 벗어나라는 말로 읽힐 수 있다",
+        "돌봄을 맡고 있는 사람에게 그 자리를 버리라는 말로 들릴 수 있다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "경 번호와 화자는 SuttaCentral Sujato 판에서 확인했다. 다만 남편과 절구를 버섯, 뱀장어에 빗댄 두 줄은 팔리 원문이 난해해 영역본마다 풀이가 갈린다. 카드에서는 그 두 줄을 빼고 옮겼으니 감수자가 확인하는 게 좋다."
+    },
+    {
+      "id": "thig.5.8",
+      "citation_ko": "테리가타 5장 8경 소나 장로니의 게송, 앞의 세 연",
+      "ref": "thig5.8",
+      "ko_text": "나는 이 몸으로 열 아이를 낳았다. 그러고서 힘이 다하고 늙었을 때 한 비구니를 찾아갔다. 그가 나에게 가르침을 일러 주었다. 나는 그 말을 듣고 머리를 깎고 집을 떠났다. 아직 배우는 자리에 있을 때 마음의 눈이 맑아졌고, 지나온 삶들이 보였다.",
+      "base_note": "Sujato 영역: 'I gave birth to ten sons in this form, this bag of bones. Then, when feeble and old, I approached a nun.' 마지막 줄 'Curse you, wretched old age!' 는 늙음을 저주하는 말이라 카드에서 뺐다.",
+      "modern_gloss": "늦었다는 말은 대개 남과 견줄 때 나온다. 소나는 열 아이를 다 키우고 몸이 쇠한 뒤에야 시작했다.",
+      "retrieval_text": "지금 시작하기엔 너무 늦었다고 느낄 때. 남들보다 출발이 늦었다고 생각될 때. 나이 때문에 새로 배우기를 망설일 때",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "나이",
+        "늦은 시작",
+        "진로",
+        "늙음"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "열 아이를 다 키우고 힘이 다한 뒤에, 그는 비로소 시작했다",
+      "terms": [
+        {
+          "word": "비구니",
+          "gloss": "출가한 여자 수행자예요"
+        }
+      ],
+      "cautions": [
+        "출가를 권하는 이야기로 좁게 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thig.6.1",
+      "citation_ko": "테리가타 6장 1경 빠따짜라의 제자 오백 명, 아들을 잃은 이에게 한 말과 그 답",
+      "ref": "thig6.1",
+      "ko_text": "온 길도 모르고 간 길도 모르는 이를 두고 내 아들아 하며 우는구나. 온 길과 간 길을 아는 이를 두고는 울지 않는다. 그것이 살아 있는 것들의 이치다. 청하지 않았는데 왔고, 말하지 않고 떠났다. 온 대로 갔을 뿐인데 무엇을 두고 우는가. 아, 당신은 보이지도 않게 가슴에 박혀 있던 화살을 뽑아 주었습니다. 아들을 잃은 슬픔에 잠겨 있던 나를 건져 주었습니다.",
+      "base_note": "Sujato 영역에서 빠따짜라의 말과 슬픔에서 놓여난 이의 답을 이어 붙였다. 'Oh! For you have plucked the arrow from me, so hard to see, stuck in the heart.'",
+      "modern_gloss": "슬픔을 설명으로 지울 수는 없다. 다만 가슴에 무엇이 박혀 있는지 이름을 붙이는 순간, 그것을 뽑을 자리가 보인다.",
+      "retrieval_text": "가족을 잃고 슬픔이 가라앉지 않을 때. 아이를 먼저 보낸 사람에게 무슨 말을 해야 할지 모를 때. 상실을 받아들이는 일이 도무지 되지 않을 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "상실",
+        "슬픔",
+        "가족",
+        "애도"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "빠따짜라",
+          "gloss": "남편과 두 아이와 부모를 한꺼번에 잃은 뒤 출가한 비구니예요"
+        }
+      ],
+      "cautions": [
+        "막 상실을 겪은 사람에게 그대로 내보내면 차갑게 들린다",
+        "슬퍼하지 말라는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thig.6.2",
+      "citation_ko": "테리가타 6장 2경 와셋티 장로니의 게송, 아들을 잃고 떠돌던 대목",
+      "ref": "thig6.2",
+      "ko_text": "아들을 잃은 슬픔에 무너져 정신을 놓고, 옷도 걸치지 못한 채 머리를 풀어헤치고 나는 이리저리 떠돌았다. 쓰레기 더미와 무덤가와 길바닥에서 살았다. 삼 년을 그렇게 주리고 목마른 채 떠돌았다. 그러다 미틸라 가까이에서 그분을 보았다. 정신이 돌아왔고, 나는 절하고 앉았다. 그는 나를 가엾이 여겨 가르침을 일러 주었다.",
+      "base_note": "Sujato 영역: 'Struck down with grief for my son, deranged, out of my mind, nude, my hair flying, I wandered here and there... For three years I wandered, stricken by hunger and thirst.' 뒤에 이어지는 출가 이후 대목은 뺐다.",
+      "modern_gloss": "그는 삼 년을 잃고 나서야 겨우 정신이 돌아왔다. 슬픔에서 빠져나오는 데 걸리는 시간은 사람마다 다르고, 오래 걸린다고 잘못된 것이 아니다.",
+      "retrieval_text": "상실을 겪고 한참이 지나도 회복되지 않을 때. 남들은 다 괜찮아졌는데 나만 그대로인 것 같을 때. 슬픔 때문에 일상이 완전히 무너졌을 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "상실",
+        "슬픔",
+        "회복",
+        "시간"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "미틸라",
+          "gloss": "고대 인도 위데하 나라의 도읍이에요"
+        }
+      ],
+      "cautions": [
+        "막 상실을 겪은 사람에게는 견디기 힘든 묘사가 들어 있다",
+        "삼 년이라는 기간을 회복의 기준으로 읽으면 안 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thig.12.1",
+      "citation_ko": "테리가타 12장 1경 뿐니까 장로니의 게송, 물 긷던 시절과 마지막 연",
+      "ref": "thig12.1",
+      "ko_text": "나는 물을 긷던 사람이었다. 추운 날에도 늘 물속에 들어갔다. 주인에게 맞을까 두려웠고 꾸짖음과 성냄이 무서웠다. 물에 씻으면 죄가 씻긴다며 떨면서 강에 드는 브라만에게 내가 말했다. 그렇다면 개구리도 거북도 다 하늘에 나겠습니다. 두려운 일이 있거든 그 일을 하지 마십시오. 그 말을 들은 브라만이 답했다. 나는 핏줄로만 브라만이었는데, 오늘은 참으로 브라만이 되었습니다.",
+      "base_note": "Sujato 영역의 첫 연과 목욕 논박 대목, 그리고 마지막 연 'I used to be brahmin only by kin, today I truly am a brahmin!' 을 이어 붙였다. 물고기와 사냥꾼을 줄지어 드는 대목은 줄였다. 마지막 연은 물 긷던 뿐니까가 아니라 그의 말을 듣고 돌아선 브라만의 말이라, 화자를 나누어 옮겼다. 종살이하던 사람이 자기를 핏줄로만 브라만이었다고 말할 수는 없다.",
+      "modern_gloss": "그를 정한 것은 태어난 자리가 아니라 그가 한 말과 한 일이었다. 물 긷던 사람에게 배운 사제가 그제야 자기 신분이 껍데기였다고 인정한다.",
+      "retrieval_text": "집안이나 직업 때문에 무시당한다고 느낄 때. 남의 눈치를 보며 일해야 하는 자리에서 자존감이 깎일 때. 내가 하는 말이 가볍게 취급된다고 느낄 때",
+      "tags_primary": [
+        "comparison",
+        "money"
+      ],
+      "themes": [
+        "신분",
+        "가난",
+        "노동",
+        "자존감"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        {
+          "word": "브라만",
+          "gloss": "고대 인도에서 제사를 맡던 가장 높은 신분이에요"
+        }
+      ],
+      "cautions": [
+        "다른 종교의 의례를 깎아내리는 말로 읽힐 수 있다",
+        "신분은 상관없다는 말로 납작하게 읽히면 지금 겪는 차별이 지워진다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "경 번호와 화자는 SuttaCentral Sujato 판에서 확인했다. 다만 마지막 연을 뿐니까의 말로 보는 판본도 있어 화자가 갈린다. 여기서는 브라만의 말로 옮겼으니 감수자가 확인하는 게 좋다."
+    }
+  ]
+}

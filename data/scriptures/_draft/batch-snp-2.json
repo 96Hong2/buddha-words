@@ -1,0 +1,582 @@
+{
+  "batch": "snp-2",
+  "source_note": "숫타니파타 확장분 20구절이다. 1차 30구절과 게송이 겹치지 않도록 골랐다(1장 2·4·10·11·12경, 2장 3·8경, 3장 1·3·11경, 4장 3·10·16경). 1장 2경 다니야경만 1차가 19게를 이미 썼고 여기서는 다른 대목인 25게를 골랐다. 나머지 열두 경은 1차가 손대지 않았다. 게송 번호는 SuttaCentral bilara API 의 reference 데이터에 있는 vnp 값으로 20개 모두 직접 대조했고, 자애경이 143~152게로 나오는 것을 확인해 이 번호 체계가 흔히 쓰는 숫타니파타 통번호와 맞는 것을 검증했다. 다만 판본에 따라 번호가 6~7 어긋나는 대목이 있어 그런 경우 confidence_note 에 다른 번호를 함께 적었다. 번역은 Bhikkhu Sujato 영역본(CC0)과 팔리 원문을 함께 보고 우리 말로 새로 옮겼고 기존 한국어 번역본은 참고하지 않았다. 1차가 anxiety·anger 로 쏠려 이번에는 comparison·money·apathy·uncertainty·regret 를 의식해 채웠다. 십이연기 공식(4장 11경, 3장 12경)과 수행 단계 나열(2장 13·14경), 의례용 축원(2장 1경), 몸을 혐오하는 관찰 대목은 고민 상담에 닿지 않아 뺐다. 자해·죽음으로 읽힐 수 있는 대목은 넣지 않았다.",
+  "items": [
+    {
+      "id": "snp.1.2.25",
+      "citation_ko": "숫타니파타 1장 2경 다니야경 25게",
+      "ref": "snp1.2",
+      "ko_text": "나는 누구의 삯꾼도 아니다. 내가 얻은 것으로 온 세상을 걸어 다닌다. 품삯을 받을 일이 내게는 없다. 그러니 뿌리고 싶거든 뿌려라, 하늘이여.",
+      "base_note": "Sujato 영역: I am no one's lackey, with what I have earned I wander the world. I have no need for wages: so rain forth, heavens, if you wish. 팔리 Nāhaṁ bhatakosmi kassaci, nibbiṭṭhena carāmi sabbaloke 를 함께 보고 새로 옮겼다. 소치기 다니야가 «나는 내 힘으로 먹고산다»고 노래하자 부처가 같은 가락으로 받아친 대목이다.",
+      "modern_gloss": "누구에게 매여 품삯을 받는 자리에 내 삶이 통째로 놓여 있지는 않은지 묻는 말이다. 일을 그만두라는 뜻이 아니라, 생계의 손잡이를 누가 쥐고 있는지 보라는 쪽이다.",
+      "retrieval_text": "월급 때문에 참고 다닌다는 생각이 들어 답답할 때. 내 생계가 온전히 남의 손에 달려 있다고 느껴 숨이 막히는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "생계",
+        "자립",
+        "일"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "내가 얻은 것으로 걸어간다. 품삯에 매여 살지 않는다",
+      "terms": [
+        {
+          "word": "삯꾼",
+          "gloss": "품삯을 받고 남의 일을 해 주는 사람이에요"
+        }
+      ],
+      "cautions": [
+        "일을 그만두라는 말로 읽히기 쉽다. 매여 있다는 느낌을 다시 보자는 쪽에 가깝다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "snp.1.4.77",
+      "citation_ko": "숫타니파타 1장 4경 밭 가는 바라드와자경 77게",
+      "ref": "snp1.4",
+      "ko_text": "믿음이 내가 뿌리는 씨앗이고 애써 나아감이 그 위에 내리는 비다. 지혜는 내 멍에이자 쟁기이고, 부끄러움을 아는 마음이 끌채다. 마음이 고삐이고 알아차림이 보습이자 몰이막대다.",
+      "base_note": "Sujato 영역: Faith is my seed, fervor my rain, and wisdom is my yoke and plough. Conscience is my draft-pole, mind my strap, mindfulness my plowshare and goad. 팔리 Saddhā bījaṁ tapo vuṭṭhi, paññā me yuganaṅgalaṁ 을 함께 보고 옮겼다. 농부 바라드와자가 «당신은 밭을 갈지 않으면서 왜 먹는가»라고 묻자 부처가 답한 대목이다.",
+      "modern_gloss": "눈에 보이는 밭만 밭이 아니라는 말이다. 성과가 안 보이는 시기에도 무엇을 믿고 어디에 마음을 쓰는지가 이미 밭을 가는 일이다.",
+      "retrieval_text": "아무것도 손에 잡히지 않고 내가 쓸모없는 사람처럼 느껴질 때. 눈에 보이는 결과가 없어 지금 헛살고 있나 싶은 상황",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "일",
+        "정진",
+        "믿음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "믿음이 씨앗이고 애씀이 빗물이다. 나에게도 갈고 있는 밭이 있다",
+      "terms": [
+        {
+          "word": "보습",
+          "gloss": "쟁기 끝에 달아 흙을 파고 드는 쇠날이에요"
+        },
+        {
+          "word": "끌채",
+          "gloss": "수레나 쟁기를 소에 이어 주는 긴 나무예요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "snp.1.4.79",
+      "citation_ko": "숫타니파타 1장 4경 밭 가는 바라드와자경 79게",
+      "ref": "snp1.4",
+      "ko_text": "애써 나아감이 멍에를 진 내 소다. 얽매임이 풀린 자리로 나를 실어다 준다. 한 번도 돌아서지 않고 나아가, 다다르면 다시는 슬퍼하지 않는 곳까지 간다.",
+      "base_note": "Sujato 영역: Energy is my harnessed beast, transporting me to sanctuary from the yoke. Without turning back, it goes to where there is no sorrow. 팔리 Vīriyaṁ me dhuradhorayhaṁ, yogakkhemādhivāhanaṁ 을 함께 보고 옮겼다. 앞 게송의 밭 비유를 이어받아 소에 해당하는 것이 무엇인지 말한다.",
+      "modern_gloss": "속도가 아니라 돌아서지 않는 것을 말한다. 오늘 뗀 걸음이 작아도 방향만 그대로면 소는 계속 끌고 간다.",
+      "retrieval_text": "의욕이 바닥나서 다 그만두고 싶을 때. 해도 티가 나지 않는 일을 계속해야 하나 싶은 상황",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "정진",
+        "지속",
+        "일"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "돌아서지만 않으면 된다. 그 길은 슬픔 없는 곳으로 간다",
+      "terms": [
+        {
+          "word": "멍에",
+          "gloss": "소의 목에 얹어 쟁기를 끌게 하는 나무틀이에요"
+        },
+        {
+          "word": "얽매임이 풀린 자리",
+          "gloss": "팔리어 요가케마, 붙잡힌 것이 없어 안전한 곳을 가리켜요"
+        }
+      ],
+      "cautions": [
+        "몸이 상할 때까지 밀어붙이라는 말로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "snp.1.10.182",
+      "citation_ko": "숫타니파타 1장 10경 알라바까경 182게",
+      "ref": "snp1.10",
+      "ko_text": "사람에게 가장 큰 재산은 믿음이다. 바르게 익힌 가르침은 행복을 데려온다. 맛 가운데 가장 단 맛은 진실이다. 가장 잘 사는 삶은 지혜로 사는 삶이라고 한다.",
+      "base_note": "Sujato 영역: Faith here is a person's best wealth. The teaching brings happiness when practiced well. Truth is the sweetest taste of all. The one they say has the best life lives by wisdom. 팔리 Saddhīdha vittaṁ purisassa seṭṭhaṁ 을 함께 보고 옮겼다. 야차 알라바까가 «무엇이 사람의 가장 큰 재산인가»라고 물은 데 대한 답이다.",
+      "modern_gloss": "재산을 세는 칸이 하나 더 있다는 말이다. 통장에 찍힌 숫자 말고, 무엇을 믿고 어떻게 사는지도 가진 것으로 센다.",
+      "retrieval_text": "돈이 없어서 내 삶이 초라하게 느껴질 때. 가진 것으로 사람을 재는 자리에서 자꾸 작아지는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "재산",
+        "가치",
+        "삶"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "가진 돈이 아니라 무엇을 믿고 사는지가 내 재산이다",
+      "terms": [
+        {
+          "word": "믿음",
+          "gloss": "팔리어 삿다, 막연한 기대가 아니라 이 길이 맞다는 신뢰예요"
+        }
+      ],
+      "cautions": [
+        "돈 걱정을 가볍게 여기라는 말이 아니다. 재산을 세는 칸이 하나 더 있다는 뜻이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 184게로 매기기도 한다."
+    },
+    {
+      "id": "snp.1.10.187",
+      "citation_ko": "숫타니파타 1장 10경 알라바까경 187게",
+      "ref": "snp1.10",
+      "ko_text": "제 몫을 알고 맡은 짐을 지고 부지런히 일어서는 사람이 재산을 얻는다. 진실함으로 이름을 얻고 베풂으로 벗을 묶는다.",
+      "base_note": "Sujato 영역: Being responsible, acting appropriately, and working hard you earn wealth. Truthfulness wins you a good reputation. You hold on to friends by giving. 팔리 Patirūpakārī dhuravā, uṭṭhātā vindate dhanaṁ 을 함께 보고 옮겼다.",
+      "modern_gloss": "돈과 평판과 사람을 각각 무엇이 만드는지 나눠 말한다. 셋을 한 가지 방법으로 다 얻으려 하면 셋 다 어그러진다.",
+      "retrieval_text": "돈도 인정도 사람도 다 모자란 것 같아 어디부터 손대야 할지 모를 때. 열심히 하는데 남는 것이 없다고 느끼는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "재산",
+        "신뢰",
+        "베풂",
+        "일"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "재산은 부지런함이, 이름은 진실함이, 벗은 베풂이 만든다",
+      "terms": [],
+      "cautions": [
+        "열심히만 하면 반드시 부자가 된다는 보장으로 읽지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 189게로 매기기도 한다."
+    },
+    {
+      "id": "snp.1.11.206",
+      "citation_ko": "숫타니파타 1장 11경 승리경 206게",
+      "ref": "snp1.11",
+      "ko_text": "이런 몸을 가지고 우쭐해지거나 남을 깔본다면, 그것은 아직 보지 못한 것이 아니고 무엇이겠는가.",
+      "base_note": "Sujato 영역: And if, on account of such a body, someone prides themselves or looks down on others, what is that but a failure to see? 팔리 Etādisena kāyena, yo maññe uṇṇametave 를 함께 보고 옮겼다. 앞 게송들이 몸의 안팎을 낱낱이 훑은 뒤 맺는 마지막 대목이다.",
+      "modern_gloss": "몸으로 우열을 매기는 일이 얼마나 얕은 자리에 서 있는지 짚는다. 남을 낮추는 쪽과 나를 깎는 쪽은 같은 착각이다.",
+      "retrieval_text": "거울을 보거나 남의 사진을 보고 내 외모가 초라하게 느껴질 때. 겉모습으로 사람을 재는 자리에서 주눅이 드는 상황",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "몸",
+        "자만",
+        "외모"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "몸을 더럽게 여기라는 말로 읽히기 쉽다. 이 경의 앞 대목이 몸을 낱낱이 살피는 수행이라 그 맥락 없이 쓰면 뜻이 뒤틀린다",
+        "자기 몸을 이미 미워하고 있는 사람에게는 권하지 않는다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 다만 앞의 몸 관찰 대목과 떼어 놓으면 뜻이 달라져 카드로 쓸지 감수가 필요하다. 판본에 따라 208게로 매기기도 한다."
+    },
+    {
+      "id": "snp.1.12.213",
+      "citation_ko": "숫타니파타 1장 12경 성자경 213게",
+      "ref": "snp1.12",
+      "ko_text": "홀로 걸으며 깨어 있는 성자는 헐뜯음에도 칭찬에도 흔들리지 않는다. 소리에 놀라지 않는 사자처럼, 그물에 걸리지 않는 바람처럼, 물에 젖지 않는 연꽃처럼. 남에게 끌려가지 않고 남을 이끄는 이, 그런 이를 성자라 한다.",
+      "base_note": "Sujato 영역: The diligent sage wandering alone, is unshaken by blame and praise, like a lion not startled by sounds, like wind not caught in a net, like water not sticking to a lotus. Leader of others, not by others led. 팔리 Nindāpasaṁsāsu avedhamānaṁ 을 함께 보고 옮겼다.",
+      "modern_gloss": "칭찬에 붕 뜨는 마음과 비난에 무너지는 마음은 사실 하나다. 둘 다 남이 쥐고 있는 손잡이다.",
+      "retrieval_text": "남의 평가에 하루 기분이 통째로 좌우될 때. 댓글이나 한마디 말에 종일 마음이 휘둘리는 상황",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "평판",
+        "흔들림",
+        "자립"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "칭찬도 헐뜯음도 남이 쥔 손잡이다. 거기 매달리지 않는다",
+      "terms": [],
+      "cautions": [
+        "남의 말을 아예 듣지 말라는 뜻은 아니다. 듣되 휘둘리지 않는 쪽이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 215게로 매기기도 한다."
+    },
+    {
+      "id": "snp.2.3.255",
+      "citation_ko": "숫타니파타 2장 3경 부끄러움경 255게",
+      "ref": "snp2.3",
+      "ko_text": "늘 갈라설 낌새를 의심하고 흠만 들여다보는 이는 벗이 아니다. 아이가 어미 품에 기대듯 기대어 쉴 수 있는 이, 남의 말로는 갈라지지 않는 이가 참된 벗이다.",
+      "base_note": "Sujato 영역: No true friend relentlessly suspects betrayal, looking for fault. One on whom you rest, like a child on the breast, is a true friend, not split from you by others. 팔리 Yasmiñca seti urasīva putto, sa ve mitto yo parehi abhejjo 를 함께 보고 옮겼다.",
+      "modern_gloss": "관계를 재는 자가 둘 나온다. 그 사람 앞에서 마음을 내려놓을 수 있는가, 그리고 제삼자의 말에 그 관계가 흔들리는가.",
+      "retrieval_text": "가까운 사람과 사이가 틀어져 이 관계를 계속 이어가야 하나 고민될 때. 누가 진짜 내 편인지 모르겠는 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "우정",
+        "신뢰",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "기대어 쉴 수 있고 남의 말에 갈라지지 않으면 벗이다",
+      "terms": [],
+      "cautions": [
+        "이 기준을 들고 주변 사람을 잘라 내라는 말이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 258게로 매기기도 한다."
+    },
+    {
+      "id": "snp.2.8.319",
+      "citation_ko": "숫타니파타 2장 8경 배경 319게",
+      "ref": "snp2.8",
+      "ko_text": "물살이 거센 큰 강에 뛰어든 사람과 같다. 제 몸이 아래로 떠내려가면서 어떻게 남을 건너게 해 주겠는가.",
+      "base_note": "Sujato 영역: It's like a man who has plunged into a river, a rushing torrent in spate. As they are swept away downstream, how could they help others across? 팔리 So vuyhamāno anusotagāmī, kiṁ so pare sakkhati tārayetuṁ 을 함께 보고 옮겼다.",
+      "modern_gloss": "원래는 제대로 알지 못하는 사람이 남을 가르치는 일을 두고 한 말이다. 내가 떠내려가는 중에는 누구도 건질 수 없다는 그림은 그대로 남는다.",
+      "retrieval_text": "내가 지쳐 있으면서도 가족이나 동료를 계속 챙겨야 할 때. 남을 돌보느라 정작 내가 가라앉고 있는 상황",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "돌봄",
+        "한계",
+        "배움"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "떠내려가는 중에는 아무도 건질 수 없다. 먼저 발을 딛는다",
+      "terms": [],
+      "cautions": [
+        "원래 맥락은 제대로 배우지 못한 사람이 남을 가르칠 수 없다는 쪽이다. 돌봄 이야기로 넓혀 읽는 것은 우리 쪽 풀이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 322게로 매기기도 한다."
+    },
+    {
+      "id": "snp.2.8.323",
+      "citation_ko": "숫타니파타 2장 8경 배경 323게",
+      "ref": "snp2.8",
+      "ko_text": "그러니 참된 사람을 가까이하라. 슬기롭고 많이 배운 이를. 뜻을 알아듣고 그대로 걸어가는 사람, 가르침을 제 것으로 아는 사람은 행복을 얻는다.",
+      "base_note": "Sujato 영역: That's why you should spend time with a true person, intelligent and learned. Having understood the meaning, putting it into practice, one who understands the teaching would find happiness. 팔리 Tasmā have sappurisaṁ bhajetha 를 함께 보고 옮겼다.",
+      "modern_gloss": "진로에서 크게 갈리는 것은 누구 옆에 서 있느냐다. 그리고 들은 것을 실제로 해 보느냐다.",
+      "retrieval_text": "앞으로 무엇을 해야 할지 모르겠고 누구에게 물어야 할지도 막막할 때. 배우고는 있는데 제자리인 것 같은 상황",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "배움",
+        "스승",
+        "진로"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "누구 곁에 서는지가 길을 바꾼다. 듣고 나면 그대로 걸어 본다",
+      "terms": [
+        {
+          "word": "참된 사람",
+          "gloss": "팔리어 삽뿌리사, 말과 행동이 어긋나지 않는 사람을 가리켜요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 326게로 매기기도 한다."
+    },
+    {
+      "id": "snp.3.1.424",
+      "citation_ko": "숫타니파타 3장 1경 출가경 424게",
+      "ref": "snp3.1",
+      "ko_text": "감각의 즐거움에서 위험을 보았고, 내려놓고 떠나는 쪽이 안전한 줄 보았다. 나는 애써 나아가려 한다. 내 마음이 기뻐하는 자리는 거기다.",
+      "base_note": "Sujato 영역: Seeing the danger in sensual pleasures, seeing renunciation as sanctuary, I shall go on to strive; that is where my mind delights. 팔리 Kāmesvādīnavaṁ disvā, nekkhammaṁ daṭṭhu khemato 를 함께 보고 옮겼다. 빔비사라 왕이 «젊고 잘났으니 내 밑에서 누릴 것을 누리라»고 권하자 부처가 사양하며 답한 대목이다.",
+      "modern_gloss": "좋은 조건을 거절하는 장면이다. 이유가 «그게 싫어서»가 아니라 «내 마음이 기뻐하는 자리가 따로 있어서»라는 점이 다르다.",
+      "retrieval_text": "남들이 보기에 좋은 자리를 두고 다른 길로 가야 하나 망설일 때. 조건은 나쁘지 않은데 마음이 가지 않는 상황",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "진로",
+        "선택",
+        "기쁨"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "내 마음이 기뻐하는 자리가 어디인지부터 본다",
+      "terms": [
+        {
+          "word": "내려놓고 떠남",
+          "gloss": "팔리어 넥캄마, 쥐고 있던 것을 놓고 나서는 것이에요"
+        }
+      ],
+      "cautions": [
+        "당장 직장을 그만두라는 말로 읽히기 쉽다. 원래는 출가 이야기라 그대로 옮겨 쓰기 어렵다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 다만 출가를 권하는 말로 읽힐 수 있어 카드 문구와 함께 감수가 필요하다. 판본에 따라 427게로 매기기도 한다."
+    },
+    {
+      "id": "snp.3.3.451",
+      "citation_ko": "숫타니파타 3장 3경 잘 설해진 말씀경 451게",
+      "ref": "snp3.3",
+      "ko_text": "자기를 태우지 않고 남을 해치지도 않는 말, 그런 말만 하라. 그것이 잘한 말이다.",
+      "base_note": "Sujato 영역: Speak only those words that do not hurt yourself nor harm others; such speech is truly well spoken. 팔리 Tameva vācaṁ bhāseyya, yāyattānaṁ na tāpaye 에서 attānaṁ na tāpaye 는 «제 속을 태우지 않는»에 가까워 그대로 옮겼다.",
+      "modern_gloss": "말의 기준이 둘이다. 남이 다치는가, 그리고 하고 나서 내가 타는가. 하나라도 걸리면 아직 할 말이 아니다.",
+      "retrieval_text": "화가 나서 쏘아붙이고 싶은데 하고 나면 후회할 것 같을 때. 할 말은 해야겠는데 어떻게 꺼낼지 막막한 상황",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "말",
+        "후회",
+        "절제"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남도 다치지 않고 나도 타지 않는 말만 한다",
+      "terms": [],
+      "cautions": [
+        "할 말을 참기만 하라는 뜻은 아니다. 다치지 않게 말하는 쪽을 찾으라는 말이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 454게로 매기기도 한다."
+    },
+    {
+      "id": "snp.3.11.705",
+      "citation_ko": "숫타니파타 3장 11경 나라까경 705게",
+      "ref": "snp3.11",
+      "ko_text": "나와 같이 저들도 그러하고, 저들과 같이 나도 그러하다. 나를 잣대로 삼아 헤아려서 해치지도 말고 해치게 하지도 말라.",
+      "base_note": "Sujato 영역: 'As am I, so are they; as are they, so am I', Treating others like oneself, neither kill nor incite to kill. 팔리 Attānaṁ upamaṁ katvā, na haneyya na ghātaye 를 함께 보고 옮겼다. 원문은 죽이는 일을 두고 한 말이라 «해치다»로 넓혀 옮긴 것은 우리 쪽 선택이다.",
+      "modern_gloss": "판단이 헷갈릴 때 쓰는 가장 오래된 잣대다. 내가 그 자리에 있었다면 어땠을지 먼저 대 본다.",
+      "retrieval_text": "누군가에게 화가 나서 그 사람을 어떻게 대해야 할지 모를 때. 내 말이나 결정이 상대에게 어떻게 가 닿을지 가늠이 안 되는 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "공감",
+        "잣대",
+        "해치지 않음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "나를 견주어 보고 나서 그 사람을 대한다",
+      "terms": [],
+      "cautions": [
+        "내가 괜찮으면 남도 괜찮을 것이라는 뜻으로 뒤집혀 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 711게로 매기기도 한다."
+    },
+    {
+      "id": "snp.3.11.712",
+      "citation_ko": "숫타니파타 3장 11경 나라까경 712게",
+      "ref": "snp3.11",
+      "ko_text": "얻었으면 좋은 일이고 못 얻었어도 괜찮다. 어느 쪽에도 흔들리지 않고 그는 나무 아래 제자리로 돌아간다.",
+      "base_note": "Sujato 영역: 'I got something, that's good. I got nothing, that's fine.' Unaffected in both cases, they return right to the tree. 팔리 Alatthaṁ yadidaṁ sādhu, nālatthaṁ kusalaṁ iti 를 함께 보고 옮겼다. 탁발을 나갔다가 앉던 나무 밑으로 돌아오는 장면이다.",
+      "modern_gloss": "결과가 어떻든 돌아갈 자리가 있는 사람의 걸음이다. 되든 안 되든 내 하루가 통째로 무너지지 않게 붙잡아 두는 자리가 필요하다.",
+      "retrieval_text": "결과가 나올 때까지 마음을 놓지 못하고 조마조마할 때. 잘되면 붕 뜨고 안 되면 무너지는 일이 반복되는 상황",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "기대",
+        "결과",
+        "평정"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "얻으면 좋고 못 얻어도 괜찮다. 돌아갈 자리는 그대로다",
+      "terms": [
+        {
+          "word": "탁발",
+          "gloss": "수행자가 집집이 다니며 먹을 것을 얻는 일이에요"
+        }
+      ],
+      "cautions": [
+        "아무 노력도 하지 말라는 뜻이 아니다. 결과에 내 하루를 통째로 걸지 않는다는 말이다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 다만 «나무 아래로 돌아간다»는 탁발 장면을 모르면 뜻이 닿지 않아, 카드에 배경 한 줄을 함께 둘지 감수가 필요하다. 판본에 따라 718게로 매기기도 한다."
+    },
+    {
+      "id": "snp.3.11.721",
+      "citation_ko": "숫타니파타 3장 11경 나라까경 721게",
+      "ref": "snp3.11",
+      "ko_text": "모자란 것이 소리를 낸다. 가득 찬 것은 고요하다. 어리석은 이는 반쯤 찬 항아리 같고, 지혜로운 이는 가득 찬 호수 같다.",
+      "base_note": "Sujato 영역: What is lacking, resounds; what is full is at peace. The fool is like a half-full pot; the wise like a brimfull lake. 팔리 Aḍḍhakumbhūpamo bālo, rahado pūrova paṇḍito 를 함께 보고 옮겼다. 바로 앞 720게의 «작은 개울은 소리 내며 흐르고 큰 강은 소리 없이 흐른다»를 이어받는다.",
+      "modern_gloss": "말이 많아지는 자리를 본다. 보통은 채워진 쪽이 아니라 비어 있는 쪽이 소리를 낸다.",
+      "retrieval_text": "남이 자기 자랑을 늘어놓는 것을 보고 내가 초라해질 때. 나도 뭔가 보여 줘야 할 것 같아 말이 많아지는 상황",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "자랑",
+        "침묵",
+        "지혜"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "모자란 것이 소리를 낸다. 가득 찬 것은 고요하다",
+      "terms": [],
+      "cautions": [
+        "말수가 적으면 무조건 지혜롭다는 뜻으로 읽지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 727게로 매기기도 한다."
+    },
+    {
+      "id": "snp.4.3.781",
+      "citation_ko": "숫타니파타 4장 3경 사악함의 여덟 게송 781게",
+      "ref": "snp4.3",
+      "ko_text": "제 견해를 어떻게 넘어서겠는가. 좋아하는 쪽으로 끌려가고 마음에 드는 것에 눌러앉은 채로는. 제가 세운 것을 제가 다시 짜 맞추면서, 제 생각대로 말하게 될 뿐이다.",
+      "base_note": "Sujato 영역: How can you transcend your own view when you're led by preference, dogmatic in belief? Inventing your own undertakings, you'd speak according to your notion. 팔리 Sakañhi diṭṭhiṁ kathamaccayeyya, chandānunīto ruciyā niviṭṭho 를 함께 보고 옮겼다.",
+      "modern_gloss": "결정을 못 내리는 것 같지만 사실은 답을 정해 놓고 근거만 모으는 중일 때가 있다. 그럴 때는 무엇을 더 알아봐도 같은 답이 나온다.",
+      "retrieval_text": "선택지를 놓고 오래 고민하는데 결론이 나지 않을 때. 마음은 이미 한쪽으로 기운 채 이유만 찾고 있는 것 같은 상황",
+      "tags_primary": [
+        "indecision"
+      ],
+      "themes": [
+        "견해",
+        "선택",
+        "치우침"
+      ],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [
+        {
+          "word": "견해",
+          "gloss": "팔리어 딧티, 세상과 나를 이렇게 보겠다고 굳혀 둔 생각이에요"
+        }
+      ],
+      "cautions": [
+        "네 생각을 믿지 말라는 허무한 말로 읽히기 쉽다. 내가 이미 기울어 있는지 보자는 쪽이다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 넷째 줄 Yathā hi jāneyya tathā vadeyya 는 «아는 대로 말한다»로도 «제 생각대로 말한다»로도 옮겨져, 여기서는 앞줄의 흐름을 따라 뒤쪽으로 읽었다. 판본에 따라 788게로 매기기도 한다."
+    },
+    {
+      "id": "snp.4.10.851",
+      "citation_ko": "숫타니파타 4장 10경 죽음 이전 851게",
+      "ref": "snp4.10",
+      "ko_text": "오지 않은 일에 매달리지 않고 지나간 일을 두고 슬퍼하지 않는다. 닿아 오는 것들 가운데서 한 발 떨어져 볼 줄 알아, 이런저런 견해에 끌려가지 않는다.",
+      "base_note": "Sujato 영역: Rid of attachment to the future, they don't grieve for the past. A seer of seclusion in the midst of contacts is not led astray among views. 팔리 Nirāsatti anāgate, atītaṁ nānusocati 를 함께 보고 옮겼다.",
+      "modern_gloss": "후회는 지나간 일을, 불안은 오지 않은 일을 붙든다. 둘 다 지금 여기서 손이 닿지 않는 자리다.",
+      "retrieval_text": "그때 그렇게 하지 말걸 하는 생각이 밤마다 떠오를 때. 지난 선택을 계속 되돌려 보느라 지금 할 일이 손에 안 잡히는 상황",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "후회",
+        "현재",
+        "놓아줌"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "지난 일에 슬퍼하지 않고 오지 않은 일에 매달리지 않는다",
+      "terms": [
+        {
+          "word": "닿아 오는 것",
+          "gloss": "팔리어 팟사, 보고 듣고 겪으며 마음에 와 닿는 일들이에요"
+        }
+      ],
+      "cautions": [
+        "반성하지 말라는 뜻이 아니다. 같은 자리를 되풀이해 파는 것을 멈추자는 말이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 858게로 매기기도 한다."
+    },
+    {
+      "id": "snp.4.10.855",
+      "citation_ko": "숫타니파타 4장 10경 죽음 이전 855게",
+      "ref": "snp4.10",
+      "ko_text": "고르게 바라보고 늘 깨어 있어, 이 세상에서 자기를 남과 같다고도 낫다고도 못하다고도 세우지 않는다. 그에게는 부풀릴 것이 없다.",
+      "base_note": "Sujato 영역: Equanimous, ever mindful, they never conceive themselves in the world as equal, special, or less than; they have no pretensions. 팔리 na loke maññate samaṁ, na visesī na nīceyyo 를 함께 보고 옮겼다.",
+      "modern_gloss": "비교는 «내가 못하다»만이 아니라 «내가 낫다»와 «우리는 같다»까지 함께 내려놓아야 끝난다. 셋 다 같은 자를 대고 있다.",
+      "retrieval_text": "남과 나를 견주느라 마음이 지칠 때. 소셜미디어를 보고 나면 기분이 가라앉는 상황",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "비교",
+        "평정",
+        "자기상"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "낫다도 같다도 못하다도 대지 않는다. 그 잣대가 나를 지치게 한다",
+      "terms": [
+        {
+          "word": "고르게 바라봄",
+          "gloss": "팔리어 우뻭카, 한쪽으로 기울지 않고 보는 마음이에요"
+        }
+      ],
+      "cautions": [
+        "목표를 갖지 말라는 말이 아니다. 나를 남의 눈금 위에 올려놓지 않는다는 뜻이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 862게로 매기기도 한다."
+    },
+    {
+      "id": "snp.4.16.970",
+      "citation_ko": "숫타니파타 4장 16경 사리뿟따경 970게",
+      "ref": "snp4.16",
+      "ko_text": "무엇을 먹지, 어디서 먹지, 어젯밤은 불편했는데 오늘은 어디서 자지. 배우는 이, 머물 곳 없이 다니는 이는 이런 한탄거리 생각들을 걷어 낸다.",
+      "base_note": "Sujato 영역: 'What will I eat? Where will I eat? Oh, I slept badly! Where will I sleep?' The trainee, the migrant without abode, would dispel these lamentable thoughts. 팔리 Kiṁsū asissāmi kuva vā asissaṁ 을 함께 보고 옮겼다.",
+      "modern_gloss": "먹고 자는 걱정이 머릿속을 하루 종일 차지할 때가 있다. 걱정 자체를 지우라는 것이 아니라 한탄으로 굴러가는 생각을 걷어 내라는 말이다.",
+      "retrieval_text": "이번 달 생활비와 잠자리가 걱정돼 밤에 잠이 오지 않을 때. 먹고사는 문제가 머릿속을 떠나지 않는 상황",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "생계",
+        "걱정",
+        "생각"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "걱정을 없앨 수는 없어도 한탄으로 굴리는 것은 멈출 수 있다",
+      "terms": [],
+      "cautions": [
+        "생계 걱정을 마음가짐 문제로 돌리는 말로 읽히지 않게 한다. 원래 맥락은 집 없이 다니는 수행자의 생활이다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 977게로 매기기도 한다."
+    },
+    {
+      "id": "snp.4.16.973",
+      "citation_ko": "숫타니파타 4장 16경 사리뿟따경 973게",
+      "ref": "snp4.16",
+      "ko_text": "지적하는 말을 들으면 깨어 있는 이는 오히려 반긴다. 함께 가는 이들에게 굳어 있던 마음을 풀어 낸다. 좋은 말을 하되 때를 넘겨 길게 끌지 않고, 남의 입에 오를 말을 일부러 만들지 않는다.",
+      "base_note": "Sujato 영역: A mindful one would welcome reproach, and would dissolve hard-heartedness toward their spiritual companions. They may utter skillful speech, but not for too long, and they shouldn't provoke people to blame. 팔리 Cudito vacībhi satimābhinande 를 함께 보고 옮겼다.",
+      "modern_gloss": "지적을 들었을 때 제일 먼저 올라오는 것은 방어다. 반길 수 있게 되면 그 말이 나를 고쳐 준다.",
+      "retrieval_text": "피드백을 듣고 나서 자책과 억울함이 뒤섞여 잠이 오지 않을 때. 지적받은 일을 며칠째 곱씹는 상황",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "피드백",
+        "자책",
+        "관계"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "지적을 반길 수 있게 되면 그 말이 나를 고쳐 준다",
+      "terms": [],
+      "cautions": [
+        "부당한 비난까지 받아들이라는 뜻은 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": "게송 번호는 SuttaCentral 대조로 확인했다. 판본에 따라 980게로 매기기도 한다."
+    }
+  ]
+}

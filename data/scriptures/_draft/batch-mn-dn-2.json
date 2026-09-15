@@ -1,0 +1,445 @@
+{
+  "batch": "mn-dn-2",
+  "source_note": "맛지마 니까야(MN)와 디가 니까야(DN)의 비유·문답 대목에서 15구절을 더 골랐다. SuttaCentral 의 Bhikkhu Sujato 영역본(CC0)을 기준본으로 삼아 우리 말로 새로 옮겼고, 기존 한국어 번역본 문장은 참고하지 않았다. 1차 묶음(batch mn-dn)이 가져간 경과 겹치지 않도록 새 경에서 골랐고, 시갈라를 가르친 경만 1차가 쓰지 않은 두 대목(부모·일자리)을 골라 id 뒤에 대목 이름을 붙였다. 1차가 anger·anxiety 쪽으로 쏠렸으므로 이번에는 money·comparison·apathy·uncertainty·regret 이 닿는 대목을 먼저 찾았다. 검증 단계에서 SuttaCentral 의 Sujato 영역본 원문을 항목마다 다시 대조해 인용 문구와 경 번호를 맞추었다.",
+  "items": [
+    {
+      "id": "mn.8",
+      "citation_ko": "맛지마 니까야 8 지워 없앰 경, 남이 거칠어도 나는 거칠지 않겠다는 대목",
+      "ref": "mn8",
+      "ko_text": "남들은 남을 해치더라도 우리는 해치지 않겠다. 이렇게 스스로를 지워 없앤다. 남들은 거짓을 말하더라도 우리는 거짓을 말하지 않겠다. 이렇게 스스로를 지워 없앤다. 남들은 성을 내더라도 우리는 성내지 않겠다. 이렇게 스스로를 지워 없앤다.",
+      "base_note": "Sujato 영역 'Now in this regard, Cunda, you should work on self-effacement in each of the following ways' 아래 이어지는 'Others will be cruel, but here we will not be cruel' 틀을 그대로 살려 새로 옮겼다. 원문은 같은 틀로 마흔네 항목이 이어지는데 세 항목만 남겨 카드 길이로 줄였다.",
+      "modern_gloss": "상대를 고치는 문장이 아니라 내 쪽을 미리 정해 두는 문장이다. 무례한 사람 앞에서 나까지 같은 사람이 되는 것을 막아 준다.",
+      "retrieval_text": "무례한 사람을 계속 상대하다 보니 나도 똑같이 굴게 된다. 상대에게 휩쓸려 평소의 나와 다르게 행동하고 나서 뒷맛이 나쁜 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "무례",
+        "휩쓸림",
+        "자기 기준",
+        "거리"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남이 거칠게 굴어도 나까지 거칠어지지는 않겠다",
+      "terms": [],
+      "cautions": [
+        "상대의 잘못을 그냥 참고 넘기라는 말로 읽힐 수 있다",
+        "나는 저 사람과 다르다는 우월감으로 굳을 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.18",
+      "citation_ko": "맛지마 니까야 18 꿀덩어리 경, 생각이 불어나는 자리를 짚은 대목",
+      "ref": "mn18",
+      "ko_text": "느낀 것을 알아차리고, 알아차린 것을 생각하고, 생각한 것을 부풀린다. 그렇게 부풀린 자리에서 생겨난 생각들이 지난 일과 앞으로 올 일과 지금 일을 두고 그 사람을 덮친다.",
+      "base_note": "Sujato 영역 'What you feel, you perceive. What you perceive, you think about. What you think about, you proliferate…' 대목을 새로 옮겼다. 눈·귀·코처럼 감각의 문을 하나씩 열거하는 부분은 뺐다.",
+      "modern_gloss": "괴로움이 커지는 자리는 일이 벌어진 곳이 아니라 생각이 불어난 곳이다. 불어난 생각은 나중에 나를 덮치러 돌아온다.",
+      "retrieval_text": "한 마디 들은 것을 하루 종일 곱씹으며 온갖 경우를 상상한다. 작은 일이 머릿속에서 자꾸 커져 잠이 오지 않는 상황",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "생각",
+        "곱씹기",
+        "확대 해석",
+        "불안"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "느낀 것을 생각하고 생각을 부풀리면, 부풀린 생각이 나를 덮친다",
+      "terms": [
+        {
+          "word": "부풀림",
+          "gloss": "팔리어 빠빤짜를 옮긴 말이에요. 한 생각이 저절로 갈래를 치며 커지는 것을 뜻합니다"
+        }
+      ],
+      "cautions": [
+        "생각을 억지로 끊으라는 말로 읽힐 수 있다",
+        "꼭 따져 봐야 할 일까지 덮으라는 뜻은 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.28",
+      "citation_ko": "맛지마 니까야 28 코끼리 발자국 비유의 긴 경, 바깥의 땅도 무너진다는 대목",
+      "ref": "mn28",
+      "ko_text": "큰물이 일어나면 바깥의 땅조차 사라지는 때가 온다. 그토록 오래 버텨 온 땅도 끝내 허물어지고 만다. 하물며 잠시 빌려 쓰면서 내 것이라 붙들고 있는 이 몸이겠는가.",
+      "base_note": "Sujato 영역 'There comes a time when the exterior water element flares up. At that time the exterior earth element vanishes. So for all its great age, the earth element will be revealed as impermanent, liable to end, vanish, and perish. What then of this ephemeral body appropriated by craving?' 대목을 새로 옮겼다. 땅·물·불·바람을 차례로 다루는 부분에서 땅 하나만 남겼다.",
+      "modern_gloss": "무너진 것이 나한테만 일어난 일이 아니라는 자리에서 보면 마음이 조금 넓어진다.",
+      "retrieval_text": "당연히 계속될 줄 알았던 것이 사라졌다. 오래 다닌 회사, 오래 쓰던 자리, 변하지 않을 것 같던 건강이 흔들리는 상황",
+      "tags_primary": [
+        "loss",
+        "uncertainty"
+      ],
+      "themes": [
+        "무상",
+        "상실",
+        "변화",
+        "받아들임"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "그토록 오래 버텨 온 땅조차 끝내 허물어진다",
+      "terms": [],
+      "cautions": [
+        "어차피 다 사라지니 애쓸 것 없다는 체념으로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.33",
+      "citation_ko": "맛지마 니까야 33 소치는 사람의 긴 경, 소 떼를 키우지 못하는 목동을 든 대목",
+      "ref": "mn33",
+      "ko_text": "상처를 살펴 덮어 주지 않는 목동, 소 떼가 건널 여울목을 모르는 목동, 소가 다닐 길을 모르는 목동, 풀이 어디 있는지 모르는 목동, 젖을 한 방울도 남기지 않고 짜 버리는 목동은 소 떼를 늘리지 못한다.",
+      "base_note": "Sujato 영역의 열한 가지 목동 조건 가운데 다섯 가지만 골라 새로 옮겼다. 원문은 이 비유를 수행자가 할 일에 하나씩 맞춰 풀어 간다.",
+      "modern_gloss": "일을 오래 끌고 가는 사람은 재주보다 돌봄으로 끌고 간다. 지금 다 짜내면 다음이 남지 않는다.",
+      "retrieval_text": "지금 하는 일을 계속 해도 되는지 모르겠다. 성과는 나는데 몸과 마음이 남아나지 않아 오래는 못 갈 것 같은 상황",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "일",
+        "지속",
+        "돌봄",
+        "소진"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": null,
+      "terms": [],
+      "cautions": [
+        "일터의 문제를 개인이 관리를 못한 탓으로만 돌리는 말로 읽힐 수 있다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "경 번호와 열한 가지 목록이 있다는 것은 확실하다. 다만 항목 하나하나를 우리말로 줄여 옮긴 것이라 어느 항목을 어떻게 골랐는지 감수가 필요하다."
+    },
+    {
+      "id": "mn.39",
+      "citation_ko": "맛지마 니까야 39 앗사뿌라에서 설한 긴 경, 수행자라 불린다면 그 이름에 값하라는 대목",
+      "ref": "mn39",
+      "ko_text": "사람들은 너희를 수행자라 부른다. 너희도 누가 물으면 스스로 수행자라 답한다. 그렇게 불리고 그렇게 답한다면, 수행자를 수행자이게 하는 일을 익히고 그대로 행하라. 그래야 그 이름이 헛되지 않고, 옷과 밥을 내준 이들의 마음도 헛되지 않다.",
+      "base_note": "Sujato 영역 'Given this label and this claim, you should train like this…' 대목을 새로 옮겼다. 뒤에 길게 이어지는 수행 항목 목록은 뺐다.",
+      "modern_gloss": "직함은 나를 그 사람으로 만들어 주지 않는다. 그 이름이 가리키는 일을 실제로 할 때 이름이 뒤따라온다.",
+      "retrieval_text": "맡은 자리의 이름만 있고 실제로 하는 일은 없는 것 같다. 몇 년째 같은 직함을 달고 있는데 안에서는 아무것도 자라지 않는 느낌인 상황",
+      "tags_primary": [
+        "apathy",
+        "regret"
+      ],
+      "themes": [
+        "직함",
+        "자기 점검",
+        "일",
+        "이름값"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "이름이 나를 만들지 않는다. 그 이름에 값하는 일이 만든다",
+      "terms": [
+        {
+          "word": "수행자",
+          "gloss": "팔리어 사마나를 옮긴 말이에요. 집을 떠나 수행하는 사람을 뜻합니다"
+        }
+      ],
+      "cautions": [
+        "자기를 몰아세우는 말로 읽혀 이미 지친 사람에게 더 무거울 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.54",
+      "citation_ko": "맛지마 니까야 54 재가자 뽀딸리야 경, 욕망을 살점 없는 뼈다귀에 빗댄 대목",
+      "ref": "mn54",
+      "ko_text": "굶주린 개가 푸줏간 앞을 서성인다. 백정이 살점 하나 붙어 있지 않고 피만 묻은 뼈다귀를 던져 준다. 개가 그 뼈다귀를 아무리 물고 뜯은들 주린 배가 채워지겠는가. 남는 것은 지치고 허탈한 마음뿐이다.",
+      "base_note": "Sujato 영역의 뼈다귀 비유 대목(mn54:15)을 새로 옮겼다. 뒤에 이어지는 여섯 가지 비유는 뺐다. 같은 비유 목록이 맛지마 22에도 이름만 짧게 나오는데, 1차 묶음의 맛지마 22 항목은 뗏목 비유라 겹치지 않는다.",
+      "modern_gloss": "채워질 것 같아 매달리지만 실제로 들어오는 것은 없고 기운만 빠지는 자리가 있다.",
+      "retrieval_text": "쓸수록 허해진다. 사고 나면 잠깐 괜찮다가 금방 다시 허전해져서 또 사게 되는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "욕망",
+        "소비",
+        "허전함",
+        "채워지지 않음"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "피 묻은 뼈다귀는 아무리 물고 있어도 배를 채워 주지 않는다",
+      "terms": [],
+      "cautions": [
+        "즐거움을 다 끊으라는 금욕 요구로 읽힐 수 있다",
+        "형편이 어려운 사람에게 소비를 탓하는 말로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.62",
+      "citation_ko": "맛지마 니까야 62 라훌라를 가르친 긴 경, 땅처럼 닦으라고 이른 대목",
+      "ref": "mn62",
+      "ko_text": "라훌라야, 땅처럼 닦아라. 땅 위에는 깨끗한 것도 더러운 것도 버려지지만 땅은 그 때문에 괴로워하거나 부끄러워하지 않는다. 땅처럼 닦으면 좋은 일도 싫은 일도 네 마음을 차지하고 앉지 못한다.",
+      "base_note": "Sujato 영역 'Rāhula, meditate like the earth. For when you meditate like the earth, pleasant and unpleasant contacts will not occupy your mind' 대목을 새로 옮겼다. 물·불·바람·허공으로 이어지는 나머지 비유는 뺐다.",
+      "modern_gloss": "무슨 말이 날아오든 그것이 내 안에 자리를 잡고 앉느냐는 또 다른 문제다.",
+      "retrieval_text": "누가 던진 말 한마디가 며칠째 가슴에 남아 있다. 상대는 잊었을 말에 나만 계속 흔들리는 상황",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "말",
+        "흔들림",
+        "평정",
+        "받아넘김"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "땅은 무엇이 떨어져도 그 때문에 괴로워하지 않는다",
+      "terms": [],
+      "cautions": [
+        "참고 삼키라는 말로 읽혀 할 말을 못 하게 만들 수 있다",
+        "부당한 대우를 견디라는 뜻이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.82",
+      "citation_ko": "맛지마 니까야 82 랏타빨라 경, 세상은 채워지지 않고 갈애의 종이라는 대목",
+      "ref": "mn82",
+      "ko_text": "세상은 채워지는 법이 없고 만족을 모르며 갈애의 종입니다. 왕께서 한 나라를 다스리시는데 누가 와서 동쪽에 살진 땅이 있다고 하면 그 땅을 가지려 하실 것입니다. 바다 건너에 또 있다 하면 그곳도 가지려 하실 것입니다.",
+      "base_note": "Sujato 영역의 네 번째 법 요약 'The world is wanting, insatiable, the slave of craving' 과 랏타빨라가 꼬라뱌 왕에게 되묻는 대목(mn82:41)을 이어 붙여 새로 옮겼다.",
+      "modern_gloss": "더 벌면 끝날 줄 알았던 마음이 액수만 바꾼 채 그대로 남아 있는 때가 있다.",
+      "retrieval_text": "연봉이 올랐는데도 마음은 그대로다. 목표를 채우면 곧 다음 목표가 생겨 언제까지 벌어야 하는지 모르겠는 상황",
+      "tags_primary": [
+        "money",
+        "comparison"
+      ],
+      "themes": [
+        "갈애",
+        "목표",
+        "만족",
+        "비교"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "하나를 얻으면 곧 둘째를 바란다. 세상은 채워지는 법이 없다",
+      "terms": [
+        {
+          "word": "갈애",
+          "gloss": "목마름처럼 끈질기게 더 바라는 마음이에요. 채워도 금방 다시 일어납니다"
+        }
+      ],
+      "cautions": [
+        "돈을 벌려는 노력 자체를 탓하는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.87",
+      "citation_ko": "맛지마 니까야 87 사랑하는 이에게서 생기는 것 경, 슬픔이 어디서 오는지 짚은 대목",
+      "ref": "mn87",
+      "ko_text": "슬픔과 울음과 아픔과 괴로움은 사랑하는 이에게서 온다. 말리까 왕비가 왕에게 물었다. 왕께서는 공주를 아끼십니까. 공주가 변하고 스러진다면 왕께 슬픔과 괴로움이 일지 않겠습니까.",
+      "base_note": "Sujato 영역 'Our loved ones are a source of sorrow, lamentation, pain, sadness, and distress' 와 말리까 왕비가 빠세나디 왕에게 되묻는 대목(mn87:24)을 이어 붙여 새로 옮겼다.",
+      "modern_gloss": "지금 이만큼 아픈 것은 마음이 약해서가 아니라 그만큼 아꼈기 때문이다.",
+      "retrieval_text": "가까운 사람을 떠나보내고 마음이 무너졌다. 이렇게까지 힘들어하는 내가 이상한 것 같아 스스로를 나무라게 되는 상황",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "상실",
+        "사랑",
+        "슬픔",
+        "애도"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "daily_line": null,
+      "terms": [],
+      "cautions": [
+        "사랑하지 말라는 말로 읽히기 쉽다. 아끼는 마음과 슬픔이 한 뿌리라는 뜻이다",
+        "애도 중인 사람에게 감정을 정리하라는 재촉으로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.95",
+      "citation_ko": "맛지마 니까야 95 짱끼 경, 진리를 지키는 법을 말한 대목",
+      "ref": "mn95",
+      "ko_text": "믿는 바가 있는 사람은 이것이 내가 믿는 바다 라고 말할 때 진리를 지킨다. 그러나 이것만이 진리이고 다른 것은 헛되다고 잘라 말하지는 않는다. 마음에 드는 것도, 전해 들은 말도, 헤아려 얻은 생각도 마찬가지다.",
+      "base_note": "Sujato 영역 'they preserve truth by saying, Such is my faith. But they don't yet come to the categorical conclusion: This is the only truth, anything else is futile' 대목을 새로 옮겼다. 다섯 가지 근거(믿음·마음에 듦·전해 들음·헤아림·숙고 끝에 받아들인 견해) 가운데 넷만 남겼다.",
+      "modern_gloss": "내 생각을 말하는 것과 상대를 틀렸다고 못 박는 것은 다른 일이다. 그 한 걸음을 덜 내딛으면 대화가 남는다.",
+      "retrieval_text": "누구 말이 맞는지 판단이 서지 않는다. 확신도 없으면서 결론을 내려 말해야 할 것 같아 마음이 조급한 상황",
+      "tags_primary": [
+        "indecision"
+      ],
+      "themes": [
+        "확신",
+        "판단",
+        "대화",
+        "유보"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "이것이 내 생각이다 까지만 말하고, 이것만 옳다 로는 넘어가지 않는다",
+      "terms": [],
+      "cautions": [
+        "아무것도 판단하지 말라는 뜻으로 읽힐 수 있다",
+        "분명히 잘못된 일까지 유보하라는 말은 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.135",
+      "citation_ko": "맛지마 니까야 135 업의 작은 분석 경, 남이 잘되는 것을 시기하는 일을 다룬 대목",
+      "ref": "mn135",
+      "ko_text": "남이 얻는 것과 남이 받는 존경을 시기하고 못마땅해하며 마음에 담아 두는 사람이 있다. 그 사람은 가는 자리마다 제 자리가 좁다. 남이 얻는 것을 시기하지 않고 함께 기뻐하는 사람이 있다. 그 사람은 가는 자리마다 제 자리가 넓다.",
+      "base_note": "Sujato 영역에서 남의 이득과 존경을 시기하는 항목을 새로 옮겼다. 원문은 그 결과를 다음 생에 받는 몫으로 말하는데, 그 틀은 빼고 시기하는 마음과 그 사람이 놓이는 자리만 남겼다.",
+      "modern_gloss": "시기는 상대를 깎아내리지 못하고 내가 설 자리만 좁힌다.",
+      "retrieval_text": "동기가 잘되는 것을 보면 축하한다고 말하면서도 속이 뒤틀린다. 남의 소식에 마음이 상하는 내가 싫어지는 상황",
+      "tags_primary": [
+        "comparison",
+        "regret"
+      ],
+      "themes": [
+        "시기",
+        "비교",
+        "함께 기뻐함",
+        "자책"
+      ],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "daily_line": null,
+      "terms": [
+        {
+          "word": "업",
+          "gloss": "사람이 한 행위와 그 행위가 남기는 자국을 뜻해요. 정해진 운명이 아니라 지금 하는 일을 가리킵니다"
+        }
+      ],
+      "cautions": [
+        "가난이나 병처럼 사람이 겪는 불행을 그 사람 탓으로 돌리는 근거로 읽히면 안 된다",
+        "시기하는 마음이 들었다는 것 자체를 나무라는 말로 들릴 수 있다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "경 번호와 이 항목이 경에 있다는 것은 확실하다. 다만 원문은 이 내용을 다음 생의 과보라는 틀 안에서 말하는데 그 틀을 덜어 내고 옮겼고, 결과를 가리키는 말(보잘것없는 사람 · 이름이 높은 사람)도 설 자리가 좁다 넓다 로 풀었으므로 이렇게 옮겨도 되는지 감수가 필요하다."
+    },
+    {
+      "id": "dn.31.parents",
+      "citation_ko": "디가 니까야 31 시갈라를 가르친 경, 부모와 자식이 서로에게 할 일을 든 대목",
+      "ref": "dn31",
+      "ko_text": "자식은 다섯 가지로 부모를 받든다. 길러 주신 것을 갚고, 그분들 몫의 일을 대신 맡고, 집안을 이어 가고, 물려받은 것을 잘 지키고, 돌아가신 뒤에는 그 이름으로 베푼다. 부모는 다섯 가지로 자식을 아낀다. 나쁜 길을 막고, 좋은 일에 힘을 보태고, 일을 익히게 하고, 짝을 만나게 하고, 때가 되면 물려준다.",
+      "base_note": "Sujato 영역의 동쪽 방향 대목(dn31:28)을 새로 옮겼다. 양쪽 다섯 가지를 모두 살리고 항목마다 붙은 설명 구절은 뺐다.",
+      "modern_gloss": "부모 자식 사이도 한쪽만 내주는 자리가 아니라 서로 할 일이 있는 자리로 본다.",
+      "retrieval_text": "부모와 자꾸 부딪힌다. 어디까지가 자식으로서 할 일이고 어디부터가 내 삶인지 선이 잡히지 않는 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "부모",
+        "가족",
+        "도리",
+        "경계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "부모와 자식 사이에도 서로 할 일이 있다. 한쪽만 내주는 자리가 아니다",
+      "terms": [],
+      "cautions": [
+        "관계가 이미 상한 사람에게 의무를 더 얹는 말로 읽힐 수 있다",
+        "학대가 있는 관계에는 그대로 적용할 수 없다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.31.work",
+      "citation_ko": "디가 니까야 31 시갈라를 가르친 경, 일을 맡기는 사람과 일하는 사람 대목",
+      "ref": "dn31",
+      "ko_text": "일을 맡기는 사람은 다섯 가지로 일하는 이를 대한다. 힘에 맞게 일을 주고, 먹을 것과 품삯을 주고, 아플 때 돌보고, 좋은 것이 생기면 나누고, 때가 되면 쉬게 한다. 일하는 이는 다섯 가지로 답한다. 먼저 일어나고, 나중에 자리를 뜨고, 주지 않은 것에 손대지 않고, 맡은 일을 잘 해내고, 그 사람을 좋게 말한다.",
+      "base_note": "Sujato 영역의 아래쪽 방향 대목(dn31:32)을 새로 옮겼다. 양쪽 다섯 가지를 그대로 살렸다.",
+      "modern_gloss": "일터의 관계도 주고받는 자리다. 한쪽 다섯 가지만 요구되는 자리라면 이미 어긋나 있다.",
+      "retrieval_text": "회사에서 받는 대우가 부당하게 느껴진다. 내가 예민한 것인지 정말 잘못된 것인지 판단이 서지 않는 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "직장",
+        "대우",
+        "책임",
+        "공정"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "힘에 맞게 일을 맡기고, 좋은 것이 생기면 나누고, 때가 되면 쉬게 한다",
+      "terms": [],
+      "cautions": [
+        "옛 사회의 주인과 일꾼 관계를 그린 대목이라 지금의 고용 관계에 그대로 옮기면 어긋나는 데가 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.2",
+      "citation_ko": "디가 니까야 2 사문과경, 빚과 감옥과 험한 길에 빗댄 대목",
+      "ref": "dn2",
+      "ko_text": "빚을 지고 있던 사람이 일을 해서 빚을 다 갚고 살림에 쓸 것까지 남겼다고 하자. 그는 그 일을 떠올리며 기뻐할 것이다. 갇혀 있다가 풀려난 사람도, 험한 길을 다 건너 무사히 닿은 사람도 그렇다. 마음을 덮고 있던 것이 걷혔을 때가 이와 같다.",
+      "base_note": "Sujato 영역의 다섯 가지 비유(빚·병·감옥·종살이·먼 길) 가운데 셋만 골라 새로 옮겼다. 원문은 이 비유로 마음을 덮고 있던 것이 걷힌 상태를 설명한다.",
+      "modern_gloss": "마음이 가벼워지는 일은 뭔가를 더 얻어서가 아니라 눌러 오던 것이 걷혀서 온다.",
+      "retrieval_text": "아무것도 하기 싫고 몸이 무겁다. 계속 무언가에 눌려 있는 것 같은데 그게 무엇인지도 모르겠는 상황",
+      "tags_primary": [
+        "anxiety",
+        "apathy"
+      ],
+      "themes": [
+        "무거움",
+        "해방",
+        "빚",
+        "회복"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "덮고 있던 것이 걷히면 빚을 다 갚은 사람처럼 가벼워진다",
+      "terms": [],
+      "cautions": [
+        "실제로 빚에 눌린 사람에게 마음의 문제로 바꿔 읽게 만들 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.26",
+      "citation_ko": "디가 니까야 26 전륜성왕 사자후경, 가난을 그냥 두자 벌어진 일을 말한 대목",
+      "ref": "dn26",
+      "ko_text": "가진 것 없는 이에게 재물이 돌아가지 않자 가난이 퍼졌다. 가난이 퍼지자 남의 것을 가져가는 일이 늘었고, 그 일이 늘자 무기가 늘었고, 무기가 늘자 사람을 해치는 일이 늘었다.",
+      "base_note": "Sujato 영역 'from not providing money to the penniless, poverty became widespread. When poverty was widespread, theft became widespread…' 대목(dn26:14)을 새로 옮겼다. 뒤로 길게 이어지는 목록은 앞의 네 단계만 남겼다.",
+      "modern_gloss": "가난은 마음가짐만으로 설명되지 않는다. 경이 먼저 짚는 것은 돌아가지 않은 몫이다.",
+      "retrieval_text": "형편이 어려운 것이 내 게으름 탓인 것 같아 자책한다. 아무리 아껴도 나아지지 않아 스스로를 계속 탓하게 되는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "가난",
+        "구조",
+        "자책",
+        "사회"
+      ],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "daily_line": null,
+      "terms": [],
+      "cautions": [
+        "가난한 사람을 잠재적 범죄자로 보는 말로 읽히면 안 된다",
+        "모든 어려움을 사회 탓으로만 돌리는 근거로 쓰이면 곤란하다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    }
+  ]
+}

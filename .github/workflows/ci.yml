@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  spec:
+    name: 정본 게이트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '26' }
+      # spec/ 과 docs/spec/ 이 갈라지면 여기서 멈춘다
+      - run: node tools/check_spec.mjs
+      # 라우터 픽스처 25건. 「방법을 묻는 글이 위로 답변으로 승격되면 실패」가 그 안에 있다
+      - run: node --experimental-strip-types spec/router.test.ts
+
+  frontend:
+    name: 프론트
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: frontend }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: '26', cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      # iOS 배치를 재는 ios-layout 프로젝트가 WebKit 으로 돈다. 둘 다 받는다
+      - run: npx playwright install --with-deps chromium webkit
+      # 검증은 e2e 한 겹이다. 목으로 격리한 단위 테스트는 만들지 않는다
+      - run: npm run e2e
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: 화면-증명
+          path: frontend/e2e/shots
+
+  backend:
+    name: 백엔드
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: backend }
+    # 배포가 쓰는 저장 자리는 PostgreSQL 이다. 주소를 안 주면 그 갈래 10건이 통째로 건너뛰어,
+    # 어댑터를 깨도 CI 가 초록으로 남는다. 링크가 30일 사는지는 여기서만 실제로 재진다
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: buddha
+          POSTGRES_PASSWORD: pw
+          POSTGRES_DB: buddha_words
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U buddha -d buddha_words"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://buddha:pw@127.0.0.1:5432/buddha_words
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync
+      - run: uv run ruff check .
+      # 프론트와 같은 픽스처 파일을 돌린다. 규칙이 갈라지면 여기서 잡힌다
+      - run: uv run pytest -q
+      # 위 실행이 PostgreSQL 갈래를 정말 돌았나. 건너뛴 것은 초록으로 보이지만 아무것도 잰 것이
+      # 없다. 주소가 안 닿으면 여기서 멈춘다
+      - name: PostgreSQL 갈래가 건너뛰어지지 않았는지 확인
+        run: |
+          out=$(uv run pytest -q tests/test_persistence.py -k postgres)
+          echo "$out"
+          if echo "$out" | grep -q "skipped"; then
+            echo "::error::PostgreSQL 갈래를 건너뛰었어요. TEST_DATABASE_URL 이 안 닿습니다"
+            exit 1
+          fi
+          if ! echo "$out" | grep -qE "[0-9]+ passed"; then
+            echo "::error::PostgreSQL 갈래가 하나도 돌지 않았어요"
+            exit 1
+          fi
