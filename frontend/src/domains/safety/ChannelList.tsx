@@ -79,11 +79,17 @@ export function ChannelList({ channels, level }: ChannelListProps) {
             href={channel.href}
             {...linkProps(channel.kind)}
             onClick={() => {
-              analytics.log('crisis_exit', { level, exit: exitOf(channel.kind) }, { kind: 'click' });
+              analytics.log(
+                'crisis_exit',
+                { level, exit: exitOf(channel.kind) },
+                { kind: 'click' },
+              );
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >
-            <span className="sf-line-ic">{channel.kind === 'call' ? <PhoneIcon /> : <ChatIcon />}</span>
+            <span className="sf-line-ic">
+              {channel.kind === 'call' ? <PhoneIcon /> : <ChatIcon />}
+            </span>
             <span className="sf-line-txt">
               <span className="sf-line-name">{channel.name}</span>
               <span className="sf-line-num">{channel.value}</span>
@@ -115,7 +121,11 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
             href={channel.href}
             {...linkProps(channel.kind)}
             onClick={() => {
-              analytics.log('crisis_exit', { level, exit: exitOf(channel.kind) }, { kind: 'click' });
+              analytics.log(
+                'crisis_exit',
+                { level, exit: exitOf(channel.kind) },
+                { kind: 'click' },
+              );
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >

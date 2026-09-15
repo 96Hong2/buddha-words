@@ -56,15 +56,22 @@ export const BACKDROP_TOKEN: Record<Backdrop, string> = {
   night: 'var(--backdrop-night)',  // 밤. 세이지가 어두워진 청록. 라이트 앱 안의 「이미지 안 색」이라 다크 모드가 아니다
 };
 
-/** 답변 화면 상단. 테마 10종 → 자세 + 시간대 */
+/**
+ * 답변 화면 상단. 테마 10종 → 자세 + 시간대
+ *
+ * `ko` 는 그 사람 앞에 놓이는 말이다. 키(attachment 같은 영문 코드)는 그림을 고르는 값이라
+ * 바꾸지 않지만, 한글 이름은 판정이 아니라 마음의 이름이어야 한다. 사별한 사람에게
+ * 「집착」, 남과 자신을 견주는 사람에게 「열등감」은 상태 이름이 아니라 진단서다.
+ * 화면 칩(`domains/answer` · `domains/archive`)과 같은 말을 쓴다. 한 개념에 두 이름을 두지 않는다.
+ */
 export const THEME_SCENE: Record<VisualTheme, { pose: Pose; backdrop: Backdrop; scene: SceneKey; ko: string }> = {
   anxiety:      { pose: 'listening', backdrop: 'dawn',  scene: 'dawn_pond',     ko: '불안' },
   anger:        { pose: 'tea',       backdrop: 'dusk',  scene: 'dusk_water',    ko: '분노' },
   loss:         { pose: 'lotus',     backdrop: 'dusk',  scene: 'autumn_maple',  ko: '이별·상실' },
-  comparison:   { pose: 'open_eyes', backdrop: 'day',   scene: 'day_mountain',  ko: '비교·열등감' },
+  comparison:   { pose: 'open_eyes', backdrop: 'day',   scene: 'day_mountain',  ko: '남과 견주는 마음' },
   choice:       { pose: 'open_eyes', backdrop: 'dawn',  scene: 'stone_path',    ko: '고민·선택 (기본값)' },
   sleepless:    { pose: 'tea',       backdrop: 'night', scene: 'night_moon',    ko: '잠 못 드는 걱정' },
-  attachment:   { pose: 'lotus',     backdrop: 'day',   scene: 'autumn_maple',  ko: '집착·미련' },
+  attachment:   { pose: 'lotus',     backdrop: 'day',   scene: 'autumn_maple',  ko: '아직 남은 마음' },
   emptiness:    { pose: 'reading',   backdrop: 'dawn',  scene: 'spring_sprout', ko: '무기력·공허' },
   relationship: { pose: 'listening', backdrop: 'day',   scene: 'compassion',    ko: '관계 피로' },
   approval:     { pose: 'welcome',   backdrop: 'day',   scene: 'day_mountain',  ko: '인정받고 싶은 마음' },
@@ -72,7 +79,7 @@ export const THEME_SCENE: Record<VisualTheme, { pose: Pose; backdrop: Backdrop; 
 
 /**
  * 장면이 여덟인데 테마는 열이라 둘이 겹친다. 계획이 정해 둔 대로다.
- * 집착은 상실 그림으로, 인정받고 싶은 마음은 비교 그림으로 간다.
+ * attachment 는 상실 그림으로, approval 은 comparison 그림으로 간다.
  */
 
 /** 큰 자리의 고정 장면. 여기 없는 화면은 인물 컷(SCREEN_POSE)을 쓴다 */

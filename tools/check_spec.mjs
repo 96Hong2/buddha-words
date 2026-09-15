@@ -2,9 +2,10 @@
  * CI 게이트. 정본이 갈라지지 않았는지 본다.
  *
  * 1. spec/ 과 docs/spec/ 이 같은가            (두 벌이 되면 반드시 어긋난다)
- * 2. events.ts 에 없는 이벤트 이름을 보내는가
- * 3. 스텁 응답이 answer.schema.json 에 맞는가
- * 4. 화면에 「무료」가 남아 있는가
+ * 2. 색 토큰 두 벌이 같은가                   (서버 카드와 앱 화면의 색이 갈린다)
+ * 3. events.ts 에 없는 이벤트 이름을 보내는가
+ * 4. 스텁 응답이 answer.schema.json 에 맞는가
+ * 5. 화면에 「무료」가 남아 있는가
  */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -36,6 +37,33 @@ function fail(message) {
   }
 }
 
+// ── 2. 색 토큰 두 벌 diff = 0 ───────────────────────────────────────────────
+// 서버가 그리는 공유 카드는 design/foundations/_tokens.css 를, 앱 화면은
+// frontend/src/shared/styles/tokens.css 를 읽는다. 한쪽만 고치면 카드 색과 화면 색이
+// 조용히 갈리고 나머지 검사는 전부 통과한다.
+{
+  const canonical = 'design/foundations/_tokens.css';
+  const copy = 'frontend/src/shared/styles/tokens.css';
+  let a = null;
+  let b = null;
+  try {
+    a = readFileSync(join(ROOT, canonical), 'utf8');
+  } catch {
+    fail(`${canonical} 을 읽지 못했습니다. 색 토큰 정본입니다.`);
+  }
+  try {
+    b = readFileSync(join(ROOT, copy), 'utf8');
+  } catch {
+    fail(`${copy} 를 읽지 못했습니다. 앱 화면이 읽는 색 토큰입니다.`);
+  }
+  if (a !== null && b !== null && a !== b) {
+    fail(
+      `${canonical} 과 ${copy} 가 다릅니다. 정본은 ${canonical} 입니다. ` +
+        '서버가 그리는 공유 카드와 앱 화면의 색이 갈립니다.',
+    );
+  }
+}
+
 // ── 파일 훑기 ───────────────────────────────────────────────────────────────
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir)) {
@@ -49,7 +77,7 @@ function walk(dir, out = []) {
 
 const srcFiles = walk(join(ROOT, 'frontend/src')).filter((f) => /\.(ts|tsx)$/.test(f));
 
-// ── 2. events.ts 밖의 이벤트 이름 ────────────────────────────────────────────
+// ── 3. events.ts 밖의 이벤트 이름 ────────────────────────────────────────────
 {
   const events = readFileSync(join(ROOT, 'spec/events.ts'), 'utf8');
   const known = new Set([...events.matchAll(/^\s{2}([a-z_0-9]+):\s*\{\s*params/gm)].map((m) => m[1]));
@@ -65,7 +93,7 @@ const srcFiles = walk(join(ROOT, 'frontend/src')).filter((f) => /\.(ts|tsx)$/.te
   }
 }
 
-// ── 3. 스텁 응답이 스키마에 맞는가 ──────────────────────────────────────────
+// ── 4. 스텁 응답이 스키마에 맞는가 ──────────────────────────────────────────
 // 얕은 검사다. 필수 필드와 responseType 만 본다. 정밀 검증은 백엔드 pytest 가 한다.
 {
   const schema = JSON.parse(readFileSync(join(ROOT, 'spec/answer.schema.json'), 'utf8'));
@@ -82,7 +110,7 @@ const srcFiles = walk(join(ROOT, 'frontend/src')).filter((f) => /\.(ts|tsx)$/.te
   }
 }
 
-// ── 4. 화면에 「무료」가 남아 있는가 ─────────────────────────────────────────
+// ── 5. 화면에 「무료」가 남아 있는가 ─────────────────────────────────────────
 {
   for (const file of srcFiles) {
     const text = readFileSync(file, 'utf8');

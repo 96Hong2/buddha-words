@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react';
 
-import type { Scripture, Term } from '../../shared/api';
+import { attributionLine, type Scripture, type Term } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { useOverlayBackClose } from '../../app/providers';
 
@@ -120,9 +120,20 @@ export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureC
   const paragraphs = (explanation ?? '').split(/\n+/).filter((line) => line.trim() !== '');
   // 뜻풀이는 요청2가 채운다. 아직 없으면 경전 한 장만 두고 흰 카드를 씌우지 않는다
   const hasExplanation = paragraphs.length > 0;
-  const credit = [scripture.source?.base, scripture.source?.translator, scripture.source?.license]
-    .filter((part): part is string => part != null && part !== '')
-    .join(' · ');
+  // 누가 한 말인가. 값은 데이터가 정하고 화면은 그대로 그린다
+  const attribution = attributionLine(scripture);
+  // 귀속 줄이 이미 출처 그대로면 시트에서 같은 줄을 두 번 그리지 않는다
+  const showLocation = scripture.citation !== attribution;
+  // 저본 칸. **문장은 서버가 완성해서 준다.** 여기서 원문 언어나 감수 상태를 보고 말을
+  // 지으면, 한문에서 옮긴 육조단경 아래에 「영역본을 옮겼다」가 붙는다. 실제로 그랬다
+  const source = scripture.source;
+  const origin =
+    source?.originalText != null && source.originalText !== ''
+      ? { label: source.originalLabel ?? '원문', text: source.originalText }
+      : null;
+  const hasCredit =
+    origin != null ||
+    [source?.base, source?.note, source?.license].some((part) => part != null && part !== '');
 
   return (
     <section
@@ -140,7 +151,7 @@ export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureC
           {scripture.text}
         </p>
         <p className="cite" {...testId(TEST_IDS.scriptureCitation)}>
-          {scripture.citation}
+          {attribution}
         </p>
         <button type="button" className="src-btn" onClick={() => setSheet({ kind: 'origin' })}>
           원문 보기
@@ -184,16 +195,42 @@ export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureC
             <div className="sheet" role="dialog" aria-modal="true" aria-label="경전 원문">
               <div className="grip" aria-hidden="true" />
               <h3>경전 원문</h3>
-              <p className="cite">{scripture.citation}</p>
+              <p className="cite">{attribution}</p>
+              <p className="lab">한국어 번역</p>
               <div className="orig">
                 <p>{scripture.text}</p>
               </div>
-              {credit !== '' && (
+              {origin != null && (
+                <>
+                  <p className="lab">{origin.label}</p>
+                  <div className="orig orig--source" {...testId(TEST_IDS.scriptureOriginal)}>
+                    <p lang="zh-Hant">{origin.text}</p>
+                  </div>
+                </>
+              )}
+              {showLocation && (
+                <>
+                  <p className="lab">경전에서의 자리</p>
+                  <p className="meta">{scripture.citation}</p>
+                </>
+              )}
+              {hasCredit && (
                 <>
                   <p className="lab">옮긴 저본</p>
-                  <p className="meta">
-                    <b>{credit}</b>
-                    <br />위 영역본을 우리가 한국어로 옮기고, 불교학 감수자가 확인한 문장이에요.
+                  <p className="meta" {...testId(TEST_IDS.scriptureCredit)}>
+                    {source?.base != null && source.base !== '' && (
+                      <>
+                        <b>{source.base}</b>
+                        <br />
+                      </>
+                    )}
+                    {source?.note}
+                    {source?.license != null && source.license !== '' && (
+                      <>
+                        <br />
+                        {source.license}
+                      </>
+                    )}
                   </p>
                 </>
               )}

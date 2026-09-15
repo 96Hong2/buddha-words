@@ -21,7 +21,8 @@ async def anon_key(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "익명 식별키가 없어요.")
     if settings.allow_unverified_anon_key:
         return x_anon_key
-    # 실제 검증기는 mTLS 인증서를 받은 뒤 붙인다. 그때까지 운영은 기동 가드가 막는다.
+    # 실제 검증기는 mTLS 인증서를 받은 뒤 붙인다. 그때까지 운영은 기동 가드가 막으므로
+    # (config 의 ANON_KEY_VERIFIER_READY) 여기로 오는 것은 local·dev 에서 검증을 켠 경우뿐이다.
     raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "익명키 검증기가 아직 없어요.")
 
 

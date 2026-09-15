@@ -1,6 +1,24 @@
 /* 전역 바탕. 화면별 CSS 는 각 도메인 폴더에 둔다. 여기에 화면 규칙을 쓰지 않는다. */
 @import './shared/styles/tokens.css';
 
+/* ── 앱 기둥 ────────────────────────────────────────────────────────────
+   이 앱은 토스 앱 WebView 안에서만 돈다. 실기기 최대 폭이 430pt 근처라
+   (docs/plan/05-비주얼-디자인-언어.md 공유 카드 배포본 절) 화면 CSS 가 그 폭까지만
+   상정하고 쓰였다. 데스크탑 브라우저에서 폭이 그대로 늘어나면 그림이 늘어나 잘리고
+   패턴 띠가 여러 번 반복된다. 그래서 기둥 폭을 못 박고 가운데에 세운다.
+   여기 값은 앱 껍데기용이다. 화면 색·간격 토큰은 tokens.css 가 정본이다. */
+:root {
+  /* 시안 기준 화면은 390px, 실기기는 360~430px 사이에서 늘어난다 */
+  --app-max: 430px;
+
+  /* 기둥 한쪽 바깥 여백. position: fixed 요소에서 100% 는 뷰포트 폭이라,
+     탭바·시트·토스트를 이 식 하나로 기둥 안에 들인다. 실기기 폭에서는 0 이다 */
+  --app-gap: max(0px, calc((100% - var(--app-max)) / 2));
+
+  /* 기둥 바깥 바닥. 앱 배경보다 한 단계 짙어(대비 1.67) 폰을 올려 둔 자리로 읽힌다 */
+  --outside: var(--c-sand-500);
+}
+
 *,
 *::before,
 *::after {
@@ -54,6 +72,21 @@ img {
   display: flex;
   flex-direction: column;
   padding-bottom: var(--safe-bottom, 0px);
+  width: 100%;
+  max-width: var(--app-max);
+  margin-inline: auto;
+  background: var(--bg);
+}
+
+/* 실기기 폭을 넘는 화면에서만 걸린다. 430px 이하에서는 이 블록이 통째로 없는 것과 같아
+   실기기 배치가 한 픽셀도 달라지지 않는다 */
+@media (min-width: 431px) {
+  body {
+    background: var(--outside);
+  }
+  .app {
+    box-shadow: var(--sh-raised);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

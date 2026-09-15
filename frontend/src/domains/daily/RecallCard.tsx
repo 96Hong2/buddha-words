@@ -14,6 +14,15 @@ import type { KeyValueStore } from '../../shared/toss';
 
 import './daily.css';
 
+/**
+ * 입력칸에서 초점이 빠져나가지 않게 한다.
+ * 초점이 빠지면 홈이 다시 그려지면서 버튼 노드가 바뀌어, 누르던 클릭이 사라진다.
+ * 예시 칩과 전송 버튼이 이미 같은 처리를 하고 있는데 이 카드만 빠져 있었다.
+ */
+function keepFocus(event: { preventDefault: () => void }): void {
+  event.preventDefault();
+}
+
 const KEY = 'recall-last';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -59,12 +68,43 @@ export async function writeRecall(store: KeyValueStore, entry: RecallEntry): Pro
   }
 }
 
+/**
+ * 한 번 답한 카드는 지운다.
+ *
+ * 화면에서만 치우면 기기에는 그대로 남아, 앱을 다시 열 때마다 같은 것을 또 묻는다.
+ * 지우기가 실패하면 다음 진입에 한 번 더 뜬다. 그 실패로 홈을 멈추지는 않는다.
+ */
+export async function clearRecall(store: KeyValueStore): Promise<void> {
+  try {
+    await store.remove(KEY);
+  } catch {
+    // 지우지 못했다. 카드가 한 번 더 뜨는 것 말고 달라지는 것은 없다.
+  }
+}
+
 export function daysSince(dateISO: string, now: Date = new Date()): number {
   const [year, month, date] = dateISO.split('-').map(Number);
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(date)) return 0;
   const then = new Date(year, month - 1, date).getTime();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   return Math.max(0, Math.round((today - then) / DAY_MS));
+}
+
+/** '2026-09-08' → '9월 8일'. 못 읽으면 null */
+function monthDay(dateISO: string): string | null {
+  const [, month, date] = dateISO.split('-').map(Number);
+  if (!Number.isFinite(month) || !Number.isFinite(date)) return null;
+  return `${month}월 ${date}일`;
+}
+
+/**
+ * 며칠 만에 왔는지에 따라 부르는 말이 달라진다.
+ * 하루 만이면 「어제」, 그 위는 날짜를 그대로 적는다. 일주일 만에 온 사람에게 어제라고 하지 않는다.
+ */
+export function recallWording(entry: RecallEntry, since: number): { key: string; when: string } {
+  if (since <= 1) return { key: '어제 이야기', when: '어제' };
+  const day = monthDay(entry.date);
+  return { key: '지난 이야기', when: day != null ? `${day}에` : '지난번에' };
 }
 
 export interface RecallCardProps {
@@ -76,6 +116,7 @@ export interface RecallCardProps {
 export function RecallCard({ entry, onRespond }: RecallCardProps) {
   const analytics = useAnalytics();
   const since = daysSince(entry.date);
+  const { key, when } = recallWording(entry, since);
   const seen = useRef('');
 
   useEffect(() => {
@@ -92,16 +133,16 @@ export function RecallCard({ entry, onRespond }: RecallCardProps) {
   return (
     <div className="recall-card" {...testId(TEST_IDS.recallCard)}>
       <span className="recall-card__text">
-        <span className="recall-card__key">어제 이야기</span>
+        <span className="recall-card__key">{key}</span>
         <span className="recall-card__line">
-          어제 적어 드린 「{entry.firstActionTitle}」는 해 보셨나요?
+          {when} 적어 드린 「{entry.firstActionTitle}」는 해 보셨나요?
         </span>
       </span>
       <span className="recall-card__buttons">
-        <button type="button" onClick={() => respond(true)}>
+        <button type="button" onMouseDown={keepFocus} onClick={() => respond(true)}>
           해봤어요
         </button>
-        <button type="button" onClick={() => respond(false)}>
+        <button type="button" onMouseDown={keepFocus} onClick={() => respond(false)}>
           아직이요
         </button>
       </span>

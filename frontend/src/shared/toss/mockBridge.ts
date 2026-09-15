@@ -20,6 +20,9 @@ import {
   type NotificationAgreementResult,
   type PickPhotosOptions,
   type PickedImage,
+  type PurchaseBridge,
+  type PurchaseOrder,
+  type PurchaseResult,
   type SafeAreaInsets,
 } from './types';
 
@@ -48,6 +51,50 @@ export interface MockScenario {
   ads?: 'ok' | 'noFill' | 'failed' | 'unsupported';
   /** 전면 광고. `ok` 면 잠깐 덮었다가 「봤다」 로 끝난다. */
   fullScreenAd?: 'ok' | 'failed' | 'unsupported';
+  /**
+   * 주문서에서 무슨 일이 벌어지나.
+   * `cancel` 은 사고 나온 것이 아니라 그냥 닫은 것이라 아무 일도 일어나면 안 된다.
+   */
+  purchase?: 'ok' | 'cancel' | 'failed' | 'unsupported';
+  /**
+   * 주문서를 누를 때까지 붙들어 둔다.
+   *
+   * 기본은 잠깐 떴다가 스스로 닫히는 것이라 테스트가 빠르다. 주문서를 화면으로 남겨야
+   * 하는 테스트만 이걸 켜고, 다 찍은 뒤에 주문서를 눌러 결제를 끝낸다.
+   */
+  purchaseHold?: boolean;
+  /**
+   * 토스에 이미 남아 있는 주문. 재설치·기기 변경을 흉내 낸다.
+   * 기기 저장을 다 지워도 이 값이 있으면 복원이 이용권을 되살려야 한다.
+   */
+  purchaseOwned?: string[];
+  /** 돈은 받았는데 지급을 못 마친 주문. 앱이 켜질 때 마저 지급해야 한다. */
+  purchasePending?: string[];
+  /** 주문 이력 조회 실패. 「없다」와 「못 읽었다」가 갈리는지 본다. */
+  purchaseRestore?: 'ok' | 'failed';
+}
+
+declare global {
+  interface Window {
+    /**
+     * 브라우저·e2e 가 브릿지 시나리오를 밀어 넣는 자리.
+     * e2e 는 페이지를 열기 전에 여기에 얹는다. API 스텁의 `__buddhaStub` 과 짝이다.
+     */
+    __buddhaBridge?: MockScenario;
+    /**
+     * 지금 앱이 쓰고 있는 목 브릿지 그 자체.
+     *
+     * 시스템 뒤로가기와 앱 닫기는 브라우저에 대응하는 동작이 없다. e2e 가 이 자리에서
+     * `pressBack()` 을 직접 불러야 BackHandler 배선을 실제로 지나간다.
+     */
+    __buddhaBridgeInstance?: MockMiniAppBridge;
+  }
+}
+
+/** 창에 얹힌 시나리오. 없으면 기본 동작이다. */
+function readScenarioDial(): MockScenario {
+  if (typeof window === 'undefined') return {};
+  return window.__buddhaBridge ?? {};
 }
 
 /** 목 전면 광고가 화면을 덮고 있는 시간. 실광고처럼 몇 초를 끌지 않는다. */
@@ -141,6 +188,134 @@ class MockAdsBridge implements AdsBridge {
   }
 }
 
+/** 목 주문서가 떠 있는 기본 시간. 실제 결제처럼 몇 초를 끌지 않는다. */
+const MOCK_ORDER_SHEET_MS = 400;
+
+/**
+ * 산 주문을 적어 두는 자리.
+ *
+ * 앱이 이용권 보유를 캐시하는 자리(`pocket:mock:archive-pass`)와 일부러 다른 키다.
+ * 기기 캐시를 지워도 여기는 남아야, 「캐시가 아니라 주문 이력이 이용권을 되살린다」를
+ * 화면으로 증명할 수 있다.
+ */
+const MOCK_ORDER_LEDGER_KEY = 'pocket:mock:iap-orders';
+
+function readLedger(): PurchaseOrder[] {
+  try {
+    const raw = globalThis.localStorage?.getItem(MOCK_ORDER_LEDGER_KEY);
+    if (raw == null) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is PurchaseOrder =>
+        typeof item === 'object' &&
+        item != null &&
+        typeof (item as PurchaseOrder).sku === 'string' &&
+        typeof (item as PurchaseOrder).orderId === 'string',
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeLedger(orders: PurchaseOrder[]): void {
+  try {
+    globalThis.localStorage?.setItem(MOCK_ORDER_LEDGER_KEY, JSON.stringify(orders));
+  } catch {
+    /* 시크릿 모드 등에서 막히면 이번 실행 동안만 기억한다. */
+  }
+}
+
+/**
+ * 목 인앱결제.
+ *
+ * 토스 주문 이력을 흉내 낸다. 이 목록은 기기가 아니라 토스 쪽에 있는 값이라, 화면을
+ * 새로 고쳐도 시나리오가 준 것과 이번에 산 것이 그대로 남아 있어야 한다.
+ */
+class MockPurchaseBridge implements PurchaseBridge {
+  private readonly scenario: MockScenario;
+  /** 지금까지 산 것. 시나리오가 준 이력 위에 쌓이고 새로고침을 넘어 남는다. */
+  private bought: PurchaseOrder[] = readLedger();
+  private granted = new Set<string>();
+
+  constructor(scenario: MockScenario) {
+    this.scenario = scenario;
+  }
+
+  buy(sku: string, grant: (orderId: string) => Promise<boolean>): Promise<PurchaseResult> {
+    const mode = this.scenario.purchase ?? 'ok';
+    if (mode === 'unsupported') {
+      return Promise.resolve({ status: 'failed', reason: 'unsupported' });
+    }
+
+    // 실제 주문서처럼 화면을 통째로 덮는다. e2e 가 「주문서가 떴다」 를 이 자리로 본다.
+    const node = document.createElement('div');
+    node.dataset.testid = 'mock-order-sheet';
+    node.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;color:#fff';
+    node.textContent = '주문서 (목)';
+    document.body.appendChild(node);
+
+    return new Promise<PurchaseResult>((resolve) => {
+      /** 주문서를 닫고 이번 주문의 끝을 정한다. */
+      const settle = () => {
+        node.remove();
+        if (mode === 'cancel') {
+          resolve({ status: 'cancelled' });
+          return;
+        }
+        if (mode === 'failed') {
+          resolve({ status: 'failed', reason: 'error' });
+          return;
+        }
+
+        const orderId = `mock-order-${this.bought.length + 1}`;
+        void Promise.resolve(grant(orderId))
+          .catch(() => false)
+          .then((ok) => {
+            if (!ok) {
+              resolve({ status: 'failed', reason: 'error' });
+              return;
+            }
+            this.bought = [...this.bought, { sku, orderId, pending: false }];
+            writeLedger(this.bought);
+            resolve({ status: 'completed', orderId });
+          });
+      };
+
+      if (this.scenario.purchaseHold) {
+        // 실제 주문서처럼 사람이 누를 때까지 떠 있는다. 시간으로 닫으면 화면을 찍는
+        // 사이에 사라져서, 주문서라고 이름 붙인 그림에 엉뚱한 화면이 담긴다.
+        node.style.cursor = 'pointer';
+        node.addEventListener('click', settle, { once: true });
+        return;
+      }
+      setTimeout(settle, MOCK_ORDER_SHEET_MS);
+    });
+  }
+
+  async restore(): Promise<PurchaseOrder[]> {
+    if (this.scenario.purchaseRestore === 'failed') {
+      throw new BridgeError('UNKNOWN', '목: 결제 내역을 불러오지 못했어요.');
+    }
+
+    const owned = (this.scenario.purchaseOwned ?? []).map((sku, index) => ({
+      sku,
+      orderId: `mock-owned-${index + 1}`,
+      pending: false,
+    }));
+    const pending = (this.scenario.purchasePending ?? [])
+      .map((sku, index) => ({ sku, orderId: `mock-pending-${index + 1}`, pending: true }))
+      .filter((order) => !this.granted.has(order.orderId));
+
+    return [...owned, ...pending, ...this.bought];
+  }
+
+  async completeGrant(orderId: string): Promise<boolean> {
+    this.granted.add(orderId);
+    return true;
+  }
+}
+
 /** 브라우저·테스트용 로그 수집. 창에 쌓아 두고 e2e 가 읽는다. */
 class MockAnalyticsBridge implements AnalyticsBridge {
   log(kind: AnalyticsKind, name: string, params: AnalyticsParams = {}): void {
@@ -156,6 +331,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
   readonly deploymentId = '';
   readonly storage = new MemoryStorage();
   readonly ads: AdsBridge;
+  readonly purchase: PurchaseBridge;
   readonly analytics: AnalyticsBridge = new MockAnalyticsBridge();
 
   private accessoryListeners = new Set<(id: string) => void>();
@@ -165,14 +341,19 @@ export class MockMiniAppBridge implements MiniAppBridge {
   private readonly scenario: MockScenario;
 
   constructor(scenario: MockScenario = {}) {
-    this.scenario = scenario;
-    this.ads = new MockAdsBridge(scenario);
+    // e2e 는 페이지를 열기 전에 창에 시나리오를 얹는다. 직접 넘긴 값이 그보다 앞선다.
+    this.scenario = { ...readScenarioDial(), ...scenario };
+    this.ads = new MockAdsBridge(this.scenario);
+    this.purchase = new MockPurchaseBridge(this.scenario);
+    // 브라우저에는 시스템 뒤로가기가 없다. e2e 가 이 인스턴스를 잡아 직접 누른다.
+    if (typeof window !== 'undefined') window.__buddhaBridgeInstance = this;
   }
 
   supports(capability: BridgeCapability): boolean {
     if (this.scenario.unsupported?.includes(capability)) return false;
     if (capability === 'ads') return this.scenario.ads !== 'unsupported';
     if (capability === 'fullScreenAd') return this.scenario.fullScreenAd !== 'unsupported';
+    if (capability === 'purchase') return this.scenario.purchase !== 'unsupported';
     return true;
   }
 

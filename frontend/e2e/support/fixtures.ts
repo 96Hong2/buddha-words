@@ -24,8 +24,9 @@ export const test = base.extend<Fixtures>({
     page.on('console', (msg) => {
       if (msg.type() !== 'error') return;
       const text = msg.text();
-      // 글꼴 CDN 실패는 배치를 바꾸지 않는다
-      if (FONT_CDN.test(text)) return;
+      // 글꼴 CDN 실패는 배치를 바꾸지 않는다.
+      // WebKit 은 문구에 주소를 담지 않고 location 에만 남긴다. 둘 다 본다
+      if (FONT_CDN.test(text) || FONT_CDN.test(msg.location().url)) return;
       errors.push(text);
     });
     page.on('pageerror', (error) => errors.push(`${error.name}: ${error.message}`));

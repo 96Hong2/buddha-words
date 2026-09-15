@@ -15,10 +15,11 @@
   background: var(--dim);
 }
 
+/* 딤은 화면 전체를 덮고 판만 앱 기둥 안에 든다. 넓은 화면에서 판이 가로로 늘어나지 않는다 */
 .pk-sheet {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: var(--app-gap);
+  right: var(--app-gap);
   bottom: 0;
   max-height: 92%;
   overflow-y: auto;

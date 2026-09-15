@@ -67,6 +67,51 @@
         }
       }
     },
+    "Attribution": {
+      "description": "누가 한 말인가. 「불교 문헌의 문장」과 「부처가 직접 한 말」은 다르다. 법구경은 전승상 부처의 가르침이지만 화자가 특정되지 않고, 테리가타·승만경·선어록은 아예 다른 사람이 말한다. 화면은 여기 실린 문자열을 그대로 그리고 화자 이름을 조합하지 않는다",
+      "type": "object",
+      "required": [
+        "displayLabel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "displayLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "「— 오조 홍인, 육조단경 행유품」 · 「부처의 가르침 · 법구경 20장 282게」. 화자가 확정되지 않은 구절은 출처 한 줄이 그대로 들어온다"
+        }
+      }
+    },
+    "ScriptureSource": {
+      "description": "어느 문헌의 어디를 무슨 언어에서 옮겼나. **문장은 서버가 완성해서 보낸다.** 화면이 원문 언어와 감수 상태를 보고 문장을 지어내면 한문 문헌에 「영역본을 옮겼다」고 적는 일이 다시 생긴다",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "type": "string",
+          "description": "저본. 「《육조단경》 행유품 한문 원문」 · 「SuttaCentral 팔리 정본 · Bhikkhu Sujato 영역(CC0) 대조」"
+        },
+        "license": {
+          "type": "string",
+          "description": "판본 라이선스를 아직 확인하지 못한 구절에만 온다"
+        },
+        "translator": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string",
+          "description": "저본을 어떻게 옮겼고 감수를 받았는지 적은 한 문장. 원문 언어(팔리·한문)와 감수 통과 여부에 따라 서버가 고른다. 감수를 통과하지 않은 구절에는 감수했다는 말이 붙지 않는다"
+        },
+        "originalLabel": {
+          "type": "string",
+          "description": "「한문 원문」 · 「팔리 원문」. originalText 가 있을 때만 함께 온다"
+        },
+        "originalText": {
+          "type": "string",
+          "description": "팔리·한문 원문. 번역문 전체를 덮는 원문이 실린 구절에만 온다. 공유 카드에는 싣지 않는다(카드 글꼴에 한자가 없다)"
+        }
+      }
+    },
     "Scripture": {
       "description": "서버가 DB 에서 채운다. text 는 사람이 감수한 문장 그대로다",
       "type": "object",
@@ -106,19 +151,12 @@
             }
           }
         },
+        "attribution": {
+          "$ref": "#/$defs/Attribution",
+          "description": "화자까지 담은 귀속. 서버는 늘 채워 보낸다. 오지 않으면 화면이 citation 한 줄로 물러선다. 그 방향은 늘 안전한 쪽으로만 틀린다. 조주 선사의 말이 「오등회원」으로 보일 수는 있어도 부처의 말이 되지는 않는다"
+        },
         "source": {
-          "type": "object",
-          "properties": {
-            "base": {
-              "type": "string"
-            },
-            "license": {
-              "type": "string"
-            },
-            "translator": {
-              "type": "string"
-            }
-          }
+          "$ref": "#/$defs/ScriptureSource"
         }
       }
     },
@@ -696,7 +734,7 @@
         },
         "fallbackUsed": {
           "type": "boolean",
-          "description": "금지어 검사에 걸려 고정 문구로 바꿔 내보냈다. true 면 운영 알림을 띄운다"
+          "description": "모델 문장 대신 고정 문구를 내보냈다. 금지어 검사에 걸렸거나 예산 문이 닫혀 모델을 부르지 않은 경우다. true 면 운영 알림을 띄운다"
         }
       }
     }

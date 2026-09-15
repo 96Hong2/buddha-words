@@ -1,10 +1,23 @@
 import { useOverlayBackClose } from '../../app/providers';
-import type { DailyQuote } from '../../shared/api';
+import { attributionLine, type DailyQuote } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { artForScreen } from '../../shared/visual/scene';
 
 /** 오늘 이미 띄웠는지 적어 두는 자리. 값은 마지막으로 띄운 날짜(YYYY-MM-DD) 하나다 */
 const SEEN_KEY = 'buddha.entryCard.v1';
+
+/**
+ * 한마디 아래에 붙는 한 줄. 오늘의 한마디 시트와 같은 말이다.
+ *
+ * 이 카드는 큰 글씨 한마디와 경전 원문을 아무 표시 없이 위아래로 붙여 놓고 있었다.
+ * 둘이 한 덩어리로 읽혀서, 처음 들어온 사람은 큰 글씨가 그 경전에 그대로 적힌
+ * 문장이라고 읽는다. 한마디는 감수본이 우리말로 풀어 둔 문장이고 원문은 그 아래에 있다.
+ *
+ * **여기에 「AI 생성」을 붙이지 않는다.** 오늘의 한마디는 모델을 부르지 않는다.
+ * 문장은 감수본의 `daily_line` 을 그대로 가져온 것이라, AI 가 썼다고 적으면
+ * 그것도 사실이 아닌 말이 된다.
+ */
+const LINE_NOTE = '불교의 가르침을 오늘의 언어로 풀었어요';
 
 /** 진입 카드를 닫은 방법. 넷 중 무엇으로 닫았는지 그대로 로그에 실린다 */
 export type EntryCardDismiss = 'cta' | 'close' | 'backdrop' | 'back';
@@ -87,8 +100,13 @@ export function EntryCard({ quote, showDailyNote, onDismiss }: EntryCardProps) {
 
         <p className="ec-k">오늘의 한마디</p>
         <p className="ec-verse">{quote.line}</p>
+        <p className="ec-foot">{LINE_NOTE}</p>
+
+        <p className="ec-k" style={{ marginTop: 'var(--s-5)' }}>
+          경전 원문
+        </p>
         <p className="ec-gloss">{quote.scripture.text}</p>
-        <p className="ec-cite">{quote.scripture.citation}</p>
+        <p className="ec-cite">{attributionLine(quote.scripture)}</p>
 
         <button
           {...testId(TEST_IDS.entryCardCta)}

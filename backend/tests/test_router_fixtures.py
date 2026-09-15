@@ -74,4 +74,3 @@ def test_router_fixture(case: dict[str, Any]) -> None:
             assert up.route == "solace"
             if "solaceTier" in expect:
                 assert up.model_tier == expect["solaceTier"]
-

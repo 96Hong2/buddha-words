@@ -20,17 +20,9 @@ export interface ChipProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: ChipVariant;
 }
 
-export function Chip({
-  variant = 'kind',
-  className,
-  children,
-  ...rest
-}: ChipProps) {
+export function Chip({ variant = 'kind', className, children, ...rest }: ChipProps) {
   return (
-    <span
-      className={cx('pk-chip', VARIANT_CLASS[variant], className)}
-      {...rest}
-    >
+    <span className={cx('pk-chip', VARIANT_CLASS[variant], className)} {...rest}>
       {children}
     </span>
   );

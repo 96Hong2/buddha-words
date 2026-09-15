@@ -77,7 +77,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <ErrorState
           title="화면을 열지 못했어요"
           description={description}
-          actionLabel="다시 시도" onAction={this.handleRetry}
+          actionLabel="다시 시도"
+          onAction={this.handleRetry}
         />
       </div>
     );

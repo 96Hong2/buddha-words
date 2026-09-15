@@ -3,17 +3,20 @@
  *
  * 실제 서버가 붙기 전에도 모든 화면이 그려지고 e2e 가 돌아야 한다. 그래서 라우터 판정은
  * **진짜 정본**(`spec/router.ts`)을 그대로 쓰고, 답변 본문만 결정론으로 지어낸다.
- * 경전은 `data/scriptures/dev-seed.json` 에서 고른다. 여기서 문장을 만들어 내지 않는다.
+ * 경전은 백엔드가 읽는 것과 **같은 파일**(`data/scriptures/seed.json`, 400구절)에서 고른다.
+ * 여기서 문장을 만들어 내지 않는다. 시드를 두 벌로 갈라 두면 스텁에서 본 화면과 서버에서 본
+ * 화면이 다른 문장으로 갈린다.
+ *
+ * 고르는 방법은 시드가 커져도 그대로다. 같은 글에는 늘 같은 구절이 나온다(`hash`).
+ * 후보를 세는 기준이 목록 길이라 400구절에서도 새로고침마다 답이 바뀌지 않는다.
+ *
+ * 옛 `dev-seed.json`(12구절)은 이 파일이 마지막 독자였고, 그래서 저장소에서 지웠다.
  *
  * 스텁 다이얼(`window.__buddhaStub`)로 e2e 가 지연·실패·응답 종류를 주입한다.
  */
 
-import seed from '../../../../data/scriptures/dev-seed.json';
-import {
-  decide,
-  escalateToSolace,
-  type RouteDecision,
-} from './routerPort';
+import seed from '../../../../data/scriptures/seed.json';
+import { decide, escalateToSolace, type RouteDecision } from './routerPort';
 import type {
   Action,
   AnalysisSection,
@@ -32,6 +35,7 @@ import type {
   VisualTheme,
 } from './types';
 
+/** 스텁이 읽는 것만 적는다. 시드에는 `retrieval_text` 처럼 서버 검색 전용 필드가 더 있다 */
 interface SeedItem {
   id: string;
   citation: string;
@@ -41,18 +45,81 @@ interface SeedItem {
   daily_ok: boolean;
   daily_line: string;
   terms?: { word: string; gloss: string }[];
+  attribution?: { display_label?: string };
+  base_edition?: string;
+  license_status?: string | null;
+  source_language?: string;
+  source_text?: string;
+  review?: { status?: string };
 }
 
 const ITEMS = (seed as { items: SeedItem[] }).items;
 
+/**
+ * 저본 문구. 원문 언어 두 갈래 × 감수 통과 여부 두 갈래다.
+ *
+ * **서버가 쓰는 문장과 같아야 한다**(`backend/app/domains/scripture/repo.py` 의
+ * `_SOURCE_BASE` · `_REVIEW_DONE` · `_REVIEW_PENDING`). 두 벌이 갈라지면 개발에서 본
+ * 화면과 배포된 화면이 다른 말을 적는다. e2e 가 두 파일을 나란히 읽어 글자까지 비교한다.
+ */
+export const SOURCE_NOTES = {
+  pli: '팔리 원문을 저본으로 삼고 영역본으로 뜻을 대조해 한국어로 새로 옮긴 문장이에요.',
+  zh: '고전 한문 원문을 저본으로 삼아 한국어로 새로 옮긴 문장이에요.',
+  unknown: '원문을 저본으로 삼아 한국어로 새로 옮긴 문장이에요.',
+  reviewed: '외부 문헌 감수에서 출처와 화자를 확인했어요.',
+  unreviewed: '문헌 감수는 아직 받지 않은 구절이에요.',
+  license: '이 구절이 실린 판본의 이용 조건은 아직 확인하고 있어요.',
+} as const;
+
+/** 원문 언어 → 화면에 붙일 이름. 서버의 `_ORIGINAL_LABEL` 과 같다 */
+export const ORIGINAL_LABELS: Record<string, string> = { pli: '팔리 원문', zh: '한문 원문' };
+
+function sourceNote(item: SeedItem): string {
+  const language = item.source_language ?? '';
+  const base =
+    language === 'pli'
+      ? SOURCE_NOTES.pli
+      : language === 'zh'
+        ? SOURCE_NOTES.zh
+        : SOURCE_NOTES.unknown;
+  const reviewed = item.review?.status === 'approved';
+  return `${base} ${reviewed ? SOURCE_NOTES.reviewed : SOURCE_NOTES.unreviewed}`;
+}
+
+/**
+ * 서버가 내주는 모양과 같게 맞춘다(`backend/.../scripture/repo.py` 의 `to_api`).
+ * 출처 칸을 스텁에서만 채우면 스텁에서는 보이던 줄이 실제 서버에서 사라진다.
+ * 시드는 법구경 말고도 열두 문헌을 함께 담고 있어 한 출처로 뭉뚱그릴 수도 없다.
+ *
+ * 한동안 `attribution` 이 스텁에만 있었다. 스키마가 닫혀 있어 서버가 못 실었고, 그래서
+ * 개발 화면에는 화자가 뜨는데 실제 서버에 붙이면 한 명도 안 떴다. 지금은 스키마 · 서버 ·
+ * 이 파일 · `http.ts` 넷이 다 열려 있어 두 화면이 같은 것을 낸다.
+ *
+ * 문구는 여기서 짓지 않는다. 귀속은 시드가 적어 둔 그대로이고, 저본 문구는 서버와 같은
+ * 규칙으로 고른다(`sourceNote`).
+ */
 function toScripture(item: SeedItem): Scripture {
-  return {
+  const scripture: Scripture = {
     id: item.id,
     citation: item.citation,
     text: item.text,
     terms: item.terms,
-    source: { base: 'Dhammapada (CC0 기반)', license: 'CC0', translator: '감수 전 개발 씨앗' },
   };
+  const label = item.attribution?.display_label;
+  if (label != null && label !== '') scripture.attribution = { displayLabel: label };
+
+  const source: NonNullable<Scripture['source']> = {
+    translator: '부처의 말 자체 번역',
+    note: sourceNote(item),
+  };
+  if (item.base_edition != null && item.base_edition !== '') source.base = item.base_edition;
+  if (item.license_status === 'needs_check') source.license = SOURCE_NOTES.license;
+  if (item.source_text != null && item.source_text !== '') {
+    source.originalLabel = ORIGINAL_LABELS[item.source_language ?? ''] ?? '원문';
+    source.originalText = item.source_text;
+  }
+  scripture.source = source;
+  return scripture;
 }
 
 /** 같은 글에는 늘 같은 구절이 나온다. 새로고침마다 답이 바뀌면 화면을 못 믿는다 */
@@ -78,7 +145,11 @@ const THEME_WORDS: { theme: VisualTheme; tag: EmotionTag; words: string[] }[] = 
   { theme: 'sleepless', tag: 'anxiety', words: ['잠', '불면', '새벽', '못 자'] },
   { theme: 'loss', tag: 'loneliness', words: ['이별', '헤어', '떠났', '돌아가셨', '상실'] },
   { theme: 'comparison', tag: 'comparison', words: ['비교', '남들', '뒤처', '부럽'] },
-  { theme: 'relationship', tag: 'fatigue', words: ['친구', '동료', '남편', '아내', '가족', '관계'] },
+  {
+    theme: 'relationship',
+    tag: 'fatigue',
+    words: ['친구', '동료', '남편', '아내', '가족', '관계'],
+  },
   { theme: 'approval', tag: 'approval', words: ['인정', '눈치', '평가', '미움받'] },
   { theme: 'attachment', tag: 'attachment', words: ['미련', '집착', '못 놓', '아직도'] },
   { theme: 'emptiness', tag: 'emptiness', words: ['공허', '무기력', '의미가', '허무'] },
@@ -135,7 +206,8 @@ function buddhaMessage(theme: VisualTheme): string {
     anxiety: '오지 않은 일을 미리 앓지 마라. 지금 네 발이 닿은 자리만이 네 것이다.',
     anger: '불을 불로 끄려 하지 마라. 손에 쥔 돌이 먼저 네 손을 태운다.',
     loss: '떠난 것을 붙들지 마라. 강물은 지나가야 다음 물이 온다.',
-    comparison: '남의 속도를 좇지 마라. 그 사람의 길은 그 사람의 것이고, 너의 길은 아직 끝나지 않았다.',
+    comparison:
+      '남의 속도를 좇지 마라. 그 사람의 길은 그 사람의 것이고, 너의 길은 아직 끝나지 않았다.',
     choice: '두 길 앞에서 오래 서 있는 것도 걸음이다. 다만 서 있는 줄은 알고 서 있어라.',
     sleepless: '밤에 떠오른 생각을 밤에 판단하지 마라. 어둠은 크기를 부풀린다.',
     attachment: '쥔 손으로는 받을 수 없다. 펴는 것이 곧 얻는 것이다.',
@@ -174,9 +246,18 @@ function analysisFor(theme: VisualTheme, deep: boolean): AnalysisSection[] {
 
 function actionsFor(deep: boolean): Action[] {
   const all: Action[] = [
-    { title: '오늘 자기 전에 이 마음 한 줄만 적어 두기', why: '머리에서 꺼내 놓으면 크기가 실제 크기로 돌아와요' },
-    { title: '내일 이 일로 가장 먼저 만날 사람 한 명 정하기', why: '혼자 굴리는 시간이 길수록 결론이 극단으로 가요' },
-    { title: '이번 주에 하지 않기로 할 것 하나 고르기', why: '더할 일보다 뺄 일이 지금은 더 효과가 커요' },
+    {
+      title: '오늘 자기 전에 이 마음 한 줄만 적어 두기',
+      why: '머리에서 꺼내 놓으면 크기가 실제 크기로 돌아와요',
+    },
+    {
+      title: '내일 이 일로 가장 먼저 만날 사람 한 명 정하기',
+      why: '혼자 굴리는 시간이 길수록 결론이 극단으로 가요',
+    },
+    {
+      title: '이번 주에 하지 않기로 할 것 하나 고르기',
+      why: '더할 일보다 뺄 일이 지금은 더 효과가 커요',
+    },
   ];
   return deep ? all : all.slice(0, 2);
 }
@@ -190,7 +271,11 @@ function newAnswerId(): string {
   return `stub-${runTag}-${answerSeq}`;
 }
 
-export function buildAnswer(text: string, route: 'normal' | 'deep', decision: RouteDecision): ApiAnswer {
+export function buildAnswer(
+  text: string,
+  route: 'normal' | 'deep',
+  decision: RouteDecision,
+): ApiAnswer {
   const { theme, tags } = themeOf(text);
   const scripture = toScripture(pickByTheme(text, theme));
   return {
@@ -208,7 +293,10 @@ export function buildAnswer(text: string, route: 'normal' | 'deep', decision: Ro
   };
 }
 
-export function buildPass2(text: string, route: 'normal' | 'deep'): Extract<ApiAnswer['pass2'], { status: 'done' }> {
+export function buildPass2(
+  text: string,
+  route: 'normal' | 'deep',
+): Extract<ApiAnswer['pass2'], { status: 'done' }> {
   const { theme } = themeOf(text);
   const item = pickByTheme(text, theme);
   const deep = route === 'deep';
@@ -298,7 +386,10 @@ export function buildExtension(text: string, answerId: string, usedIds: string[]
         '그런데 같은 상황을 「내가 무엇을 바라고 있었나」로 바꿔 보면 이야기가 달라져요. ' +
         '바라던 것이 무엇이었는지 분명해지면, 그것이 지금 꼭 필요한 것인지도 같이 보여요.',
     },
-    action: { title: '내가 이 일에서 정말 바랐던 것 한 문장으로 적기', why: '바람이 분명해지면 실망의 크기도 정확해져요' },
+    action: {
+      title: '내가 이 일에서 정말 바랐던 것 한 문장으로 적기',
+      why: '바람이 분명해지면 실망의 크기도 정확해져요',
+    },
   };
 }
 
@@ -306,6 +397,9 @@ export function buildExtension(text: string, answerId: string, usedIds: string[]
 /**
  * 링크를 연 사람이 보는 카드. 서버가 토큰으로 내주는 자리를 흉내 낸다.
  * 고민 원문은 여기에 담기지 않는다.
+ *
+ * 스텁은 카드를 그림으로 그리지 못한다. 그래서 `kind: 'fields'` 조각을 그대로 넣어 두고
+ * 화면이 HTML 로 그린다. 서버는 반대로 PNG 주소만 준다(`http.ts` 의 `fetchSharedCard`).
  */
 const SHARED_KEY = 'buddha.stub.share.v1';
 
@@ -327,7 +421,10 @@ export function rememberShared(answerId: string, card: SharedCard): void {
 }
 
 export function readShared(token: string): SharedCard | null {
-  return sharedStore()[token] ?? null;
+  const card = sharedStore()[token];
+  // 갈래가 생기기 전에 저장된 옛 값은 화면이 못 그린다. 반쪽으로 그리지 않고 없는 것으로 본다
+  if (card == null || (card.kind !== 'fields' && card.kind !== 'image')) return null;
+  return card;
 }
 
 // ── 오늘의 한마디 ────────────────────────────────────────────────────────────

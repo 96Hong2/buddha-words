@@ -2,6 +2,7 @@ import {
   Analytics,
   Device,
   Environment,
+  IAP,
   Notification,
   PermissionError,
   SafeArea,
@@ -38,6 +39,9 @@ import {
   type NotificationAgreementResult,
   type PickPhotosOptions,
   type PickedImage,
+  type PurchaseBridge,
+  type PurchaseOrder,
+  type PurchaseResult,
   type SafeAreaInsets,
 } from './types';
 
@@ -156,40 +160,188 @@ class TossAdsBridge implements AdsBridge {
     }
     return new Promise<FullScreenAdResult>((resolve) => {
       let settled = false;
+      // 로드 구독을 끊는 함수. 콜백이 먼저 돌 수 있어 값이 늦게 들어온다.
+      let cancelLoad: (() => void) | undefined;
+      let loadCancelled = false;
+
+      /** 로드를 그만 기다린다. 두 번 불러도 한 번만 끊긴다. */
+      const stopLoading = () => {
+        if (loadCancelled) return;
+        loadCancelled = true;
+        cancelLoad?.();
+      };
+
       const finish = (result: FullScreenAdResult) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
+        stopLoading();
         resolve(result);
       };
       const timer = setTimeout(() => finish('failed'), FULL_SCREEN_LOAD_TIMEOUT_MS);
 
       const show = () => {
-        let shown = false;
+        // 시간 제한은 불러오는 데까지만이다. 광고가 떴는데 8초가 지났다고 실패로 접으면,
+        // 끝까지 본 사람이 보상을 못 받는다.
+        clearTimeout(timer);
         showFullScreenAd({
           options: { adGroupId },
           onEvent: (event) => {
-            // 보상형은 보상 이벤트가 먼저 오고, 전면형은 닫힘만 온다. 어느 쪽이든 「봤다」.
-            // 눌렀다는 것도 떠 있었다는 뜻이다. 목 SDK 는 뜸·노출 없이 눌림만 보낸다.
-            if (event.type === 'show' || event.type === 'impression' || event.type === 'clicked') {
-              shown = true;
-            }
+            // 보상은 `userEarnedReward` 하나에서만 나온다. 떴다·노출됐다·눌렸다는 보상이 아니다.
+            // 닫힘은 언제나 취소다. 뜨자마자 닫은 사람에게 보상을 주면 무효 트래픽으로 잡혀
+            // 광고 계정이 막힌다. 샌드박스 목이 보상 이벤트를 안 준다고 여기서 타협하지 않는다.
             if (event.type === 'userEarnedReward') finish('watched');
-            if (event.type === 'dismissed') finish(shown ? 'watched' : 'failed');
-            if (event.type === 'failedToShow') finish('failed');
+            if (event.type === 'dismissed' || event.type === 'failedToShow') finish('failed');
           },
           onError: () => finish('failed'),
         });
       };
 
-      loadFullScreenAd({
+      cancelLoad = loadFullScreenAd({
         options: { adGroupId },
         onEvent: (event) => {
+          // 시간이 다 돼 실패로 끝낸 뒤에 오는 loaded 는 버린다. 화면은 이미 다음으로 넘어갔고,
+          // 여기서 띄우면 보상도 없는 광고가 엉뚱한 자리에서 튀어나온다.
+          if (loadCancelled) return;
           if (event.type === 'loaded') show();
         },
         onError: () => finish('failed'),
       });
+      // 콜백이 먼저 끝났으면 위 구독 값이 아직 없었다. 여기서 한 번 더 끊는다.
+      if (loadCancelled) cancelLoad();
     });
+  }
+}
+
+/**
+ * 「사지 않고 나온 것 같다」고 읽은 뒤에도 주문서 구독을 붙들고 있는 시간.
+ *
+ * 주문서가 올리는 이벤트 이름이 SDK 에 선언돼 있지 않다. 그래서 모르는 이벤트 하나로
+ * 구독을 끊으면, 그것이 결제 도중의 중간 신호였을 때 뒤늦게 오는 지급 요청을 못 받는다.
+ * 돈은 빠져나갔는데 이용권이 안 열리는 것이 이 배선에서 가장 나쁜 결말이라, 화면은 먼저
+ * 풀어 주고 귀는 이만큼 더 열어 둔다.
+ */
+const LATE_GRANT_GRACE_MS = 180_000;
+
+class TossPurchaseBridge implements PurchaseBridge {
+  /**
+   * 주문서를 띄우고 흐름이 끝날 때까지 기다린다.
+   *
+   * 성공 신호는 `processProductGrant` 하나다. SDK 구현이 두 갈래인데, 새 경로는
+   * 주문서에서 `purchased` 를 받으면 onEvent 를 거치지 않고 이 콜백만 부른다.
+   * 그래서 여기서 지급하고 그 결과로 성패를 가른다.
+   *
+   * 타입 선언은 onEvent 가 `success` 하나만 받는다고 하지만, SDK 는 주문서에서 온
+   * 이벤트를 그대로 넘긴다. 이름 목록이 SDK 에 없어서, `success` 가 아닌 것은
+   * **사지 않고 나온 것**으로 읽는다. 여기서 실패로 처리하면 그냥 닫은 사람에게
+   * 오류 문구가 뜬다.
+   *
+   * 다만 그렇게 읽었다고 구독까지 끊지는 않는다. 읽기가 틀렸을 때 잃는 것이 사용자의
+   * 돈이라, 답만 먼저 내보내고 지급 요청은 잠시 더 기다린다.
+   */
+  buy(sku: string, grant: (orderId: string) => Promise<boolean>): Promise<PurchaseResult> {
+    if (!IAP.createOneTimePurchaseOrder.isSupported()) {
+      return Promise.resolve({ status: 'failed', reason: 'unsupported' });
+    }
+
+    return new Promise<PurchaseResult>((resolve) => {
+      let settled = false;
+      let released = false;
+      let graceTimer: ReturnType<typeof setTimeout> | undefined;
+      // 주문서가 끝나면 반드시 불러야 하는 정리 함수. 아래에서 실제 값으로 바뀐다.
+      let cleanup: () => void = () => {};
+
+      /** 주문서 구독을 끊는다. 두 번 불러도 한 번만 끊긴다. */
+      const release = () => {
+        if (released) return;
+        released = true;
+        clearTimeout(graceTimer);
+        cleanup();
+      };
+
+      const finish = (result: PurchaseResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
+
+      cleanup = IAP.createOneTimePurchaseOrder({
+        options: {
+          sku,
+          processProductGrant: async ({ orderId }) => {
+            const granted = await grant(orderId).catch(() => false);
+            finish(
+              granted ? { status: 'completed', orderId } : { status: 'failed', reason: 'error' },
+            );
+            release();
+            return granted;
+          },
+        },
+        onEvent: (event) => {
+          // 지급까지 끝난 뒤의 확인 이벤트다. 이미 finish 했다.
+          if (event.type === 'success') {
+            release();
+            return;
+          }
+          finish({ status: 'cancelled' });
+          graceTimer ??= setTimeout(release, LATE_GRANT_GRACE_MS);
+        },
+        // 오류 내용은 밖으로 내보내지 않는다. 주문서 메시지에 무엇이 실려 있을지 모른다.
+        onError: () => {
+          finish({ status: 'failed', reason: 'error' });
+          release();
+        },
+      });
+
+      // 콜백이 먼저 끝났으면 위 cleanup 은 빈 함수였다. 여기서 한 번 더 부른다.
+      if (released) cleanup();
+    });
+  }
+
+  /**
+   * 토스에 남은 주문 이력을 읽는다.
+   *
+   * 두 곳을 본다. 완료·환불 목록은 이 사람이 산 적이 있는지를, 대기 목록은 돈은 받았는데
+   * 아직 못 준 주문을 알려 준다. 환불된 주문은 여기서 걸러 내 이용권이 회수되게 한다.
+   *
+   * ⚠ SDK 3.4.0 의 `getCompletedOrRefundedOrders` 는 `nextKey` 를 돌려주면서도 받는 자리가
+   * 없다. 첫 장만 읽는다. 파는 상품이 하나라 지금은 문제가 없지만 상품이 늘면 다시 본다.
+   */
+  async restore(): Promise<PurchaseOrder[]> {
+    if (!IAP.getCompletedOrRefundedOrders.isSupported()) {
+      throw new BridgeError('UNSUPPORTED', '이 토스 앱 버전에서는 결제 내역을 볼 수 없어요.');
+    }
+
+    try {
+      const orders: PurchaseOrder[] = [];
+
+      const { orders: history } = await IAP.getCompletedOrRefundedOrders();
+      for (const order of history) {
+        if (order.status !== 'COMPLETED') continue;
+        orders.push({ sku: order.sku, orderId: order.orderId, pending: false });
+      }
+
+      if (IAP.getPendingOrders.isSupported()) {
+        const { orders: waiting } = await IAP.getPendingOrders();
+        for (const order of waiting) {
+          orders.push({ sku: order.sku, orderId: order.orderId, pending: true });
+        }
+      }
+
+      return orders;
+    } catch (error) {
+      throw toBridgeError(error, '결제 내역을 불러오지 못했어요.');
+    }
+  }
+
+  async completeGrant(orderId: string): Promise<boolean> {
+    if (!IAP.completeProductGrant.isSupported()) return false;
+    try {
+      return await IAP.completeProductGrant({ params: { orderId } });
+    } catch {
+      // 못 알려도 사용자에게는 이용권이 열려 있다. 다음 실행의 대기 주문으로 다시 온다.
+      return false;
+    }
   }
 }
 
@@ -201,6 +353,7 @@ export class TossMiniAppBridge implements MiniAppBridge {
   readonly deploymentId: string;
   readonly storage = new TossStorage();
   readonly ads = new TossAdsBridge();
+  readonly purchase = new TossPurchaseBridge();
   readonly analytics = new TossAnalyticsBridge();
 
   constructor() {
@@ -232,6 +385,8 @@ export class TossMiniAppBridge implements MiniAppBridge {
         return TossAds.attachBanner.isSupported();
       case 'fullScreenAd':
         return loadFullScreenAd.isSupported() && showFullScreenAd.isSupported();
+      case 'purchase':
+        return IAP.createOneTimePurchaseOrder.isSupported();
       case 'notification':
         return Notification.requestAgreement.isSupported();
       case 'analytics':
@@ -242,8 +397,13 @@ export class TossMiniAppBridge implements MiniAppBridge {
 
   minAppVersion(capability: BridgeCapability): string | null {
     // 버전으로 갈리는 것만 적는다. 나머지는 앱 버전과 무관하거나 SDK 가 하한을 알려 주지 않는다.
-    if (capability !== 'notification') return null;
-    const gate = Notification.requestAgreement.MIN_TOSS_APP_VERSION;
+    const gate =
+      capability === 'notification'
+        ? Notification.requestAgreement.MIN_TOSS_APP_VERSION
+        : capability === 'purchase'
+          ? IAP.createOneTimePurchaseOrder.MIN_TOSS_APP_VERSION
+          : null;
+    if (gate == null) return null;
     if (this.platform === 'ios') return gate.ios;
     if (this.platform === 'android') return gate.android;
     return null;

@@ -6,40 +6,61 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen';
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
 import {
   RecallCard,
+  clearRecall,
   daysSince,
   readRecall,
   type RecallEntry,
 } from '../../domains/daily/RecallCard';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
 import { ExhaustedNotice } from '../../domains/quota/ExhaustedNotice';
-import { continuesLeft, gateFor, readQuota, type QuotaState } from '../../domains/quota/quota';
-import { routeByRules } from '../../shared/api/routerPort';
+import {
+  continuesLeft,
+  gateFor,
+  readQuota,
+  saveFromServer,
+  type QuotaState,
+} from '../../domains/quota/quota';
+import type { Quota } from '../../shared/api';
+import { resolveApiMode } from '../../shared/api/client';
+import { markAdWatched } from '../../shared/api/http';
 import { useSession } from '../../shared/session';
 import { useBridge } from '../providers';
 import { ROUTES } from '../router';
 
 /**
- * 이 글이 오늘의 횟수를 쓰는 이야기인가.
+ * 사용량 문을 누가 여는가.
  *
- * 최종 판정은 서버가 한다. 화면은 규칙층만 보고 NORMAL·DEEP 후보일 때만 센다.
- * 가볍게 쓴 글 · 알아볼 수 없는 글 · 위기 글은 어느 쪽으로 판정되든 세지 않는다.
+ * **화면이 먼저 막지 않는다.** 예전에는 규칙층(`routeByRules`)만 보고 NORMAL·DEEP 이면
+ * 광고 시트를 띄웠다. 규칙층은 위기를 확정하지 못한다(normal·deep 판정은 늘 confidence 0.5,
+ * 곧 「분류기가 봐야 한다」는 뜻이다). 그래서 분류기가 잡을 위기 글이 서버에 닿기도 전에
+ * 광고에 막혔고, 시트를 닫으면 창구를 영영 못 봤다.
+ *
+ * 지금은 보내고 나서 서버가 「광고가 필요하다」고 답할 때 시트를 연다. 서버는 위기를
+ * 사용량보다 먼저 처리하므로(`routes.py`) 위기 글은 분류기까지 돌아 창구로 간다.
+ *
+ * 스텁 판에는 사용량을 세는 서버가 없다. 그 판에서만 화면이 기기 사본으로 문을 연다.
  */
-function countsToday(text: string): boolean {
-  const route = routeByRules(text).route;
-  return route === 'normal' || route === 'deep';
+function serverOpensTheGate(): boolean {
+  return resolveApiMode() === 'http';
+}
+
+/** 대기 화면이 사용량에 막혀 돌려보낼 때 들려 보내는 것 */
+interface HomeNavState {
+  exhaustedQuota?: Quota;
 }
 
 export function HomeRoute() {
   const navigate = useNavigate();
+  const { state } = useLocation();
   const bridge = useBridge();
-  const { beginSubmit } = useSession();
+  const { beginSubmit, sent } = useSession();
 
   const [quota, setQuota] = useState<QuotaState>(readQuota);
   const [continueOpen, setContinueOpen] = useState(false);
@@ -48,6 +69,35 @@ export function HomeRoute() {
   const [recall, setRecall] = useState<RecallEntry | null>(null);
   /** 시트가 열려 있는 동안 들고 있는 글. 시트를 닫아도 입력창에는 그대로 남는다 */
   const held = useRef('');
+  /** 이미 문을 연 서버 사용량. 같은 값으로 시트를 두 번 열지 않는다 */
+  const handledCap = useRef<Quota | null>(null);
+
+  /**
+   * 서버가 사용량으로 막아 대기 화면이 돌려보낸 자리.
+   *
+   * 서버가 센 값을 기기 사본에 적어 둔다. 그리고 그 값이 말하는 문을 바로 연다:
+   * 이어가기가 남아 있으면 광고 시트, 다 썼으면 천장 안내다.
+   * 왜 답이 안 나왔는지 모른 채 홈에 서 있게 두지 않는다.
+   *
+   * 한 번 쓰고 나면 히스토리에서도 지운다. 남겨 두면 광고를 보고 답까지 받은 뒤 뒤로 돌아왔을 때
+   * 그 낡은 값이 다시 살아나, 이미 쓴 횟수를 안 쓴 것으로 되돌리고 광고 시트를 또 연다.
+   */
+  useEffect(() => {
+    const capped = (state as HomeNavState | null)?.exhaustedQuota;
+    // 같은 자리에서 온 값은 한 번만 연다. 글을 고쳐 다시 보낼 때 옛 값이 시트를 또 열면 안 된다
+    if (capped == null || handledCap.current === capped) return;
+    handledCap.current = capped;
+    void navigate(ROUTES.home, { replace: true, state: null });
+    const next = saveFromServer(capped);
+    setQuota(next);
+    if (gateFor(next) === 'exhausted') {
+      setExhausted(true);
+      return;
+    }
+    // 보낸 글은 세션이 그대로 쥐고 있다. 광고를 다 보면 이 글을 그대로 잇는다
+    held.current = sent;
+    setContinueOpen(true);
+  }, [navigate, sent, state]);
 
   useEffect(() => {
     let alive = true;
@@ -70,7 +120,8 @@ export function HomeRoute() {
 
   const submit = useCallback(
     (text: string) => {
-      if (!countsToday(text)) {
+      if (serverOpensTheGate()) {
+        // 막지 않고 보낸다. 광고가 필요하면 서버가 답으로 알려 주고 위의 효과가 시트를 연다
         send(text);
         return;
       }
@@ -100,8 +151,25 @@ export function HomeRoute() {
     setContinueOpen(false);
     const text = held.current;
     held.current = '';
-    if (text !== '') send(text);
+    if (text === '') return;
+    // 광고를 끝까지 봤다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다
+    markAdWatched();
+    send(text);
   }, [send]);
+
+  /**
+   * 천장 카드. 오늘의 한마디가 왔을 때만 그 길을 준다.
+   * 시트는 아래 카드 자리가 들고 있어서, 구절이 없으면 눌러도 아무 일이 안 일어난다.
+   */
+  const renderNotice = useCallback(
+    ({ quote }: HomeCardSlot): ReactNode => (
+      <ExhaustedNotice
+        continuesUsed={quota.continuesUsed}
+        onOpenDailyQuote={quote != null ? () => setDailyOpen(true) : undefined}
+      />
+    ),
+    [quota.continuesUsed],
+  );
 
   const renderCards = useCallback(
     ({ quote, focusField }: HomeCardSlot): ReactNode => (
@@ -110,6 +178,8 @@ export function HomeRoute() {
           <RecallCard
             entry={recall}
             onRespond={() => {
+              // 기기에서도 지운다. 화면에서만 치우면 앱을 다시 열 때 같은 것을 또 묻는다
+              void clearRecall(bridge.storage);
               setRecall(null);
               focusField();
             }}
@@ -129,14 +199,14 @@ export function HomeRoute() {
         )}
       </>
     ),
-    [dailyOpen, recall],
+    [bridge, dailyOpen, recall],
   );
 
   return (
     <>
       <HomeScreen
         onSubmit={submit}
-        notice={exhausted ? <ExhaustedNotice continuesUsed={quota.continuesUsed} /> : null}
+        notice={exhausted ? renderNotice : undefined}
         renderCards={renderCards}
       />
 

@@ -1,12 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type MouseEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useBridge } from '../../app/providers';
@@ -48,8 +41,11 @@ export interface HomeScreenProps {
    * 주지 않으면 이 화면이 바로 대기 화면으로 보낸다.
    */
   onSubmit?: (text: string) => void;
-  /** 전송 버튼 아래 안내 자리 */
-  notice?: ReactNode;
+  /**
+   * 전송 버튼 아래 안내 자리. 오늘 몫을 다 쓴 카드가 여기 들어온다.
+   * 카드 자리와 같은 것을 받는다. 그 안내가 오늘의 한마디로 가는 길을 두려면 구절이 왔는지 알아야 한다.
+   */
+  notice?: (slot: HomeCardSlot) => ReactNode;
   /** 입력 묶음 아래 카드 자리. 오늘의 한마디·회고 카드가 여기 들어온다 */
   renderCards?: (slot: HomeCardSlot) => ReactNode;
 }
@@ -244,7 +240,7 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
           <p className="micro">
             답변은 AI 가 만들어요 · <span className="nb">이름·연락처</span>는 적지 않아도 괜찮아요
           </p>
-          {notice}
+          {notice?.({ quote, focusField })}
         </div>
 
         {renderCards != null && (

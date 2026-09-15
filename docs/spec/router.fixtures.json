@@ -207,6 +207,45 @@
       "note": "제외 패턴이 위기 사전보다 먼저 돈다. 죽겠어요 는 관용"
     },
     {
+      "name": "관용 표현에 섞인 위기 어휘",
+      "input": "심심해 죽겠어요. 진짜 죽고 싶어요.",
+      "verdict": {
+        "route": "crisis",
+        "confidence": 0.8,
+        "reasons": [
+          "passive_ideation"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "normal",
+        "final": "crisis",
+        "floor": "normal",
+        "crisisLevel": "distress"
+      },
+      "note": "관용 표현에 가려 규칙층이 확정하지 못한다. 가벼운 주제가 섞였다고 가벼운 답으로 끝내면 분류기가 볼 기회가 없다"
+    },
+    {
+      "name": "가벼운 주제에 섞인 에두른 위기",
+      "input": "심심해 죽겠다. 그냥 다 끝내고 싶어.",
+      "verdict": {
+        "route": "light",
+        "confidence": 0.85,
+        "reasons": [
+          "casual"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "normal",
+        "final": "normal",
+        "floor": "normal"
+      },
+      "note": "바닥이 정해진 글은 가벼운 답으로 확정하지 않는다. 분류기가 light 라고 해도 바닥 아래로는 못 내려간다"
+    },
+    {
       "name": "학대 정황은 바닥이 normal 이고 abuse 플래그가 선다",
       "input": "남자친구가 화나면 저를 때려요. 근데 평소엔 잘해줘서 헤어지기가 어려워요.",
       "verdict": {
@@ -354,6 +393,118 @@
         "solace": "blocked"
       },
       "note": "위기가 아니므로 승격 함수가 null 을 돌려준다"
+    },
+    {
+      "name": "에두른 위기 (표현이 겹친다)",
+      "input": "이제 그만하고 싶어요. 아무 의미가 없어요",
+      "verdict": {
+        "route": "crisis",
+        "confidence": 0.7,
+        "reasons": [
+          "passive_ideation"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "crisis",
+        "final": "crisis",
+        "floor": "normal",
+        "crisisLevel": "distress",
+        "solace": "allowed",
+        "solaceTier": "standard"
+      },
+      "note": "죽음을 직접 말하지 않는다. 에두른 표현이 둘 겹치면 후보로 올려 분류기가 확정한다"
+    },
+    {
+      "name": "살아야 할 이유가 없다",
+      "input": "더 살아야 할 이유를 모르겠어요. 그냥 다 끝내고 싶다는 생각만 들어요.",
+      "verdict": {
+        "route": "crisis",
+        "confidence": 0.8,
+        "reasons": [
+          "passive_ideation"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "crisis",
+        "final": "crisis",
+        "floor": "normal",
+        "crisisLevel": "distress",
+        "solace": "allowed"
+      },
+      "note": "이 글이 normal 로 떨어져 광고 시트에 막히던 자리다. 삶을 가리키는 말은 단독으로도 후보다"
+    },
+    {
+      "name": "사는 게 의미가 없다",
+      "input": "매일 아침 눈 뜨기가 싫어요. 아무것도 하기 싫고 사는 게 의미가 없어요",
+      "verdict": {
+        "route": "crisis",
+        "confidence": 0.7,
+        "reasons": [
+          "hopelessness"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "crisis",
+        "final": "crisis",
+        "crisisLevel": "distress"
+      },
+      "note": "무기력이 깊은 글. 삶을 가리키는 말이 있으면 에두른 표현 하나로도 후보가 된다"
+    },
+    {
+      "name": "그만하고 싶은 것이 일이다",
+      "input": "이 일 그만하고 싶어요. 매일 야근이라 몸이 안 따라줘요.",
+      "verdict": {
+        "route": "normal",
+        "confidence": 0.8,
+        "reasons": [
+          "work_stress"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "normal",
+        "final": "normal",
+        "floor": "normal",
+        "useRag": true
+      },
+      "note": "사전을 넓히면 일상어가 걸린다. 대상이 일이면 위기로 올리지 않는다"
+    },
+    {
+      "name": "의미가 없는 것이 회의다",
+      "input": "이 회의는 아무 의미가 없어요. 시간만 버리는 것 같아요.",
+      "verdict": {
+        "route": "normal",
+        "confidence": 0.8,
+        "reasons": [
+          "work_stress"
+        ],
+        "minor": false,
+        "abuse": false
+      },
+      "expect": {
+        "rules": "normal",
+        "final": "normal",
+        "floor": "normal"
+      },
+      "note": "표현이 둘 겹쳐도 걸린 곳이 회의면 위기가 아니다"
+    },
+    {
+      "name": "손목을 그었다 (어간 끊기)",
+      "input": "어제 손목을 그었어요. 아무한테도 말 못 했어요.",
+      "expect": {
+        "route": "crisis",
+        "stage": "rules",
+        "crisisLevel": "acute",
+        "solace": "blocked"
+      },
+      "note": "「그어」만 보던 사전은 「그었어요」를 놓쳤다. 어간에서 끊어야 잡힌다"
     }
   ]
 }

@@ -219,6 +219,10 @@
   height: 8px;
   border-radius: var(--r-pill);
   border: 1.5px solid var(--line-strong);
+  /* 한 칸씩 차오르는 것이 보이게. 움직임을 줄이는 설정이면 index.css 가 꺼 준다 */
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 
 .home-screen .dots i.on {
@@ -409,8 +413,9 @@
   word-break: keep-all;
   position: fixed;
   z-index: 5;
-  left: 16px;
-  right: 16px;
+  /* 뷰포트 기준이라 기둥 바깥 여백을 더해 준다. 실기기 폭에서는 0 이다 */
+  left: calc(16px + var(--app-gap));
+  right: calc(16px + var(--app-gap));
   top: 50%;
   transform: translateY(-50%);
   max-width: 358px;

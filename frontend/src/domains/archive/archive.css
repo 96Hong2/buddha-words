@@ -51,6 +51,22 @@
   margin: 0;
 }
 
+/* 섹션 머리 오른쪽. 간직한 말씀은 쓴 개수를, 간직할 자리는 몇 개까지인지를 여기에 적는다 */
+.arch-sec-state {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  padding: 3px 8px;
+}
+
+.arch-sec-state--open {
+  color: var(--sage);
+  background: var(--sage-soft);
+}
+
 .arch-sec-count {
   font-size: var(--t-caption);
   color: var(--text-muted);
@@ -59,10 +75,16 @@
 
 /* ── 카드 ─────────────────────────────────────────────────────────────── */
 
+/* 카드 전체가 눌리는 자리다. 버튼 기본 모양을 지우고 카드처럼 보이게 되돌린다 */
 .arch-card {
   display: flex;
   gap: var(--s-4);
   align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  font: inherit;
+  color: inherit;
   background: var(--surface);
   border-radius: var(--r-card);
   padding: var(--s-4);
@@ -70,7 +92,17 @@
   margin-bottom: var(--gap-card);
 }
 
+.arch-card:active {
+  background: var(--surface-pressed);
+}
+
+.arch-card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
 .arch-body {
+  display: block;
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -99,8 +131,12 @@
   padding: 3px 8px;
 }
 
-/* 두 줄까지만 보이고 나머지는 접는다. 보관함은 훑는 자리다 */
+/*
+  자르지 않는다. 예전에는 두 줄에서 접었는데, 카드를 눌러도 아무 일이 없어서 나머지를
+  볼 길이 아예 없었다. 간직한 한마디는 길어야 두어 줄이라 다 보여도 훑는 데 지장이 없다.
+*/
 .arch-line {
+  display: block;
   font-family: var(--font-serif);
   font-weight: var(--w-semibold);
   font-size: var(--t-body-l);
@@ -108,10 +144,35 @@
   letter-spacing: -0.01em;
   margin: 0 0 var(--s-3);
   color: var(--text);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+}
+
+/* 눌러서 답변 전체를 펼친다는 표시 */
+.arch-card-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  color: var(--accent-text);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.arch-card-cta svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+/* 섹션 머리 바로 아래에 붙는 한 줄 안내 */
+.arch-note {
+  margin: calc(var(--s-1) * -1) 0 var(--s-3);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
 }
 
 .arch-thumb {
@@ -132,6 +193,7 @@
 
 .arch-tags {
   display: flex;
+  width: 100%;
   flex-wrap: wrap;
   gap: var(--s-2);
 }
@@ -156,14 +218,20 @@
   color: var(--lotus);
 }
 
-/* ── 지난 이야기 · 흐린 영역 ──────────────────────────────────────────── */
+/* ── 간직할 자리 안내 ──────────────────────────────────────────────── */
 
+/*
+  제한이 걸린 자리와 풀린 자리가 같은 판을 쓴다. 자물쇠·문구·눌림만 달라진다.
+  배경과 같은 톤에 테두리만 둘러, 간직한 말씀 카드(흰 판)와 한눈에 갈린다.
+*/
 .arch-past {
-  display: block;
+  display: flex;
+  gap: var(--s-4);
+  align-items: flex-start;
   width: 100%;
-  text-align: center;
+  text-align: left;
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-card);
-  border: 1px dashed var(--line-strong);
   padding: var(--s-4);
   background: var(--surface-2);
 }
@@ -177,62 +245,101 @@
   outline-offset: 2px;
 }
 
-.arch-past-inner {
-  display: block;
-  opacity: 0.34;
-  filter: blur(1.1px);
-}
-
-.arch-past-row {
-  display: flex;
-  gap: var(--s-3);
-  align-items: center;
-  padding: var(--s-3) 0;
-}
-
-.arch-past-row + .arch-past-row {
-  border-top: 1px solid var(--line);
-}
-
-.arch-past-sq {
-  width: 44px;
-  height: 44px;
+/* 자물쇠. 한눈에 잠겼다고 읽히는 자리다 */
+.arch-past-mark {
   flex: 0 0 auto;
-  border-radius: var(--r-sm);
-  background: var(--surface-illust);
-}
-
-.arch-past-lines {
-  flex: 1 1 auto;
   display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
 }
 
-.arch-past-bar {
+.arch-past-mark svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* 열린 자리는 금색 자물쇠 대신 세이지 확인 표시 */
+.arch-past--open .arch-past-mark {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
+
+.arch-past-texts {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.arch-past-title {
   display: block;
-  height: 10px;
-  border-radius: var(--r-pill);
-  background: var(--line);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
 }
 
 .arch-past-note {
   display: block;
-  margin-top: var(--s-3);
+  margin-top: var(--s-1);
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   color: var(--text-muted);
 }
 
-/* 목록이 끝났다는 신호. 연꽃 패턴 띠 */
+/* 어떻게 여는지. 눌러서 이용권 시트로 간다 */
+.arch-past-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  color: var(--accent-text);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.arch-past-cta svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+/*
+  목록이 끝났다는 신호.
+
+  연꽃 띠 원본(366×55)은 두 장을 이어 붙인 그림이라 x=184 에 세로 이음매가 배어 있다.
+  여기에 가로 반복까지 걸면 이음매가 여러 줄로 드러나 그림이 토막 난 것처럼 보였다.
+  그래서 이음매 왼쪽(연잎·연꽃)만 잘라 한 장으로 놓고, 가장자리는 흐리게 지운다.
+*/
 .arch-pattern {
-  height: 26px;
-  margin: var(--s-6) 0 var(--s-2);
+  width: 176px;
+  height: 55px;
+  margin: var(--s-6) auto var(--s-2);
   background-image: url('/assets/pattern_lotus.webp');
-  background-repeat: repeat-x;
-  background-size: auto 26px;
-  background-position: center;
+  background-repeat: no-repeat;
+  /* 원본 크기 그대로 두고 왼쪽 6px(구워진 둥근 모서리)만 밀어낸다 */
+  background-size: 366px 55px;
+  background-position: -6px center;
   opacity: 0.5;
+  /*
+    네 변을 다 흐리게 지운다. 원본 맨 아랫줄에 밝은 띠가 구워져 있어서, 아래를 안 지우면
+    그 줄이 곧은 선으로 남아 그림이 잘린 것처럼 보인다. 답변 화면의 같은 띠와 맞춘다.
+  */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent),
+    linear-gradient(to bottom, transparent, #000 30%, #000 78%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent),
+    linear-gradient(to bottom, transparent, #000 30%, #000 78%, transparent);
+  mask-composite: intersect;
 }
 
 /* ── 빈 상태 ──────────────────────────────────────────────────────────── */
@@ -326,6 +433,16 @@
   color: var(--text-muted);
 }
 
+/* 되돌릴 수 없는 자리. 색으로만 말하지 않고 한 번 더 묻는 단계를 함께 둔다 */
+.arch-btn--danger {
+  background: var(--surface-chip);
+  color: var(--danger);
+}
+
+.arch-btn--danger:active {
+  background: var(--surface-pressed);
+}
+
 .arch-btn--lg {
   min-height: 52px;
   font-size: 15px;
@@ -343,8 +460,9 @@
 
 .arch-tabbar {
   position: fixed;
-  left: 16px;
-  right: 16px;
+  /* 뜬 탭바라 뷰포트 기준이다. 앱 기둥 안쪽에서 좌우 16px 을 잡는다 */
+  left: calc(16px + var(--app-gap));
+  right: calc(16px + var(--app-gap));
   bottom: calc(20px + var(--safe-bottom, 0px));
   height: 64px;
   background: var(--surface);
@@ -398,8 +516,8 @@
 
 .pw-sheet {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: var(--app-gap);
+  right: var(--app-gap);
   bottom: 0;
   z-index: 51;
   background: var(--surface);
@@ -440,12 +558,13 @@
   margin: 0 0 var(--s-6);
 }
 
+/* 적는 것이 둘뿐이다. 두 칸으로 나누면 좁은 폭에서 낱말이 잘게 끊긴다 */
 .pw-benefits {
   margin: 0 0 var(--s-2);
   padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: var(--s-2);
 }
 
@@ -468,13 +587,30 @@
   background: var(--accent);
 }
 
+/* 좁은 폭에서 줄이 바뀌어도 낱말 가운데가 끊기지 않게 덩어리로 흐른다 */
 .pw-price {
   margin: var(--s-3) 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--s-2);
+  row-gap: 2px;
+  color: var(--text);
+}
+
+.pw-price__name {
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+  flex-basis: 100%;
+}
+
+.pw-price__amount {
   font-family: var(--font-serif);
   font-size: var(--t-display-m);
   line-height: var(--lh-display-m);
   font-weight: var(--w-bold);
-  color: var(--text);
 }
 
 .pw-price small {
@@ -482,10 +618,247 @@
   font-size: var(--t-caption);
   font-weight: var(--w-medium);
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* 사기 전에 알아야 할 것. 값보다 작게, 그래도 읽히게 */
+.pw-note {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  margin: 0 0 var(--s-4);
 }
 
 .pw-actions {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
+}
+
+/* ── 간직한 말씀 상세 시트 ────────────────────────────────────────────── */
+
+/*
+  답변 전체를 다시 펼치는 자리. 길어질 수 있어 시트 안에서만 스크롤한다.
+  이용권 시트(pw-)와 겹쳐 뜨는 일이 없어 z-index 를 같은 층에 둔다.
+*/
+.ad-dim {
+  position: fixed;
+  inset: 0;
+  background: var(--dim);
+  z-index: 50;
+}
+
+.ad-sheet {
+  position: fixed;
+  left: var(--app-gap);
+  right: var(--app-gap);
+  bottom: 0;
+  z-index: 51;
+  max-height: 88vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--sh-sheet);
+  padding: var(--s-3) var(--gutter) calc(var(--s-8) + var(--safe-bottom, 0px));
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  animation: pw-rise var(--dur-sheet) var(--ease-sheet);
+}
+
+.ad-grabber {
+  display: block;
+  width: 36px;
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  margin: 0 auto var(--s-5);
+}
+
+.ad-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
+}
+
+.ad-date {
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-medium);
+}
+
+.ad-eyebrow {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}
+
+.ad-line {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  margin: 0 0 var(--s-4);
+}
+
+.ad-sec {
+  margin-top: var(--s-8);
+}
+
+.ad-sec-title {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+}
+
+.ad-sub-title {
+  margin: var(--s-4) 0 var(--s-1);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+/*
+  답변 화면 조각(경전 카드 · 다른 관점)을 시트 안에 그대로 놓는 자리.
+
+  경전 문장과 「원문 보기」 시트는 답변 화면 것을 그대로 쓴다. 그 CSS 가 화면 루트 `.ans`
+  아래에 묶여 있어 여기서도 `.ans` 를 함께 붙인다. 화면 루트가 쓰던 세로 늘림·바탕색만
+  덜어 내고, 시트가 이미 흰 면이라 그 위에 카드 면과 그림자를 한 겹 더 씌우지 않는다.
+*/
+.ad-ans {
+  margin-top: var(--s-8);
+}
+
+.ad-ans.ans {
+  display: block;
+  flex: none;
+  background: transparent;
+}
+
+.ad-ans.ans .block,
+.ad-ans.ans .ext-card {
+  margin-top: 0;
+}
+
+.ad-ans.ans .card {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* 카드 여백을 지웠으니 경전면이 밖으로 끌려 나가던 음수 여백도 함께 지운다 */
+.ad-ans.ans .card .scripture--inset {
+  margin: 0;
+  border-radius: var(--r-inset);
+  border-width: 1px;
+}
+
+.ad-ans.ans .ext-result .acts {
+  margin-top: var(--s-5);
+}
+
+.ad-body {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-body);
+  line-height: var(--lh-body-l);
+  color: var(--text-muted);
+}
+
+.ad-acts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.ad-acts li {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+}
+
+.ad-n {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+}
+
+.ad-act-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+}
+
+.ad-why {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  font-weight: var(--w-regular);
+}
+
+.ad-closing {
+  margin: var(--s-8) 0 0;
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-family: var(--font-serif);
+  font-size: var(--t-body-l);
+  line-height: 1.7;
+}
+
+/* 앞선 판에서 간직해 한마디만 남은 항목 */
+.ad-note {
+  margin: var(--s-6) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.ad-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-top: var(--s-8);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+
+.ad-ask {
+  margin: 0 0 var(--s-1);
+  text-align: center;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+
+.ad-hint {
+  margin: var(--s-1) 0 0;
+  text-align: center;
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  color: var(--text-weak);
 }

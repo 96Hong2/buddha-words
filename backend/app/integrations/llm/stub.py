@@ -6,11 +6,15 @@
 
 from __future__ import annotations
 
+from app.integrations.llm.port import Tier
+
 _MESSAGE = {
     "anxiety": "오지 않은 일을 미리 앓지 마라. 지금 네 발이 닿은 자리만이 네 것이다.",
     "anger": "불을 불로 끄려 하지 마라. 손에 쥔 돌이 먼저 네 손을 태운다.",
     "loss": "떠난 것을 붙들지 마라. 강물은 지나가야 다음 물이 온다.",
-    "comparison": "남의 속도를 좇지 마라. 그 사람의 길은 그 사람의 것이고, 너의 길은 아직 끝나지 않았다.",
+    "comparison": (
+        "남의 속도를 좇지 마라. 그 사람의 길은 그 사람의 것이고, 너의 길은 아직 끝나지 않았다."
+    ),
     "choice": "두 길 앞에서 오래 서 있는 것도 걸음이다. 다만 서 있는 줄은 알고 서 있어라.",
     "sleepless": "밤에 떠오른 생각을 밤에 판단하지 마라. 어둠은 크기를 부풀린다.",
     "attachment": "쥔 손으로는 받을 수 없다. 펴는 것이 곧 얻는 것이다.",
@@ -58,7 +62,11 @@ class StubClient:
             "abuse": False,
         }
 
-    async def pass1(self, text: str, candidates: list[dict[str, str]]) -> dict[str, object]:
+    async def pass1(
+        self, text: str, candidates: list[dict[str, str]], tier: Tier
+    ) -> dict[str, object]:
+        # 등급은 받고 버린다. 부르는 모델이 없어 값도 품질도 갈리지 않는다.
+        # 기본값을 두지 않는 이유는 포트와 모양이 어긋나면 그 자리에서 드러나게 하려는 것이다
         theme, tag = theme_of(text)
         return {
             "responseType": "answer",
@@ -71,7 +79,9 @@ class StubClient:
             "visualTheme": theme,
         }
 
-    async def pass2(self, text: str, scripture: dict[str, str], deep: bool) -> dict[str, object]:
+    async def pass2(
+        self, text: str, scripture: dict[str, str], deep: bool, tier: Tier
+    ) -> dict[str, object]:
         sections = [
             {
                 "heading": "지금 무엇이 무거운가",
@@ -88,7 +98,8 @@ class StubClient:
                     "heading": "내가 정할 수 있는 자리",
                     "body": (
                         "이 상황에는 내가 어쩔 수 있는 부분과 어쩔 수 없는 부분이 섞여 있어요. "
-                        "상대의 마음과 이미 지나간 일은 뒤쪽이고, 앞으로 어떻게 반응할지와 어디까지 "
+                        "상대의 마음과 이미 지나간 일은 뒤쪽이고, 앞으로 어떻게 반응할지와 "
+                        "어디까지 "
                         "감당할지는 앞쪽이에요. 둘을 섞어 두면 무게가 "
                         "두 배가 돼요. 오늘은 앞쪽 하나만 붙잡아도 충분해요."
                     ),
@@ -103,8 +114,14 @@ class StubClient:
             ),
             "personalAnalysis": sections,
             "actions": [
-                {"title": "오늘 자기 전에 이 마음 한 줄만 적어 두기", "why": "머리에서 꺼내 놓으면 크기가 실제 크기로 돌아와요"},
-                {"title": "내일 이 일로 가장 먼저 만날 사람 한 명 정하기", "why": "혼자 굴리는 시간이 길수록 결론이 극단으로 가요"},
+                {
+                    "title": "오늘 자기 전에 이 마음 한 줄만 적어 두기",
+                    "why": "머리에서 꺼내 놓으면 크기가 실제 크기로 돌아와요",
+                },
+                {
+                    "title": "내일 이 일로 가장 먼저 만날 사람 한 명 정하기",
+                    "why": "혼자 굴리는 시간이 길수록 결론이 극단으로 가요",
+                },
             ],
             "closingMessage": "오늘 하루를 잘 넘긴 것만으로도 충분히 하신 거예요.",
         }
@@ -126,7 +143,8 @@ class StubClient:
                 "무겁게 남아요. 지금 느끼는 것이 과한 것도, 틀린 것도 아니에요."
             ),
             "closing": (
-                "지금 당장 무엇을 결정하지 않으셔도 돼요. 물 한 잔 마시고 창문을 한 번 열어 보셔요. "
+                "지금 당장 무엇을 결정하지 않으셔도 돼요. 물 한 잔 마시고 창문을 한 번 "
+                "열어 보셔요. "
                 "그다음은 그다음에 생각해도 늦지 않아요."
             ),
         }

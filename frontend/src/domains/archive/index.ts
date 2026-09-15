@@ -3,11 +3,14 @@ export {
   saveAnswer,
   listSaved,
   countSaved,
+  removeSaved,
   SAVE_LIMIT,
   type SavedAnswer,
+  type SavedDetail,
   type SavedInput,
   type SaveResult,
 } from './archiveStore';
 export { Paywall, type PaywallProps, type PurchaseOutcome } from './Paywall';
 export { ArchiveItem, type ArchiveItemProps } from './ArchiveItem';
+export { ArchiveDetail, type ArchiveDetailProps } from './ArchiveDetail';
 export { ArchiveScreen } from './ArchiveScreen';

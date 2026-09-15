@@ -493,11 +493,20 @@
 
 /* ── ① 마음 태그 ───────────────────────────────────────────────────── */
 
+/* 칩을 읽기 전에 서는 한 줄. 판정이 아니라 안내라서 작고 조용하다.
+   전에는 칩 아래에 「마음의 중심에는 …이 있어 보여요」가 본문 크기로 서 있었다 */
+.ans .tag-lead {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
 .ans .tags {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);
-  margin-bottom: var(--s-4);
 }
 .ans .tag {
   display: inline-flex;
@@ -521,14 +530,6 @@
 .ans .tag--lotus {
   background: var(--lotus-soft);
   color: var(--lotus);
-}
-
-.ans .tag-line {
-  margin: 0;
-  font-size: var(--t-body);
-  line-height: var(--lh-body);
-  font-weight: var(--w-medium);
-  color: var(--text-muted);
 }
 
 /* ── Deep 안내 줄 ──────────────────────────────────────────────────── */
@@ -619,11 +620,12 @@
   letter-spacing: var(--ls-scripture);
   color: var(--text);
 }
+/* 누가 한 말인지 적는 줄. 안 읽히면 표시한 뜻이 없어 출처 캡션(13px)보다 한 단 키웠다 */
 .ans .scripture .cite {
   margin: var(--s-4) 0 0;
-  font-size: var(--t-caption);
-  line-height: var(--lh-caption);
-  font-weight: var(--w-semibold);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
   color: var(--accent-text);
 }
 .ans .src-btn {
@@ -917,10 +919,26 @@
 
 /* ── 문서 흐름의 공유·간직 ─────────────────────────────────────────── */
 
+/* 간직하기 바로 위. 이 답이 어디까지 남는지 한 줄로 알린다 */
+.ans .keep-note {
+  margin: var(--gap-section) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .ans .actions-inline {
   display: flex;
   gap: var(--s-2);
-  margin-top: var(--gap-section);
+  margin-top: var(--s-4);
+  transition: opacity 0.18s ease;
+}
+
+/* 하단 바가 같은 버튼을 이미 들고 있을 때. 자리는 남기고 보이지만 않게 한다 */
+.ans .actions-inline.is-hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 공유하기·간직하기와 다시 이야기하기 사이에 숨 쉴 자리를 둔다 */
@@ -1113,8 +1131,9 @@
 
 .ans .bottombar {
   position: fixed;
-  left: 0;
-  right: 0;
+  /* 앱 기둥 안에 든다. 실기기 폭에서는 0 이라 배치가 그대로다 */
+  left: var(--app-gap);
+  right: var(--app-gap);
   bottom: 0;
   z-index: 40;
   display: flex;
@@ -1141,8 +1160,8 @@
 
 .ans .sheet {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: var(--app-gap);
+  right: var(--app-gap);
   bottom: 0;
   z-index: 60;
   max-height: 76%;
@@ -1178,9 +1197,9 @@
 }
 .ans .sheet .cite {
   margin: 0 0 var(--s-5);
-  font-size: var(--t-caption);
-  line-height: var(--lh-caption);
-  font-weight: var(--w-semibold);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
   color: var(--accent-text);
 }
 .ans .sheet .orig {
@@ -1198,6 +1217,19 @@
   line-height: var(--lh-scripture);
   letter-spacing: var(--ls-scripture);
   color: var(--text);
+}
+/* 한문·팔리 원문. 한국어 번역과 한눈에 갈리도록 종이와 글자를 달리 둔다.
+   한자는 획이 빽빽해 줄 간격과 자간을 번역문보다 넓게 준다 */
+.ans .sheet .orig--source {
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+.ans .sheet .orig--source p {
+  font-size: var(--t-body-l);
+  line-height: 1.95;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  word-break: keep-all;
 }
 .ans .sheet .lab {
   margin: 0 0 var(--s-2);

@@ -1,9 +1,6 @@
 # 생성물. tools/inline_assets.py 로 다시 만든다
 design-inline/
 
-# 검증 코드는 제품 저장소 안에 두되 커밋하지 않는다 (개발 계획 6.5절)
-e2e-local/
-
 # 환경
 .env
 .env.*
@@ -15,6 +12,9 @@ __pycache__/
 # macOS
 .DS_Store
 
+# vite 가 저장소 뿌리에서 돌 때 남기는 의존성 캐시. 생성물이다
+.vite/
+
 # 프론트 빌드 산출물
 frontend/dist/
 frontend/node_modules/
@@ -22,3 +22,9 @@ frontend/playwright-report/
 frontend/test-results/
 frontend/*.ait
 frontend/e2e/shots/
+
+# 검색 품질을 재는 자리의 임베딩 캐시. 50MB 넘고 다시 부르면 만들어진다.
+# 사람이 판정한 기록(queries · relevance · pool · result)은 이 아래에 걸리지 않는다
+tools/eval/doc_vectors_*.json
+tools/eval/query_vectors.json
+tools/eval/dv_1536.json

@@ -1,12 +1,53 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { useAnalytics } from '../../shared/analytics';
-import { useApiClient, type ApiExtension } from '../../shared/api';
+import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
 import { elapsedBucket } from './buckets';
 
-type Phase = 'idle' | 'watching' | 'building' | 'done';
+type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
+
+/**
+ * 받은 「다른 관점」을 카드 밖에 둔다.
+ *
+ * 간직하기는 답변 화면 바깥(AnswerRoute)이 하는데 이 결과는 카드 안에만 있었다. 그래서
+ * 광고를 끝까지 보고 받은 것이 간직해도 남지 않았다. 답변 아이디로 들고 있어서 다음 이야기에
+ * 지난 관점이 섞이지 않는다.
+ */
+const received = new Map<string, ApiExtension>();
+const listeners = new Set<() => void>();
+
+function keep(answerId: string, extension: ApiExtension): void {
+  received.set(answerId, extension);
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** 이 답변에 붙은 「다른 관점」. 아직 안 받았으면 null */
+export function useExtensionResult(answerId: string | undefined): ApiExtension | null {
+  return useSyncExternalStore(subscribe, () =>
+    answerId == null ? null : (received.get(answerId) ?? null),
+  );
+}
+
+/**
+ * 못 받은 이유를 사람 말로 옮긴다. 서버가 준 문자열을 그대로 내보내지 않는다.
+ * 광고를 끝까지 본 사람에게는 「다시 보지 않아도 된다」가 가장 궁금한 정보라 끝에 붙인다.
+ */
+function whyFailed(error: unknown): string {
+  const reason = error instanceof ApiFailure ? error.reason : 'provider';
+  if (reason === 'offline') return '인터넷이 잠깐 닿지 않아 다른 관점을 가져오지 못했어요.';
+  if (reason === 'timeout') return '가져오는 데 너무 오래 걸려서 멈췄어요.';
+  if (reason === 'budget') return '지금은 이야기가 많이 몰려 있어서 가져오지 못했어요.';
+  return '다른 관점을 가져오지 못했어요.';
+}
 
 export interface ExtensionCardProps {
   answerId: string;
@@ -39,7 +80,14 @@ export function ExtensionCard({
   const analytics = useAnalytics();
 
   const [phase, setPhase] = useState<Phase>('idle');
-  const [result, setResult] = useState<ApiExtension | null>(null);
+  const [failure, setFailure] = useState('');
+  /**
+   * 받은 결과는 카드 밖에 둔 것을 그대로 읽는다.
+   *
+   * 카드 안에만 두었을 때는 보관함에 갔다 돌아오면 카드가 다시 만들어지면서 결과가 사라지고,
+   * 광고를 한 번 더 보라는 버튼이 그 자리에 떴다. 이미 끝까지 본 사람에게 값을 두 번 받는 셈이다.
+   */
+  const result = useExtensionResult(answerId);
   const cardRef = useRef<HTMLDivElement>(null);
   const viewLogged = useRef(false);
 
@@ -65,6 +113,35 @@ export function ExtensionCard({
     return () => observer.disconnect();
   }, [adReady, analytics, answerId, route]);
 
+  /**
+   * 보상을 받은 뒤 본문을 가져온다. 광고는 여기 없다.
+   *
+   * 다시 시도가 이 함수만 부르는 것이 중요하다. 광고는 이미 끝까지 봤으니 가져오기가
+   * 실패했다고 광고를 한 번 더 보게 하지 않는다.
+   */
+  async function build() {
+    setPhase('building');
+    const startedAt = Date.now();
+    try {
+      const extension = await client.fetchExtension({
+        answerId,
+        text,
+        usedIds,
+      });
+      // 간직하기와 다시 그려지는 카드가 함께 읽어 가도록 카드 밖에 둔다
+      keep(answerId, extension);
+      setPhase('done');
+      analytics.log('extension_generated', {
+        answer_id: answerId,
+        elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+      });
+    } catch (error) {
+      // 조용히 원래 카드로 돌아가지 않는다. 끝까지 본 사람은 왜 못 받았는지 알아야 한다
+      setFailure(whyFailed(error));
+      setPhase('failed');
+    }
+  }
+
   // 광고 자체의 로그(start · complete · fail)는 광고를 띄운 쪽이 남긴다. 여기서 또 찍지 않는다
   async function watch() {
     setPhase('watching');
@@ -77,38 +154,23 @@ export function ExtensionCard({
     }
 
     if (!granted) {
+      // 스스로 닫은 것이라 알릴 것이 없다. 안 본 사람에게 실패라고 말하지 않는다
       setPhase('idle');
       return;
     }
 
-    setPhase('building');
-    const startedAt = Date.now();
-    try {
-      const extension = await client.fetchExtension({
-        answerId,
-        text,
-        usedIds,
-      });
-      setResult(extension);
-      setPhase('done');
-      analytics.log('extension_generated', {
-        answer_id: answerId,
-        elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
-      });
-    } catch {
-      setPhase('idle');
-    }
+    await build();
   }
 
   return (
     <div className="ext-card" ref={cardRef} {...testId(TEST_IDS.extensionCard)}>
       <p className="eyebrow">조금 더 깊게 보고 싶다면</p>
 
-      {phase === 'done' && result != null ? (
+      {result != null ? (
         <div className="ext-result" {...testId(TEST_IDS.extensionResult)}>
           <div className="scripture">
             <p className="text">{result.scripture.text}</p>
-            <p className="cite">{result.scripture.citation}</p>
+            <p className="cite">{attributionLine(result.scripture)}</p>
           </div>
           <div className="sub">
             <h3>{result.alternativeAnalysis.heading}</h3>
@@ -144,6 +206,13 @@ export function ExtensionCard({
                 <span />
                 <span />
               </div>
+            </div>
+          ) : phase === 'failed' ? (
+            <div style={{ marginTop: 'var(--s-4)' }}>
+              <p role="status">{failure} 광고는 다시 보지 않아도 되니 아래를 눌러 주세요.</p>
+              <button type="button" className="ad-btn" onClick={() => void build()}>
+                다시 받아보기
+              </button>
             </div>
           ) : (
             <button

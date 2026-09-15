@@ -57,7 +57,9 @@ export function AppInfoScreen() {
             <span className="set-kv-k">판</span>
             <span className="set-kv-v">
               {EDITION[bridge.environment] ?? bridge.environment}
-              {bridge.environment === 'sandbox' && <span className="set-badge-sandbox">sandbox</span>}
+              {bridge.environment === 'sandbox' && (
+                <span className="set-badge-sandbox">sandbox</span>
+              )}
             </span>
           </div>
           <div className="set-kv">
@@ -88,7 +90,9 @@ export function AppInfoScreen() {
           <div className="set-switch-row">
             <span className="set-text" id="ad-opt-out-label">
               <span className="set-item-title">이 기기에서 광고 끄기</span>
-              <span className="set-item-desc">만든 사람과 테스터가 자기 광고를 만나지 않게 해요</span>
+              <span className="set-item-desc">
+                만든 사람과 테스터가 자기 광고를 만나지 않게 해요
+              </span>
             </span>
             <button
               type="button"

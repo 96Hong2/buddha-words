@@ -21,6 +21,8 @@ export type BridgeCapability =
   | 'ads'
   /** 전면(보상형) 광고. 배너와 지원 여부가 따로 갈린다. */
   | 'fullScreenAd'
+  /** 인앱결제. 토스 앱 5.219.0 부터다. */
+  | 'purchase'
   | 'notification'
   | 'analytics';
 
@@ -117,8 +119,8 @@ export interface AttachBannerOptions {
 /**
  * 전면 광고를 끝까지 본 결과.
  *
- * `watched` 는 광고가 뜨고 닫힌 것이다. 보상형이면 보상 이벤트 뒤에, 전면형이면 닫힘 뒤에
- * 온다. 둘 다 「봤다」로 친다. `failed` 는 못 불러왔거나 못 띄운 것이라 사용자 탓이 아니다.
+ * `watched` 는 보상 이벤트(`userEarnedReward`)를 받은 것 하나뿐이다. 뜨기만 했거나 중간에
+ * 닫은 것은 `failed` 다. 못 불러왔거나 못 띄운 것도 같은 값이라 부르는 쪽은 둘을 가르지 않는다.
  */
 export type FullScreenAdResult = 'watched' | 'failed';
 
@@ -133,6 +135,56 @@ export interface AdsBridge {
    * 광고가 안 떴다고 기능을 막으면 광고 서버 사정으로 사람이 돌아간다.
    */
   showFullScreen(adGroupId: string): Promise<FullScreenAdResult>;
+}
+
+/**
+ * 결제 한 건의 끝.
+ *
+ * 던지지 않는다. 취소도 실패도 결과의 한 종류라 부르는 쪽이 갈래만 고른다.
+ * `cancelled` 는 사용자가 주문서에서 그냥 나온 것이라 아무 일도 일어나면 안 된다.
+ */
+export type PurchaseResult =
+  | { status: 'completed'; orderId: string }
+  | { status: 'cancelled' }
+  | { status: 'failed'; reason: 'unsupported' | 'error' };
+
+/** 결제가 끝난 주문 하나. */
+export interface PurchaseOrder {
+  sku: string;
+  orderId: string;
+  /**
+   * 돈은 받았는데 상품을 아직 못 준 주문.
+   * 앱이 지급하고 completeGrant 로 알려 줘야 이 표시가 풀린다.
+   */
+  pending: boolean;
+}
+
+/**
+ * 인앱결제.
+ *
+ * 무엇을 샀는지는 기기가 아니라 토스 쪽에 남는다. 그래서 재설치·기기 변경 뒤에도
+ * `restore()` 로 되찾을 수 있고, 환불도 같은 자리에서 반영된다.
+ */
+export interface PurchaseBridge {
+  /**
+   * 비소모품 하나를 산다. 주문서가 뜨고 흐름이 끝날 때까지 기다린다.
+   *
+   * `grant` 는 「돈을 받았으니 이제 상품을 주라」는 신호다. 여기서 실제로 지급하고
+   * 성공했으면 true 를 돌려준다. false 를 주면 토스가 그 주문을 미지급으로 남겨 두고,
+   * 다음 실행에서 `restore()` 의 pending 주문으로 다시 온다.
+   */
+  buy(sku: string, grant: (orderId: string) => Promise<boolean>): Promise<PurchaseResult>;
+
+  /**
+   * 토스에 남은 주문 이력을 읽는다. 환불된 주문은 빠져서 온다.
+   *
+   * 기기 저장이 아니라 이 값이 보유의 근거다. 실패하면 던진다. 부르는 쪽이 「모른다」와
+   * 「없다」를 갈라야 해서, 못 읽은 것을 빈 배열로 돌려주면 안 된다.
+   */
+  restore(): Promise<PurchaseOrder[]>;
+
+  /** 지급을 끝냈다고 토스에 알린다. 안 알리면 대기 주문으로 남는다. */
+  completeGrant(orderId: string): Promise<boolean>;
 }
 
 /**
@@ -260,5 +312,6 @@ export interface MiniAppBridge {
 
   readonly storage: KeyValueStore;
   readonly ads: AdsBridge;
+  readonly purchase: PurchaseBridge;
   readonly analytics: AnalyticsBridge;
 }

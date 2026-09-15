@@ -7,7 +7,8 @@
   transform: translateX(-50%);
   z-index: 60;
   width: 330px;
-  max-width: calc(100% - 40px);
+  /* 앱 기둥보다 넓어지지 않는다. 실기기 폭에서는 계산값이 예전과 같다 */
+  max-width: calc(min(100%, var(--app-max)) - 40px);
   background: var(--surface-deep);
   border-radius: var(--r-button);
   padding: 15px 18px;

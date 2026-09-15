@@ -29,6 +29,15 @@ const STEP_TWO_MS = 2000;
 /** 멈춘 화면을 만들지 않으려고 이 간격으로 하단 한 문장을 바꾼다 */
 const QUOTE_TURN_MS = 4000;
 
+/**
+ * 지금 살아 있는 이야기의 멱등키.
+ *
+ * 요청1·요청2는 이 화면이 사라진 뒤에 도착한다. 그 사이에 사람이 홈으로 돌아가 다음 이야기를
+ * 보냈으면, 늦게 온 답을 세션에 쓰는 순간 방금 받은 답변이 옛 답변으로 되돌아간다.
+ * 사라진 화면의 ref 로는 다음 이야기가 시작된 것을 알 수 없어 화면 밖에 한 자리를 둔다.
+ */
+let liveKey: string | null = null;
+
 function codeOf(reason: ApiFailure['reason']): ErrorCode {
   if (reason === 'timeout') return 'TIMEOUT';
   if (reason === 'offline') return 'OFFLINE';
@@ -106,18 +115,14 @@ export function LoadingScreen() {
 
   const submit = useCallback(async () => {
     const startedAt = Date.now();
+    // 이 제출의 키. 아래에서 답이 올 때마다 아직 이 이야기가 화면의 주인인지 이 값으로 본다
+    const myKey = idempotencyKey;
+    liveKey = myKey;
     try {
       const response = await client.submitConcern({
         text: sent,
-        idempotencyKey,
+        idempotencyKey: myKey,
       });
-      setResponse(response);
-
-      if (response.responseType === 'crisis') {
-        navigate(ROUTES.crisis, { replace: true });
-        return;
-      }
-
       if (response.responseType === 'light') {
         analytics.log('answer_generated', {
           answer_id: response.answerId,
@@ -125,31 +130,40 @@ export function LoadingScreen() {
           elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
           regenerated: false,
         });
+      } else if (response.responseType === 'answer') {
+        analytics.log('answer_generated', {
+          answer_id: response.answerId,
+          route: response.route,
+          pass: 1,
+          elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+          regenerated: false,
+        });
       }
 
-      if (response.responseType !== 'answer') {
-        navigate(ROUTES.answer, { replace: true });
+      // 기다리는 동안 다음 이야기가 시작됐으면 이 답은 화면에 올리지 않는다.
+      // 답이 만들어진 것은 사실이라 위 기록은 그대로 남긴다.
+      if (liveKey !== myKey) return;
+
+      setResponse(response);
+
+      if (response.responseType === 'crisis') {
+        navigate(ROUTES.crisis, { replace: true });
         return;
       }
 
-      analytics.log('answer_generated', {
-        answer_id: response.answerId,
-        route: response.route,
-        pass: 1,
-        elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
-        regenerated: false,
-      });
       navigate(ROUTES.answer, { replace: true });
+      if (response.responseType !== 'answer') return;
 
       // 요청2는 화면이 넘어간 뒤에 이어서 돈다. 받는 자리는 세션이라 이 화면이 사라져도 남는다.
       const pass2StartedAt = Date.now();
       try {
         const pass2 = await client.fetchPass2({
           answerId: response.answerId,
-          idempotencyKey,
+          idempotencyKey: myKey,
           text: sent,
         });
-        setResponse({ ...response, pass2 });
+        // 60초까지 기다리는 요청이다. 그 사이 다음 이야기가 시작됐으면 세션에 쓰지 않는다
+        if (liveKey === myKey) setResponse({ ...response, pass2 });
         if (pass2.status === 'done') {
           analytics.log('answer_generated', {
             answer_id: response.answerId,
@@ -166,10 +180,12 @@ export function LoadingScreen() {
           });
         }
       } catch (error) {
-        setResponse({
-          ...response,
-          pass2: { status: 'failed', retryable: true },
-        });
+        if (liveKey === myKey) {
+          setResponse({
+            ...response,
+            pass2: { status: 'failed', retryable: true },
+          });
+        }
         analytics.log('answer_failed', {
           route: response.route,
           pass: 2,
@@ -180,6 +196,13 @@ export function LoadingScreen() {
       const failed =
         error instanceof ApiFailure ? error : new ApiFailure('provider', '보내지 못했어요.');
       analytics.log('answer_failed', { pass: 1, reason: failed.reason });
+      if (failed.quota != null) {
+        // 오늘 천장에 닿았다. 여기에 오류 화면을 그리면 「다시 해보기」를 몇 번 눌러도 같은
+        // 자리에 남는다. 사용량을 읽고 쓰는 일은 quota 도메인 몫이라 app 층인 홈으로 넘겨
+        // 서버가 센 값을 적게 하고, 홈이 천장 안내를 그린다. 적은 글은 그대로 남는다
+        navigate(ROUTES.home, { replace: true, state: { exhaustedQuota: failed.quota } });
+        return;
+      }
       setFailure(failed);
     }
   }, [analytics, client, idempotencyKey, navigate, sent, setResponse]);

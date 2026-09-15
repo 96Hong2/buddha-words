@@ -42,6 +42,12 @@
   color: var(--accent-text);
 }
 
+/* 「오늘의 한마디 · 현대적 해석」 뒷말. 같은 줄에 두어 카드 높이를 늘리지 않는다 */
+.daily-card__key .daily-card__ai {
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
 .daily-card__line,
 .recall-card__line {
   font-family: var(--font-serif);
@@ -95,7 +101,7 @@
 }
 
 .daily-sheet__verse {
-  margin: 0 0 var(--s-3);
+  margin: 0 0 var(--s-2);
   font-family: var(--font-serif);
   font-size: var(--t-display-m);
   line-height: var(--lh-display-m);
@@ -105,16 +111,35 @@
   white-space: pre-line;
 }
 
-.daily-sheet__cite {
-  margin: 0 0 var(--s-4);
+/* 한마디가 AI 문장임을 그 자리에서 알린다. 아래 경전 원문과 성격이 다르다 */
+.daily-sheet__ai {
+  margin: 0 0 var(--s-6);
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
-  font-weight: var(--w-semibold);
+  font-weight: var(--w-medium);
+  color: var(--text-muted);
+}
+
+.daily-sheet__lab {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  color: var(--text-weak);
+}
+
+/* 출처는 한마디가 아니라 원문에 붙는다. 그래서 원문 블록 바로 아래에 온다 */
+.daily-sheet__cite {
+  margin: var(--s-3) 0 var(--s-5);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
   color: var(--accent-text);
 }
 
 .daily-sheet__origin {
-  margin: 0 0 var(--s-5);
+  margin: 0;
   padding: var(--s-4) var(--s-5);
   border-radius: var(--r-inset);
   background: var(--surface-scripture);

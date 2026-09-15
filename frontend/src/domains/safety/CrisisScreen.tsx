@@ -104,13 +104,17 @@ export function CrisisScreen() {
       const next = await client.continueAfterCrisis({ text: sent });
       setResponse(next);
       if (next.responseType === 'solace') {
-        analytics.log('solace_generated', { elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt) });
+        analytics.log('solace_generated', {
+          elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+        });
         navigate(ROUTES.solace);
         return;
       }
       // 서버가 다시 판정해 거부했다. 위기 안내에 그대로 남는다.
     } catch (error) {
-      setFailure(error instanceof ApiFailure ? failureMessage(error.reason) : failureMessage('provider'));
+      setFailure(
+        error instanceof ApiFailure ? failureMessage(error.reason) : failureMessage('provider'),
+      );
     } finally {
       setPending(false);
     }
@@ -169,7 +173,12 @@ export function CrisisScreen() {
       </div>
 
       <div className="sf-foot">
-        <Button fullWidth className="sf-btn sf-btn--primary" onClick={onClose} {...testId(TEST_IDS.crisisClose)}>
+        <Button
+          fullWidth
+          className="sf-btn sf-btn--primary"
+          onClick={onClose}
+          {...testId(TEST_IDS.crisisClose)}
+        >
           {CRISIS_COPY.close}
         </Button>
       </div>

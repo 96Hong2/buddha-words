@@ -18,14 +18,7 @@ import {
   type RouteDecision,
 } from '@spec/router.ts';
 
-export {
-  depthIndicator,
-  escalateToSolace,
-  merge,
-  needsClassifier,
-  routeByRules,
-  SOLACE_FALLBACK,
-};
+export { depthIndicator, escalateToSolace, merge, needsClassifier, routeByRules, SOLACE_FALLBACK };
 export type { ClassifierVerdict, CrisisLevel, InputRoute, RouteDecision };
 
 /**
@@ -33,8 +26,30 @@ export type { ClassifierVerdict, CrisisLevel, InputRoute, RouteDecision };
  * 이해관계자 수와 결정 어휘로 흉내만 낸다. 규칙이 아니라 흉내라 spec 에 두지 않는다.
  */
 function stubVerdict(text: string, rules: RouteDecision): ClassifierVerdict {
-  const people = ['남편', '아내', '엄마', '아빠', '부모', '친구', '동료', '상사', '팀장', '선배', '후배', '아이'];
-  const decisions = ['해야 할까', '할까요', '그만둘', '이혼', '헤어질', '결정', '선택', '고민이에요'];
+  const people = [
+    '남편',
+    '아내',
+    '엄마',
+    '아빠',
+    '부모',
+    '친구',
+    '동료',
+    '상사',
+    '팀장',
+    '선배',
+    '후배',
+    '아이',
+  ];
+  const decisions = [
+    '해야 할까',
+    '할까요',
+    '그만둘',
+    '이혼',
+    '헤어질',
+    '결정',
+    '선택',
+    '고민이에요',
+  ];
   const actors = people.filter((w) => text.includes(w)).length;
   const hasDecision = decisions.some((w) => text.includes(w));
   const long = rules.counts.chars >= 120;

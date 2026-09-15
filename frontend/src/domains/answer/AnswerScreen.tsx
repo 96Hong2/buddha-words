@@ -13,6 +13,24 @@ import { InvalidAnswer } from './InvalidAnswer';
 import { LightAnswer } from './LightAnswer';
 import './answer.css';
 
+/**
+ * 화면 맨 위에 늘 떠 있는 표시.
+ *
+ * 전에는 「AI 생성」 한 마디였다. 이 배지는 sticky 라 아래로 내려가도 따라오는데, 그 아래에는
+ * 문헌에서 옮겨 온 경전 원문 카드도 있다. 화면 전체를 가리키는 「AI 생성」이 그 위에까지 서면
+ * 경전까지 모델이 지어낸 것으로 읽힌다. 이 앱은 경전을 지어내지 않는다.
+ *
+ * 다만 감수를 통과했는지는 구절마다 다르므로 여기서 말하지 않는다. 그 도장은 근거가 있는
+ * 자리에서만 찍는다(공유 카드·공유 링크·구절의 「원문 보기」).
+ *
+ * 그래서 이 한 줄이 무엇이 AI 이고 무엇이 아닌지를 함께 말한다. 어느 블록 위에 서 있어도
+ * 참인 문장이라 sticky 여도 어긋나지 않는다. 블록마다 붙는 자세한 표시는 AnswerBody 가 맡는다.
+ *
+ * 「AI 생성」 네 글자는 그대로 남긴다. 고지 의무가 요구하는 말이고 확인 항목이 이 문자열을 본다.
+ * 뒤에 예외만 덧붙였다. 배지는 nowrap 이라 길어지면 본문을 더 가리므로 한 뼘 안에서 끝낸다.
+ */
+const TOP_BADGE = 'AI 생성 · 경전은 원문';
+
 /** 완독 판정. 답변 하나에 한 번씩만 찍는다 */
 const READ_MARKS = [
   { at: 50, name: 'answer_read_50' },
@@ -112,7 +130,7 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
           >
             <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
           </svg>
-          AI 생성
+          {TOP_BADGE}
         </span>
       </div>
 
@@ -120,7 +138,7 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
         <img className="main" src={art.src} alt={art.alt} />
       </div>
 
-      <AnswerBody answer={answer} closingRef={closingRef} {...wires} />
+      <AnswerBody answer={answer} closingRef={closingRef} barOn={barOn} {...wires} />
 
       <div className={barOn ? 'bottombar on' : 'bottombar'} {...testId(TEST_IDS.bottomBar)}>
         <button

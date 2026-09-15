@@ -34,10 +34,7 @@ export function OverlayProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
-  const value = useMemo(
-    () => ({ hasOpen, closeTop, register }),
-    [hasOpen, closeTop, register],
-  );
+  const value = useMemo(() => ({ hasOpen, closeTop, register }), [hasOpen, closeTop, register]);
 
   return <OverlayContext value={value}>{children}</OverlayContext>;
 }

@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { routeByRules, merge, needsClassifier, depthIndicator, escalateToSolace, type RouteDecision, type ClassifierVerdict } from './router.ts';
+import { routeByRules, merge, needsClassifier, depthIndicator, escalateToSolace, DEPTH_STEPS, type RouteDecision, type ClassifierVerdict } from './router.ts';
 
 type Case = {
   name: string;
@@ -50,9 +50,63 @@ for (const c of cases) {
 console.log(rows.join('\n'));
 console.log(`\n${cases.length - failed}/${cases.length} 통과`);
 
-// 인디케이터 세 단계가 실제로 갈리는지 한 번만 본다
-const ind = ['', '회사 가기 싫어요', '너무 힘들어요\n잠도 안 와요\n어떡하죠 정말 모르겠어요 매일 이래요'].map(depthIndicator);
-console.log('indicator:', ind.map((i) => `${i.dots}·${i.label}`).join(' | '));
-if (!(ind[0].dots === 1 && ind[1].dots === 2 && ind[2].dots === 3)) { console.error('인디케이터 단계가 갈리지 않는다'); failed++; }
+// 인디케이터. 점은 0 → 1 → 2 → 3 으로 한 칸씩 차오른다. 건너뛰는 칸이 있으면 실패다
+const 가 = (n: number) => '가'.repeat(n);
+const indCases: { name: string; input: string; dots: number }[] = [
+  { name: '빈 입력',            input: '',                                              dots: 0 },
+  { name: '한 글자',            input: 가(1),                                           dots: 1 },
+  { name: '한 칸 마지막 글자',  input: 가(DEPTH_STEPS.two - 1),                         dots: 1 },
+  { name: '두 칸 첫 글자',      input: 가(DEPTH_STEPS.two),                             dots: 2 },
+  { name: '두 칸 마지막 글자',  input: 가(DEPTH_STEPS.three - 1),                       dots: 2 },
+  { name: '세 칸 첫 글자',      input: 가(DEPTH_STEPS.three),                           dots: 3 },
+  { name: '세 줄 · 두 칸 분량', input: [가(9), 가(9), 가(9)].join('\n'),                dots: 2 },
+  { name: '세 줄 · 한 칸 분량', input: [가(8), 가(8), 가(8)].join('\n'),                dots: 1 },
+  // 줄을 나눠 쓴 사람이 세 칸째를 받는 자리. 그 한 글자 앞은 아직 두 칸이어야 한다
+  { name: '세 줄 · 세 칸 직전', input: [가(13), 가(13), 가(13)].join('\n'),             dots: 2 },
+  { name: '세 줄 · 세 칸 첫 글자', input: [가(14), 가(13), 가(13)].join('\n'),          dots: 3 },
+  { name: '「응」 세 줄',       input: ['응', '응', '응'].join('\n'),                    dots: 1 },
+  { name: '「응」 여덟 줄',     input: Array(8).fill('응').join('\n'),                   dots: 1 },
+  // 시안 s1-home 의 네 상태를 문장 그대로 옮긴 것
+  { name: '시안 ① 빈 상태',    input: '',                                              dots: 0 },
+  { name: '시안 ② 짧은 고민',  input: '오늘 친구랑 크게 다퉜어요. 먼저 연락해야 할지 모르겠어요', dots: 1 },
+  { name: '시안 ④ 초안 복구',  input: '엄마랑 또 같은 일로 부딪혔어요. 나쁜 뜻이 아닌 걸 아는데도 그 말투만 들으면 자꾸 날이 서요', dots: 2 },
+  { name: '시안 ③ 충분히 씀',  input: '요즘 회사에서 같은 실수를 자꾸 반복해요. 어제는 보고서 숫자를 잘못 적어서 지적을 받았는데, 그 자리에선 괜찮은 척했지만 집에 오는 내내 그 장면만 떠올랐어요. 다들 나를 일 못하는 사람으로 볼까 봐 무서워요. 이런 마음이 든 지 벌써 몇 달째예요', dots: 3 },
+];
+const indRows: string[] = [];
+const seen = new Set<number>();
+for (const c of indCases) {
+  const got = depthIndicator(c.input);
+  const ok = got.dots === c.dots;
+  if (!ok) failed++;
+  seen.add(got.dots);
+  indRows.push(`${ok ? '✓' : '✗'} ${c.name.padEnd(16)} dots=${got.dots}${ok ? '' : ` ≠ ${c.dots}`} ${got.label}`);
+}
+console.log('\n인디케이터\n' + indRows.join('\n'));
+for (const step of [0, 1, 2, 3]) {
+  if (!seen.has(step)) { console.error(`${step}칸이 되는 입력이 하나도 없다`); failed++; }
+}
+
+// 케이스 몇 개로는 건너뛰는 자리를 놓친다. 줄 수를 고정한 채 한 글자씩 늘려 전 구간을 훑는다.
+// 한 글자 더 썼는데 점이 두 칸 이상 차오르거나 거꾸로 줄어들면 실패다.
+const sweepRows: string[] = [];
+for (const 줄수 of [1, 2, 3, 5]) {
+  let prev = 0;
+  const jumps: string[] = [];
+  const marks: string[] = [];
+  for (let n = 줄수; n <= DEPTH_STEPS.three + 20; n += 1) {
+    const 몫 = Math.floor(n / 줄수);
+    const 나머지 = n % 줄수;
+    const text = Array.from({ length: 줄수 }, (_, i) => 가(몫 + (i < 나머지 ? 1 : 0))).join('\n');
+    const dots = depthIndicator(text).dots;
+    if (dots !== prev) {
+      if (dots - prev !== 1) jumps.push(`${n}자에서 ${prev}칸 → ${dots}칸`);
+      else marks.push(`${n}자→${dots}칸`);
+      prev = dots;
+    }
+  }
+  if (jumps.length) { failed++; sweepRows.push(`✗ ${줄수}줄  ${jumps.join(', ')}`); }
+  else sweepRows.push(`✓ ${줄수}줄  ${marks.join(' · ')}`);
+}
+console.log('\n한 글자씩 훑기 (한 칸씩만 차올라야 한다)\n' + sweepRows.join('\n'));
 
 process.exit(failed ? 1 : 0);

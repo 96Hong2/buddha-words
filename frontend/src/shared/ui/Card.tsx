@@ -20,12 +20,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   padding?: CardPadding;
 }
 
-export function Card({
-  padding = 'md',
-  className,
-  children,
-  ...rest
-}: CardProps) {
+export function Card({ padding = 'md', className, children, ...rest }: CardProps) {
   return (
     <div className={cx('pk-card', PADDING_CLASS[padding], className)} {...rest}>
       {children}

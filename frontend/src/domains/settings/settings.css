@@ -66,8 +66,15 @@
 }
 
 .set-item + .set-item,
-.set-line + .set-line {
+.set-line + .set-line,
+/* 읽기만 하는 줄 아래에 누르는 줄이 올 때도 경계가 보여야 한다 */
+.set-line + .set-item {
   border-top: 1px solid var(--line);
+}
+
+/* 누르는 중에는 다시 누르지 못한다. 흐리게 두되 글자는 읽히게 */
+.set-item:disabled {
+  opacity: 0.6;
 }
 
 .set-item:active {

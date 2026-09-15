@@ -36,6 +36,23 @@ export interface QuotaState {
   lightUsed: number;
 }
 
+/**
+ * 다음 하루가 열리는 시각. 사용자 시간대 자정이다.
+ *
+ * `dayKey` 가 기기 시간대로 날짜를 세니 다시 열리는 시각도 같은 시간대여야 한다.
+ */
+export function nextReset(now: Date = new Date()): Date {
+  const reset = new Date(now);
+  reset.setHours(24, 0, 0, 0);
+  return reset;
+}
+
+/** 자정까지 남은 시간. 30분이 남아도 「약 1시간」이라고 말한다 */
+export function hoursUntilReset(now: Date = new Date()): number {
+  const ms = nextReset(now).getTime() - now.getTime();
+  return Math.max(1, Math.ceil(ms / 3_600_000));
+}
+
 export function dayKey(now: Date = new Date()): string {
   const month = `${now.getMonth() + 1}`.padStart(2, '0');
   const date = `${now.getDate()}`.padStart(2, '0');
@@ -132,6 +149,19 @@ export function fromServer(state: QuotaState, quota: Quota): QuotaState {
     firstUsed: quota.firstUsed,
     continuesUsed: toCount(quota.continuesUsed),
   };
+}
+
+/**
+ * 서버가 준 사용량을 기기 사본에 덮어쓴다. 답이 온 자리와 천장에 막힌 자리에서 부른다.
+ *
+ * 기기 값만 믿으면 저장소를 지우거나 앱을 다시 깐 사람에게는 오늘 횟수가 처음으로 돌아간다.
+ * 그 상태로 보내면 서버는 같은 익명키의 오늘 횟수를 그대로 기억하고 있어 천장에서 막고,
+ * 화면은 왜 막혔는지 모른 채 오류만 그린다.
+ */
+export function saveFromServer(quota: Quota, now: Date = new Date()): QuotaState {
+  const next = fromServer(readQuota(now), quota);
+  writeQuota(next);
+  return next;
 }
 
 export function toQuota(state: QuotaState): Quota {

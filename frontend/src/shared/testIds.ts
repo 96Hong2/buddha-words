@@ -31,6 +31,8 @@ export const TEST_IDS = {
   scriptureCard: 'scripture-card',
   scriptureText: 'scripture-text',
   scriptureCitation: 'scripture-citation',
+  scriptureOriginal: 'scripture-original',
+  scriptureCredit: 'scripture-credit',
   explanation: 'explanation',
   analysis: 'analysis',
   actions: 'actions',
@@ -44,6 +46,7 @@ export const TEST_IDS = {
   shareButton: 'share-button',
   saveButton: 'save-button',
   againButton: 'again-button',
+  keepNote: 'keep-note',
   reportLink: 'report-link',
 
   // LIGHT · INVALID
@@ -72,15 +75,21 @@ export const TEST_IDS = {
   shareCard: 'share-card',
   shareLink: 'share-link',
   shareImage: 'share-image',
+  shareText: 'share-text',
   landing: 'landing',
   archive: 'archive',
   archiveItem: 'archive-item',
+  archiveDetail: 'archive-detail',
+  archiveDelete: 'archive-delete',
+  archiveDeleteConfirm: 'archive-delete-confirm',
   paywall: 'paywall',
   paywallBuy: 'paywall-buy',
 
   // 설정
   settingsButton: 'settings-button',
   settings: 'settings',
+  archivePass: 'archive-pass',
+  archivePassRestore: 'archive-pass-restore',
   appInfo: 'app-info',
   privacy: 'privacy',
   helpLines: 'help-lines',

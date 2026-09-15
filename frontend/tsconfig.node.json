@@ -1,34 +1,20 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "ES2023",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": [
-      "node",
-      "vite/client"
-    ],
+    "types": ["node", "vite/client"],
     "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@spec/*": [
-        "../spec/*"
-      ]
+      "@spec/*": ["../spec/*"]
     },
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx"
   },
-  "include": [
-    "vite.config.ts",
-    "apps-in-toss.config.ts",
-    "playwright.config.ts",
-    "e2e"
-  ]
+  "include": ["vite.config.ts", "apps-in-toss.config.ts", "playwright.config.ts", "e2e"]
 }

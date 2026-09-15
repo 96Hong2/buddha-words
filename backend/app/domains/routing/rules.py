@@ -148,7 +148,7 @@ CRISIS_STRONG = [
     regex.compile(r"번개탄"),
     regex.compile(r"수면제.{0,6}(모으|모아|털)"),
     regex.compile(r"유서"),
-    regex.compile(r"손목.{0,4}(긋|그어)"),
+    regex.compile(r"손목.{0,4}(긋|그어|그었)"),
     regex.compile(r"자해(하|했|를|를 했)"),
     regex.compile(r"죽여버리(고|겠)"),
     regex.compile(r"다\s?죽이"),
@@ -160,6 +160,48 @@ CRISIS_SOFT = [
     regex.compile(r"살기\s?싫"),
     regex.compile(r"없어지고\s?싶"),
     regex.compile(r"세상.{0,4}떠나고\s?싶"),
+    # 죽음을 직접 말하지 않지만 삶 자체를 가리켜 일상어와 겹치지 않는 말
+    regex.compile(r"살아야\s?할\s?이유(가|를)?\s?(없|모르)"),
+    regex.compile(r"살\s?이유(가|를)?\s?(없|모르)"),
+    regex.compile(r"살고\s?싶지(가|도)?\s?않"),
+    regex.compile(r"태어나지\s?(말|않)았어야"),
+    regex.compile(r"사라져\s?버리고\s?싶"),
+]
+# 에두른 위기 표현. 직접 죽음을 말하지 않아 하나만으로는 일상어와 갈리지 않는다.
+# 「이 일 그만하고 싶다」 「이 회의는 의미가 없다」가 위기가 되면 안 된다.
+# 그래서 단독으로 세지 않고 둘이 겹치거나 삶을 가리키는 말과 같이 올 때만 후보로 올린다.
+CRISIS_VEILED = [
+    regex.compile(r"다\s?끝내(고|버리고)\s?싶"),
+    regex.compile(r"그만하고\s?싶"),
+    regex.compile(r"(아무런?|무슨)?\s?의미(가|도)?\s?없"),
+    regex.compile(r"무슨\s?의미(가|를)?\s?있"),
+    regex.compile(r"버티기(가)?\s?(너무)?\s?(힘들|벅차|어렵)"),
+    regex.compile(r"버틸\s?(힘|자신|기운|이유|여력)(이|가)?\s?없"),
+    regex.compile(r"견디기(가)?\s?(너무)?\s?(힘들|벅차)"),
+    regex.compile(r"더\s?이상\s?(못|안)\s?(버티|견디|살|하겠)"),
+    regex.compile(r"아무것도\s?하기\s?싫"),
+    regex.compile(r"아무\s?의욕(이|도)?\s?없"),
+    regex.compile(r"희망(이|도)?\s?(안\s?보|없)"),
+    regex.compile(r"앞이\s?(캄캄|안\s?보)"),
+    regex.compile(r"내일이\s?(안\s?오|오지\s?않|안\s?왔으면)"),
+]
+# 위의 말이 일이 아니라 사는 것에 걸렸다는 신호
+LIFE_CONTEXT = [
+    regex.compile(r"사는\s?(게|거|것)"),
+    regex.compile(r"살아(가|야|갈|가는)"),
+    regex.compile(r"살\s?(이유|의미)"),
+    regex.compile(r"인생|삶|평생"),
+    regex.compile(r"하루하루|매일이|눈을?\s?뜨(면|는|기)"),
+]
+# 그 말이 걸린 곳이 일·공부·모임일 때. 삶을 가리키는 말이 없으면 후보로 올리지 않는다
+DAILY_OBJECT = [
+    regex.compile(
+        r"(이|그|저)\s?(일|회사|직장|회의|프로젝트|과제|숙제|공부|운동|알바|게임|모임|연습|수업|다이어트)"
+    ),
+    regex.compile(
+        r"(회사|직장|회의|프로젝트|과제|숙제|공부|운동|알바|게임|모임|연습|수업|다이어트|야근|출근)"
+        r"(을|를|은|는|도|이|가)?\s?(그만|끝내|때려)"
+    ),
 ]
 # 방법·수단을 찾는 물음. 걸리면 무조건 acute 라서 어떤 경로로도 모델에 닿지 않는다.
 # 「소설이다 · 참고용이다」 같은 우회 전제를 붙여도 같은 자리에서 걸린다.
@@ -367,15 +409,30 @@ def route_by_rules(raw: str) -> RouteDecision:
         reasons.append("crisis_strong")
         base["crisis_level"] = "acute"
         return _decide("crisis", "rules", 0.9, base)
-    if (strong or soft) and excluded:
+    # 관용 표현에 가려 확정하지 못했을 뿐, 위기 어휘는 실제로 있었다.
+    # 「심심해 죽겠어요. 진짜 죽고 싶어요」처럼 가벼운 주제가 섞이면 아래 7·8 이 이 글을
+    # 가벼운 답으로 끝내 버린다. 그 길로 가면 분류기가 볼 기회조차 없다
+    idiom_crisis = (strong or soft) and excluded
+    if idiom_crisis:
         hints.append("crisis_pattern_but_idiom")
-    if not excluded and soft:
-        reasons.append("crisis_soft")
+        base["floor"] = "normal"
+    # 에두른 표현. 삶을 가리키면 하나로도, 아니면 둘이 겹쳐야 후보다. 일에 걸린 말은 세지 않는다
+    veiled = len([p for p in CRISIS_VEILED if p.search(compact)])
+    life = _matches_any(LIFE_CONTEXT, compact)
+    daily = _matches_any(DAILY_OBJECT, compact)
+    veiled_crisis = veiled > 0 and not (daily and not life) and veiled >= (1 if life else 2)
+    if not excluded and (soft or veiled_crisis):
+        reasons.append("crisis_soft" if soft else "crisis_veiled")
         hints.append("crisis_candidate")
         base["floor"] = "normal"
         base["crisis_level"] = "distress"
         # 확정은 classifier. rules 임시 판정은 crisis 로 두어 분류 실패 시 안전한 쪽으로 간다
         return _decide("crisis", "rules", 0.6, base)
+    # 후보까지는 아니어도 신호 하나는 남았다. 가볍게 답하지 않고 classifier 에게 알린다.
+    # 관용 표현 제외는 「죽겠다」 쪽을 지우는 것이지 에두른 신호까지 지우는 것이 아니다
+    if veiled > 0:
+        base["floor"] = "normal"
+        hints.append("veiled_crisis_signal")
     # 5. 무의미한 반복·랜덤 문자열
     if flags.low_entropy:
         reasons.append("low_entropy")
@@ -398,12 +455,14 @@ def route_by_rules(raw: str) -> RouteDecision:
         base["floor"] = "normal"
         hints.append("abuse_context")
     # 7. 가벼운 주제
-    if _matches_any(LIGHT_TOPICS, text) and chars < 60:
+    # 바닥이 정해진 글은 가볍게 답하지 않는다. floor 는 「이 아래로 내리지 못한다」는 뜻인데
+    # 여기서 light 로 확정해 버리면 그 약속이 두 줄 만에 깨지고 classifier 도 돌지 않는다
+    if not base["floor"] and _matches_any(LIGHT_TOPICS, text) and chars < 60:
         reasons.append("light_topic")
         return _decide("light", "rules", 0.8, base)
     # 8. 아주 짧고 문장이 하나면 light 후보. 단 감정어가 있으면 normal 후보
     feeling = bool(_FEELING.search(text))
-    if chars < 15 and not feeling:
+    if not base["floor"] and chars < 15 and not feeling:
         reasons.append("very_short_no_feeling")
         return _decide("light", "rules", 0.6, base)
     # 9. 나머지는 classifier 몫. rules 임시 판정은 길이·줄 수로 normal/deep 후보만 낸다

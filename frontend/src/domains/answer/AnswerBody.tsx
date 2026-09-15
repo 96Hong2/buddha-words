@@ -18,19 +18,32 @@ import { ExtensionCard } from './ExtensionCard';
 import { PROGRESS_STEPS, StepList } from './LoadingScreen';
 import { ScriptureCard } from './ScriptureCard';
 
-/** 태그 색은 토큰이 정한 계열을 따른다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다 */
+/**
+ * 마음 태그의 한글 이름과 칩 색.
+ *
+ * 색은 토큰이 정한 계열을 따른다. 색이 매번 달라지면 태그가 신호가 아니라 장식이 된다.
+ *
+ * 이름은 **그 상태의 사람이 자기 화면에서 읽을 말**로 고른다. 칩은 화면 맨 위에 서서
+ * 본문보다 먼저 읽히므로, 마음의 이름이 아니라 그 사람의 문제 이름을 적으면 그 한 칸이
+ * 판정이 된다. 사별하고 엄마 방을 못 치우는 사람에게 「집착」, 인정받고 싶은 사람에게
+ * 「인정욕구」가 그랬다. 서버는 이미 사별한 사람에게 「집착이 문제였다」로 읽히는 구절을
+ * 후보에서 거르고 있는데(domains/scripture/safety.py) 화면 칩만 그 기준 밖에 있었다.
+ *
+ * 이름 정본은 `spec/visual-theme.ts` 의 `THEME_SCENE[].ko` 와 보관함 칩이다. 세 곳이 같은 말을 쓴다.
+ * 태그 코드(attachment 같은 영문 값)는 서버·그림 배정이 쓰는 값이라 바꾸지 않는다.
+ */
 const TAG: Record<EmotionTag, { ko: string; tone: 'sage' | 'lotus' | 'neutral' }> = {
   anxiety: { ko: '불안', tone: 'sage' },
   confusion: { ko: '혼란', tone: 'sage' },
-  comparison: { ko: '비교', tone: 'lotus' },
-  approval: { ko: '인정욕구', tone: 'lotus' },
-  attachment: { ko: '집착', tone: 'lotus' },
+  comparison: { ko: '남과 견주는 마음', tone: 'lotus' },
+  approval: { ko: '인정받고 싶은 마음', tone: 'lotus' },
+  attachment: { ko: '아직 남은 마음', tone: 'lotus' },
   loneliness: { ko: '외로움', tone: 'lotus' },
   anger: { ko: '분노', tone: 'neutral' },
   regret: { ko: '후회', tone: 'neutral' },
   emptiness: { ko: '공허', tone: 'neutral' },
-  fatigue: { ko: '피로', tone: 'neutral' },
-  other: { ko: '복잡함', tone: 'neutral' },
+  fatigue: { ko: '지친 마음', tone: 'neutral' },
+  other: { ko: '복잡한 마음', tone: 'neutral' },
 };
 
 const ROUTE_NOTE = {
@@ -40,16 +53,36 @@ const ROUTE_NOTE = {
 
 const DEEP_NOTE = '이야기를 자세히 들려줘서, 더 깊이 풀어 봤어요';
 
+/**
+ * 마음 태그 앞에 서는 한 줄.
+ *
+ * 전에는 첫 태그 하나를 뽑아 「지금 마음의 중심에는 집착이 있어 보여요」라고 적었다.
+ * 두 가지가 사실이 아니었다. 모델에게 순위를 물은 적이 없어 첫 태그는 중심이 아니고,
+ * 엄마 유품을 못 치우는 사람에게 「집착」은 마음의 이름이 아니라 판정으로 읽힌다.
+ * 본문은 「이상한 게 아니에요」로 다독이는데 맨 위 한 줄이 그 다독임을 먼저 지웠다.
+ * 그래서 하나를 고르는 문장을 없애고, 아래 칩이 무엇인지만 먼저 말한다.
+ */
+const TAG_LEAD = '적어 주신 이야기에서 이런 마음이 읽혔어요';
+
+/**
+ * 「오늘의 부처의 말」 아래에 붙는 한 줄.
+ *
+ * 전에는 「부처의 가르침을 오늘의 언어로 풀어쓴 말이에요」였다. 이 줄이 두 번 틀렸다.
+ * 감수를 통과한 16구절 중 6구절은 부처의 말이 아니라 원효·승만부인·조주 선사·뿐니까
+ * 장로니의 말인데 그 구절이 붙은 답변에도 같은 줄이 그대로 붙었다. 그리고 이 한마디는
+ * 어느 구절을 풀어쓴 것이 아니라 이 고민을 읽고 모델이 새로 쓴 문장이다.
+ *
+ * 화자를 보고 줄을 갈라 쓸 수는 없다. 서버가 화면에 주는 것은 완성된 귀속 문구
+ * 한 줄(`attributionLine`)뿐이라 화면이 「부처인가」를 판정할 값이 없고, 그 판정을
+ * 문자열에서 되짚으면 조주 선사의 말이 부처의 말이 되는 쪽으로 틀린다.
+ * 그래서 화자를 말하지 않고 이 문장이 무엇인지만 말한다. 어느 구절이 붙어도 사실이다.
+ */
+const AI_LINE_NOTE = '이 고민에 맞춰 AI 가 쓴 말이에요. 경전 원문은 바로 아래에 있어요';
+
 /** 요청2를 기다리는 동안 4초마다 바뀌는 자리. 20초 동안 멈춘 화면을 만들지 않는다 */
 const PENDING_TURN_MS = 4000;
 const NOTE_EARLY = '쓰신 이야기를 하나씩 짚어 이 아래에 이어서 적어 드려요';
 const NOTE_LATE = '이 화면을 나가도 답은 그대로 남아 있어요. 홈에서 다시 열 수 있어요';
-
-function subjectParticle(word: string): string {
-  const last = word.charCodeAt(word.length - 1);
-  const hasFinal = last >= 0xac00 && last <= 0xd7a3 && (last - 0xac00) % 28 !== 0;
-  return hasFinal ? '이' : '가';
-}
 
 function LotusMark({ size }: { size: number }) {
   return (
@@ -175,12 +208,15 @@ export interface AnswerBodyProps {
   adReady?: boolean;
   /** 이 기기에서 광고를 띄울 수 있나. 못 띄우면 Extension 자리를 아예 두지 않는다 */
   adSupported?: boolean;
+  /** 하단 고정 바가 떠 있나. 떠 있으면 문서 흐름의 같은 버튼을 감춘다 */
+  barOn?: boolean;
 }
 
 /** 7블록 v0.3 순서 그대로. 면(카드)은 네 번만 바뀐다 */
 export function AnswerBody({
   answer,
   closingRef,
+  barOn = false,
   onShare,
   onSave,
   onWatchAd,
@@ -256,6 +292,8 @@ export function AnswerBody({
     <div className="doc">
       {/* 묶음 A · ① 마음 태그 */}
       <section className="block" {...testId(TEST_IDS.answerTags)}>
+        {/* 태그를 읽기 전에 이것이 무엇인지 먼저 말한다. 아래 칩을 판정으로 읽지 않게 */}
+        <p className="tag-lead">{TAG_LEAD}</p>
         <div className="tags">
           {answer.emotionTags.map((tag) => (
             <span key={tag} className={`tag tag--${TAG[tag].tone}`}>
@@ -263,10 +301,6 @@ export function AnswerBody({
             </span>
           ))}
         </div>
-        <p className="tag-line">
-          지금 마음의 중심에는 <b>{TAG[answer.emotionTags[0]].ko}</b>
-          {subjectParticle(TAG[answer.emotionTags[0]].ko)} 있어 보여요.
-        </p>
       </section>
 
       {/* 묶음 A · ② 오늘의 부처의 말 */}
@@ -280,10 +314,10 @@ export function AnswerBody({
         <div className="today" {...testId(TEST_IDS.buddhaMessage)}>
           <p className="eyebrow">오늘의 부처의 말</p>
           <blockquote>{answer.modernBuddhaMessage}</blockquote>
-          <p className="sub-note">부처의 가르침을 오늘의 언어로 풀어쓴 말이에요</p>
+          <p className="sub-note">{AI_LINE_NOTE}</p>
           <span className="badge">
-            <LotusMark size={12} />
-            현대적 풀이
+            <SparkIcon />
+            AI 생성
           </span>
         </div>
       </section>
@@ -491,8 +525,19 @@ export function AnswerBody({
             )}
           </section>
 
-          {/* 하단 고정 바와 같은 두 버튼이다. 셀렉터는 고정 바 쪽 하나만 붙인다 */}
-          <div className="actions-inline">
+          {/*
+            이 답은 세션에만 있다. 앱을 닫으면 사라지는데 그 말이 어디에도 없어서, 광고를 보며
+            받은 답까지 잃고 나서야 알게 됐다. 간직하기를 누르기 전에 같은 자리에서 알린다.
+          */}
+          <p className="keep-note" {...testId(TEST_IDS.keepNote)}>
+            이 답변은 앱을 닫으면 사라져요. 간직하면 경전 원문과 풀이, 받은 다른 관점까지 보관함에
+            그대로 남아요.
+          </p>
+
+          {/* 하단 고정 바와 같은 두 버튼이다. 셀렉터는 고정 바 쪽 하나만 붙인다.
+              바가 올라와 있으면 같은 버튼이 위아래로 겹쳐 보이므로 이쪽을 감춘다.
+              자리는 그대로 두어 바가 오르내릴 때 본문이 튀지 않게 한다 */}
+          <div className={barOn ? 'actions-inline is-hidden' : 'actions-inline'}>
             <button type="button" className="btn btn--ghost" onClick={onShare}>
               <ShareIcon />
               공유하기
@@ -517,8 +562,20 @@ export function AnswerBody({
         </>
       )}
 
+      {/*
+        화면을 다 읽고 나가는 자리. 상단 배지가 짧게 말한 것을 여기서 한 번 풀어 적는다.
+
+        「사람이 감수했다」고는 적지 않는다. 이 화면은 지금 붙은 구절이 감수를 통과했는지
+        모르고, 후보 풀에는 감수 전 구절이 함께 들어 있다. 근거 없이 감수 도장을 찍지 않는
+        것은 공유 카드·공유 링크가 이미 지키는 규칙이다. 감수 여부는 구절마다 다르므로
+        그 구절의 「원문 보기」가 말한다. 여기서는 무엇을 AI 가 썼고 무엇을 안 썼는지만 가른다.
+      */}
       <div className="notice">
-        <p>이 답변은 AI 가 경전을 찾아 풀어 쓴 것이에요. 의학·법률 조언이 아니에요.</p>
+        <p>
+          경전 원문은 앱이 지어낸 문장이 아니라 문헌에서 옮긴 것이고, 풀이와 조언은 AI 가 썼어요.
+          어느 저본을 옮겼고 감수를 받았는지는 구절의 「원문 보기」에 적어 두었어요. 의학·법률
+          조언이 아니에요.
+        </p>
         <Link to={ROUTES.helpLines}>많이 힘들다면 도움받을 곳을 봐 주세요</Link>
       </div>
     </div>

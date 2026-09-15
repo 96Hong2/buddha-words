@@ -108,18 +108,76 @@
   color: var(--text-weak);
 }
 
-/* 천장. 짙은 면 위에는 --text-on-deep 만 올린다 */
-.quota-exhausted {
-  width: fit-content;
-  max-width: 100%;
-  margin: var(--s-3) auto 0;
-  padding: var(--s-3) var(--s-4);
-  border-radius: var(--r-pill);
-  background: var(--surface-deep);
-  color: var(--text-on-deep);
+/* ── 천장 카드 ───────────────────────────────────────────────────────────
+   오늘 몫을 다 쓴 자리. 「끝」이라고만 적힌 알림이 아니라 지금 갈 수 있는 곳을 같이 둔다.
+   버튼은 셋 다 같은 무게다. 돈 쓰는 쪽을 크게 그려 두지 않는다. */
+
+.quota-wall {
+  margin-top: var(--s-4);
+  padding: var(--s-5);
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-card);
+}
+
+.quota-wall__title {
+  margin: 0;
+  text-align: center;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  letter-spacing: var(--ls-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.quota-wall__reset {
+  margin: var(--s-2) 0 0;
+  text-align: center;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+.quota-wall__acts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+.quota-wall__act {
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--btn-ghost-line);
+  border-radius: var(--r-button);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--t-body);
+  line-height: var(--lh-label);
+  letter-spacing: var(--ls-label);
+  font-weight: var(--w-semibold);
+}
+
+.quota-wall__act:active {
+  background: var(--surface-pressed);
+}
+
+/* 이용권이 여는 것은 보관함이다. 두 문장이라 가운데 정렬하지 않는다 */
+.quota-wall__pass {
+  margin: var(--s-4) 0 0;
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
-  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.quota-wall__foot {
+  margin: var(--s-3) 0 0;
   text-align: center;
-  box-shadow: var(--sh-raised);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
 }
