@@ -1,0 +1,971 @@
+{
+  "batch": "dhp-c",
+  "source_note": "법구경 1장 쌍의 장부터 13장 세상의 장까지(dhp1~dhp178)에서 35구절을 더 골랐다. 게송 번호와 장 이름은 2026-09-15에 SuttaCentral bilara API(/api/bilarasuttas/<범위>/sujato)로 1게부터 178게까지 팔리 원문과 Bhikkhu Sujato 영역본(CC0)을 통째로 받아 한 구절씩 대조했다. 한국어는 그 팔리·영역을 보고 새로 옮긴 초안이고 기존 한국어 번역본은 참고하지 않았다. 1차(dhp-a)가 가져간 35게는 고르기 전에 목록으로 제외했고, 번호만 다르고 내용이 겹치는 짝게송(100·103과 붙는 101·102·104, 129와 붙는 130)도 같은 이유로 뺐다. 80게는 1차에 들어간 145게와 팔리 원문이 마지막 낱말(paṇḍitā/subbatā) 하나만 다른 사실상 같은 게송이라 뺐고, 그 자리는 4장 53게로 채웠다. 3장 마음의 장과 12장 자기의 장은 자존감·자책 쪽, 8장 천의 장과 4장 꽃의 장은 비교·인정 쪽, 11장 늙음의 장은 상실과 지난 시간 쪽에서 골랐다. 지옥·살생·고행 나열처럼 고민 상담에 닿지 않는 대목과 자해로 읽힐 수 있는 대목은 뺐다. 58게와 59게는 한 문장으로 이어지는 짝이라 한 장에 붙였고 그 사실을 citation_ko 와 base_note 에 적었다. 번역어 선택이 갈리는 자리(6게의 mayamettha yamāmase, 75·134게의 닛바나, 78게의 purisādhama, 98게의 아라한, 59게의 '부처의 제자')는 base_note 앞머리에 적어 두었으니 감수 때 어느 쪽으로 낼지 정해 주면 된다.",
+  "items": [
+    {
+      "id": "dhp.4",
+      "citation_ko": "법구경 1장 쌍의 장 4게",
+      "ref": "dhp4",
+      "ko_text": "그가 나를 욕했다, 나를 때렸다, 나를 이겼다, 내 것을 빼앗았다. 이런 생각을 품어 두지 않는 사람에게는 미움이 가라앉는다.",
+      "base_note": "Sujato 영역: “They abused me, they hit me! They beat me, they robbed me!” For those who bear no such grudge, hatred is laid to rest. 팔리 upanayhati 는 마음에 매어 둔다는 뜻이라 '품어 둔다'로 옮겼다. 3게가 같은 문장을 '품어 두는 사람에게는 미움이 그치지 않는다'로 맺는 짝이다.",
+      "modern_gloss": "억울한 일을 참으라는 말이 아니라, 그 장면을 몇 번이고 다시 틀지 말라는 말이에요. 되감기를 멈추는 자리에서 미움도 가라앉아요.",
+      "retrieval_text": "누가 나에게 함부로 한 일이 몇 달째 잊히지 않는다. 자기 전마다 그 장면이 다시 떠올라 분이 풀리지 않을 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "분노",
+        "되새김",
+        "미움",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "그 장면을 다시 틀지 않는 사람에게 미움이 가라앉는다",
+      "terms": [],
+      "cautions": [
+        "참고 넘기라는 말로 읽히면 피해를 입은 사람에게 침묵을 강요하게 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.6",
+      "citation_ko": "법구경 1장 쌍의 장 6게",
+      "ref": "dhp6",
+      "ko_text": "사람들은 모른다, 이 자리에서 우리가 스스로를 삼가야 한다는 것을. 그것을 아는 사람이 있는 자리에서는 다툼이 가라앉는다.",
+      "base_note": "감수 포인트: 팔리 'mayamettha yamāmase' 를 읽는 방식이 갈린다. Sujato 는 '우리가 스스로를 다잡는다'로 읽었고, 다른 판본은 '우리도 여기서 죽어간다'로 읽어 무상을 아는 것이 다툼을 그치게 한다고 푼다. 초안은 Sujato 쪽을 따랐다. 팔리: Pare ca na vijānanti, mayamettha yamāmase; Ye ca tattha vijānanti, tato sammanti medhagā. Sujato 영역: When others do not understand, let us, who do understand this, restrain ourselves in this regard; for that is how conflicts are laid to rest.",
+      "modern_gloss": "다툼은 양쪽이 다 이기려 할 때 길어져요. 한 사람이라도 먼저 손을 내려놓으면 거기서 끝나요.",
+      "retrieval_text": "같은 일로 계속 부딪치는 사람이 있다. 저쪽은 잘못을 모르는 것 같고 나만 참는 것 같아 억울할 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "다툼",
+        "양보",
+        "관계",
+        "알아차림"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "한 사람이 먼저 내려놓으면 다툼은 거기서 그친다",
+      "terms": [],
+      "cautions": [
+        "늘 내가 먼저 참으라는 뜻으로 읽히면 일방적으로 당하는 관계를 더 굳힌다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송 번호는 확실하다. 다만 가운데 구절을 '스스로를 다잡는다'로 읽느냐 '우리도 여기서 죽어간다'로 읽느냐에 따라 한국어 문장이 크게 달라져서 감수 때 한쪽을 골라야 한다."
+    },
+    {
+      "id": "dhp.11",
+      "citation_ko": "법구경 1장 쌍의 장 11게",
+      "ref": "dhp11",
+      "ko_text": "알맹이가 아닌 것을 알맹이로 여기고 알맹이인 것을 알맹이가 아니라 보면, 끝내 알맹이에 이르지 못한다. 그릇된 생각을 풀밭 삼아 거기서 지내는 탓이다.",
+      "base_note": "Sujato 영역: Thinking the inessential is essential, seeing the essential as inessential; they don’t realize the essential, for wrong thoughts are their habitat. 팔리 sāra 는 나무 속의 단단한 심재를 가리켜 '알맹이'로 옮겼다. gocara 는 소가 풀을 뜯는 자리라서 '풀밭'으로 살렸다. 12게가 같은 문장을 뒤집은 짝이다.",
+      "modern_gloss": "바쁜데 남는 게 없을 때가 있어요. 무엇이 알맹이인지 정하지 않은 채로 손에 잡히는 것부터 해 왔기 때문일 수 있어요.",
+      "retrieval_text": "할 일은 계속 쳐내는데 정작 중요한 건 하나도 못 하고 있다. 무엇부터 해야 할지 순서가 안 잡힐 때",
+      "tags_primary": [
+        "indecision"
+      ],
+      "themes": [
+        "우선순위",
+        "핵심",
+        "선택",
+        "분별"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "알맹이를 정하지 않으면 아무리 바빠도 알맹이에 닿지 못한다",
+      "terms": [
+        {
+          "word": "알맹이",
+          "gloss": "팔리 사라(sāra)를 옮긴 말이에요. 나무 한가운데의 단단한 심재에서 온 말로 진짜 중요한 것을 뜻해요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.14",
+      "citation_ko": "법구경 1장 쌍의 장 14게",
+      "ref": "dhp14",
+      "ko_text": "지붕을 잘 이은 집에 비가 새지 않듯, 잘 닦은 마음에는 탐욕이 스미지 않는다.",
+      "base_note": "Sujato 영역: Just as rain doesn’t seep into a well roofed house, lust doesn’t seep into a well developed mind. 팔리 rāga 는 욕정과 탐욕을 함께 가리키는데 카드에서는 '탐욕'으로 옮겼다. 13게가 '지붕이 성긴 집'으로 시작하는 짝이다.",
+      "modern_gloss": "비를 막는 것은 날씨가 아니라 지붕이에요. 바깥일이 그치기를 기다리는 대신 지금 내 지붕부터 손보는 거예요.",
+      "retrieval_text": "휘둘리기 싫은데 누가 한마디만 해도 바로 흔들린다. 마음이 자꾸 새는 것 같아 불안할 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "흔들림",
+        "마음지킴",
+        "습관",
+        "불안"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "잘 이은 지붕에 비가 새지 않듯, 닦은 마음에는 탐욕이 스미지 않는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.19",
+      "citation_ko": "법구경 1장 쌍의 장 19게",
+      "ref": "dhp19",
+      "ko_text": "경을 아무리 많이 외워도 마음을 놓고 지내며 그대로 하지 않으면, 남의 소를 세는 목동처럼 제 몫을 얻지 못한다.",
+      "base_note": "Sujato 영역: Much though they may recite scripture, if a negligent person does not apply them, then, like a cowherd who counts the cattle of others, they miss out on the blessings of the ascetic life. 팔리 pamatta 를 한자말 '방일'로 두지 않고 '마음을 놓고 지낸다'로 풀었다. 마지막 구의 '수행자의 몫'은 카드에서 '제 몫'으로 줄였다. 20게가 '적게 외워도 그대로 사는 사람'으로 받는 짝이다.",
+      "modern_gloss": "목동은 하루 종일 소를 세지만 그 소는 한 마리도 자기 것이 아니에요. 아는 것과 하는 것 사이가 벌어지면 그 자리에 서게 돼요.",
+      "retrieval_text": "강의도 듣고 책도 읽고 계획도 세우는데 정작 실행한 게 없다. 알기만 하고 하나도 옮기지 못하고 있을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "실천",
+        "공회전",
+        "습관",
+        "배움"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "아무리 외워도 하지 않으면 남의 소를 세는 것과 같다",
+      "terms": [],
+      "cautions": [
+        "배우는 일 자체가 헛되다는 말로 읽으면 안 된다. 아는 것과 하는 것이 벌어진 자리를 가리킨다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.24",
+      "citation_ko": "법구경 2장 부지런함의 장 24게",
+      "ref": "dhp24",
+      "ko_text": "스스로 일어서고 마음을 챙기며, 하는 일이 깨끗하고 살펴서 행하며, 스스로를 다잡고 바르게 살아가는 사람. 마음을 놓지 않는 그에게는 이름이 절로 자란다.",
+      "base_note": "Sujato 영역: For the hard-working and mindful, pure of deed and attentive, restrained, living righteously, and diligent, their reputation only grows. 팔리 yasa 는 명성과 지위를 함께 가리키는데 '이름'으로 옮겼다. uṭṭhānavā 는 스스로 일어나 움직인다는 뜻이라 '스스로 일어서고'로 풀었다.",
+      "modern_gloss": "이름은 만들어 붙이는 게 아니라 쌓여서 남는 거예요. 지금 보는 사람이 없어도 하는 일이 나중에 내 이름이 돼요.",
+      "retrieval_text": "묵묵히 일하는데 아무도 알아주지 않는다. 티 내는 사람만 올라가는 것 같아 이렇게 해서 뭐가 되나 싶을 때",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "평판",
+        "꾸준함",
+        "일",
+        "성실"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "스스로 일어나 하루를 다잡는 사람에게는 이름이 절로 자란다",
+      "terms": [],
+      "cautions": [
+        "열심히 하면 반드시 인정받는다는 보장으로 읽히면, 평가가 불공정한 자리에 있는 사람에게는 공허하게 들린다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.34",
+      "citation_ko": "법구경 3장 마음의 장 34게",
+      "ref": "dhp34",
+      "ko_text": "살던 물에서 건져 올려져 마른 땅에 던져진 물고기처럼, 이 마음은 마라의 손아귀를 벗어나려고 파닥거린다.",
+      "base_note": "Sujato 영역: Like a fish pulled from the sea and cast upon the shore, this mind flounders about, trying to throw off Māra’s dominion. 팔리 okamokata 는 '제가 살던 물에서'라는 뜻이라 그 대목을 살렸다. 마라는 소리대로 두고 용어 풀이를 붙였다.",
+      "modern_gloss": "불안할 때 마음이 요동치는 것은 고장 난 게 아니라 익숙한 자리에서 꺼내져서 그래요. 파닥거림을 없애려 애쓰는 대신 그러고 있구나 보는 데서 시작해요.",
+      "retrieval_text": "가만히 있어도 심장이 뛰고 생각이 멈추지 않는다. 마음이 제멋대로 날뛰어서 붙잡을 수가 없을 때",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "불안",
+        "마음",
+        "요동",
+        "알아차림"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "물 밖에 던져진 물고기처럼 마음도 낯선 자리에서 파닥거린다",
+      "terms": [
+        {
+          "word": "마라",
+          "gloss": "마음을 흔들어 붙잡아 두는 힘을 사람처럼 부른 이름이에요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.43",
+      "citation_ko": "법구경 3장 마음의 장 43게",
+      "ref": "dhp43",
+      "ko_text": "어머니도 아버지도 다른 어떤 살붙이도 해 줄 수 없는 일을, 바르게 세운 마음은 해낸다.",
+      "base_note": "Sujato 영역: A rightly directed mind would do you more good than your mother or father or any other relative. 팔리는 '어머니도 아버지도 그것을 해 주지 못한다, 바르게 세운 마음이 그보다 낫게 해 준다'는 구조라 그대로 살렸다. 42게가 '잘못 세운 마음은 원수보다 더 해롭다'로 짝을 이루고 1차에 들어가 있다.",
+      "modern_gloss": "가까운 사람이 대신 살아 줄 수는 없어요. 서운한 이야기가 아니라, 내 쪽에서 할 수 있는 몫이 아직 남아 있다는 뜻이에요.",
+      "retrieval_text": "가족에게도 기대고 친구에게도 털어놨는데 그때뿐이다. 결국 아무도 나를 대신 살아 줄 수 없다는 게 막막할 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "자립",
+        "마음",
+        "가족",
+        "의지"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "누구도 대신 해 줄 수 없는 일을 바르게 세운 마음이 해낸다",
+      "terms": [],
+      "cautions": [
+        "도움을 청하지 말라는 뜻으로 읽히면 안 된다. 주변의 도움이 닿지 않는 자리가 따로 있다는 말이다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.47",
+      "citation_ko": "법구경 4장 꽃의 장 47게",
+      "ref": "dhp47",
+      "ko_text": "꽃을 따는 데 마음이 팔린 사람을, 잠든 마을을 쓸어 가는 큰물처럼 죽음이 데려간다.",
+      "base_note": "Sujato 영역: As a mighty flood sweeps off a sleeping village, death steals away a man even as he gathers flowers, his mind caught up in them. 팔리 byāsattamanasa 는 마음이 거기 들러붙었다는 뜻이라 '마음이 팔린'으로 옮겼다.",
+      "modern_gloss": "잃고 나서야 그때가 좋았다는 걸 알게 되는 이유예요. 큰물은 예고하고 오지 않으니, 지금 곁에 있는 것을 오늘 한 번 더 보는 거예요.",
+      "retrieval_text": "가까운 사람을 갑자기 잃었다. 잘해 주지 못한 것만 떠오르고 시간이 이렇게 끝날 줄 몰랐을 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "무상",
+        "죽음",
+        "지금",
+        "소중함"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "상을 당한 직후에 이 구절만 건네면 위로가 아니라 훈계로 들린다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.53",
+      "citation_ko": "법구경 4장 꽃의 장 53게",
+      "ref": "dhp53",
+      "ko_text": "쌓아 놓은 꽃 더미에서 화환을 여럿 엮어 낼 수 있듯, 사람으로 태어난 이에게는 해 볼 만한 좋은 일이 많다.",
+      "base_note": "Sujato 영역: Just as one would create many garlands from a heap of flowers, when a person has come to be born, they should do many skillful things. 팔리 kusala 는 이롭고 잘한 일을 함께 가리키는데 카드에서는 '좋은 일'로 옮겼다. 주석 전통은 이 게송을 위사카 이야기에 붙인다.",
+      "modern_gloss": "한 다발로 크게 묶어야 하는 게 아니라 여러 개를 엮을 수 있다는 말이에요. 남은 꽃이 몇 송이인지 세는 대신 지금 손에 잡히는 한 송이부터 꿰는 거예요.",
+      "retrieval_text": "무엇을 해도 달라질 것 같지 않아 손을 놓고 있다. 시작해 봐야 소용없을 것 같아 하루를 그냥 흘려보낼 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "무기력",
+        "시작",
+        "가능성",
+        "하루"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "꽃 더미에서 화환을 여럿 엮듯, 해 볼 만한 좋은 일은 아직 많다",
+      "terms": [],
+      "cautions": [
+        "좋은 일을 많이 하라는 요구로 읽히면 이미 지친 사람에게는 할 일이 하나 더 늘어난다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.54",
+      "citation_ko": "법구경 4장 꽃의 장 54게",
+      "ref": "dhp54",
+      "ko_text": "꽃향기는 바람을 거슬러 가지 못한다. 전단도 따가라도 말리도 그렇다. 그러나 바르게 사는 사람의 향기는 바람을 거슬러 간다. 그 향기는 모든 방향으로 퍼진다.",
+      "base_note": "Sujato 영역: The fragrance of flowers doesn’t spread upwind, nor sandalwood, pinwheel, or jasmine; but the fragrance of the good spreads upwind; a true person’s virtue spreads in every direction. 전단(candana)·따가라(tagara)·말리(mallikā)는 인도의 향나무와 꽃 이름이라 소리대로 두고 용어 풀이를 붙였다.",
+      "modern_gloss": "알아주는 사람이 없는 자리에서 한 일도 어딘가로 퍼져요. 바람 방향을 내가 정할 수는 없지만, 향기는 그 방향을 따지지 않아요.",
+      "retrieval_text": "성과는 다른 사람이 가져가고 나는 늘 조용히 일만 한다. 내가 한 일이 아무 데도 남지 않는 것 같을 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "인정",
+        "묵묵함",
+        "향기",
+        "평판"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "꽃향기는 바람을 거스르지 못해도 바르게 사는 사람의 향기는 거슬러 간다",
+      "terms": [
+        {
+          "word": "전단",
+          "gloss": "인도의 향나무 백단이에요. 향이 귀해 예부터 가장 좋은 향의 대명사로 쓰였어요"
+        },
+        {
+          "word": "따가라",
+          "gloss": "향을 얻는 인도의 관목이에요. 마땅한 우리말 이름이 없어 소리대로 적었어요"
+        },
+        {
+          "word": "말리",
+          "gloss": "인도의 재스민이에요. 흰 꽃이 피고 향이 진해 화환에 많이 썼어요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.58",
+      "citation_ko": "법구경 4장 꽃의 장 58~59게(두 게송이 한 문장으로 이어지는 대목)",
+      "ref": "dhp58",
+      "ko_text": "큰길에 버려진 쓰레기 더미에서도 연꽃이 피어난다. 향기롭고 눈이 가는 꽃이. 그처럼 쓰레기 취급받는 자리에서도, 눈먼 뭇사람 가운데 깨어 있는 이는 지혜로 환하게 드러난다.",
+      "base_note": "58게와 59게는 앞뒤가 한 문장으로 이어지는 짝이라 한 장에 붙였다. Sujato 영역: From a heap of trash discarded on the highway, a lotus might blossom, fragrant and delightful. / So too, among those thought of as trash, a disciple of the perfect Buddha outshines with their wisdom the blind ordinary folk. 59게 원문은 '바르게 깨달은 분의 제자'인데 불자가 아닌 사람도 읽는 자리라 '깨어 있는 이'로 넓혔다. 원문대로 둘지 정해 주면 좋겠다.",
+      "modern_gloss": "연꽃은 깨끗한 자리에서만 피지 않아요. 지금 있는 자리가 초라하다고 해서 거기서 나오는 것까지 초라해지지는 않아요.",
+      "retrieval_text": "남들이 보기에 보잘것없는 자리에 있다. 출신도 학교도 회사도 내세울 게 없어서 어디 가서 말하기가 부끄러울 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "자존감",
+        "출신",
+        "가능성",
+        "연꽃"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "큰길에 버려진 쓰레기 더미에서도 연꽃은 피어난다",
+      "terms": [],
+      "cautions": [
+        "사람을 쓰레기에 빗댄 표현이라 그대로 읽으면 상처가 된다. 사람이 아니라 자리가 그렇게 보일 뿐이라는 뜻으로 받아야 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.61",
+      "citation_ko": "법구경 5장 어리석은 이의 장 61게",
+      "ref": "dhp61",
+      "ko_text": "길을 가다가 나보다 낫거나 나와 걸맞은 길동무를 만나지 못했다면, 차라리 혼자 가기로 마음을 굳혀라. 어리석은 이는 벗이 되어 주지 못한다.",
+      "base_note": "Sujato 영역: If while wandering you find no partner equal or better than yourself, then firmly resolve to wander alone—there’s no fellowship with fools. 마지막 구 'natthi bāle sahāyatā' 는 '어리석은 이에게는 벗됨이 없다'는 뜻이라 어리석은 쪽이 벗이 되어 주지 못한다는 결로 옮겼다.",
+      "modern_gloss": "혼자가 편해서 혼자 가라는 말이 아니에요. 나를 끌어내리는 자리에 억지로 남아 있느니 비어 있는 채로 걷는 편이 낫다는 말이에요.",
+      "retrieval_text": "어울리는 무리가 나를 지치게 한다. 혼자 남는 게 두려워서 계속 붙어 있는 것 같을 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "친구",
+        "거리두기",
+        "혼자",
+        "선택"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "맞는 길동무가 없다면 혼자 가기로 마음을 굳혀라",
+      "terms": [],
+      "cautions": [
+        "사람을 어리석은 쪽으로 분류해 끊어 내라는 허가로 읽히기 쉽다. 사람 값을 매기라는 말이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.63",
+      "citation_ko": "법구경 5장 어리석은 이의 장 63게",
+      "ref": "dhp63",
+      "ko_text": "어리석은 이가 자기가 어리석다고 여기면 그만큼은 지혜로운 것이다. 스스로 지혜롭다 여기는 이야말로 정말 어리석다고 한다.",
+      "base_note": "Sujato 영역: The fool who thinks they’re a fool is wise at least to that extent. But the true fool is said to be one who imagines that they are wise.",
+      "modern_gloss": "모르는 걸 모른다고 말하는 게 이미 한 걸음이에요. 다 안다고 믿는 순간부터 배울 자리가 사라져요.",
+      "retrieval_text": "회의에서 나만 아무것도 모르는 것 같아 입을 못 열었다. 다들 아는 걸 나만 모르는 것 같아 주눅들 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "열등감",
+        "앎",
+        "겸손",
+        "배움"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "모른다는 것을 아는 그만큼이 이미 지혜다",
+      "terms": [],
+      "cautions": [
+        "자기를 이미 낮추고 있는 사람에게 건네면 자책을 부추길 수 있다. 모른다고 말할 수 있는 힘을 가리킨다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.71",
+      "citation_ko": "법구경 5장 어리석은 이의 장 71게",
+      "ref": "dhp71",
+      "ko_text": "저지른 나쁜 일은 갓 짠 우유가 곧바로 엉기듯 그렇게 바로 굳지 않는다. 재에 덮인 불씨처럼 속으로 타면서 뒤를 따라온다.",
+      "base_note": "Sujato 영역: For a wicked deed that has been done does not curdle quickly like milk. Smoldering, it follows the fool, like a fire smothered over with ash. 팔리 비유는 우유가 바로 시어지지 않는다는 쪽인데 우리말로는 '곧바로 엉기지 않는다'가 더 통해서 그렇게 옮겼다. '바로 상하지 않는다'로 바꿔도 된다.",
+      "modern_gloss": "티가 안 난다고 없던 일이 되지는 않아요. 재를 덮어 둔 불씨는 꺼진 게 아니라 안 보이는 거예요.",
+      "retrieval_text": "예전에 한 일이 지금 와서 계속 마음에 걸린다. 아무도 모르고 넘어간 것 같은데 나만 알고 있을 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "후회",
+        "인과",
+        "시간",
+        "수습"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "이미 자책이 심한 사람에게는 벌을 예고하는 말로 들린다. 덮어 두지 말고 수습하라는 쪽으로 읽어야 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.74",
+      "citation_ko": "법구경 5장 어리석은 이의 장 74게",
+      "ref": "dhp74",
+      "ko_text": "'이 일은 나 혼자 해낸 것으로 알아 달라. 무슨 일이든 나를 거치게 하라.' 어리석은 이는 이렇게 생각하고, 그러는 사이 욕심과 자만만 자란다.",
+      "base_note": "Sujato 영역: “Let both layfolk and renunciants think the work was done by me alone. In anything at all that’s to be done, let them fall under my sway alone.” So thinks the fool, their greed and pride only growing. 원문은 재가자와 출가자를 함께 드는데 카드에서는 나누지 않고 '이 일'로 줄였다. 73게와 이어지는 대목이다.",
+      "modern_gloss": "공을 인정받고 싶은 마음 자체는 이상하지 않아요. 다만 전부 내 것이어야 한다고 붙들기 시작하면 채워지는 대신 자꾸 배가 고파져요.",
+      "retrieval_text": "같이 한 일을 누가 혼자 한 것처럼 말하고 다닌다. 그걸 보는 것도 화가 나고 나도 그러고 싶어질 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "인정욕구",
+        "공치사",
+        "자만",
+        "직장"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "내 몫을 정당하게 주장하는 일까지 욕심으로 읽히면 안 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.75",
+      "citation_ko": "법구경 5장 어리석은 이의 장 75게",
+      "ref": "dhp75",
+      "ko_text": "이득으로 가는 길과 고요함으로 가는 길은 서로 다른 길이다. 이것을 똑똑히 알면 대접받는 자리를 반기지 않고 혼자 있는 시간을 늘린다.",
+      "base_note": "Sujato 영역: For the means to profit and the path to quenching are two quite different things. A mendicant disciple of the Buddha, understanding what this really means, would never delight in honors, but rather would foster seclusion. 원문의 '부처의 제자인 비구'는 카드에서 뺐다. 닛바나를 소리대로 옮기지 않고 '고요함'으로 풀었는데 '열반'으로 둘지 정해 주면 좋겠다.",
+      "modern_gloss": "돈이 되는 길과 마음이 편한 길이 겹치지 않을 때가 있어요. 둘 다 잡으려다 어느 쪽도 못 가는 것보다, 지금 어느 길 위에 서 있는지 아는 게 먼저예요.",
+      "retrieval_text": "연봉은 오르는데 사는 게 계속 헛헛하다. 돈을 좇는 게 맞는지 그만두는 게 맞는지 모르겠을 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "돈",
+        "진로",
+        "선택",
+        "고요"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "이득으로 가는 길과 고요함으로 가는 길은 서로 다른 길이다",
+      "terms": [
+        {
+          "word": "고요함",
+          "gloss": "팔리 닛바나(열반)를 풀어 쓴 말이에요. 불이 꺼지듯 들끓던 것이 가라앉은 상태를 가리켜요"
+        }
+      ],
+      "cautions": [
+        "돈 버는 일을 낮게 보라는 말로 읽히면 생계가 급한 사람에게는 도움이 되지 않는다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.77",
+      "citation_ko": "법구경 6장 지혜로운 이의 장 77게",
+      "ref": "dhp77",
+      "ko_text": "타이르고 일러 주며 그릇된 것을 막아라. 그러면 바른 사람에게는 사랑받고 그렇지 않은 사람에게는 미움받는다.",
+      "base_note": "Sujato 영역: Advise and instruct; curb wickedness: for you shall be loved by the good, and disliked by the bad.",
+      "modern_gloss": "모두에게 좋은 사람으로 남으면서 옳은 말을 하기는 어려워요. 미움을 사는 게 늘 내가 잘못했다는 뜻은 아니에요.",
+      "retrieval_text": "할 말을 했다가 사이가 나빠졌다. 괜히 나섰나 싶고 그냥 넘어갈 걸 그랬나 후회될 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "직언",
+        "미움",
+        "용기",
+        "관계"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "옳은 말을 하면 누군가에게는 미움을 산다",
+      "terms": [],
+      "cautions": [
+        "남을 가르치려 드는 태도의 근거로 쓰이기 쉽다. 159게와 함께 읽는 게 좋다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.78",
+      "citation_ko": "법구경 6장 지혜로운 이의 장 78게",
+      "ref": "dhp78",
+      "ko_text": "나쁜 벗과 어울리지 말고 못난 마음을 가진 이와 어울리지 마라. 좋은 벗과 어울리고 훌륭한 사람과 어울려라.",
+      "base_note": "Sujato 영역: Don’t mix with bad friends, nor with the worst of men. Mix with spiritual friends, and with the best of men. 팔리 purisādhama 는 '가장 낮은 사람'인데 신분을 가리키는 말로 읽히지 않게 '못난 마음을 가진 이'로 옮겼다. 원문 그대로 둘지 정해 주면 좋겠다.",
+      "modern_gloss": "누구와 시간을 보내는지가 내가 무엇을 당연하게 여기는지를 정해요. 사람을 고르는 일은 냉정한 게 아니라 나를 지키는 일이에요.",
+      "retrieval_text": "같이 있으면 나까지 나빠지는 것 같은 사람들이 있다. 그래도 정 때문에 못 끊고 있을 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "친구",
+        "환경",
+        "거리두기",
+        "영향"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "좋은 벗과 어울리고 훌륭한 사람과 어울려라",
+      "terms": [],
+      "cautions": [
+        "사람을 좋은 쪽과 나쁜 쪽으로 갈라 배제하는 근거로 쓰이기 쉽다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.83",
+      "citation_ko": "법구경 6장 지혜로운 이의 장 83게",
+      "ref": "dhp83",
+      "ko_text": "바른 사람은 어디서든 놓을 줄 안다. 갖고 싶은 것을 얻으려고 말을 꾸미지 않는다. 즐거운 일이 닿든 괴로운 일이 닿든, 지혜로운 이는 올라갔다 내려갔다 하지 않는다.",
+      "base_note": "Sujato 영역: True persons give up everything, they don’t cajole for the things they desire. Though touched by sadness or happiness, the astute appear neither depressed nor elated. 팔리 uccāvaca 는 높고 낮음이 오르내린다는 말이라 '올라갔다 내려갔다'로 살렸다.",
+      "modern_gloss": "감정을 없애라는 말이 아니라 좋은 소식과 나쁜 소식에 매번 통째로 실려 가지 않는다는 말이에요. 파도는 오지만 배가 뒤집히지는 않는 쪽이에요.",
+      "retrieval_text": "소중한 사람을 떠나보낸 뒤로 괜찮다가도 갑자기 무너진다. 하루에도 몇 번씩 감정이 뒤집혀 지칠 때",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "평정",
+        "감정기복",
+        "상실",
+        "놓아줌"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "즐거운 일이 닿든 괴로운 일이 닿든 통째로 실려 가지 않는다",
+      "terms": [],
+      "cautions": [
+        "슬픔을 드러내지 말라는 말로 읽히면 안 된다. 애도하는 사람에게 평정을 요구하는 뜻이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.98",
+      "citation_ko": "법구경 7장 아라한의 장 98게",
+      "ref": "dhp98",
+      "ko_text": "마을이든 숲이든, 낮은 골짜기든 높은 땅이든, 고요해진 이가 머무는 곳이면 그 자리가 좋은 땅이다.",
+      "base_note": "Sujato 영역: Whether in village or wilderness, in a valley or the uplands, wherever the perfected ones live is a delightful place. 원문의 아라한을 카드에서는 '고요해진 이'로 풀었다. '아라한'으로 두고 용어 풀이를 붙일지 정해 주면 좋겠다.",
+      "modern_gloss": "장소를 바꾸면 달라질 것 같지만 정작 바뀌는 건 데리고 가는 마음이에요. 여기가 별로라는 느낌이 장소에서만 오는 건 아니에요.",
+      "retrieval_text": "회사도 동네도 다 별로다. 어디로 옮기면 나아질까 싶은데 어디를 가도 똑같을 것 같을 때",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "환경",
+        "이직",
+        "마음자리",
+        "선택"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "고요해진 이가 머무는 곳이면 그 자리가 좋은 땅이다",
+      "terms": [],
+      "cautions": [
+        "실제로 해로운 환경에 있는 사람에게 참고 있으라는 말로 쓰이면 안 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.112",
+      "citation_ko": "법구경 8장 천의 장 112게",
+      "ref": "dhp112",
+      "ko_text": "게으르고 힘없이 백 년을 사는 것보다, 힘을 내어 단단하게 하루를 사는 것이 낫다.",
+      "base_note": "Sujato 영역: Better to live a single day energetic and strong, than to live a hundred years lazy and lacking energy. 8장은 '백 년보다 하루가 낫다'는 틀을 여러 게송이 반복하는데, 112게는 그중 게으름과 정진을 다룬 것이다. 1차에 들어간 113게와 틀만 같고 내용은 다르다.",
+      "modern_gloss": "길게 흘려보낸 시간보다 오늘 하루를 어떻게 쓰느냐가 먼저예요. 되돌릴 수 없는 백 년 대신 손에 쥔 하루가 있어요.",
+      "retrieval_text": "몇 년째 아무것도 안 하고 흘려보냈다. 이미 늦은 것 같아서 지금 시작해도 소용없을 것 같을 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "시작",
+        "늦음",
+        "하루",
+        "정진"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "힘없이 백 년을 사는 것보다 힘을 내어 하루를 사는 것이 낫다",
+      "terms": [],
+      "cautions": [
+        "번아웃으로 움직이지 못하는 사람에게는 더 몰아붙이는 말이 될 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.119",
+      "citation_ko": "법구경 9장 악의 장 119게",
+      "ref": "dhp119",
+      "ko_text": "나쁜 일을 한 사람도 그 일이 익기 전까지는 좋은 것만 본다. 그러나 그 일이 익고 나면 그때는 나쁜 것을 본다.",
+      "base_note": "Sujato 영역: Even the wicked see good things, so long as their wickedness has not ripened. But as soon as that wickedness ripens, then the wicked see wicked things. 팔리 paccati 는 열매가 익는다는 말이라 '익는다'로 그대로 옮겼다. 120게가 같은 문장을 좋은 일 쪽으로 뒤집은 짝이다.",
+      "modern_gloss": "지금 잘 되는 것처럼 보이는 게 전부가 아니에요. 열매는 심은 그날 열리지 않으니 남의 계절을 보고 내 계절을 판단하지 않는 거예요.",
+      "retrieval_text": "반칙하는 사람이 더 잘 되는 걸 계속 본다. 정직하게 사는 게 손해인 것 같아 힘이 빠질 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "불공평",
+        "인과",
+        "시간",
+        "억울함"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "언젠가 벌 받는다는 식으로 읽으면 남의 불행을 기다리는 마음이 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.124",
+      "citation_ko": "법구경 9장 악의 장 124게",
+      "ref": "dhp124",
+      "ko_text": "손에 상처가 없으면 독을 쥐어도 된다. 상처 없는 손에는 독이 스며들지 않는다. 짓지 않는 사람에게는 나쁜 일이 붙지 않는다.",
+      "base_note": "Sujato 영역: You can carry poison in your hand if it has no wound, for poison does not infect without a wound; nothing bad happens unless you do bad.",
+      "modern_gloss": "주위가 다 그렇게 한다고 해서 내가 하는 것까지 같아지지는 않아요. 손에 상처를 내지 않는 쪽은 내가 정할 수 있는 몫이에요.",
+      "retrieval_text": "다들 적당히 넘어가는 자리에서 나만 원칙을 지키기가 어렵다. 나도 그냥 똑같이 해야 하나 흔들릴 때",
+      "tags_primary": [
+        "indecision"
+      ],
+      "themes": [
+        "원칙",
+        "유혹",
+        "선택",
+        "환경"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "상처 없는 손에는 독이 스며들지 않는다",
+      "terms": [],
+      "cautions": [
+        "부당한 일을 당한 사람에게는 '네가 뭔가 했으니 그렇다'는 말로 들린다. 피해의 원인을 당한 사람에게 돌리는 뜻이 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.132",
+      "citation_ko": "법구경 10장 폭력의 장 132게",
+      "ref": "dhp132",
+      "ko_text": "살아 있는 것은 모두 즐겁기를 바란다. 내 즐거움을 구하면서 남을 매로 해치지 않는 사람은 그 뒤에 즐거움을 얻는다.",
+      "base_note": "Sujato 영역: Creatures love happiness, so if you don’t harm them with a stick in search of your own happiness, after death you will find happiness. 팔리 pecca 는 '몸을 버린 뒤'를 가리키는데 다음 생 이야기로만 읽히지 않게 '그 뒤에'로 옮겼다. 원문대로 살릴지 정해 주면 좋겠다. 131게가 같은 문장의 부정형 짝이다.",
+      "modern_gloss": "남을 밟고 올라선 자리에서 얻은 것은 오래 편하지 않아요. 내 행복을 구하는 방식 자체가 그 행복의 재료가 돼요.",
+      "retrieval_text": "경쟁에서 이기려면 누군가를 밀어내야 하는 자리에 있다. 그렇게까지 해서 얻는 게 맞나 싶을 때",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "경쟁",
+        "배려",
+        "행복",
+        "직장"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "내 즐거움을 구하면서 남을 해치지 않는 사람이 결국 즐거움을 얻는다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.134",
+      "citation_ko": "법구경 10장 폭력의 장 134게",
+      "ref": "dhp134",
+      "ko_text": "깨진 징처럼 소리를 내지 않는다면, 너는 이미 고요에 이른 것이다. 네게는 다툼이 없다.",
+      "base_note": "Sujato 영역: If you still yourself like a broken gong, you reach extinguishment and know no conflict. 팔리 kaṁsa 는 청동 징을 가리키고, 깨진 징은 쳐도 울리지 않는다는 비유다. 닛바나를 여기서는 '고요'로 풀었다.",
+      "modern_gloss": "받아치지 않는 것과 참는 것은 달라요. 울리지 않는 징은 애써 참는 게 아니라 울릴 것이 없는 거예요.",
+      "retrieval_text": "한마디만 들어도 바로 받아치게 된다. 말싸움이 끝나고 나면 늘 후회하면서도 또 그럴 때",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "말다툼",
+        "반응",
+        "고요",
+        "후회"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "깨진 징처럼 소리를 내지 않으면 다툼이 없다",
+      "terms": [
+        {
+          "word": "징",
+          "gloss": "팔리 원문은 청동으로 만든 타악기예요. 깨지면 쳐도 소리가 나지 않아요"
+        }
+      ],
+      "cautions": [
+        "할 말을 삼키라는 뜻으로 읽히면 참기만 하는 관계를 굳힌다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.142",
+      "citation_ko": "법구경 10장 폭력의 장 142게",
+      "ref": "dhp142",
+      "ko_text": "차려입었더라도 바르게 산다면, 고요하고 스스로를 다잡으며 살아 있는 모든 것에 매를 내려놓았다면, 그 사람이 바라문이고 수행자다.",
+      "base_note": "Sujato 영역: Dressed up they may be, but if they live well—peaceful, tamed, committed to the spiritual path, having laid aside violence toward all creatures—they are a brahmin, an ascetic, a mendicant. 끝에 바라문·사문·비구 세 이름이 나란히 오는데 카드 길이 때문에 '바라문이고 수행자'로 줄였다. 141게가 겉모습만 꾸미는 고행을 늘어놓는 짝이다.",
+      "modern_gloss": "겉모습으로 사람을 가르는 기준을 뒤집는 구절이에요. 무엇을 걸쳤는지가 아니라 어떻게 사는지가 그 사람을 정해요.",
+      "retrieval_text": "옷차림이나 가진 것으로 사람을 판단하는 자리에 있다. 내가 초라해 보일까 봐 자꾸 신경 쓰일 때",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "겉모습",
+        "자존감",
+        "기준",
+        "편견"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "무엇을 걸쳤는지가 아니라 어떻게 사는지가 그 사람을 정한다",
+      "terms": [
+        {
+          "word": "바라문",
+          "gloss": "인도에서 가장 높게 치던 사제 계급이에요. 불교는 이 말을 태생이 아니라 삶으로 정해지는 이름으로 바꿔 썼어요"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.146",
+      "citation_ko": "법구경 11장 늙음의 장 146게",
+      "ref": "dhp146",
+      "ko_text": "늘 타오르고 있는데 무엇이 즐겁고 무엇이 우스운가. 어둠에 싸여 있으면서 등불을 찾지 않겠는가.",
+      "base_note": "Sujato 영역: What is joy, what is laughter, when the flames are ever burning? Swathed in darkness, would you not seek a light? 마지막 줄은 팔리도 묻는 형태라 '찾지 않겠는가'로 두었다.",
+      "modern_gloss": "웃고 떠들면서도 속이 타는 날이 있어요. 그걸 덮는 대신 등불을 찾자는 말이고, 여기서 등불은 남이 켜 주는 게 아니에요.",
+      "retrieval_text": "겉으로는 웃고 지내는데 속은 계속 타들어 간다. 이대로 사는 게 맞나 싶은데 어디서부터 손대야 할지 모를 때",
+      "tags_primary": [
+        "uncertainty"
+      ],
+      "themes": [
+        "직면",
+        "방향",
+        "등불",
+        "공허"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "어둠에 싸여 있으면서 등불을 찾지 않겠는가",
+      "terms": [],
+      "cautions": [
+        "지금 많이 지쳐 있는 사람에게는 다그치는 말로 들릴 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.156",
+      "citation_ko": "법구경 11장 늙음의 장 156게",
+      "ref": "dhp156",
+      "ko_text": "젊을 때 뜻을 세우지도 못하고 재물도 모으지 못한 사람은, 다 쏘아 버린 화살처럼 누워 지난 일만 되뇐다.",
+      "base_note": "Sujato 영역: When young they spurned the spiritual path and failed to earn any wealth. Now they lie like spent arrows, bemoaning over things past. 팔리 brahmacariya 는 수행하는 삶을 가리키는데 카드에서는 '뜻을 세우다'로 넓혔다. cāpātikhīṇa 는 활을 떠나 힘이 다한 화살이라 '다 쏘아 버린 화살'로 옮겼다. 155게가 같은 문장의 짝이고 1차에 들어가 있다.",
+      "modern_gloss": "지난 일을 되뇌는 자리에 오래 머물지 말라는 말이에요. 아직 남은 화살이 있는지 보는 게 이 구절을 제대로 읽는 방법이에요.",
+      "retrieval_text": "남들 자리 잡을 때 나는 아무것도 못 했다. 지나간 시간이 아까워서 계속 그 생각만 날 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "후회",
+        "지난시간",
+        "늦음",
+        "돈"
+      ],
+      "difficulty": "medium",
+      "daily_ok": false,
+      "daily_line": "",
+      "terms": [],
+      "cautions": [
+        "나이 든 사람이나 늦게 시작한 사람을 깎아내리는 말로 읽히기 쉽다. 지금 남은 것을 보라는 쪽으로 받아야 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.159",
+      "citation_ko": "법구경 12장 자기의 장 159게",
+      "ref": "dhp159",
+      "ko_text": "남에게 일러 주는 그대로 자기를 대한다면, 잘 다잡은 사람이 남도 다잡을 것이다. 자기를 다잡는 일이야말로 어렵다고 한다.",
+      "base_note": "Sujato 영역: If one were to treat oneself as one instructs another, the well-tamed indeed would tame: for the self, it seems, is hard to tame. 팔리 dameti 는 길들인다는 뜻인데 사람에게 쓰기에는 세서 '다잡는다'로 옮겼다. 158게와 이어지는 대목이다.",
+      "modern_gloss": "남에게는 쉽게 하는 말을 나에게는 못 할 때가 많아요. 반대로 나에게만 모진 사람도 있어요. 두 기준이 같아지는 자리를 말해요.",
+      "retrieval_text": "친구에게는 괜찮다고 말해 주면서 나한테는 한 번도 그렇게 말하지 못한다. 나에게만 유독 모질 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "이중잣대",
+        "자기대우",
+        "자책",
+        "조언"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "남에게 하는 말을 나에게도 그대로 해 주는 것, 그것이 가장 어렵다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.163",
+      "citation_ko": "법구경 12장 자기의 장 163게",
+      "ref": "dhp163",
+      "ko_text": "스스로에게 해롭고 좋지 않은 일은 하기 쉽다. 이롭고 좋은 일이야말로 하기가 가장 어렵다.",
+      "base_note": "Sujato 영역: It’s easy to do bad things harmful to oneself, but good things that are helpful are the hardest things to do.",
+      "modern_gloss": "안 하던 일이 안 되는 게 내가 유독 모자라서가 아니에요. 원래 그쪽이 더 어려운 거예요. 어려운 일을 하는 중이라고 알아주는 데서 힘이 나요.",
+      "retrieval_text": "몸에 나쁜 것만 골라 하고 좋은 습관은 하루도 못 간다. 의지가 약한 내가 한심하게 느껴질 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "습관",
+        "의지",
+        "자책",
+        "시작"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "해로운 일은 하기 쉽고 이로운 일은 하기 어렵다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.168",
+      "citation_ko": "법구경 13장 세상의 장 168게",
+      "ref": "dhp168",
+      "ko_text": "일어서라, 마음을 놓지 마라. 바르게 살아가라. 바르게 사는 사람은 이 세상에서도 다음 세상에서도 편히 잠든다.",
+      "base_note": "Sujato 영역: Get up, don’t be heedless, live by principle, with good conduct. For one of good conduct sleeps at ease, in this world and the next. 첫 낱말 uttiṭṭhe 는 '일어서라'는 명령이다. 169게가 뒷구절을 그대로 반복한다.",
+      "modern_gloss": "대단한 결심을 하라는 말이 아니라 일단 몸을 일으키라는 말이에요. 잠이 편해지는 건 그다음 이야기예요.",
+      "retrieval_text": "아침에 눈을 떠도 일어나지지 않는다. 하루를 시작할 힘이 안 나고 그냥 누워만 있게 될 때",
+      "tags_primary": [
+        "apathy"
+      ],
+      "themes": [
+        "시작",
+        "무기력",
+        "하루",
+        "잠"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "일어서라, 마음을 놓지 마라. 바르게 사는 사람은 편히 잠든다",
+      "terms": [],
+      "cautions": [
+        "우울로 몸이 움직이지 않는 상태에 이 말만 건네면 다그침이 된다. 도움을 받아야 할 자리를 의지 문제로 만들지 않는다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.171",
+      "citation_ko": "법구경 13장 세상의 장 171게",
+      "ref": "dhp171",
+      "ko_text": "와서 이 세상을 보라. 잘 꾸민 임금의 수레 같다. 어리석은 이들은 거기 빠져들지만 아는 사람은 거기 묶이지 않는다.",
+      "base_note": "Sujato 영역: Come, see this world decked out like a fancy royal chariot. Here fools founder, but the discerning are not chained. 팔리 visīdanti 는 진창에 빠져 가라앉는다는 말이라 '빠져든다'로 옮겼다.",
+      "modern_gloss": "잘 꾸민 것은 보라고 만든 거예요. 보는 것과 거기 올라타는 것은 다르고, 그 사이에서 쓰는 돈이 갈려요.",
+      "retrieval_text": "남들 사는 걸 보면 나만 초라해서 자꾸 지갑을 연다. 사고 나면 잠깐 괜찮다가 다시 허전할 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "소비",
+        "비교",
+        "화려함",
+        "절제"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "와서 이 세상을 보라. 잘 꾸민 임금의 수레 같다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.173",
+      "citation_ko": "법구경 13장 세상의 장 173게",
+      "ref": "dhp173",
+      "ko_text": "지은 나쁜 일을 좋은 일로 덮어 가는 사람은, 구름을 벗어난 달처럼 이 세상을 환하게 비춘다.",
+      "base_note": "Sujato 영역: Someone whose bad deed is supplanted by the good, shines upon this world, like the moon freed from clouds. 팔리 pidhīyati 는 덮인다는 뜻인데 숨긴다는 말로 읽히지 않게 '덮어 간다'로 옮겼다. '지워 간다'로 바꿔도 된다. 주석 전통은 이 게송을 앙굴리말라 이야기에 붙인다.",
+      "modern_gloss": "잘못한 일을 없던 일로 만들 수는 없어요. 다만 그 위에 무엇을 쌓을지는 아직 정해지지 않았어요.",
+      "retrieval_text": "예전에 크게 잘못한 일이 있다. 이미 늦었고 나 같은 사람은 달라질 수 없을 것 같을 때",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "회복",
+        "용서",
+        "다시시작",
+        "자책"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "구름을 벗어난 달처럼 다시 환해질 수 있다",
+      "terms": [],
+      "cautions": [
+        "사과와 수습 없이 좋은 일만 쌓으면 된다는 뜻으로 읽히면 안 된다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dhp.177",
+      "citation_ko": "법구경 13장 세상의 장 177게",
+      "ref": "dhp177",
+      "ko_text": "인색한 사람은 하늘에 이르지 못한다. 나누는 일을 기리지 않는 것은 어리석음이다. 지혜로운 이는 남이 나누는 것까지 함께 기뻐하고, 그래서 뒤에 편안해진다.",
+      "base_note": "Sujato 영역: The miserly don’t ascend to heaven, it takes a fool to not praise giving. The attentive celebrate giving, and so find happiness in the hereafter. 팔리 anumodamāna 는 남이 베푼 것을 함께 기뻐한다는 말이라 그대로 살렸다.",
+      "modern_gloss": "쥐고 있으면 늘어날 것 같지만 쥔 손은 받을 수도 없어요. 크게 내놓으라는 말이 아니라 나누는 마음을 닫지 말라는 말이에요.",
+      "retrieval_text": "돈이 빠듯해서 누구에게도 쓰지 못하고 있다. 아끼는데도 늘 쫓기는 기분이고 마음까지 옹색해질 때",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "나눔",
+        "인색",
+        "마음",
+        "돈"
+      ],
+      "difficulty": "medium",
+      "daily_ok": true,
+      "daily_line": "지혜로운 이는 남이 나누는 것까지 함께 기뻐한다",
+      "terms": [],
+      "cautions": [
+        "형편이 어려운 사람에게 더 내놓으라는 압박이 될 수 있다. 액수 이야기가 아니다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    }
+  ]
+}

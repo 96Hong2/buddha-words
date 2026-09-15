@@ -1,0 +1,423 @@
+{
+  "batch": "mn-dn",
+  "source_note": "맛지마 니까야(MN)와 디가 니까야(DN)의 비유 대목에서 15구절을 골랐다. SuttaCentral 의 Bhikkhu Sujato 영역본(CC0)을 기준본으로 삼아 우리 말로 새로 옮겼고, 기존 한국어 번역본 문장은 참고하지 않았다. 긴 산문경은 비유 한 대목만 카드 길이로 잘라 citation_ko 에 어느 대목인지 적었다. 같은 경에서 두 대목 이상을 쓴 DN 31·DN 16 은 id 뒤에 대목 이름을 붙여 구분했다.",
+  "items": [
+    {
+      "id": "mn.63",
+      "citation_ko": "맛지마 니까야 63 말룽꺄뿟따에게 설한 짧은 경, 독화살의 비유 대목",
+      "ref": "mn63",
+      "ko_text": "독 묻은 화살을 맞은 사람이 있었다. 사람들이 의사를 부르자 그가 말했다. 나를 쏜 자가 누구인지, 어느 마을 사람인지, 활이 무엇으로 만들어졌는지 알기 전에는 이 화살을 뽑지 않겠다. 그는 그것을 알지 못한 채 숨을 거두었다.",
+      "base_note": "Sujato 영역 'Suppose a man was struck by an arrow thickly smeared with poison…' 대목을 새로 옮겼다. 원문에 길게 이어지는 물음 목록은 세 가지만 남겨 카드 길이로 줄였다.",
+      "modern_gloss": "왜 이렇게 됐는지 다 알아야 움직일 수 있을 것 같지만, 먼저 뽑아야 할 화살이 있다.",
+      "retrieval_text": "원인을 다 따져 봐야 움직일 수 있을 것 같아 결정을 미루고 있다. 왜 이런 일이 생겼는지 계속 곱씹느라 정작 해야 할 일에 손을 못 대는 상황",
+      "tags_primary": [
+        "indecision",
+        "uncertainty"
+      ],
+      "themes": [
+        "결정",
+        "미룸",
+        "곱씹기",
+        "우선순위"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "답을 다 찾기 전에 먼저 뽑아야 할 화살이 있다",
+      "terms": [],
+      "cautions": [
+        "원인을 반드시 따져야 하는 문제까지 덮으라는 뜻으로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.21",
+      "citation_ko": "맛지마 니까야 21 톱의 비유 경, 양날 톱의 비유 대목",
+      "ref": "mn21",
+      "ko_text": "누가 양쪽에 손잡이가 달린 톱으로 그대의 몸을 마디마디 잘라낸다 해도, 그때 마음이 미움으로 물든다면 그는 내 가르침을 따르는 사람이 아니다. 그런 때에도 이렇게 익혀라. 내 마음은 흔들리지 않는다, 나는 거친 말을 내뱉지 않는다.",
+      "base_note": "Sujato 영역 'Even if low-down bandits were to sever you limb from limb with a two-handled saw…' 대목을 새로 옮겼다.",
+      "modern_gloss": "상대가 어떻게 하든 내 마음까지 넘겨주지는 않겠다는 선언이다. 참으라는 말이 아니라 마음의 주인 자리를 지키라는 말이다.",
+      "retrieval_text": "상대가 너무 심하게 굴어서 나도 똑같이 갚아 주고 싶다. 화가 나서 마음이 통째로 흔들리는 상황",
+      "tags_primary": [
+        "anger"
+      ],
+      "themes": [
+        "분노",
+        "인내",
+        "자제",
+        "마음지킴"
+      ],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "terms": [],
+      "cautions": [
+        "폭력이나 괴롭힘을 참고 견디라는 뜻으로 읽힐 수 있다. 피해를 겪는 중인 사람에게는 쓰지 않는다",
+        "벗어날 수 있는 상황에서 벗어나지 말라는 말로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.22",
+      "citation_ko": "맛지마 니까야 22 뱀의 비유 경, 뗏목의 비유 대목",
+      "ref": "mn22",
+      "ko_text": "큰 물을 건너려는 사람이 풀과 나뭇가지를 엮어 뗏목을 만들고 무사히 건넜다. 건넌 뒤에 그가 생각한다. 이 뗏목이 고마우니 머리에 이고 다녀야겠다. 그것은 뗏목을 쓸 줄 아는 것이 아니다. 건너게 해 준 것도 건넌 뒤에는 내려놓는다.",
+      "base_note": "Sujato 영역 'Suppose a person who was traveling along a road saw a large deluge…' 의 뗏목 대목을 새로 옮겼다. 원문의 반복 구절은 줄였다.",
+      "modern_gloss": "나를 여기까지 데려온 방식이 다음 자리에서도 맞는 것은 아니다.",
+      "retrieval_text": "예전에 도움이 됐던 방식이나 관계를 놓기가 아깝다. 이제는 맞지 않는 줄 알면서도 붙들고 있는 상황",
+      "tags_primary": [
+        "indecision",
+        "uncertainty"
+      ],
+      "themes": [
+        "놓아줌",
+        "변화",
+        "집착",
+        "전환"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "건너게 해 준 것도 건넌 뒤에는 내려놓는다",
+      "terms": [
+        {
+          "word": "뗏목",
+          "gloss": "강을 건너려고 그때그때 엮어 쓰는 배예요. 건너고 나면 두고 갑니다"
+        }
+      ],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.61",
+      "citation_ko": "맛지마 니까야 61 암발랏티까에서 라훌라에게 설한 경, 거울의 비유 대목",
+      "ref": "mn61",
+      "ko_text": "라훌라야, 거울은 무엇에 쓰는 것이냐. 비추어 보는 데 씁니다. 그와 같이 몸으로 하는 일, 말로 하는 일, 마음으로 하는 일을 거듭 비추어 보아라. 하기 전에 한 번, 하는 중에 한 번, 하고 난 뒤에 한 번.",
+      "base_note": "Sujato 영역 'What is a mirror for? For reflection.' 대목을 새로 옮겼다. 문답이 길게 이어지는 원문을 카드 길이로 줄였다.",
+      "modern_gloss": "잘잘못을 따지자는 것이 아니라, 내 행동이 나와 남을 어디로 데려가는지 보자는 것이다.",
+      "retrieval_text": "내가 한 말이나 행동이 자꾸 마음에 걸린다. 다음에는 같은 실수를 하고 싶지 않은 상황",
+      "tags_primary": [
+        "regret",
+        "relationship"
+      ],
+      "themes": [
+        "돌아보기",
+        "말",
+        "후회",
+        "습관"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "하기 전에 한 번, 하고 난 뒤에 한 번 비춰 본다",
+      "terms": [],
+      "cautions": [
+        "지난 일을 곱씹으며 자책하라는 쪽으로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.19",
+      "citation_ko": "맛지마 니까야 19 두 갈래 생각 경, 생각을 둘로 나누어 본 대목",
+      "ref": "mn19",
+      "ko_text": "나는 생각을 둘로 나누어 놓았다. 한쪽에는 나와 남을 해치는 생각을, 다른 쪽에는 해치지 않는 생각을 두었다. 해치는 생각이 올라오면 이렇게 알아차렸다. 이것은 나를 해치고 남을 해치며 지혜를 무너뜨린다. 그렇게 보자 그 생각은 힘을 잃고 가라앉았다.",
+      "base_note": "Sujato 영역 'I divided my thoughts into two classes…' 대목을 새로 옮겼다. 원문이 각 갈래에 든 세 가지 생각(감각적 욕망, 악의, 해침)은 해침과 해치지 않음의 대비로 묶었다.",
+      "modern_gloss": "생각을 없애려 애쓰는 대신 어느 쪽 생각인지 이름을 붙여 보는 것만으로 힘이 빠진다.",
+      "retrieval_text": "누군가를 향한 미운 생각이 계속 올라와서 스스로도 지친다. 머릿속으로 되갚는 장면을 자꾸 그리게 되는 상황",
+      "tags_primary": [
+        "anger",
+        "anxiety"
+      ],
+      "themes": [
+        "생각",
+        "알아차림",
+        "미움",
+        "반복"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "어느 쪽 생각인지 이름을 붙이면 힘이 빠진다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.20",
+      "citation_ko": "맛지마 니까야 20 생각을 가라앉히는 법 경, 걸음을 늦추는 비유 대목",
+      "ref": "mn20",
+      "ko_text": "빠르게 걷던 사람이 문득 생각한다. 나는 왜 이렇게 빨리 걷고 있나, 천천히 걸어 보자. 그는 천천히 걷다가 멈추어 서고, 서 있다가 앉고, 앉았다가 눕는다. 거친 자세를 한 단계씩 내려놓듯 거친 생각도 그렇게 가라앉는다.",
+      "base_note": "Sujato 영역 'Suppose there was a man walking quickly…' 대목을 새로 옮겼다. 이 경이 든 여러 방법 가운데 걸음 비유 하나만 옮겼다.",
+      "modern_gloss": "생각을 한 번에 끄려 하면 더 세진다. 속도를 한 단계씩 늦추는 쪽이 실제로 듣는다.",
+      "retrieval_text": "머릿속 생각이 멈추지 않아 잠이 오지 않는다. 그만하려 할수록 더 빨라지는 상황",
+      "tags_primary": [
+        "anxiety"
+      ],
+      "themes": [
+        "생각",
+        "불안",
+        "속도",
+        "가라앉힘"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "빠른 걸음도 한 단계씩 늦추면 결국 멈춘다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.2",
+      "citation_ko": "맛지마 니까야 2 모든 번뇌 경, 피함으로 덜어내는 대목",
+      "ref": "mn2",
+      "ko_text": "사나운 짐승을 피하고 가시덤불과 낭떠러지와 늪을 피하듯, 피해야 할 것이 있다. 앉지 않아야 할 자리, 가지 않아야 할 곳, 가까이하면 나빠지는 사람이 그렇다. 피해서 덜어내는 괴로움이 있다.",
+      "base_note": "Sujato 영역 'the defilements that should be given up by avoiding' 대목을 새로 옮겼다. 원문의 긴 목록에서 대표적인 것만 남겼다.",
+      "modern_gloss": "다 견뎌 내는 것만 답은 아니다. 피하는 편이 나은 자리는 피하는 것도 길이다.",
+      "retrieval_text": "같이 있으면 자꾸 상하는 사람이 있는데 내가 참아야 하나 고민된다. 그 자리를 피해도 되는지 알고 싶은 상황",
+      "tags_primary": [
+        "relationship",
+        "anxiety"
+      ],
+      "themes": [
+        "거리두기",
+        "관계",
+        "선택",
+        "자기보호"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "다 견디는 것만이 답은 아니다, 피할 자리는 피한다",
+      "terms": [],
+      "cautions": [
+        "해야 할 일을 회피하는 근거로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "mn.66",
+      "citation_ko": "맛지마 니까야 66 메추라기의 비유 경, 썩은 덩굴에 묶인 메추라기 대목",
+      "ref": "mn66",
+      "ko_text": "작은 메추라기가 썩은 덩굴 하나에 묶여 옴짝달싹 못 하고 죽기도 한다. 그 덩굴은 약한 것이지만 메추라기에게는 목숨이 걸린 끈이다. 같은 덩굴이라도 큰 코끼리에게는 끊을 것도 없는 것이다.",
+      "base_note": "Sujato 영역의 laṭukikā(메추라기) 비유 대목을 새로 옮겼다. 묶임의 크기는 끈이 아니라 묶인 쪽에 달렸다는 대비만 남겼다.",
+      "modern_gloss": "남에게 아무것도 아닌 일이 나에게는 크게 걸릴 수 있다. 내가 약해서가 아니라 지금 내가 선 자리가 그런 것이다.",
+      "retrieval_text": "남들은 아무렇지 않게 넘기는 일을 나만 크게 힘들어하는 것 같다. 별것 아닌 일에 무너지는 내가 한심하게 느껴지는 상황",
+      "tags_primary": [
+        "comparison"
+      ],
+      "themes": [
+        "비교",
+        "자책",
+        "무거움",
+        "다름"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "같은 끈이라도 누구에게는 목숨 걸린 밧줄이 된다",
+      "terms": [
+        {
+          "word": "메추라기",
+          "gloss": "몸집이 작은 새예요. 힘이 세지 않습니다"
+        }
+      ],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "메추라기 비유가 이 경에 있는 것은 맞지만, 코끼리를 나란히 놓은 대비가 같은 대목인지 원문 확인이 필요하다. 또 이 경의 본래 취지는 사소한 것에도 묶이는 마음을 경책하는 쪽인데, 풀이와 검색 문구는 비교로 힘들어하는 사람을 달래는 쪽으로 기울었다. 이 방향을 그대로 둘지 감수자 판단이 필요하다"
+    },
+    {
+      "id": "mn.86",
+      "citation_ko": "맛지마 니까야 86 앙굴리말라 경, 앙굴리말라가 읊은 게송 대목",
+      "ref": "mn86",
+      "ko_text": "예전에 게을렀더라도 이제 게으르지 않은 사람은 구름을 벗어난 달처럼 이 세상을 비춘다. 지은 잘못을 선한 일로 덮어 가는 사람도 그와 같다.",
+      "base_note": "Sujato 영역 'Whoever once was heedless, but later is not…' 게송을 새로 옮겼다. 같은 게송이 법구경 172~173 게로도 전한다.",
+      "modern_gloss": "지난 잘못이 남은 날까지 정하지는 않는다. 지금 무엇을 하느냐가 그 위에 쌓인다.",
+      "retrieval_text": "예전에 저지른 일이 자꾸 떠올라 지금도 고개를 들지 못하겠다. 이미 늦은 것 같아 새로 시작할 엄두가 안 나는 상황",
+      "tags_primary": [
+        "regret"
+      ],
+      "themes": [
+        "후회",
+        "다시시작",
+        "자책",
+        "변화"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "지난 허물보다 오늘의 걸음이 나를 정한다",
+      "terms": [],
+      "cautions": [
+        "남에게 준 피해를 가볍게 덮으라는 뜻으로 읽히지 않게 한다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "게송이 이 경 끝머리에 실린 것은 맞지만 법구경 172~173 게와 겹친다. 출처를 어느 쪽으로 적을지 감수자 판단이 필요하다"
+    },
+    {
+      "id": "mn.107",
+      "citation_ko": "맛지마 니까야 107 가나까 목갈라나 경, 차례로 오르는 계단의 비유 대목",
+      "ref": "mn107",
+      "ko_text": "이 큰 집에도 차례가 보인다. 아래 계단을 딛고 그다음 계단을 디뎌야 위층에 이른다. 그와 같이 이 길에도 차례로 익히고 차례로 행하는 순서가 있다.",
+      "base_note": "Sujato 영역에서 가나까 목갈라나가 미가라마따 저택의 계단을 들어 말하는 첫머리 대목을 새로 옮겼다.",
+      "modern_gloss": "한 번에 위층에 오르는 사람은 없다. 지금 디딜 계단은 늘 바로 다음 한 칸이다.",
+      "retrieval_text": "남들은 벌써 저만치 가 있는데 나만 제자리인 것 같다. 뭘 해도 늦은 것 같아 시작이 안 되는 상황",
+      "tags_primary": [
+        "comparison",
+        "apathy"
+      ],
+      "themes": [
+        "조급함",
+        "비교",
+        "순서",
+        "시작"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "지금 디딜 자리는 늘 바로 다음 한 칸이다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "차례로 익힌다는 가르침이 이 경의 주제인 것은 맞지만, 계단 비유가 첫머리 산문 어디에 놓였는지 대목 표기는 원문 확인이 필요하다"
+    },
+    {
+      "id": "dn.31.friends",
+      "citation_ko": "디가 니까야 31 시갈라를 가르친 경, 벗을 가려보는 대목",
+      "ref": "dn31",
+      "ko_text": "가져가기만 하는 사람, 말만 앞세우는 사람, 듣기 좋은 말만 하는 사람, 함께 망가지는 자리로 데려가는 사람은 벗의 얼굴을 했을 뿐 벗이 아니다. 힘이 되어 주는 사람, 즐거울 때나 괴로울 때나 한결같은 사람, 이로운 것을 일러 주는 사람, 나를 아껴 주는 사람이 참된 벗이다.",
+      "base_note": "Sujato 영역의 네 가지 거짓 벗과 네 가지 참된 벗 대목을 새로 옮겼다. 각 항목에 붙은 설명 구절은 줄이고 이름만 남겼다.",
+      "modern_gloss": "오래 알았다고 다 가까운 사이는 아니다. 무엇을 주고받고 있는지로 보면 금방 갈린다.",
+      "retrieval_text": "이 사람과 계속 가까이 지내야 할지 모르겠다. 만나고 오면 늘 기운이 빠지는 관계를 어떻게 할지 고민인 상황",
+      "tags_primary": [
+        "relationship"
+      ],
+      "themes": [
+        "친구",
+        "관계",
+        "가려봄",
+        "거리"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "듣기 좋은 말만 하는 사람은 아직 벗이 아니다",
+      "terms": [],
+      "cautions": [
+        "사람을 단정해 잘라 내는 근거로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.31.wealth",
+      "citation_ko": "디가 니까야 31 시갈라를 가르친 경, 재산을 네 몫으로 나누는 대목",
+      "ref": "dn31",
+      "ko_text": "모은 재산은 네 몫으로 나눈다. 한 몫으로 살림을 하고, 두 몫으로 하는 일을 이어 가고, 남은 한 몫은 어려운 때를 위해 둔다.",
+      "base_note": "Sujato 영역 'One portion is to enjoy; two to invest in work; and the fourth should be kept for times of trouble.' 게송을 새로 옮겼다.",
+      "modern_gloss": "다 쓰지도 다 쌓지도 않는다. 오늘 쓰는 몫과 내일 버티는 몫을 미리 갈라 둔다.",
+      "retrieval_text": "돈이 모이지 않고 매달 그냥 사라진다. 벌이는 있는데 어디에 얼마를 둬야 할지 모르겠는 상황",
+      "tags_primary": [
+        "money"
+      ],
+      "themes": [
+        "돈",
+        "살림",
+        "대비",
+        "균형"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "오늘 쓸 몫과 어려울 때 쓸 몫을 미리 갈라 둔다",
+      "terms": [],
+      "cautions": [
+        "오늘날의 투자 조언이나 재무 상담으로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.31.idle",
+      "citation_ko": "디가 니까야 31 시갈라를 가르친 경, 게으름이 대는 여섯 가지 핑계 대목",
+      "ref": "dn31",
+      "ko_text": "너무 춥다 하며 일하지 않고, 너무 덥다 하며 일하지 않는다. 너무 늦었다, 너무 이르다, 너무 배고프다, 너무 배부르다 하며 일하지 않는다. 그렇게 할 일을 미루는 사이 아직 얻지 못한 것은 얻지 못하고, 있던 것은 사라진다.",
+      "base_note": "Sujato 영역의 게으름에 따르는 여섯 가지 허물 대목을 새로 옮겼다.",
+      "modern_gloss": "조건이 맞는 날은 좀처럼 오지 않는다. 오늘 하기 어려운 이유는 늘 하나쯤 있다.",
+      "retrieval_text": "해야 할 일을 자꾸 다음으로 미루고 있다. 지금은 컨디션이 아니라며 하루를 흘려보내는 상황",
+      "tags_primary": [
+        "apathy",
+        "money"
+      ],
+      "themes": [
+        "미룸",
+        "핑계",
+        "무기력",
+        "일"
+      ],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "오늘 하기 어려운 이유는 늘 하나쯤 있다",
+      "terms": [],
+      "cautions": [
+        "번아웃이나 우울로 움직이지 못하는 사람에게는 게으름을 탓하는 말로 읽힐 수 있다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.16.island",
+      "citation_ko": "디가 니까야 16 대반열반경, 스스로를 섬으로 삼으라는 대목",
+      "ref": "dn16",
+      "ko_text": "스스로를 섬으로 삼고 스스로를 의지처로 삼아라. 다른 것을 의지처로 삼지 말라. 가르침을 섬으로 삼고 가르침을 의지처로 삼아라.",
+      "base_note": "Sujato 영역 'be your own island, your own refuge' 대목을 새로 옮겼다. 팔리 dīpa 는 섬으로도 등불로도 읽혀, 한역 계열 번역에는 등불로 옮긴 판본이 있다.",
+      "modern_gloss": "기대던 사람이 사라져도 내가 설 자리는 남는다. 물이 차올라도 잠기지 않는 자리를 자기 안에 둔다.",
+      "retrieval_text": "믿고 기대던 사람이 떠나서 앞으로 무엇을 붙들어야 할지 모르겠다. 혼자 남은 것 같아 막막한 상황",
+      "tags_primary": [
+        "loss",
+        "uncertainty"
+      ],
+      "themes": [
+        "의지처",
+        "홀로서기",
+        "상실",
+        "중심"
+      ],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "기댈 곳이 사라져도 설 자리는 내 안에 남는다",
+      "terms": [
+        {
+          "word": "의지처",
+          "gloss": "힘들 때 돌아가 기대는 자리를 말해요"
+        }
+      ],
+      "cautions": [
+        "도움을 청하지 말고 혼자 버티라는 뜻으로 읽히지 않게 한다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "dn.16.ananda",
+      "citation_ko": "디가 니까야 16 대반열반경, 슬퍼하는 아난다에게 건넨 대목",
+      "ref": "dn16",
+      "ko_text": "아난다야, 슬퍼하지 말고 울지 말아라. 사랑하고 아끼는 모든 것과는 헤어지고 달라지기 마련이라고 내가 늘 말하지 않았더냐. 태어난 것, 이루어진 것은 무너지기 마련이다.",
+      "base_note": "Sujato 영역 'Enough, Ānanda! Do not grieve, do not lament…' 대목을 새로 옮겼다.",
+      "modern_gloss": "헤어짐이 온 것이 내가 무엇을 잘못해서는 아니다. 사랑한 만큼 아픈 것이 이별의 모양이다.",
+      "retrieval_text": "가까운 사람과 헤어지거나 떠나보내고 마음이 무너졌다. 이 슬픔이 언제 끝날지 모르겠는 상황",
+      "tags_primary": [
+        "loss"
+      ],
+      "themes": [
+        "이별",
+        "상실",
+        "슬픔",
+        "받아들임"
+      ],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [],
+      "cautions": [
+        "막 상실을 겪은 사람에게는 슬퍼하지 말라는 지시로 먼저 닿을 수 있다. 위로가 앞선 뒤에 쓴다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    }
+  ]
+}

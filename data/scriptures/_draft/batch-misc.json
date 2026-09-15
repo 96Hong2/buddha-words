@@ -1,0 +1,205 @@
+{
+  "batch": "misc",
+  "source_note": "우다나 5구절, 이띠웃따까 2구절, 테라가타 2구절, 테리가타 1구절을 골랐다. 우다나 8장의 열반 게송(8.1~8.4)은 교리 서술이라 실제 고민에 닿지 않아 빼고, 8장에서는 손녀를 잃은 위사카 대목(8.8)을 골랐다. 키사고타미(테리가타 10장 1경)는 지시대로 검토했으나 겨자씨 이야기는 정경 게송이 아니라 법구경 주석에 있고, 정경 게송 본문에는 자해를 언급하는 대목이 있어 뺐다. 같은 계열인 자식 잃은 어머니 대목으로 웁비리(테리가타 3장 5경)를 넣었다. 번역은 SuttaCentral 의 Bhikkhu Sujato 영역본(CC0)을 기준으로 새로 옮겼고 기존 한글 번역본은 보지 않았다.",
+  "items": [
+    {
+      "id": "ud.6.4",
+      "citation_ko": "우다나 6장 4경 여러 외도들 첫째 경, 앞 못 보는 이들과 코끼리 대목과 맺음 게송",
+      "ref": "ud6.4",
+      "ko_text": "왕이 태어날 때부터 앞을 못 보는 이들을 불러 코끼리를 만지게 했다. 머리를 만진 이는 항아리 같다 하고, 귀를 만진 이는 키 같다 하고, 다리를 만진 이는 기둥 같다 했다. 저마다 제가 만진 것만 코끼리라 하며 서로 주먹질을 했다. 한쪽만 본 사람들은 저렇게 제 말을 붙들고 다툰다.",
+      "base_note": "Sujato 영역의 산문 대목을 줄이고 맺음 게송 'people who see just one side of things dispute and quarrel' 을 마지막 문장에 붙였다. 장님이라는 말 대신 앞을 못 보는 이로 옮겼다.",
+      "modern_gloss": "누가 옳은지 가리기 전에, 내가 만진 자리가 코끼리의 어디쯤인지부터 본다. 상대도 같은 코끼리를 만지는 중이다.",
+      "retrieval_text": "사람마다 조언이 달라서 누구 말이 맞는지 모르겠을 때. 서로 자기 말만 옳다고 해서 대화가 막힐 때. 팀이나 가족 안에서 의견이 갈려 결정을 못 내릴 때",
+      "tags_primary": ["indecision", "relationship"],
+      "themes": ["관점", "다툼", "고집", "조언"],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "다들 코끼리의 한 곳씩만 만지고는 제가 옳다고 한다",
+      "terms": [
+        { "word": "외도", "gloss": "부처와 다른 가르침을 따르던 수행자들을 부르던 말이에요" }
+      ],
+      "cautions": ["옳고 그름이 분명한 일까지 다 각자 옳다는 식으로 뭉개는 근거로 쓰일 수 있다"],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.8.8",
+      "citation_ko": "우다나 8장 8경 위사카, 손녀를 잃은 위사카에게 한 게송",
+      "ref": "ud8.8",
+      "ko_text": "세상의 온갖 슬픔과 울음과 괴로움은 아끼는 것이 있어서 생긴다. 아끼는 것이 없으면 그것들도 없다. 그러니 세상 어디에도 아끼는 것을 두지 않은 이라야 슬픔이 없고 걱정이 없다.",
+      "base_note": "Sujato 영역: 'All the sorrows and lamentations and the countless forms of suffering in the world occur because of those that we love; without loved ones they do not occur.' piya 를 사랑하는 이보다 넓은 아끼는 것으로 옮겼다.",
+      "modern_gloss": "슬픔의 크기는 그 사람을 얼마나 아꼈는지의 크기다. 지금 많이 아프다면 그만큼 크게 아꼈다는 뜻이다.",
+      "retrieval_text": "아끼던 사람을 잃고 슬픔이 가라앉지 않을 때. 헤어진 뒤 왜 이렇게까지 아픈지 스스로 이해가 안 될 때. 시간이 지나도 나아지지 않는다고 느낄 때",
+      "tags_primary": ["loss"],
+      "themes": ["상실", "슬픔", "애착", "이별"],
+      "difficulty": "normal",
+      "daily_ok": false,
+      "terms": [
+        { "word": "위사카", "gloss": "부처 당시 사왓티에 살던 이름난 여성 후원자예요" }
+      ],
+      "cautions": [
+        "사랑하지 말라는 말로 읽힐 수 있다",
+        "막 사별한 사람에게 그대로 내보내면 차갑게 들린다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.5.1",
+      "citation_ko": "우다나 5장 1경, 빠세나디 왕과 말리까 왕비 대목의 게송",
+      "ref": "ud5.1",
+      "ko_text": "마음으로 온 사방을 다 돌아보아도 자기보다 더 아끼는 것은 어디에도 없었다. 남들도 저마다 자기를 그렇게 아낀다. 그러니 자기를 아끼는 사람은 남을 해치지 않는다.",
+      "base_note": "Sujato 영역: 'Having explored every quarter with the mind, one finds none dearer than oneself. So since others each hold themselves dear, one who loves themselves would harm no other.' 같은 게송이 상윳따 3권 8경에도 나온다.",
+      "modern_gloss": "나를 먼저 챙기는 건 부끄러운 일이 아니다. 다만 남도 똑같이 자기를 챙기는 중이라는 걸 같이 본다.",
+      "retrieval_text": "남 눈치를 보다가 나를 계속 뒤로 미룰 때. 나만 이기적인가 싶어 스스로를 탓할 때. 남과 비교하다 내가 작아 보일 때",
+      "tags_primary": ["comparison"],
+      "themes": ["자기애", "자존감", "배려", "경계"],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "온 사방을 다 돌아보아도 나보다 아끼는 것은 없었다",
+      "terms": [
+        { "word": "빠세나디", "gloss": "부처 당시 꼬살라라는 나라의 왕이에요" }
+      ],
+      "cautions": ["자기중심으로 살아도 된다는 말로 읽힐 수 있다"],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "ud.4.1",
+      "citation_ko": "우다나 4장 1경 메기야, 맺음 게송",
+      "ref": "ud4.1",
+      "ko_text": "자잘한 생각과 미세한 생각이 뒤따라 일어나 마음을 들뜨게 한다. 이 마음의 움직임을 알아채지 못하면 생각을 따라 이리저리 끌려다닌다.",
+      "base_note": "Sujato 영역: 'Trivial thoughts, subtle thoughts, following along, lifting up the mind. Not understanding these thoughts of the mind, one runs here and there with wandering mind.'",
+      "modern_gloss": "생각을 없애려 애쓰기 전에, 지금 무슨 생각이 오가는지부터 알아본다. 알아채는 순간 끌려가는 힘이 줄어든다.",
+      "retrieval_text": "잡생각이 꼬리를 물어 잠이 안 오고 마음이 들썩일 때. 별일 아닌 것을 자꾸 곱씹어 불안이 커질 때",
+      "tags_primary": ["anxiety"],
+      "themes": ["잡념", "불안", "알아차림", "마음"],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "알아채지 못한 생각이 나를 끌고 다닌다",
+      "terms": [],
+      "cautions": [],
+      "confidence": "medium",
+      "confidence_note": "우다나 4장 1경이 메기야 경인 것은 확실하다. 다만 이 게송이 그 경의 맺음 게송인지 뒤따르는 별도 게송인지 원문 대조가 필요하다"
+    },
+    {
+      "id": "ud.1.10",
+      "citation_ko": "우다나 1장 10경 바히야, 부처가 바히야에게 준 짧은 가르침",
+      "ref": "ud1.10",
+      "ko_text": "바히야여, 이렇게 익혀라. 볼 때는 본 것만 있게 하고, 들을 때는 들은 것만 있게 하고, 느낄 때는 느낀 것만 있게 하고, 알 때는 안 것만 있게 하라.",
+      "base_note": "Sujato 영역: 'In the seen there will be only the seen; in the heard, only the heard; in the thought, only the thought; in the known, only the known.'",
+      "modern_gloss": "일어난 일과, 그 위에 내가 붙인 해석은 다른 것이다. 붙인 것을 떼어 내면 남는 일은 생각보다 작다.",
+      "retrieval_text": "지나간 말이나 표정을 계속 곱씹으며 의미를 덧붙일 때. 내가 왜 그랬을까 하며 하루를 되감을 때. 후회가 머릿속에서 반복 재생될 때",
+      "tags_primary": ["regret"],
+      "themes": ["곱씹기", "해석", "알아차림", "지금"],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "terms": [
+        { "word": "바히야", "gloss": "이 가르침을 듣고 곧바로 깨달았다고 전해지는 수행자예요" }
+      ],
+      "cautions": ["짧고 압축된 문장이라 맥락 없이 읽으면 무슨 말인지 모를 수 있다"],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "iti.27",
+      "citation_ko": "이띠웃따까 27경 자애를 닦음",
+      "ref": "iti27",
+      "ko_text": "별빛을 다 모아도 달빛의 십육분의 일에 미치지 못한다. 달빛이 그것들을 덮고 홀로 빛난다. 공덕이 되는 일을 다 모아도 자애로 풀린 마음의 십육분의 일에 미치지 못한다. 자애가 그것들을 덮고 홀로 빛난다.",
+      "base_note": "Sujato 영역: 'the radiance of all the stars is not worth a sixteenth part of the moon's radiance ... so too, the heart's release by love outshines them all and shines and glows and radiates.'",
+      "modern_gloss": "잘해 준 일의 목록보다, 상대가 잘되기를 바라는 마음 한 줌이 크다. 미움이 풀리는 자리도 거기다.",
+      "retrieval_text": "화가 가라앉지 않아 되갚아 주고 싶을 때. 미운 사람을 어떻게 대해야 할지 모를 때. 잘해 줬는데 돌아온 게 없어 억울할 때",
+      "tags_primary": ["anger"],
+      "themes": ["자애", "미움", "마음", "공덕"],
+      "difficulty": "normal",
+      "daily_ok": true,
+      "daily_line": "별빛을 다 모아도 달빛 하나를 덮지 못한다",
+      "terms": [
+        { "word": "자애", "gloss": "상대가 잘되기를 바라는 마음이에요" },
+        { "word": "공덕", "gloss": "좋은 결과를 남기는 착한 행동이에요" }
+      ],
+      "cautions": ["화를 무조건 억누르라는 뜻으로 읽힐 수 있다"],
+      "confidence": "medium",
+      "confidence_note": "이띠웃따까 한 모음(Ekakanipāta) 안의 자애 게송인 것은 확실하나 경 번호가 27인지 감수자 대조가 필요하다"
+    },
+    {
+      "id": "iti.17",
+      "citation_ko": "이띠웃따까 17경, 좋은 벗을 밖의 요인 가운데 으뜸으로 꼽은 대목",
+      "ref": "iti17",
+      "ko_text": "밖에서 오는 것 가운데 좋은 벗만큼 큰 도움이 되는 것을 나는 보지 못했다. 좋은 벗을 둔 사람은 해로운 것을 놓고 이로운 것을 키운다.",
+      "base_note": "Sujato 영역: 'I do not see a single external factor so helpful as good friendship. Good friendship helps give up unskillful qualities and develop skillful qualities.'",
+      "modern_gloss": "의지가 모자라서가 아니라 곁에 누가 있느냐가 다르다. 혼자 버티는 것을 그만두는 것도 방법이다.",
+      "retrieval_text": "아무것도 하기 싫고 혼자 버티고 있을 때. 마음 붙일 사람이 없다고 느낄 때. 주변 사람들 때문에 자꾸 무너질 때",
+      "tags_primary": ["apathy", "relationship"],
+      "themes": ["벗", "환경", "회복", "곁"],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "혼자 버티는 힘보다 곁에 누구를 두느냐가 크다",
+      "terms": [],
+      "cautions": ["사람을 가려 사귀라는 말이 관계를 끊는 근거로 쓰일 수 있다"],
+      "confidence": "medium",
+      "confidence_note": "좋은 벗을 밖의 요인 가운데 으뜸으로 꼽는 대목인 것은 확실하다. 다만 이 경의 본래 제목은 좋은 벗이 아니라 배우는 이 둘째 경이라, 화면에 나갈 출처 문구를 감수자가 정해야 한다. 상윳따 45상응에도 비슷한 대목이 있어 어느 쪽을 적을지 함께 본다"
+    },
+    {
+      "id": "thag.1.1",
+      "citation_ko": "테라가타 1장 1경 수부띠 장로",
+      "ref": "thag1.1",
+      "ko_text": "내 오두막은 지붕이 덮여 아늑하고 바람이 들지 않는다. 비여, 내리고 싶으면 내려라. 내 마음은 가라앉아 잘 놓여 있다. 비여, 내려라.",
+      "base_note": "Sujato 영역: 'My hut is roofed and pleasant, sheltered from the wind. So rain, sky, as you please. My mind is serene and released, and I meditate with ardor. So rain, sky!'",
+      "modern_gloss": "가진 것이 늘어야 마음이 놓이는 건 아니다. 오늘 비를 피할 자리가 있는지부터 본다.",
+      "retrieval_text": "통장 잔고와 생활비 걱정으로 마음이 졸아들 때. 남들만큼 못 갖춰서 불안할 때. 더 벌어야만 안심이 될 것 같을 때",
+      "tags_primary": ["money"],
+      "themes": ["만족", "살림", "안심", "지금"],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "지붕이 덮였다. 비여, 내리고 싶으면 내려라",
+      "terms": [],
+      "cautions": [
+        "가난을 그냥 견디라는 말로 읽힐 수 있다",
+        "당장 생계가 위태로운 사람에게는 맞지 않는다"
+      ],
+      "confidence": "high",
+      "confidence_note": ""
+    },
+    {
+      "id": "thig.3.5",
+      "citation_ko": "테리가타 3장 5경 웁비리, 딸을 잃고 숲에서 우는 웁비리에게 한 말",
+      "ref": "thig3.5",
+      "ko_text": "웁비리여, 숲에서 아 지와야 하고 우는구나. 정신을 차려라. 이 화장터 한 곳에서만도 지와라는 이름으로 불태워진 딸이 팔만사천이다. 그 가운데 누구를 두고 우느냐.",
+      "base_note": "Sujato 영역: 'Ubbirī, you wail in the woods, crying \"Oh, Jīvā!\" Come to your senses! In this cemetery alone, eighty-four thousand daughters all named Jīvā have been burned.'",
+      "modern_gloss": "슬픔을 줄이라는 말이 아니다. 같은 자리에서 같은 이름을 부르며 운 사람이 헤아릴 수 없이 많았다는 말이다.",
+      "retrieval_text": "가까운 사람을 떠나보내고 울음이 멈추지 않을 때. 같은 자리를 계속 맴돌 때. 나만 이런 일을 겪는 것 같을 때",
+      "tags_primary": ["loss"],
+      "themes": ["상실", "애도", "슬픔", "어머니"],
+      "difficulty": "deep",
+      "daily_ok": false,
+      "terms": [
+        { "word": "지와", "gloss": "웁비리가 잃은 딸의 이름이에요" }
+      ],
+      "cautions": [
+        "막 상실을 겪은 사람에게는 너만 그런 게 아니라는 말로 들려 차갑게 느껴질 수 있다",
+        "숫자를 들어 슬픔을 비교하는 대목이라 위로가 아니라 훈계로 읽힐 위험이 있다"
+      ],
+      "confidence": "medium",
+      "confidence_note": "웁비리 게송인 것은 분명하나 장과 경 번호가 판본에 따라 다르게 매겨진다. 초안에 적혀 있던 게송 번호는 근거가 확인되지 않아 뺐다. 화면에 나갈 출처 문구를 감수자가 정해야 한다"
+    },
+    {
+      "id": "thag.1.43",
+      "citation_ko": "테라가타 1장 43경 수망갈라 장로",
+      "ref": "thag1.43",
+      "ko_text": "잘 벗어났다. 참 잘 벗어났다. 나를 굽게 하던 세 가지, 낫과 쟁기와 괭이에서 벗어났다. 그것들이 여기 그대로 있다 해도 이제 됐다, 됐다.",
+      "base_note": "Sujato 영역: 'So well freed! So well freed! So very well freed am I from three crooked things: from sickles, from ploughs, and from curved spades.' 농기구 세 가지를 우리 말로 낫, 쟁기, 괭이로 옮겼다.",
+      "modern_gloss": "그 일을 놓고 나서야 그 일이 나를 어떻게 굽혀 놓았는지 보인다. 지금 굽은 자세가 원래 내 모습은 아니다.",
+      "retrieval_text": "지금 하는 일을 계속해야 하나 싶을 때. 그만두고 다른 길로 가도 되나 망설일 때. 오래 버텨 온 자리가 나를 갉아먹는다고 느낄 때",
+      "tags_primary": ["uncertainty"],
+      "themes": ["진로", "전환", "일", "홀가분함"],
+      "difficulty": "easy",
+      "daily_ok": true,
+      "daily_line": "나를 굽게 하던 일에서 벗어나니 그것으로 됐다",
+      "terms": [],
+      "cautions": ["당장 일을 그만두라는 조언으로 읽힐 수 있다"],
+      "confidence": "medium",
+      "confidence_note": "가난한 농부였다가 출가한 수망갈라 장로의 게송인 것은 확실하나 테라가타 1장 안의 경 번호가 판본마다 달라 43인지 대조가 필요하다"
+    }
+  ]
+}
