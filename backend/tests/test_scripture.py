@@ -370,8 +370,8 @@ def test_to_api_stays_inside_the_answer_schema() -> None:
     for s in repo.load_seed():
         assert set(s.to_api()) <= allowed, s.id
 
+    # 한 구절도 스키마를 벗어나지 않는다. 전에는 dhp.54 가 용어 풀이 셋(전단·따가라·말리)으로
+    # 걸려 있었고 그 사실을 이 줄이 붙들고 있었다. 감수본이 셋을 적은 것이 맞다고 보고
+    # Scripture.terms 를 3 으로 넓혔다. 모델이 만드는 LlmPass2.terms 는 2 그대로다
     broken = {s.id for s in repo.load_seed() if list(validator.iter_errors(s.to_api()))}
-    # dhp.54 는 용어 풀이가 셋(전단·따가라·말리)인데 spec 은 둘까지다.
-    # 감수본이 셋을 적어 두었고 spec 은 이 작업의 파일 영역 밖이라 어느 쪽도 손대지 않았다.
-    # 누가 spec 을 넓히거나 용어 하나를 덜어내면 이 줄이 먼저 깨져 결정을 드러낸다.
-    assert broken == {"dhp.54"}
+    assert broken == set()

@@ -42,14 +42,15 @@ const DRAFT_NOTE = '문헌 감수는 아직 받지 않은 구절이에요 · 한
 /**
  * 감수를 통과한 구절로 떨어지도록 맞춰 둔 고민문.
  *
- * 스텁은 글자에서 뽑은 해시로 구절을 고르므로 아무 글이나 쓰면 초안 구절로 떨어진다.
- * 이 글은 육조단경 행유품(`maha.platform.3`)으로 떨어지도록 꼬리 숫자까지 맞춘 것이다.
+ * 스텁은 글자에서 뽑은 해시로 구절을 고르므로 어느 구절로 갈지는 글자가 정한다.
+ * 이 글은 육조단경 행유품(`maha.platform.3`)으로 떨어지도록 골라 둔 것이다.
+ * `speaker-attribution.spec.ts` 의 `PLATFORM_CONCERN` 과 같은 글이고, 그쪽은 저본·원문 표기를 본다.
  * 경전 시드가 바뀌면 이 테스트가 그 자리에서 실패한다. 그때 글을 다시 고른다.
  */
 const APPROVED_CONCERN = [
-  '어느 쪽을 골라야 할지 몇 달째 정하지 못하고 있어요.',
-  '남의 기준을 자꾸 모으다 보니 제 방향을 잃은 것 같아요.',
-  '(156번 고쳐 적어요)',
+  '이 길이 맞는지 몇 달째 정하지 못하고 있어요.',
+  '조언을 들을수록 오히려 더 헷갈리기만 해요.',
+  '정작 제 마음이 어디로 가고 싶은지는 모르겠어요.',
 ].join('\n');
 
 /** 화면에 뜬 경전 문장을 시드에서 되찾는다. 감수 상태의 정본은 시드 하나다 */
@@ -115,8 +116,13 @@ test('길어진 소표기가 카드를 넘치게 하지 않는다', async ({ pag
   expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height + 0.5);
 });
 
-test('공유 링크 첫 화면이 초안 구절에 감수했다고 적지 않는다', async ({ page }) => {
-  await openShareCard(page, DEEP_CONCERN);
+test('공유 링크 첫 화면의 소표기도 구절 상태를 따라간다', async ({ page }) => {
+  // 전에는 초안 구절로 들어가 「아직 받지 않았고」가 뜨는지를 봤다. 전수 감수 뒤 시드에
+  // 초안이 남지 않아 그 갈래는 여기서 잴 수 없다. 대신 통과 구절에 초안 문구가 새지 않는지를
+  // 보고, 문구가 상태를 따라 뒤집히는 것 자체는 백엔드
+  // `test_only_reviewed_scriptures_claim_a_review` 가 감수 도장만 지운 사본으로 잰다
+  const [, item] = await openShareCard(page, DEEP_CONCERN);
+  expect(item.review.status, '전수 감수 뒤에는 미감수 구절이 남지 않아요').toBe('approved');
 
   // 주소는 토큰이 생긴 뒤에 붙는다. 붙기 전에 읽으면 늘 만료 화면으로 간다
   const linkButton = page.getByTestId('share-link');
@@ -126,9 +132,8 @@ test('공유 링크 첫 화면이 초안 구절에 감수했다고 적지 않는
   const landing = page.getByTestId('landing');
   await expect(landing).toBeVisible();
   const note = page.locator('.sh-land__ai');
-  await expect(note).toContainText('문헌 감수를 아직 받지 않았고');
   await expect(note).toContainText('풀이는 AI 가 썼어요');
-  expect((await landing.innerText()).includes('감수했'), '초안 구절에 감수 도장이 찍혔어요').toBe(
+  expect((await landing.innerText()).includes('아직 받지 않았'), '통과 구절에 초안 문구가 붙었어요').toBe(
     false,
   );
 });

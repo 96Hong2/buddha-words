@@ -39,6 +39,7 @@ def seed_file() -> dict:
 
     return json.loads(SEED_JSON.read_text(encoding="utf-8"))
 
+
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_SCRIPT = ROOT / "tools" / "build_scripture_seed.py"
 

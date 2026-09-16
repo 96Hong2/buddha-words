@@ -44,6 +44,7 @@ REVIEWED_MD = DATA / "경전 감수본 (감수후 v2).md"
 DRAFT_DIR = DATA / "_draft"
 OUT = DATA / "seed.json"
 VISUAL_THEME_TS = ROOT / "spec" / "visual-theme.ts"
+ANSWER_SCHEMA = ROOT / "spec" / "answer.schema.json"
 
 # ────────────────────────────────────────────────────────────────────────────
 # id 표기
@@ -596,6 +597,12 @@ def parse_block(block: list[str]) -> dict:
     return parsed
 
 
+def terms_cap() -> int:
+    """용어 풀이를 몇 개까지 싣나. 정본은 spec 이고 여기서 읽어 쓴다."""
+    schema = json.loads(ANSWER_SCHEMA.read_text(encoding="utf-8"))
+    return int(schema["$defs"]["Scripture"]["properties"]["terms"]["maxItems"])
+
+
 def review_status(mark: str) -> tuple[str, bool]:
     """감수 줄의 체크 상자를 읽는다. ☒ 가 찍힌 칸이 판정이다.
 
@@ -935,13 +942,15 @@ def main() -> int:
     if short:
         print(f"참고: retrieval_text 가 {PLANNED_RETRIEVAL_LEN}자 미만인 구절 {short}개")
 
-    # spec/answer.schema.json 의 Scripture.terms 는 maxItems 2 다. 감수본이 셋을 적어 둔
-    # 구절이 있으면 그대로 내보내는 순간 답변 계약을 깬다. spec 은 이 스크립트가 고칠 자리가
-    # 아니므로 지우지 않고 이름을 대어 알린다
-    over = [it["id"] for it in seed["items"] if len(it.get("terms", [])) > 2]
+    # 상한을 여기 적지 않고 spec 에서 읽는다. 두 곳에 적으면 한쪽만 고쳐져 어긋난다.
+    # 넘치면 경고가 아니라 게이트다. 그대로 내보내는 순간 답변 계약을 깨기 때문이다
+    cap = terms_cap()
+    over = [it["id"] for it in seed["items"] if len(it.get("terms", [])) > cap]
     if over:
-        print(f"경고: 용어 풀이가 3개 이상인 구절 {len(over)}개 ({', '.join(over)}). "
-              "spec 의 Scripture.terms 는 2개까지라 한쪽을 정해야 합니다")
+        errors.append(
+            f"용어 풀이가 {cap}개를 넘는 구절 {len(over)}개 ({', '.join(over)}). "
+            f"spec 의 Scripture.terms 는 {cap}개까지예요"
+        )
 
     if errors:
         print("\n게이트 위반이라 쓰지 않았어요:", file=sys.stderr)

@@ -67,9 +67,7 @@ def test_the_development_pool_is_checked_for_everything_but_the_review_stamp() -
     gate.check_quotable(pool, "개발 후보 풀", require_review=False)
     gate.check_quotable(pool, "개발 후보 풀")
 
-    drafts = tuple(
-        replace(s, review=replace(s.review, status="needs_review")) for s in pool[:3]
-    )
+    drafts = tuple(replace(s, review=replace(s.review, status="needs_review")) for s in pool[:3])
     # 도장을 뺀 것 말고는 그대로다. 다른 칸은 여전히 지난다
     gate.check_quotable(drafts, "감수 도장만 지운 사본", require_review=False)
     with pytest.raises(gate.GateError, match="감수"):
