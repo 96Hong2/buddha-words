@@ -165,7 +165,7 @@ PRD 2절(고민 유형)과 15절(부처 이미지 6종)을 합쳐 10종으로 �
 | `retrieval_text` | 검색 전용 합성 문단(3-3절). 화면에 안 나간다 | 어휘 점수 · 임베딩 |
 | `themes` | 열 종(`anxiety` 110 · `choice` 79 · `relationship` 72 · `comparison` 67 · `sleepless` 67 · `emptiness` 65 · `anger` 43 · `loss` 40 · `attachment` 37 · `approval` 20) | 후보 필터 |
 | `daily_ok` · `daily_line` | 홈 「오늘의 한마디」 재료. 시드에 315구절이 있고 전부 `daily_line` 을 들고 있다 | `repo.daily()` |
-| `terms` | 불교 용어 풀이 0~2개. 129구절이 들고 있다 | O2 시트 |
+| `terms` | 불교 용어 풀이 0~3개. 127구절이 들고 있다. 3 은 `dhp.54`(전단·따가라·말리) 하나뿐이고, 모델이 만드는 `LlmPass2.terms` 는 2 그대로다 | O2 시트 |
 | `license_status` | 판본 라이선스를 아직 확인 못 한 구절에 `needs_check`. 45구절 | `to_api()` 가 안내 문장을 함께 보낸다 |
 
 **원안에 있었는데 안 들어온 것**: `ref.sc_uid` · `ref.segments` · `source.base_commit`(원본 대조 경로) · `tags.primary` · `tags.secondary`(테마 하나로 합쳤다) · `difficulty` · `cautions` · `excluded_for` · `status` · `version`. 이 중 `excluded_for`(코드가 막는 제외 조건)는 **구절 쪽 칸이 아니라 규칙 쪽 코드**로 갔다. 어느 구절을 어느 상태에서 뺄지를 `domains/scripture/safety.py` 가 구절 이름과 근거 주석으로 들고 있다(5-2-1 · 5-2-4 표). 데이터에 칸을 두면 399구절을 하나씩 채워야 하는데 규칙은 결로 묶이는 편이 낫다는 것이 실측에서 나왔다. 한 구절을 막으면 같은 결의 다음 구절이 그 자리에 온다(5-2-4 `KARMA_BURNS`).

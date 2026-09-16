@@ -14,14 +14,14 @@ import { shot } from '../support/shots';
  *
  * 칩은 뜻풀이 본문 안에 그 낱말이 그대로 나와야 붙는다. 어떤 구절이 뽑히는지는 글자에서
  * 나온 해시가 정하므로 아무 글이나 쓰면 칩이 없는 구절로 간다. 이 글은 「인색」이 뜻풀이에
- * 들어 있는 구절(이띠웃따까 26경)로 떨어지도록 골라 둔 것이다.
+ * 들어 있는 구절(이띠웃따까 26경)로 떨어지도록 골라 둔 것이다. 395구절 가운데 칩이 붙을 수
+ * 있는 것은 일곱뿐이라 글자 하나만 달라져도 빗나간다.
  * 경전 시드가 바뀌면 이 테스트가 그 자리에서 실패한다. 그때 글을 다시 고른다.
  */
 const TERM_CONCERN = [
   '요즘 계속 불안해요. 사소한 일에도 가슴이 두근거려요.',
-  '앞으로 어떻게 될지 걱정이 멈추질 않아서 밤에도 생각이 꼬리를 물어요.',
+  '어떻게 될지 몰라 걱정이 밤까지 이어져요.',
   '이대로 괜찮은 건지 무섭기도 하고, 누구한테 말하기도 어려워요.',
-  '(27번 고쳐 적어요)',
 ].join('\n');
 
 test('보통 길이 답변은 깊은 답변보다 짧게, 그러나 빠진 자리 없이 온다', async ({ page }) => {
@@ -96,6 +96,43 @@ test('뜻풀이에 나온 낱말을 누르면 그 자리에서 뜻이 열린다'
 
   await sheet.getByTestId('sheet-close').click();
   await expect(sheet).toBeHidden();
+});
+
+test('한 글자 용어가 남의 낱말 첫 글자를 잘라 가지 않는다', async ({ page, stub }) => {
+  // 시드에 한 글자 용어가 여덟 개 있다(업·소·문·섬·복·매·징). 낱말 경계를 안 보면
+  // 「소중한」의 「소」에 밑줄이 쳐지고, 누르면 십우도의 소 풀이가 뜬다.
+  // 실서버에서 풀이를 쓰는 것은 모델이라 어떤 문장이 올지 스텁이 흉내 낼 수 없어 주입한다
+  // 이 풀이에 홀로 선 「소」는 없다. 「소중한」·「소식」의 첫 글자뿐이라 칩이 하나도 안 붙어야 한다
+  await stub({
+    glossOverride: {
+      explanation: '소중한 것을 찾는 중이에요. 좋은 소식이 없어도 헤매는 시간은 길의 일부예요.',
+      terms: [{ word: '소', gloss: '십우도에서 찾는 대상이에요. 본래 마음을 소에 빗댔어요' }],
+    },
+  });
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = page.getByTestId('scripture-card');
+  await expect(card).toContainText('소중한 것을 찾는 중이에요');
+  await expect(
+    page.getByTestId('term-chip'),
+    '「소중한」의 첫 글자에 용어 밑줄이 쳐졌어요',
+  ).toHaveCount(0);
+});
+
+test('낱말 첫머리에 홀로 선 용어에는 그대로 칩이 붙는다', async ({ page, stub }) => {
+  // 위 검사만 두면 칩을 통째로 없애도 통과한다. 붙어야 하는 자리를 함께 본다
+  await stub({
+    glossOverride: {
+      explanation: '소 를 찾는 이야기예요. 소중한 것을 잃었다는 뜻은 아니에요.',
+      terms: [{ word: '소', gloss: '십우도에서 찾는 대상이에요. 본래 마음을 소에 빗댔어요' }],
+    },
+  });
+  await page.goto('/');
+  await askOnce(page);
+
+  await expect(page.getByTestId('term-chip')).toHaveCount(1);
+  await expect(page.getByTestId('term-chip').first()).toHaveText('소');
 });
 
 test('마지막 한마디까지 읽으면 하단 바가 올라온다', async ({ page }) => {

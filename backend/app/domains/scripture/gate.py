@@ -104,7 +104,7 @@ def check_context_vocabulary() -> None:
 def check_every_flag_bites(pool: Iterable[Scripture]) -> None:
     """깃발마다 실제로 빠지는 구절이 있는지. 시드 전체를 놓고 잰다.
 
-    **후보 풀이 아니라 시드 399구절로 잰다.** 운영 후보 16구절에서는 bereavement · minor ·
+    **후보 풀이 아니라 시드 395구절 전체로 잰다.** 운영 후보가 16구절이던 때는 bereavement · minor ·
     self_harm 이 아무 구절도 빼지 않는데, 그건 규칙이 죽어서가 아니라 그 결의 구절이 아직
     감수를 통과하지 않아서다. 풀로 재면 규칙을 고쳐야 할 자리와 감수가 덜 된 자리가 섞인다.
     """
@@ -197,6 +197,6 @@ def startup_check() -> None:
     # 감수 상태는 draft 판에서만 눈감아 준다. 출처·화자·합성글 검사는 어느 판에서도 돈다
     check_quotable(pool, "경전 후보 풀", require_review=mode != "draft")
     check_context_vocabulary()
-    # 안전 규칙은 풀 모드와 상관없이 시드 399구절로 잰다. 미감수라고 검사를 건너뛰지 않는다
+    # 안전 규칙은 풀 모드와 상관없이 시드 395구절로 잰다. 감수 통과가 검사를 면제하지 않는다
     check_every_flag_bites(seed)
     check_safety_leaves_candidates(pool)

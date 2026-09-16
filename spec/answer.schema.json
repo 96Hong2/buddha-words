@@ -133,8 +133,9 @@
           "type": "string"
         },
         "terms": {
+          "description": "감수가 붙인 고정 풀이. 한 게송이 낯선 외래 이름을 셋까지 나열하는 일이 있어 3 이다(전단·따가라·말리). 모델이 만드는 LlmPass2.terms 는 2 그대로 둔다",
           "type": "array",
-          "maxItems": 2,
+          "maxItems": 3,
           "items": {
             "type": "object",
             "required": [

@@ -451,12 +451,17 @@ def test_candidate_pool_is_cut_and_moves_with_the_concern() -> None:
 def test_candidate_pool_is_the_reviewed_pool_in_production(
     approved_pool: tuple[repo.Scripture, ...],
 ) -> None:
-    """운영 판에서는 후보가 감수 통과분뿐이다. 상한보다 적어도 그대로 넘긴다."""
-    assert len(approved_pool) < repo.MAX_CANDIDATES
+    """운영 판에서는 후보가 감수 통과분뿐이다.
+
+    v1 때는 감수 통과가 16구절이라 풀이 상한(20)보다 작았고, 이 테스트는 「적어도 그대로
+    넘긴다」를 쟀다. v2 전수 감수 뒤에는 395구절이라 상한에서 잘린다. 자르는 쪽이
+    제대로 도는지가 이제 볼 자리다.
+    """
+    assert len(approved_pool) > repo.MAX_CANDIDATES
     pool = compose.candidate_pool("삼 년 만난 사람과 헤어졌어요. 밤마다 그 사람이 생각나요.")
     assert pool
     assert all(s.reviewed for s in pool)
-    assert len(pool) <= repo.MAX_CANDIDATES
+    assert len(pool) == repo.MAX_CANDIDATES
 
 
 def test_candidate_payload_carries_the_retrieval_text() -> None:

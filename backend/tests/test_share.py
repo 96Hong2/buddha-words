@@ -355,14 +355,23 @@ def _card_for(scripture: Any) -> ShareCardData:
 
 
 def test_review_status_comes_from_the_seed_when_nobody_says() -> None:
-    """감수 여부를 안 넘겨 준 카드는 시드에서 그 구절을 찾아 상태를 읽는다."""
+    """감수 여부를 안 넘겨 준 카드는 시드에서 그 구절을 찾아 상태를 읽는다.
+
+    v2 전수 감수 뒤 시드에는 미감수 구절이 없다. 그래서 반대쪽은 **찾아보는 목록 자체를
+    비워** 잰다. 도장이 카드가 아니라 시드 조회에서 나온다는 것을 그대로 보여 준다.
+    """
     from app.domains.scripture import repo
 
     approved = next(s for s in repo.load_seed() if s.reviewed)
-    draft = next(s for s in repo.load_seed() if not s.reviewed)
+    card = _card_for(approved)
+    assert card_mod.is_reviewed(card) is True
 
-    assert card_mod.is_reviewed(_card_for(approved)) is True
-    assert card_mod.is_reviewed(_card_for(draft)) is False
+    real = card_mod._approved_texts
+    card_mod._approved_texts = frozenset  # type: ignore[assignment]
+    try:
+        assert card_mod.is_reviewed(card) is False
+    finally:
+        card_mod._approved_texts = real  # type: ignore[assignment]
 
 
 def test_an_unknown_scripture_does_not_get_the_stamp() -> None:
@@ -385,7 +394,9 @@ def test_the_real_share_card_follows_the_seed(
     scripture = repo.by_id(row.scripture_ids[0])
     assert scripture is not None
     if mode == "draft":
-        assert not scripture.reviewed, "초안 풀인데 감수 구절이 떨어졌어요. 시험이 성립 안 해요"
+        # v1 때는 초안 풀에서 미감수 구절이 떨어졌다. v2 전수 감수 뒤에는 두 풀이 같아서
+        # 어느 쪽을 골라도 감수 통과분이 온다. 초안 풀 스위치 자체는 그대로 살아 있다
+        assert scripture.reviewed
 
     data = store.card_from_row(row, scripture)
     assert card_mod.is_reviewed(data) is scripture.reviewed

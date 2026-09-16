@@ -54,6 +54,33 @@ function BookIcon() {
 }
 
 /**
+ * 조사의 첫 글자들. 용어 뒤에 이것이 오면 낱말이 거기서 끝난 것으로 본다.
+ * 형태소 분석기를 넣지 않고 이만큼만 본다. 밑줄 하나 때문에 번들에 사전을 실을 일은 아니다.
+ */
+const PARTICLE_HEAD = '은는이가을를의에와과도로만큼처럼부터까지보다밖뿐마저조차라란이란야여요';
+
+/**
+ * 그 자리에 용어 밑줄을 쳐도 되나.
+ *
+ * **앞쪽**은 길이와 무관하게 본다. 앞 글자가 한글이면 그 자리는 남의 낱말 한가운데다.
+ *
+ * **뒤쪽은 한 글자 용어일 때만** 본다. 한국어는 조사가 뒤에 붙어서(「업을」·「업이」)
+ * 뒤를 무조건 막으면 제 낱말도 놓친다. 그런데 한 글자는 남의 낱말 첫 글자와 너무 쉽게
+ * 겹친다. 그래서 한 글자에 한해, 뒤에 한글이 오면 그것이 조사일 때만 통과시킨다.
+ * 두 글자 이상은 뒤를 보지 않는다. 「인색하게」의 「인색」까지 놓치기 때문이다.
+ *
+ * 이게 없으면 「소중한」의 「소」에 밑줄이 쳐지고, 누르면 십우도의 소 풀이가 뜬다.
+ * 시드에 한 글자 용어가 여덟 개 있다(업·소·문·섬·복·매·징).
+ */
+function marksWord(text: string, at: number, word: string): boolean {
+  if (at > 0 && /[가-힣]/.test(text[at - 1])) return false;
+  if (word.length > 1) return true;
+  const next = text[at + word.length];
+  if (next === undefined || !/[가-힣]/.test(next)) return true;
+  return PARTICLE_HEAD.includes(next);
+}
+
+/**
  * 풀이 안의 용어를 점선 밑줄 버튼으로 바꾼다.
  * 같은 용어는 처음 나온 자리에서 한 번만 표시한다. 문단마다 반복되면 글이 읽히지 않는다.
  */
@@ -71,7 +98,10 @@ function markTerms(
     let first: { term: Term; at: number } | null = null;
     for (const term of terms) {
       if (used.has(term.word)) continue;
-      const at = rest.indexOf(term.word);
+      let at = rest.indexOf(term.word);
+      while (at >= 0 && !marksWord(rest, at, term.word)) {
+        at = rest.indexOf(term.word, at + 1);
+      }
       if (at < 0) continue;
       if (first == null || at < first.at) first = { term, at };
     }

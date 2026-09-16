@@ -18,28 +18,25 @@ VISUAL_THEME_TS = ROOT / "spec" / "visual-theme.ts"
 SEED_JSON = ROOT / "data" / "scriptures" / "seed.json"
 ANSWER_SCHEMA = ROOT / "spec" / "answer.schema.json"
 
-# 2026-09-15 외부 문헌 감수 v1 이 통과시킨 16구절. 감수본 머리말 표와 같은 목록이다
-APPROVED = {
-    "dhp.58",
+# 2026-09-16 외부 문헌 감수 v2 는 400구절을 전수로 봤다. 통과 331 · 고침 반영 64 · 제외 5.
+# v1 때는 통과한 16구절을 손으로 적었지만 이제는 통과가 395개라 적을 수 없다.
+# 그래서 **빠진 것**을 적고 나머지가 전부 통과라고 잰다. 여기 없는 id 가 하나라도
+# needs_review 로 남으면 아래 카운트 테스트가 잡는다.
+REJECTED = {
     "dhp.75",
-    "dhp.98",
-    "dhp.132",
-    "dhp.155",
-    "dhp.156",
-    "dhp.279",
-    "dhp.282",
-    "sn.1.34",
-    "an.2.33",
-    "thig.12.1",
-    "maha.lotus.4",
-    "maha.platform.3",
-    "zen.zhaozhou.fangxia",
-    "maha.srimala.vows",
-    "kr.wonhyo.hwajaeng",
+    "dhp.219",
+    "snp.3.1.424",
+    "kr.naong.cheongsan",
+    "kr.mangong.oneflower",
 }
 
-# 감수가 화자를 부처로 확정한 구절. 법구경은 전승이라 여기 들어오지 않는다
-DIRECT_BUDDHA = {"sn.1.34", "an.2.33"}
+TOTAL_BLOCKS = 400
+SHIPPING = TOTAL_BLOCKS - len(REJECTED)
+
+# 감수가 화자를 부처로 확정한 구절. 법구경은 전승이라 여기 들어오지 않는다.
+# thig.3.5 는 v2 가 뒤집었다. 테리가타 웁비리 장에 있지만 웁비리의 말이 아니라
+# 딸을 잃고 우는 웁비리에게 부처가 건넨 말이다
+DIRECT_BUDDHA = {"sn.1.34", "an.2.33", "thig.3.5"}
 
 # 실제로 서로 다른 고민 다섯 개. 같은 구절만 나오면 검색이 죽은 것이다
 WORRIES = [
@@ -65,9 +62,10 @@ def seed_file() -> dict:
 def test_seed_has_the_whole_reviewed_file() -> None:
     """감수본 구절 블록 400개가 하나도 빠지지 않았다. 빠진 1구절은 items 밖 비석으로 남는다."""
     seed = seed_file()
-    assert len(seed["items"]) == 399
-    assert len(seed["rejected"]) == 1
-    assert len(repo.load_seed()) == 399
+    assert len(seed["items"]) == SHIPPING
+    assert len(seed["rejected"]) == len(REJECTED)
+    assert len(seed["items"]) + len(seed["rejected"]) == TOTAL_BLOCKS
+    assert len(repo.load_seed()) == SHIPPING
 
 
 def test_every_theme_is_a_spec_visual_theme() -> None:
@@ -117,9 +115,13 @@ def test_word_keys_are_cut_from_the_front_only() -> None:
 def test_review_status_counts_match_the_reviewed_file() -> None:
     pool = repo.load_seed()
     approved = {s.id for s in pool if s.review.status == "approved"}
-    assert approved == APPROVED
-    assert sum(1 for s in pool if s.review.status == "needs_review") == 383
-    assert all(s.review.status in ("approved", "needs_review") for s in pool)
+    assert approved == {s.id for s in pool}
+    assert len(approved) == SHIPPING
+    # v2 는 전수 감수라 미감수가 하나도 남지 않는다
+    assert sum(1 for s in pool if s.review.status == "needs_review") == 0
+    assert approved & REJECTED == set()
+    # 고침을 반영해 통과시킨 구절. 감수본 머리말 표와 같은 수다
+    assert sum(1 for s in pool if s.review.fix_applied) == 64
 
 
 def test_approved_scriptures_carry_who_reviewed_them_and_why() -> None:
@@ -127,7 +129,7 @@ def test_approved_scriptures_carry_who_reviewed_them_and_why() -> None:
         if not s.reviewed:
             continue
         assert s.review.reviewed_by, s.id
-        assert s.review.reviewed_at == "2026-09-15", s.id
+        assert s.review.reviewed_at == "2026-09-16", s.id
         assert s.review.evidence_note.strip(), s.id
 
 
@@ -137,11 +139,15 @@ def test_rejected_scripture_left_the_pool_but_kept_its_tombstone() -> None:
     프론트 스텁도 같은 seed.json 의 items 를 그대로 읽어 아무 구절이나 고르므로,
     items 안에 두면 개발 화면에 빈 카드가 뜬다. 그래서 items 밖 rejected 로 옮겨 둔다.
     """
-    assert repo.by_id("kr.mangong.oneflower") is None
-    assert "kr.mangong.oneflower" not in {s.id for s in repo.load_seed()}
-    tomb = seed_file()["rejected"]
-    assert [t["id"] for t in tomb] == ["kr.mangong.oneflower"]
-    assert "왕유" in tomb[0]["review"]["evidence_note"]
+    for sid in REJECTED:
+        assert repo.by_id(sid) is None, sid
+    assert REJECTED & {s.id for s in repo.load_seed()} == set()
+    tomb = {t["id"]: t for t in seed_file()["rejected"]}
+    assert set(tomb) == REJECTED
+    assert "왕유" in tomb["kr.mangong.oneflower"]["review"]["evidence_note"]
+    # 빼는 이유가 비석에 남아 있어야 같은 id 가 되돌아오지 않는다
+    for sid in REJECTED:
+        assert tomb[sid]["review"]["evidence_note"].strip(), sid
 
 
 def test_review_gate_blocks_prod_when_nothing_is_reviewed() -> None:
@@ -156,7 +162,9 @@ def test_review_gate_blocks_prod_when_nothing_is_reviewed() -> None:
 
 def test_review_gate_keeps_only_approved_in_prod() -> None:
     pool = repo.load_seed()
-    assert {s.id for s in repo.apply_review_gate(pool, "prod")} == APPROVED
+    kept = {s.id for s in repo.apply_review_gate(pool, "prod")}
+    assert kept == {s.id for s in pool}
+    assert len(kept) == SHIPPING
 
 
 def test_candidates_stay_inside_the_theme_and_the_cap() -> None:
@@ -168,20 +176,21 @@ def test_candidates_stay_inside_the_theme_and_the_cap() -> None:
 def test_a_theme_with_no_approved_scripture_still_gives_candidates(
     approved_pool: tuple[repo.Scripture, ...],
 ) -> None:
-    """감수 통과 16구절에는 anger·approval 구절이 아직 없다. 그 테마로 들어와도 빈손이 아니다.
+    """v1 때 비어 있던 자리가 v2 전수 감수로 채워졌다.
+
+    통과 16구절만 쓰던 동안에는 anger·approval 테마에 구절이 하나도 없어서, 화가 난
+    고민에 화를 말하는 구절이 못 붙었다. 전수 감수 뒤에는 spec 의 테마 열 종이 전부
+    후보를 갖는다. 이 테스트가 그 회복을 지킨다.
 
     빈 목록을 돌려주면 그 고민은 경전 없는 답변이 되고 응답 스키마도 깨진다.
-    테마가 비면 풀 전체를 내주고, 고르는 일은 모델이 한다.
-
-    이 빈자리가 운영 후보를 감수분으로 묶어 둔 값을 그대로 보여 준다. 화가 난 고민에
-    화를 말하는 구절이 하나도 없으니, 나가는 것은 남아 있는 아무 구절이다.
     """
     themes_in_pool = {t for s in approved_pool for t in s.themes}
-    assert "anger" not in themes_in_pool
-    assert "approval" not in themes_in_pool
+    for theme in spec_visual_themes():
+        assert theme in themes_in_pool, theme
     picked = repo.candidates("anger", query=WORRIES[0])
     assert picked
     assert all(s.reviewed for s in picked)
+    assert any("anger" in s.themes for s in picked)
 
 
 def test_the_default_pool_in_development_is_the_whole_seed() -> None:
@@ -191,7 +200,7 @@ def test_the_default_pool_in_development_is_the_whole_seed() -> None:
     아니라 닿는 구절이 풀에 없어서였다. 무엇이 달라졌는지는 `repo.retrieval_pool` 머리말에
     실측표로 적어 두었다.
     """
-    assert len(repo.retrieval_pool()) == 399
+    assert len(repo.retrieval_pool()) == SHIPPING
     tops = [repo.candidates("anxiety", query=w)[0].id for w in WORRIES]
     assert len(set(tops)) >= 4, tops
 
@@ -204,7 +213,7 @@ def test_the_approved_switch_puts_development_back_on_the_production_pool(
     16구절만 남으면 서로 다른 고민에 같은 구절이 겹친다. 그 겹침이 운영에서 실제로
     벌어지는 일이고, 배포 날이 아니라 지금 볼 수 있어야 한다.
     """
-    assert {s.id for s in approved_pool} == APPROVED
+    assert {s.id for s in approved_pool} == {s.id for s in repo.load_seed()}
     tops = {repo.candidates("anxiety", query=w)[0].id for w in WORRIES}
     assert 1 < len(tops) <= len(WORRIES), tops
 
@@ -254,12 +263,13 @@ def test_daily_is_same_day_same_scripture_and_only_daily_ok() -> None:
 def test_needs_check_license_is_carried_over() -> None:
     """대승·선·한국 문헌 45구절이 아직 판본 라이선스를 확인받지 못했다.
 
-    초안에서는 50구절이었다. 감수를 통과하며 넷은 「고전 한문 원문을 기준으로 새 번역」으로
-    확인이 끝났고, 하나(kr.mangong.oneflower)는 아예 빠졌다. 조주 문답은 감수본에서 표시가
-    빠졌지만 메모가 디지털 판본 고정을 요구하므로 빌드가 needs_check 를 되살린다.
+    초안에서는 50구절이었다. v1 감수에서 넷이 「고전 한문 원문을 기준으로 새 번역」으로
+    확인이 끝났고, v2 전수 감수에서 kr.mangong.oneflower 와 kr.naong.cheongsan 둘이
+    아예 빠져 44구절이 남았다. 조주 문답은 감수본에서 표시가 빠졌지만 메모가 디지털 판본
+    고정을 요구하므로 빌드가 needs_check 를 되살린다.
     """
     marked = {s.id for s in repo.load_seed() if s.license_status == "needs_check"}
-    assert len(marked) == 45
+    assert len(marked) == 44
     assert "zen.zhaozhou.fangxia" in marked
     assert "maha.platform.3" not in marked
 
@@ -275,8 +285,13 @@ def test_only_a_buddha_speaker_is_marked_as_direct_buddha_speech() -> None:
         assert s.attribution.is_direct_buddha_speech == (s.speaker_kind == "buddha"), s.id
     marked = {s.id for s in pool if s.attribution.is_direct_buddha_speech}
     assert marked == DIRECT_BUDDHA
-    # 감수를 통과했다고 자동으로 붙지 않는다. 통과 16건 중 둘뿐이다
-    assert marked < APPROVED
+    # 감수를 통과했다고 자동으로 붙지 않는다. 395구절이 통과했는데 셋뿐이다.
+    # 그리고 이 셋은 전부 손으로 적은 귀속 표(REVIEWED)에서 나온다. 인용표기나
+    # 문헌 기본값이 화자를 부처로 올리는 길은 없다
+    assert len(marked) == 3
+    for s in pool:
+        if s.attribution.is_direct_buddha_speech:
+            assert s.attribution.speaker_source == "reviewed_table", s.id
 
 
 def test_unreviewed_scriptures_claim_no_speaker() -> None:
@@ -355,8 +370,8 @@ def test_to_api_stays_inside_the_answer_schema() -> None:
     for s in repo.load_seed():
         assert set(s.to_api()) <= allowed, s.id
 
+    # 한 구절도 스키마를 벗어나지 않는다. 전에는 dhp.54 가 용어 풀이 셋(전단·따가라·말리)으로
+    # 걸려 있었고 그 사실을 이 줄이 붙들고 있었다. 감수본이 셋을 적은 것이 맞다고 보고
+    # Scripture.terms 를 3 으로 넓혔다. 모델이 만드는 LlmPass2.terms 는 2 그대로다
     broken = {s.id for s in repo.load_seed() if list(validator.iter_errors(s.to_api()))}
-    # dhp.54 는 용어 풀이가 셋(전단·따가라·말리)인데 spec 은 둘까지다.
-    # 감수본이 셋을 적어 두었고 spec 은 이 작업의 파일 영역 밖이라 어느 쪽도 손대지 않았다.
-    # 누가 spec 을 넓히거나 용어 하나를 덜어내면 이 줄이 먼저 깨져 결정을 드러낸다.
-    assert broken == {"dhp.54"}
+    assert broken == set()

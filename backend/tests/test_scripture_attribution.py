@@ -31,6 +31,15 @@ from app.core.config import Settings
 from app.core.config import _guard as config_guard
 from app.domains.scripture import repo
 
+SEED_JSON = Path(__file__).resolve().parents[2] / "data" / "scriptures" / "seed.json"
+
+
+def seed_file() -> dict:
+    import json
+
+    return json.loads(SEED_JSON.read_text(encoding="utf-8"))
+
+
 ROOT = Path(__file__).resolve().parents[2]
 BUILD_SCRIPT = ROOT / "tools" / "build_scripture_seed.py"
 
@@ -196,18 +205,18 @@ def test_dhp_132_keeps_what_happens_after_death() -> None:
     assert "사후" in s.modern_gloss
 
 
-def test_dhp_75_keeps_the_monk_and_nibbana() -> None:
-    """법구경 75게는 출가 수행자에게 한 말이다. 비구·열반을 지우면 다른 말이 된다.
+def test_dhp_75_left_the_pool_because_it_ends_in_a_call_to_ordain() -> None:
+    """법구경 75게는 v2 전수 감수에서 빠졌다.
 
-    초안은 「이득 ~ 고요함」, 「혼자 있는 시간」 처럼 직장인 조언으로 읽히게 옮겨 두었다.
-    감수가 비구·부처의 제자·열반을 본문에 되살렸다.
+    v1 감수는 초안이 지웠던 비구·부처의 제자·열반을 본문에 되살렸다. 되살리고 나니
+    번역문이 「부처의 제자인 비구는 홀로 머무는 수행을 길러야 한다」는 출가 권유로
+    끝난다. 결론을 지우면 원전 훼손이고 두면 일반 사용자 카드가 출가를 권한다.
+    고쳐서 살릴 수 없다고 보고 제품 데이터에서 내렸다.
     """
-    s = one("dhp.75")
-    assert "비구" in s.text
-    assert "부처의 제자" in s.text
-    assert "열반" in s.text
-    # 열반은 설명 없이 읽히는 낱말이 아니다. 뜻풀이가 함께 나가야 한다
-    assert any("열반" in term["word"] for term in s.terms), s.terms
+    assert repo.by_id("dhp.75") is None
+    tomb = {t["id"]: t for t in seed_file()["rejected"]}
+    assert "dhp.75" in tomb
+    assert "출가" in tomb["dhp.75"]["review"]["evidence_note"]
 
 
 def test_wonhyo_is_the_author_not_the_buddha() -> None:
@@ -276,13 +285,15 @@ def test_only_reviewed_scriptures_become_retrieval_candidates() -> None:
 
 
 def test_the_pools_really_differ_and_drafts_are_shut_out_of_production() -> None:
-    """개발과 운영이 서로 다른 풀로 돈다는 것을 먼저 재고, 초안이 운영에 못 가는 것을 잰다.
+    """초안이 운영에 못 가는 것을 잰다.
 
-    두 풀이 같으면 위 검사는 「막을 것이 없어서」 통과한 것이 된다. 그래서 개발 후보에
-    초안이 실제로 들어 있는지 먼저 확인한다.
+    v1 때는 개발 풀에 미감수 383구절이 섞여 있어 두 풀이 실제로 달랐다. v2 전수 감수
+    뒤에는 남은 395구절이 전부 감수를 통과해 두 풀이 같아졌다. **막는 장치는 그대로
+    살려 둔다.** 앞으로 감수 전 구절이 다시 들어올 때 이 문이 없으면 그대로 운영에 나간다.
     """
-    drafts = [s for s in repo.retrieval_pool() if not s.reviewed]
-    assert drafts, "개발 후보에 초안이 없어요. 막는 검사가 헛돕니다"
+    assert not [s for s in repo.retrieval_pool() if not s.reviewed], (
+        "개발 후보에 미감수 구절이 생겼어요. 전수 감수 뒤에는 없어야 합니다"
+    )
 
     # 운영은 아무것도 고르지 않아도 감수 통과분으로 간다
     with production_pool():
@@ -417,20 +428,29 @@ def test_source_note_never_says_english_for_a_chinese_text() -> None:
 
 
 def test_only_reviewed_scriptures_claim_a_review() -> None:
-    """감수를 통과하지 않은 383구절에 감수했다는 말을 붙이지 않는다."""
-    seen = {True: 0, False: 0}
+    """감수했다는 말은 감수를 통과한 구절에만 붙는다.
+
+    v1 때는 미감수 383구절이 남아 있어 두 갈래를 다 지날 수 있었다. v2 는 전수 감수라
+    미감수가 없다. 그래서 「감수를 통과한 쪽에만 붙는가」를 직접 재고, 반대쪽은
+    감수 상태를 지운 사본을 만들어 확인한다.
+    """
+    from dataclasses import replace
+
+    seen = 0
     for s in repo.load_seed():
         if s.text_type in DERIVED_TEXT_TYPES:
             continue
+        assert s.reviewed, s.id
         note = str(s.to_api()["source"]["note"])  # type: ignore[index]
-        seen[s.reviewed] += 1
-        if s.reviewed:
-            assert "감수에서 출처와 화자를 확인했어요" in note, s.id
-        else:
-            assert "아직 받지 않은" in note, s.id
-            assert "확인했어요" not in note, s.id
-    # 두 갈래가 다 돌았는지 본다. 한쪽만 돌면 검사가 아무것도 못 거른다
-    assert seen[True] > 0 and seen[False] > 0, seen
+        assert "감수에서 출처와 화자를 확인했어요" in note, s.id
+        seen += 1
+        if seen == 1:
+            # 감수 상태만 지우면 문구가 반대로 바뀌는지 본다
+            draft = replace(s, review=replace(s.review, status="needs_review"))
+            draft_note = str(draft.to_api()["source"]["note"])  # type: ignore[index]
+            assert "아직 받지 않은" in draft_note, s.id
+            assert "확인했어요" not in draft_note, s.id
+    assert seen > 0
 
 
 def test_the_original_text_reaches_the_screen_with_its_own_name() -> None:

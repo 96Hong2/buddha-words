@@ -82,7 +82,11 @@ function sourceNote(item: SeedItem): string {
       : language === 'zh'
         ? SOURCE_NOTES.zh
         : SOURCE_NOTES.unknown;
-  const reviewed = item.review?.status === 'approved';
+  // 2026-09-16 전수 감수로 시드 395구절이 전부 approved 가 됐다. 화면에는 감수 도장을
+  // 붙이는 갈래와 안 붙이는 갈래가 둘 다 있는데, 데이터에 초안이 하나도 없어 뒤엣것을
+  // 화면에서 잴 수가 없다. 도장 코드를 무조건 참으로 바꿔도 e2e 열두 건이 전부 통과했다.
+  // 그래서 스텁에 시험용 스위치를 둔다. 켜면 모든 구절이 미감수로 온다.
+  const reviewed = dial().draftScripture === true ? false : item.review?.status === 'approved';
   return `${base} ${reviewed ? SOURCE_NOTES.reviewed : SOURCE_NOTES.unreviewed}`;
 }
 
@@ -176,6 +180,18 @@ export interface StubDial {
   failSend?: 'timeout' | 'offline' | 'budget';
   /** 광고를 띄울 수 없는 기기로 둔다 */
   adUnsupported?: boolean;
+  /**
+   * 경전을 미감수 구절처럼 내준다. 감수 도장이 안 붙는 갈래를 화면에서 보려고 둔 스위치다.
+   * 전수 감수 뒤 시드에 초안이 남지 않아 데이터로는 그 갈래를 만들 수 없다.
+   * 스텁에만 있고 운영 빌드에는 실리지 않는다.
+   */
+  draftScripture?: boolean;
+  /**
+   * 경전 뜻풀이와 용어를 통째로 갈아 끼운다. 실서버에서 풀이를 쓰는 것은 모델이라
+   * 어떤 문장이 올지 스텁이 흉내 낼 수 없다. 용어 칩이 남의 낱말을 자르지 않는지처럼
+   * 문장에 달린 동작을 화면에서 재려고 둔다.
+   */
+  glossOverride?: { explanation: string; terms: { word: string; gloss: string }[] };
 }
 
 declare global {
@@ -300,13 +316,15 @@ export function buildPass2(
   const { theme } = themeOf(text);
   const item = pickByTheme(text, theme);
   const deep = route === 'deep';
+  const override = dial().glossOverride;
   return {
     status: 'done',
     scriptureExplanation:
+      override?.explanation ??
       `${item.modern_gloss} 이 구절은 상황을 바꾸라는 말이 아니라, 상황을 보는 자리를 한 걸음 옮겨 보라는 말이에요. ` +
-      '같은 일을 겪어도 어디에 서서 보느냐에 따라 견딜 수 있는 무게가 달라져요. ' +
-      '지금 하신 고민도 답을 정하기 전에 먼저 자리를 옮겨 볼 수 있는 이야기예요.',
-    terms: item.terms,
+        '같은 일을 겪어도 어디에 서서 보느냐에 따라 견딜 수 있는 무게가 달라져요. ' +
+        '지금 하신 고민도 답을 정하기 전에 먼저 자리를 옮겨 볼 수 있는 이야기예요.',
+    terms: override?.terms ?? item.terms,
     personalAnalysis: analysisFor(theme, deep),
     actions: actionsFor(deep),
     closingMessage: '오늘 하루를 잘 넘긴 것만으로도 충분히 하신 거예요.',

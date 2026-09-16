@@ -2,7 +2,7 @@
  * 화면이 누구의 말이라고 적는가.
  *
  * 앱 이름이 「부처의 말」이라 경전 카드에 뜨는 문장을 전부 부처가 한 말로 읽기 쉽다.
- * 그런데 시드 399구절 가운데 부처의 직접 발언은 둘뿐이다. 나머지는 전승 게송이거나
+ * 그런데 시드 395구절 가운데 부처의 직접 발언은 셋뿐이다. 나머지는 전승 게송이거나
  * 제자·장로니·선사·저자가 한 말이다. 화면이 그 구분을 지우면 앱이 없는 말을 지어낸 것이 된다.
  *
  * 여기서 보는 것은 네 가지다.
@@ -158,9 +158,9 @@ test('원문 시트를 열어도 화자가 부처로 바뀌지 않는다', async
  * 유일한 자리라 이 구절로 못 박는다. 경전 시드가 바뀌면 여기서 먼저 실패한다.
  */
 const PLATFORM_CONCERN = [
-  '어느 쪽을 골라야 할지 몇 달째 정하지 못하고 있어요.',
-  '남의 기준을 자꾸 모으다 보니 제 방향을 잃은 것 같아요.',
-  '(156번 고쳐 적어요)',
+  '이 길이 맞는지 몇 달째 정하지 못하고 있어요.',
+  '조언을 들을수록 오히려 더 헷갈리기만 해요.',
+  '정작 제 마음이 어디로 가고 싶은지는 모르겠어요.',
 ].join('\n');
 
 /** 원문 시트를 열고, 그 안에 뜬 구절을 시드에서 되찾는다 */
@@ -187,18 +187,19 @@ test('한문 문헌에 「영역본을 옮겼다」고 적지 않는다', async 
 });
 
 test('감수를 통과한 구절에만 감수했다고 적는다', async ({ page }) => {
+  // 2026-09-16 전수 감수 뒤 시드 395구절이 전부 approved 다. 미감수 갈래를 시드에서
+  // 끌어올 수 없으므로, 어느 고민으로 들어가도 감수 문구가 붙는지를 대신 잰다.
+  // 「미감수에는 감수했다고 적지 않는다」 쪽은 backend 의 test_only_reviewed_scriptures_claim_a_review
+  // 가 감수 도장만 지운 사본으로 잰다
   const approved = await openOriginSheet(page, PLATFORM_CONCERN);
   expect(approved.item.review.status).toBe('approved');
   await expect(page.getByTestId('scripture-credit')).toContainText('감수에서 출처와 화자를 확인');
 
-  const draft = await openOriginSheet(page, DEEP_CONCERN);
-  expect(draft.item.review.status, '이 고민문이 더는 미감수 구절로 떨어지지 않아요').toBe(
-    'needs_review',
-  );
+  const second = await openOriginSheet(page, DEEP_CONCERN);
+  expect(second.item.review.status, '전수 감수 뒤에는 미감수 구절이 남지 않아요').toBe('approved');
   const credit = page.getByTestId('scripture-credit');
-  await expect(credit).toContainText('팔리 원문');
-  await expect(credit).toContainText('아직 받지 않은');
-  await expect(credit).not.toContainText('확인했어요');
+  await expect(credit).toContainText('감수에서 출처와 화자를 확인');
+  await expect(credit).not.toContainText('아직 받지 않은');
 });
 
 test('데이터에 원문이 있으면 화면에도 원문이 뜬다', async ({ page }) => {

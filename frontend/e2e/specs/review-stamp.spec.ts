@@ -1,13 +1,17 @@
 /**
  * 감수 도장을 아무 구절에나 찍지 않는가.
  *
- * 시드 399구절 가운데 문헌 감수를 통과한 것은 16구절이다. 나머지는 아직 초안인데,
+ * 이 검사가 생길 때는 시드 399구절 가운데 감수를 통과한 것이 16구절뿐이었다. 그런데
  * 공유 카드와 공유 링크 첫 화면은 구절을 가리지 않고 「경전 원문은 사람이 감수했어요」를
  * 적고 있었다. 카드는 앱 밖으로 나가 「부처의 말」 워드마크와 나란히 놓이는 그림이라
  * 한 번 나가면 되돌릴 방법이 없다.
  *
+ * 2026-09-16 전수 감수로 시드 395구절이 전부 통과분이 됐다. 그래도 이 검사는 산다.
+ * 도장이 **구절의 상태를 따라 붙는지**를 재는 자리이고, 앞으로 감수 전 구절이 다시
+ * 들어올 때 이 문이 없으면 그대로 카드에 찍혀 나간다.
+ *
  * 여기서 보는 것은 셋이다.
- *   1. 초안 구절에는 감수했다는 말이 어떤 모양으로도 남지 않는가
+ *   1. 카드의 도장이 그 구절의 review.status 를 그대로 따라가는가
  *   2. 감수를 통과한 구절에는 그대로 감수했다고 적는가
  *   3. 문구가 길어져 카드가 넘치거나 잘리지 않는가
  *
@@ -38,14 +42,15 @@ const DRAFT_NOTE = '문헌 감수는 아직 받지 않은 구절이에요 · 한
 /**
  * 감수를 통과한 구절로 떨어지도록 맞춰 둔 고민문.
  *
- * 스텁은 글자에서 뽑은 해시로 구절을 고르므로 아무 글이나 쓰면 초안 구절로 떨어진다.
- * 이 글은 육조단경 행유품(`maha.platform.3`)으로 떨어지도록 꼬리 숫자까지 맞춘 것이다.
+ * 스텁은 글자에서 뽑은 해시로 구절을 고르므로 어느 구절로 갈지는 글자가 정한다.
+ * 이 글은 육조단경 행유품(`maha.platform.3`)으로 떨어지도록 골라 둔 것이다.
+ * `speaker-attribution.spec.ts` 의 `PLATFORM_CONCERN` 과 같은 글이고, 그쪽은 저본·원문 표기를 본다.
  * 경전 시드가 바뀌면 이 테스트가 그 자리에서 실패한다. 그때 글을 다시 고른다.
  */
 const APPROVED_CONCERN = [
-  '어느 쪽을 골라야 할지 몇 달째 정하지 못하고 있어요.',
-  '남의 기준을 자꾸 모으다 보니 제 방향을 잃은 것 같아요.',
-  '(156번 고쳐 적어요)',
+  '이 길이 맞는지 몇 달째 정하지 못하고 있어요.',
+  '조언을 들을수록 오히려 더 헷갈리기만 해요.',
+  '정작 제 마음이 어디로 가고 싶은지는 모르겠어요.',
 ].join('\n');
 
 /** 화면에 뜬 경전 문장을 시드에서 되찾는다. 감수 상태의 정본은 시드 하나다 */
@@ -68,14 +73,28 @@ async function openShareCard(page: Page, concern: string): Promise<[Locator, See
   return [card, item];
 }
 
-test('초안 구절 카드에는 감수했다고 적지 않는다', async ({ page }) => {
+test('카드의 감수 도장은 구절 상태를 그대로 따라간다', async ({ page }) => {
+  // 전수 감수 뒤 시드에는 미감수 구절이 없다. 그래서 시드에서 초안을 끌어오는 대신,
+  // 카드가 도장을 **구절 상태에서 읽는지**를 본다
   const [card, item] = await openShareCard(page, DEEP_CONCERN);
-  expect(item.review.status, '이 고민문이 더는 초안 구절로 떨어지지 않아요').toBe('needs_review');
+  expect(item.review.status, '전수 감수 뒤에는 미감수 구절이 남지 않아요').toBe('approved');
 
-  const note = card.locator('.sh-card__ai');
-  await expect(note).toHaveText(DRAFT_NOTE);
-  // 「감수했」이 어떤 모양으로도 남으면 안 된다. 카드 전체를 훑는다
-  expect((await card.innerText()).includes('감수했'), '초안 구절에 감수 도장이 찍혔어요').toBe(
+  await expect(card.locator('.sh-card__ai')).toHaveText(REVIEWED_NOTE);
+  // 초안 문구가 통과 구절에 잘못 붙지 않는다
+  expect((await card.innerText()).includes(DRAFT_NOTE)).toBe(false);
+});
+
+test('미감수 구절이 오면 카드가 감수했다고 적지 않는다', async ({ page, stub }) => {
+  // 이 검사가 없으면 도장 코드를 무조건 참으로 바꿔도 이 파일 전체가 통과한다. 실제로 그랬다.
+  // 시드에 초안이 남지 않아 스텁 스위치로 미감수 구절을 만들어 그 갈래를 본다
+  await stub({ draftScripture: true });
+  const [card, item] = await openShareCard(page, DEEP_CONCERN);
+
+  // 시드는 여전히 통과분이다. 바뀐 것은 서버가 내주는 저본 문구뿐이다
+  expect(item.review.status).toBe('approved');
+
+  await expect(card.locator('.sh-card__ai')).toHaveText(DRAFT_NOTE);
+  expect((await card.innerText()).includes(REVIEWED_NOTE), '초안 구절에 감수 도장이 찍혔어요').toBe(
     false,
   );
 });
@@ -112,8 +131,13 @@ test('길어진 소표기가 카드를 넘치게 하지 않는다', async ({ pag
   expect(inner.y + inner.height).toBeLessThanOrEqual(outer.y + outer.height + 0.5);
 });
 
-test('공유 링크 첫 화면이 초안 구절에 감수했다고 적지 않는다', async ({ page }) => {
-  await openShareCard(page, DEEP_CONCERN);
+test('공유 링크 첫 화면의 소표기도 구절 상태를 따라간다', async ({ page }) => {
+  // 전에는 초안 구절로 들어가 「아직 받지 않았고」가 뜨는지를 봤다. 전수 감수 뒤 시드에
+  // 초안이 남지 않아 그 갈래는 여기서 잴 수 없다. 대신 통과 구절에 초안 문구가 새지 않는지를
+  // 보고, 문구가 상태를 따라 뒤집히는 것 자체는 백엔드
+  // `test_only_reviewed_scriptures_claim_a_review` 가 감수 도장만 지운 사본으로 잰다
+  const [, item] = await openShareCard(page, DEEP_CONCERN);
+  expect(item.review.status, '전수 감수 뒤에는 미감수 구절이 남지 않아요').toBe('approved');
 
   // 주소는 토큰이 생긴 뒤에 붙는다. 붙기 전에 읽으면 늘 만료 화면으로 간다
   const linkButton = page.getByTestId('share-link');
@@ -123,8 +147,23 @@ test('공유 링크 첫 화면이 초안 구절에 감수했다고 적지 않는
   const landing = page.getByTestId('landing');
   await expect(landing).toBeVisible();
   const note = page.locator('.sh-land__ai');
-  await expect(note).toContainText('문헌 감수를 아직 받지 않았고');
   await expect(note).toContainText('풀이는 AI 가 썼어요');
+  expect((await landing.innerText()).includes('아직 받지 않았'), '통과 구절에 초안 문구가 붙었어요').toBe(
+    false,
+  );
+});
+
+test('공유 링크 첫 화면도 미감수 구절에는 감수했다고 적지 않는다', async ({ page, stub }) => {
+  await stub({ draftScripture: true });
+  await openShareCard(page, DEEP_CONCERN);
+
+  const linkButton = page.getByTestId('share-link');
+  await expect(linkButton).toHaveAttribute('data-share-url', /\/s\/.+/);
+  await page.goto((await linkButton.getAttribute('data-share-url')) ?? '/s/none');
+
+  const landing = page.getByTestId('landing');
+  await expect(landing).toBeVisible();
+  await expect(page.locator('.sh-land__ai')).toContainText('문헌 감수를 아직 받지 않았고');
   expect((await landing.innerText()).includes('감수했'), '초안 구절에 감수 도장이 찍혔어요').toBe(
     false,
   );
