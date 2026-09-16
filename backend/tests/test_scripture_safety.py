@@ -4,9 +4,11 @@
 LLM 만 stub 이고, stub 은 **후보 1순위를 그대로 고른다.** 그래서 후보에서 빠진 구절은
 어떤 경로로도 화면에 나갈 수 없다.
 
-말뭉치를 왜 399구절로 재나
-    「참아라」 · 「효도」 구절은 대부분 아직 감수를 기다리는 383구절 쪽에 있다. 그런데
-    local·dev 후보 풀이 바로 그 399구절이다. 규칙이 실제로 무엇을 걷어 내는지는 거기서
+말뭉치를 왜 395구절로 재나
+    「참아라」 · 「효도」 구절은 전수 감수를 통과한 395구절 안에 그대로 있다. 통과했다는
+    말은 출처와 화자가 맞다는 뜻이지 어느 고민에나 붙여도 된다는 뜻이 아니다. 그래서
+    안전 규칙이 따로 걷어 내야 하고, local·dev 후보 풀이 바로 그 395구절이다. 규칙이
+    실제로 무엇을 걷어 내는지는 거기서
     재야 한다. 운영과 같은 16구절 판은 `approved_pool` 픽스처로 따로 본다.
 """
 
@@ -44,8 +46,8 @@ ORDINARY_WORRIES = (
     # 「사귀던 사람과 헤어졌어요」가 여기 있었다. 2026-09-16 에 이별 상태를 세우면서
     # 아래 BREAKUP_WORRIES 로 옮겼다. 이별은 깃발이 서지 않는 평범한 고민이 아니다
 )
-# 돈·진로 고민이다. 출가 수행 구절(dhp.75)의 검색 문단과 낱말이 그대로 겹쳐서
-# 규칙이 없으면 1순위가 된다
+# 돈·진로 고민이다. 출가 수행 구절의 검색 문단과 낱말이 겹쳐서 규칙이 없으면 위로 올라온다.
+# v1 때 이 자리의 1순위는 dhp.75 였는데, v2 전수 감수에서 출가 권유 결론부 때문에 빠졌다
 MONEY_WORRY = "연봉은 오르는데 삶이 계속 헛헛해요. 돈만 보고 달려온 것 같아요."
 PRACTICE_WORRY = (
     "명상을 배우고 있는데, 연봉은 오르는데 삶이 계속 헛헛해요. 돈만 보고 달려온 것 같아요."
@@ -67,7 +69,7 @@ def _isolate() -> None:
 def draft_corpus() -> tuple[repo.Scripture, ...]:
     """local·dev 의 실제 후보 풀. 「참아라」 계열 구절이 실제로 있는 말뭉치다."""
     pool = repo.retrieval_pool()
-    assert len(pool) == 399
+    assert len(pool) == 395
     return pool
 
 
@@ -324,7 +326,7 @@ WORRY_FOR = {
     "minor": "고등학생인데 집에 있기가 너무 힘들어요.",
 }
 
-# 후보 풀이 399구절로 넓어지면서 드러난 자리. 규칙이 감수본 16구절만 보고 만들어져서
+# 후보 풀이 395구절로 넓어지면서 드러난 자리. 규칙이 감수본 16구절만 보고 만들어져서
 # 초안 쪽 표현을 못 보고 있었다. 왼쪽이 구절, 오른쪽이 그 구절이 빠져야 하는 상태다
 LEAKED_FROM_DRAFTS = (
     # 「나는 거친 말을 견디겠다」. 검색 문단이 「상사나 동료에게 심한 말을 듣고」다
@@ -550,11 +552,16 @@ def test_a_verse_that_offers_a_way_back_is_not_swept_away(scripture_id: str) -> 
 def test_a_draft_verse_that_used_to_leak_is_excluded_now(
     scripture_id: str, context: str, draft_corpus: tuple[repo.Scripture, ...]
 ) -> None:
-    """미감수 구절도 안전 규칙을 지난다. 감수를 기다린다고 검사를 건너뛰지 않는다."""
+    """감수를 통과한 구절도 안전 규칙을 지난다.
+
+    v1 때 이 표는 「미감수 구절도 검사를 건너뛰지 않는다」를 재는 자리였다. v2 전수 감수
+    뒤에는 여기 적힌 구절이 전부 감수를 통과했다. 그래도 표는 그대로 산다. **감수 통과는
+    출처와 화자가 맞다는 뜻이지 어느 고민에나 붙여도 된다는 뜻이 아니기 때문이다.**
+    사별한 사람에게 죽음을 세는 구절이 가면 안 되는 것은 감수와 상관없는 일이다.
+    """
     found = repo.by_id(scripture_id)
     assert found is not None, scripture_id
     assert found in draft_corpus, f"{scripture_id} 가 후보 풀에 없어요"
-    assert not found.reviewed, f"{scripture_id} 가 감수를 통과했어요. 이 표를 손봐 주세요"
     assert context in safety.excluded_for(found), scripture_id
     # 실제 후보 검색으로도 확인한다. 규칙만 맞고 파이프라인에서 안 빠지면 소용이 없다
     picked = repo.candidates(
@@ -591,22 +598,30 @@ def test_a_monastic_verse_is_not_the_first_pick_for_a_work_worry() -> None:
     first = repo.by_id(picked[0])
     assert first is not None
     assert not safety.monastic(first), picked[:3]
-    # 빼지는 않는다. 목록에는 그대로 있다
-    assert "dhp.75" in picked
-    assert safety.monastic(repo.by_id("dhp.75"))
+    # 빼지는 않는다. 목록에는 그대로 있다.
+    # 어느 구절이 뽑히는지는 풀이 바뀌면 달라지므로 id 를 박지 않고 성질로 잰다
+    assert any(safety.monastic(repo.by_id(sid)) for sid in picked), picked
 
 
 def test_a_practice_worry_keeps_the_monastic_verse_at_the_top() -> None:
-    """수행 이야기에는 출가 문맥이 맞는 말이다. 그 자리에서는 내리지 않는다."""
-    assert ids(PRACTICE_WORRY)[0] == "dhp.75"
+    """수행 이야기에는 출가 문맥이 맞는 말이다. 그 자리에서는 내리지 않는다.
+
+    v1 때는 검색 결과 1순위(dhp.75)로 쟀는데, 그 구절이 v2 에서 빠지고 풀도 395구절로
+    넓어져 어느 구절이 올라올지가 고정되지 않는다. 그래서 규칙 자체를 직접 잰다.
+    """
+    order = ["dhp.98", "dhp.58"]
+    assert safety.monastic(repo.by_id("dhp.98"))
+    assert not safety.monastic(repo.by_id("dhp.58"))
+    # 수행 이야기에서는 내리지 않는다
+    assert safety.demote_monastic(order, PRACTICE_WORRY, repo.by_id) == order
 
 
 def test_demotion_moves_one_slot_and_keeps_the_rest_in_order() -> None:
-    order = ["dhp.75", "dhp.58", "dhp.98", "dhp.132"]
+    order = ["dhp.98", "dhp.58", "dhp.19", "dhp.132"]
     moved = safety.demote_monastic(order, MONEY_WORRY, repo.by_id)
-    assert moved == ["dhp.58", "dhp.75", "dhp.98", "dhp.132"]
+    assert moved == ["dhp.58", "dhp.98", "dhp.19", "dhp.132"]
     # 전부 출가 문맥이면 내릴 자리가 없다. 순서를 그대로 둔다
-    monastic_only = ["dhp.75", "dhp.98"]
+    monastic_only = ["dhp.98", "dhp.19"]
     assert safety.demote_monastic(monastic_only, MONEY_WORRY, repo.by_id) == monastic_only
 
 
@@ -633,8 +648,8 @@ def test_dhp_132_keeps_the_afterlife_meaning_in_the_canonical_text() -> None:
 def test_the_solace_verse_is_never_a_rebuke_or_monastic_advice() -> None:
     """위기 안내를 보고 「그래도 들어주세요」를 누른 자리. 여기서 고르는 한 구절을 잰다.
 
-    규칙을 걸기 전에는 dhp.75(홀로 머무는 수행을 길러라)가 1순위였다. 혼자 있는 사람에게
-    혼자 있으라고 말하는 답이 나가고 있었다.
+    규칙을 걸기 전에는 출가 수행 구절(홀로 머무는 수행을 길러라)이 1순위였다. 혼자 있는
+    사람에게 혼자 있으라고 말하는 답이 나가고 있었다.
     """
     client = TestClient(app)
     headers = {"X-Anon-Key": f"anon-{uuid.uuid4().hex}", "X-Timezone": "Asia/Seoul"}

@@ -54,22 +54,36 @@ def test_startup_check_runs_clean() -> None:
 
 
 def test_the_development_pool_is_checked_for_everything_but_the_review_stamp() -> None:
-    """초안 383구절도 출처·화자·합성글 검사를 지난다."""
+    """전수 감수 뒤 395구절 전부가 출처·화자·합성글 검사를 지난다.
+
+    v1 때는 개발 풀에 미감수 구절이 섞여 있어 감수 도장을 요구하면 막혔다. 지금은 전부
+    통과분이라 도장을 요구해도 지난다. 그래서 **감수 도장만 지운 사본**을 만들어, 그
+    한 칸이 실제로 문을 닫는지 따로 잰다. 안 그러면 이 검사가 헛돌게 된다.
+    """
+    from dataclasses import replace
+
     pool = repo.retrieval_pool()
-    assert any(not s.reviewed for s in pool), "개발 후보에 초안이 없어요"
+    assert all(s.reviewed for s in pool), "전수 감수 뒤에는 미감수 구절이 없어야 해요"
     gate.check_quotable(pool, "개발 후보 풀", require_review=False)
-    # 감수 도장까지 요구하면 같은 풀이 막힌다. 눈감아 준 것이 그 한 칸뿐임을 못 박는다
+    gate.check_quotable(pool, "개발 후보 풀")
+
+    drafts = tuple(
+        replace(s, review=replace(s.review, status="needs_review")) for s in pool[:3]
+    )
+    # 도장을 뺀 것 말고는 그대로다. 다른 칸은 여전히 지난다
+    gate.check_quotable(drafts, "감수 도장만 지운 사본", require_review=False)
     with pytest.raises(gate.GateError, match="감수"):
-        gate.check_quotable(pool, "개발 후보 풀")
+        gate.check_quotable(drafts, "감수 도장만 지운 사본")
 
 
 def test_the_startup_line_says_which_pool_is_running() -> None:
     """개발 판에 미감수 구절이 섞였다는 것을 사람이 읽을 수 있어야 한다."""
     status = gate.pool_status()
     assert status["mode"] == "draft"
-    assert status["candidates"] == 399
-    assert status["drafts"] == 383
-    assert status["reviewed"] == 16
+    # v2 전수 감수 뒤. 400구절 중 5구절이 빠지고 남은 395가 전부 감수를 통과했다
+    assert status["candidates"] == 395
+    assert status["drafts"] == 0
+    assert status["reviewed"] == 395
 
 
 def test_build_check_script_exits_zero() -> None:

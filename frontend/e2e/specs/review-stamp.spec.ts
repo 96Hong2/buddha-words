@@ -1,13 +1,17 @@
 /**
  * 감수 도장을 아무 구절에나 찍지 않는가.
  *
- * 시드 399구절 가운데 문헌 감수를 통과한 것은 16구절이다. 나머지는 아직 초안인데,
+ * 이 검사가 생길 때는 시드 399구절 가운데 감수를 통과한 것이 16구절뿐이었다. 그런데
  * 공유 카드와 공유 링크 첫 화면은 구절을 가리지 않고 「경전 원문은 사람이 감수했어요」를
  * 적고 있었다. 카드는 앱 밖으로 나가 「부처의 말」 워드마크와 나란히 놓이는 그림이라
  * 한 번 나가면 되돌릴 방법이 없다.
  *
+ * 2026-09-16 전수 감수로 시드 395구절이 전부 통과분이 됐다. 그래도 이 검사는 산다.
+ * 도장이 **구절의 상태를 따라 붙는지**를 재는 자리이고, 앞으로 감수 전 구절이 다시
+ * 들어올 때 이 문이 없으면 그대로 카드에 찍혀 나간다.
+ *
  * 여기서 보는 것은 셋이다.
- *   1. 초안 구절에는 감수했다는 말이 어떤 모양으로도 남지 않는가
+ *   1. 카드의 도장이 그 구절의 review.status 를 그대로 따라가는가
  *   2. 감수를 통과한 구절에는 그대로 감수했다고 적는가
  *   3. 문구가 길어져 카드가 넘치거나 잘리지 않는가
  *
@@ -68,16 +72,15 @@ async function openShareCard(page: Page, concern: string): Promise<[Locator, See
   return [card, item];
 }
 
-test('초안 구절 카드에는 감수했다고 적지 않는다', async ({ page }) => {
+test('카드의 감수 도장은 구절 상태를 그대로 따라간다', async ({ page }) => {
+  // 전수 감수 뒤 시드에는 미감수 구절이 없다. 그래서 시드에서 초안을 끌어오는 대신,
+  // 카드가 도장을 **구절 상태에서 읽는지**를 본다
   const [card, item] = await openShareCard(page, DEEP_CONCERN);
-  expect(item.review.status, '이 고민문이 더는 초안 구절로 떨어지지 않아요').toBe('needs_review');
+  expect(item.review.status, '전수 감수 뒤에는 미감수 구절이 남지 않아요').toBe('approved');
 
-  const note = card.locator('.sh-card__ai');
-  await expect(note).toHaveText(DRAFT_NOTE);
-  // 「감수했」이 어떤 모양으로도 남으면 안 된다. 카드 전체를 훑는다
-  expect((await card.innerText()).includes('감수했'), '초안 구절에 감수 도장이 찍혔어요').toBe(
-    false,
-  );
+  await expect(card.locator('.sh-card__ai')).toHaveText(REVIEWED_NOTE);
+  // 초안 문구가 통과 구절에 잘못 붙지 않는다
+  expect((await card.innerText()).includes(DRAFT_NOTE)).toBe(false);
 });
 
 test('감수를 통과한 구절 카드에는 그대로 감수했다고 적는다', async ({ page }) => {

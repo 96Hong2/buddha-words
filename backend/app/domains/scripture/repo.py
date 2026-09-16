@@ -58,6 +58,9 @@ INDIRECT_TEXT_TYPES = frozenset({"composite", "summary"})
 
 SPEAKER_KINDS = (
     "buddha",
+    # 관자재보살·보현보살·법혜보살처럼 경 안에서 설법하는 보살.
+    # 재가 보살(유마힐·승만부인)은 lay_bodhisattva 로 따로 둔다
+    "bodhisattva",
     "disciple",
     "nun",
     "monk",
@@ -78,6 +81,9 @@ class Attribution:
     is_direct_buddha_speech: bool = False
     # 「— 부처, 상윳따 니까야 1:34」 · 「부처의 가르침 · 법구경 20장 282게」 같은 완성된 문자열
     display_label: str = ""
+    # 화자를 어디서 얻었나. reviewed_table(손으로 적은 표) · citation(감수된 인용표기) ·
+    # work_default(문헌 성격) · none. 화면에는 안 나가고 데이터 감사용이다
+    speaker_source: str = ""
 
 
 @dataclass(frozen=True)
@@ -85,6 +91,8 @@ class Review:
     """감수 상태와 근거. status 가 approved 인 것만 운영에 나간다."""
 
     status: str = "needs_review"
+    # 감수가 문장을 고쳐서 통과시킨 구절이다. 고친 내용은 evidence_note 앞머리에 있다
+    fix_applied: bool = False
     reviewed_by: str = ""
     reviewed_at: str = ""
     evidence_note: str = ""
@@ -160,7 +168,7 @@ class Scripture:
 
         가르는 것은 두 칸이다.
           source_language  팔리(pli)냐 한문(zh)이냐. 저본과 대조 과정이 다르다
-          review.status    감수를 통과했나. 통과하지 못한 383구절에 감수 문구를 붙이지 않는다
+          review.status    감수를 통과했나. 통과하지 못한 구절에 감수 문구를 붙이지 않는다
         """
         base = _SOURCE_BASE.get(self.source_language, _SOURCE_BASE_UNKNOWN)
         return f"{base} {_REVIEW_DONE if self.reviewed else _REVIEW_PENDING}"
@@ -302,6 +310,9 @@ def retrieval_pool() -> tuple[Scripture, ...]:
         399구절          0.380       0.658    0.827          26 / 26
         16구절           0.029       0.037    0.119           5 / 26
 
+    2026-09-16 전수 감수로 풀이 395구절(감수 통과분)이 됐다. 위 표의 「399구절」 판과
+    거의 같은 크기이고, 이제 그것이 **운영 풀이기도 하다.** 개발과 운영이 같은 풀로 돈다.
+
     안전 규칙을 넓히기 전에는 399구절이 0.390 · 0.684 였다. 내려간 만큼은 전부
     **골든셋이 정답이라 표시한 구절을 안전 규칙이 뺀 것**이고, 세 고민뿐이며 셋 다 빼는
     쪽이 맞다(아버지를 떠나보낸 사람에게 an.2.33 「어머니와 아버지에게는 갚기가 쉽지
@@ -315,14 +326,14 @@ def retrieval_pool() -> tuple[Scripture, ...]:
          `_guard`(core/config.py)와 이 함수가 두 겹으로 기동을 멈춘다. 나가는 곳은
          local·dev 뿐이고, 거기서도 기동 로그와 `/health` 가 초안이 섞였다고 말한다.
     2. 개발과 운영이 다른 구절로 돈다
-       → `SCRIPTURE_POOL=approved` 한 줄로 개발에서도 운영과 같은 16구절 판을 본다.
+       → `SCRIPTURE_POOL=approved` 한 줄로 개발에서도 운영과 같은 판을 본다.
          기동 로그가 지금 어느 판인지 늘 적으므로 무엇을 보고 있는지 헷갈릴 자리가 없다.
-    3. 안전 규칙이 미감수 383구절에 검증된 적 없다
+    3. 안전 규칙이 미감수 구절에 검증된 적 없다
        → 이것만은 스위치로 못 덮어서 규칙 쪽을 고쳤다. 안전 규칙은 감수 여부와 무관하게
-         **399구절 전체에 걸린다.** 실제로 초안에서 새던 구절이 있었다(학대 고민에 「거친
+         **시드 전체에 걸린다.** 실제로 초안에서 새던 구절이 있었다(학대 고민에 「거친
          말을 견디겠다」 dhp.320, 사별 고민에 「울고 슬퍼한다고 마음이 고요해지지 않는다」
          an.5.49). safety.BY_CONTENT 에 근거와 함께 막아 두었고, 기동 게이트
-         `check_every_flag_bites` 는 풀 모드와 상관없이 시드 399구절로 잰다.
+         `check_every_flag_bites` 는 풀 모드와 상관없이 시드 전체로 잰다.
     """
     return _retrieval_pool(pool_mode(), get_settings().environment)
 

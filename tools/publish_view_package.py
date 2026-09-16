@@ -171,11 +171,14 @@ def main():
     # 06 경전 감수본
     cp(f"{ROOT}/data/scriptures/경전 감수본 (초안).md",
        f"{DST}/{DIR_SUTRA}/경전 감수본 400구절 (초안).md")
+    # 2026-09-16 전수 감수본. 400구절 전부에 판정이 붙은 정본이다
+    cp(f"{ROOT}/data/scriptures/경전 감수본 (감수후 v2).md",
+       f"{DST}/{DIR_SUTRA}/경전_감수후_수정본_400구절_v2.md")
     draft = f"{ROOT}/data/scriptures/_draft"
     if os.path.isdir(draft):
         shutil.copytree(draft, os.path.join(DST, DIR_SUTRA, "초안 원본 (JSON · 감수 뒤 다시 조립할 때 쓴다)"),
                         dirs_exist_ok=True)
-    n += 1
+    n += 2
 
     # 갤러리 링크가 실제 파일을 가리키는지 확인한다
     base = os.path.join(DST, DIR_SCREEN)

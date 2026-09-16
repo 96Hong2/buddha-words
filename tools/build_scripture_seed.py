@@ -2,7 +2,7 @@
 """감수본 400구절을 제품이 쓰는 시드로 만든다.
 
 입력
-    data/scriptures/경전 감수본 (감수후 v1).md   외부 감수를 반영한 **정본**
+    data/scriptures/경전 감수본 (감수후 v2).md   400구절 전수 외부 감수본. **정본**
     data/scriptures/_draft/batch-*.json          초안 JSON. 한국어 주제 낱말만 가져온다
 
 출력
@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "scriptures"
-REVIEWED_MD = DATA / "경전 감수본 (감수후 v1).md"
+REVIEWED_MD = DATA / "경전 감수본 (감수후 v2).md"
 DRAFT_DIR = DATA / "_draft"
 OUT = DATA / "seed.json"
 VISUAL_THEME_TS = ROOT / "spec" / "visual-theme.ts"
@@ -99,6 +99,7 @@ THEME_KEYWORDS = {
 
 SPEAKER_KINDS = (
     "buddha",
+    "bodhisattva",
     "disciple",
     "nun",
     "monk",
@@ -253,6 +254,13 @@ REVIEWED: dict[str, dict[str, str]] = {
         "speaker_kind": "nun",
         "display_label": "— 뿐니까 장로니, 테리가타 12.1",
     },
+    # v2 전수 감수가 화자를 뒤집은 자리다. 테리가타 웁비리 장에 실려 있지만 이 게송은
+    # 웁비리 본인의 말이 아니라 딸을 잃고 우는 웁비리에게 부처가 건넨 말이다.
+    # Thanissaro 역 등 여러 역주가 이 절을 「[The Buddha:]」로 명시한다.
+    "thig.3.5": {
+        "speaker_kind": "buddha",
+        "display_label": "— 부처, 테리가타 3.5 (웁비리에게 건넨 말)",
+    },
     "maha.lotus.4": {
         "speaker_kind": "disciple",
         "display_label": "— 부처의 제자들, 법화경 신해품 제4",
@@ -286,6 +294,83 @@ REVIEWED: dict[str, dict[str, str]] = {
     },
 }
 
+# ────────────────────────────────────────────────────────────────────────────
+# 화자를 400구절로 넓히는 두 장치
+#
+# v1 은 감수를 통과한 17구절마다 REVIEWED 에 손으로 한 줄씩 적었다. v2 는 395구절이
+# 통과했으므로 그 방식으로는 못 간다. 그렇다고 화자를 지어내면 이번 감수가 잡아낸
+# **결함 1위**(화자를 감춰 부처의 말처럼 읽히는 자리 23건)를 코드가 다시 만드는 셈이다.
+#
+# 그래서 둘로 나눈다.
+#
+#   SPEAKER_FROM_CITATION  감수자가 인용표기에 적어 둔 화자를 읽는다. 지어내지 않고
+#                          **감수본에 쓰여 있는 글자만** 근거로 쓴다.
+#   DEFAULT_SPEAKER_KIND   인용표기에 사람 이름이 없을 때 쓰는 문헌별 기본값.
+#
+# **buddha 는 두 장치 어느 쪽에서도 나오지 않는다.** 부처의 직접 발언은 REVIEWED 에
+# 손으로 적은 구절에서만 나온다. 「부처의 말」이 서비스 이름이어도 코드가 화자를
+# 부처로 올리지 않는다는 규칙은 v1 그대로다.
+# ────────────────────────────────────────────────────────────────────────────
+
+# 위에서부터 먼저 걸리는 것을 쓴다. 좁은 것을 앞에 둔다.
+SPEAKER_FROM_CITATION: tuple[tuple[str, str], ...] = (
+    (r"(유마힐)", "lay_bodhisattva"),
+    (r"(승만부인)", "lay_bodhisattva"),
+    (r"([가-힣]{2,6}보살)", "bodhisattva"),
+    (r"([가-힣]{2,8}\s*장로니)", "nun"),
+    (r"([가-힣]{2,8}\s*존자)", "disciple"),
+    (r"([가-힣]{2,8}\s*장로)", "monk"),
+    (r"(오조\s*홍인)", "zen_master"),
+    (r"([가-힣]{2,6}\s*선사)", "zen_master"),
+    (r"(혜능|임제|조주|서암|달마|대주혜해|곽암)", "zen_master"),
+    (r"(원효|지눌|서산대사|서산|나옹|만공)", "author"),
+    (r"(제자들|네\s*제자|아라한\s*제자들)", "disciple"),
+)
+
+# 인용표기에 사람 이름이 없을 때. 문헌 성격으로만 정하고 개인을 지목하지 않는다.
+#
+# canonical_tradition 은 「전승상 이 문헌의 가르침」이라는 뜻이다. 부처의 직접 발언이
+# 아니고, 화면에도 「— 부처」가 붙지 않는다. 팔리 삼장과 대승 경은 여기에 둔다.
+DEFAULT_SPEAKER_KIND: dict[str, str] = {
+    "dhp": "canonical_tradition",
+    "snp": "canonical_tradition",
+    "sn": "canonical_tradition",
+    "an": "canonical_tradition",
+    "mn": "canonical_tradition",
+    "dn": "canonical_tradition",
+    "ud": "canonical_tradition",
+    "iti": "canonical_tradition",
+    "thag": "monk",
+    "thig": "nun",
+    "maha": "canonical_tradition",
+    "zen": "zen_master",
+    "kr": "author",
+}
+
+# 화자 이름이 반드시 화면 귀속 문구에 드러나야 하는 종류.
+# 이 종류인데 이름이 안 보이면 「누가 한 말인지 모르는 채로」 카드가 나간다.
+NAMED_SPEAKER_KINDS = frozenset(
+    {"bodhisattva", "lay_bodhisattva", "disciple", "nun", "monk", "zen_master", "author", "deity"}
+)
+
+
+def speaker_from_citation(citation: str) -> tuple[str, str]:
+    """인용표기에서 화자를 읽는다. 못 읽으면 ("", "") 다."""
+    for pattern, kind in SPEAKER_FROM_CITATION:
+        got = re.search(pattern, citation)
+        if got:
+            return kind, got.group(1).strip()
+    return "", ""
+
+
+def default_speaker_kind(scripture_id: str) -> str:
+    parts = scripture_id.split(".")
+    for key in (".".join(parts[:2]), parts[0]):
+        if key in DEFAULT_SPEAKER_KIND:
+            return DEFAULT_SPEAKER_KIND[key]
+    return "unknown"
+
+
 # 감수에서 빠진 구절. 화자 귀속 근거가 무너진 것이라 제품 데이터에서 내린다.
 #
 # 이 구절들은 seed.json 의 items 에 넣지 않고 rejected 목록에 비석으로만 남긴다.
@@ -302,7 +387,43 @@ REJECTED: dict[str, dict[str, str]] = {
             "`世界一花 祖宗六葉` 으로 확인됩니다. 만공이 이 표현을 썼을 수는 있어도 "
             "만공이 만든 말이라고 적을 근거가 없어 제품 데이터에서 내립니다."
         ),
-    }
+    },
+    "kr.naong.cheongsan": {
+        "speaker_kind": "unknown",
+        "text_type": "poetic_line",
+        "citation": "나옹 작으로 전하던 「청산은 나를 보고」",
+        "evidence_note": (
+            "나옹집 수록 여부가 학계에서 다투어지고, 원작자를 당나라 한산(寒山)으로 보는 "
+            "설까지 있습니다. 진작을 확인할 1차 문헌을 찾지 못해 제품 데이터에서 내립니다."
+        ),
+    },
+    "dhp.75": {
+        "speaker_kind": "canonical_tradition",
+        "text_type": "direct_verse",
+        "evidence_note": (
+            "번역문 결론부가 「부처의 제자인 비구는 홀로 머무는 수행을 길러야 한다」는 "
+            "출가 권유입니다. 결론을 지우면 원전 훼손이고 두면 일반 사용자 카드에 "
+            "출가를 권하게 되어, 고쳐서 살릴 수 없다고 판정했습니다."
+        ),
+    },
+    "dhp.219": {
+        "speaker_kind": "canonical_tradition",
+        "text_type": "direct_verse",
+        "evidence_note": (
+            "짝이 되는 220게는 죽은 뒤 다음 생에서 선업이 가족처럼 맞아 준다는 내생 전용 "
+            "이야기입니다. 내생 틀을 지우면 원문이 아니게 되고, 두면 일반 생활 고민 카드로 "
+            "쓸 수 없어 고쳐서 살릴 수 없다고 판정했습니다."
+        ),
+    },
+    "snp.3.1.424": {
+        "speaker_kind": "canonical_tradition",
+        "text_type": "direct_verse",
+        "evidence_note": (
+            "빔비사라 왕의 권유를 부처가 사양하며 한 출가 선언입니다. 일반화하면 원전에 "
+            "없는 뜻이 되고 그대로 두면 출가를 권하는 결론부가 되어, 고쳐서 살릴 수 "
+            "없다고 판정했습니다."
+        ),
+    },
 }
 
 # 계획 02 4-1. 쿨다운 10 에 여유 2 를 더한 수다
@@ -475,16 +596,29 @@ def parse_block(block: list[str]) -> dict:
     return parsed
 
 
-def review_status(mark: str) -> str:
-    """감수 줄의 체크 상자를 읽는다. ☒ 가 찍힌 칸이 판정이다."""
+def review_status(mark: str) -> tuple[str, bool]:
+    """감수 줄의 체크 상자를 읽는다. ☒ 가 찍힌 칸이 판정이다.
+
+    (status, fix_applied) 를 돌려준다.
+
+    v1 은 「고쳐야 함」이 생기면 멈췄다. 고친 문장을 어디서 받을지 정하지 않았기 때문이다.
+    v2(400구절 전수 감수)가 그 자리를 정했다. **감수자가 고친 문장을 감수본 본문에 직접
+    반영한다.** 그래서 「고쳐야 함」 블록의 번역문·풀이·한마디·출처는 이미 고쳐진 값이고,
+    무엇을 왜 고쳤는지는 같은 블록의 메모 줄에 남는다.
+
+    곧 「고쳐야 함」은 **통과다.** 다만 손댄 구절이라는 사실을 잃지 않으려고 fix_applied 로
+    따로 표시하고 counts 에서도 따로 센다. 이 값을 approved 와 뭉개면 「감수가 무엇을
+    고쳤는가」를 되짚을 자리가 없어진다.
+
+    빼야 함은 그대로 rejected 다. 살릴 수 없다고 판정한 것이라 고친 문장이 없다.
+    """
     if re.search(r"☒ ?통과", mark):
-        return "approved"
+        return "approved", False
     if re.search(r"☒ ?빼야 함", mark):
-        return "rejected"
+        return "rejected", False
     if re.search(r"☒ ?고쳐야 함", mark):
-        # 아직 한 건도 없다. 생기면 「고친 문장을 메모에 적는다」 규칙을 코드로 옮겨야 한다
-        raise SystemExit("「고쳐야 함」 표시가 생겼어요. 고친 문장을 어떻게 받을지 정해야 합니다.")
-    return "needs_review"
+        return "approved", True
+    return "needs_review", False
 
 
 def draft_themes() -> dict[str, list[str]]:
@@ -528,27 +662,45 @@ def convert(
     parsed: dict, keywords: list[str], reviewed_by: str, at: str, errors: list[str]
 ) -> dict:
     sid = parsed["id"]
-    status = review_status(parsed["review_mark"])
+    status, fix_applied = review_status(parsed["review_mark"])
     work, base_edition, language, guessed_type = work_of(sid)
 
     if status == "approved":
-        override = REVIEWED.get(sid)
-        if override is None:
-            errors.append(f"{sid}: 감수를 통과했는데 귀속 표(REVIEWED)에 없어요")
-            override = {}
-        speaker_kind = override.get("speaker_kind", "unknown")
+        # 귀속은 세 겹이다. 위가 이긴다.
+        #   1. REVIEWED   손으로 적은 표. 부처 직접 발언은 여기서만 나온다
+        #   2. 인용표기    감수자가 「사리뿟따 존자가 설한 …」처럼 적어 둔 글자
+        #   3. 문헌 기본값 사람 이름이 없을 때. 개인을 지목하지 않는다
+        override = REVIEWED.get(sid, {})
+        cited_kind, cited_name = speaker_from_citation(parsed["citation"])
+        if override.get("speaker_kind"):
+            speaker_kind, speaker_source = override["speaker_kind"], "reviewed_table"
+        elif cited_kind:
+            speaker_kind, speaker_source = cited_kind, "citation"
+        else:
+            speaker_kind, speaker_source = default_speaker_kind(sid), "work_default"
         # 전승 문헌에는 말한 사람이 없다. 「법구경 전승상 …」 같은 설명을 이름 칸에 두면
         # 화면이 그것을 화자 이름으로 읽는다
-        speaker_name = "" if speaker_kind == "canonical_tradition" else parsed["speaker_name"]
+        if speaker_kind == "canonical_tradition":
+            speaker_name = ""
+        else:
+            speaker_name = parsed["speaker_name"] or cited_name
         raw_type = parsed["text_type"]
-        text_type = TEXT_TYPE_FOLD.get(raw_type, raw_type)
-        display_label = override.get("display_label", "")
+        text_type = TEXT_TYPE_FOLD.get(raw_type, raw_type) or guessed_type
+        # 표에 손으로 적은 문구가 있으면 그것을, 없으면 감수된 인용표기를 그대로 쓴다.
+        # 인용표기에는 v2 감수가 화자를 밝혀 넣었으므로 「— 부처」 같은 말을 새로 붙이지 않는다
+        display_label = override.get("display_label") or parsed["citation"]
         base_edition = override.get("base_edition", base_edition)
         source_text = override.get("source_text", "")
         evidence_note = " · ".join(x for x in (parsed["notes"], parsed["evidence_note"]) if x)
+        if fix_applied:
+            # 무엇을 왜 고쳤는지는 감수본 메모 줄에 있다. 그것을 근거에 함께 남긴다
+            evidence_note = " · ".join(
+                x for x in ("감수에서 고침 반영", parsed["memo"], evidence_note) if x
+            )
     elif status == "rejected":
         override = REJECTED.get(sid, {})
         speaker_kind = override.get("speaker_kind", "unknown")
+        speaker_source = "reviewed_table" if override else "none"
         speaker_name = parsed["speaker_name"]
         text_type = override.get("text_type", guessed_type)
         display_label = ""
@@ -565,6 +717,7 @@ def convert(
         # 인용한 현대 영어 번역 문장이 들어 있고, 런타임 데이터에는 팔리·한문 원문과
         # 우리 자체 한국어 번역만 싣기로 했기 때문이다. 근거 원문은 감수본 마크다운에 남아 있다.
         speaker_kind = "unknown"
+        speaker_source = "none"
         speaker_name = ""
         text_type = guessed_type
         # 화자를 모르므로 귀속 문구는 출처만 적는다. 「— 부처」 같은 말을 붙이지 않는다
@@ -601,9 +754,13 @@ def convert(
             # speaker_kind 가 buddha 일 때만 참이다. 감수 통과가 참을 만들지 않는다
             "is_direct_buddha_speech": speaker_kind == "buddha",
             "display_label": display_label,
+            # 화자를 어디서 얻었나. reviewed_table 이 가장 세고 work_default 가 가장 약하다
+            "speaker_source": speaker_source,
         },
         "review": {
             "status": status,
+            # 감수가 문장을 고쳐 통과시킨 구절이다. 고친 내용은 evidence_note 앞머리에 있다
+            "fix_applied": fix_applied,
             "reviewed_by": reviewed_by if status != "needs_review" else "",
             "reviewed_at": at if status != "needs_review" else "",
             "evidence_note": evidence_note,
@@ -629,7 +786,7 @@ def build() -> tuple[dict, list[str]]:
 
     title = md.split("\n", 3)[:3]
     at = next((m.group(1) for line in title if (m := _REVIEWED_AT.search(line))), "")
-    reviewed_by = "외부 문헌 감수 v1"
+    reviewed_by = "외부 문헌 감수 v2 (400구절 전수)"
     if not at:
         raise SystemExit("감수본 머리말에서 감수 날짜를 못 찾았어요.")
 
@@ -682,6 +839,27 @@ def build() -> tuple[dict, list[str]]:
                 errors.append(f"{it['id']}: {field} 가 비어 있어요")
         if it["attribution"]["is_direct_buddha_speech"] and it["speaker_kind"] != "buddha":
             errors.append(f"{it['id']}: 화자가 부처가 아닌데 직접 발언 표시가 붙었어요")
+        # v2 전수 감수의 결함 1위를 코드로 막는다.
+        # 문장은 맞는데 인용표기가 화자를 감춰 부처의 말처럼 읽히던 자리가 23건 있었다.
+        # 사람이 말한 구절은 화면 귀속 문구에 그 이름이 반드시 드러나야 한다
+        label = it["attribution"]["display_label"]
+        if it["speaker_kind"] in NAMED_SPEAKER_KINDS:
+            if not label.strip():
+                errors.append(f"{it['id']}: 화자가 {it['speaker_kind']} 인데 귀속 문구가 비었어요")
+            elif re.match(r"부처(?![의님])", label.lstrip("— ")):
+                # 「부처의 제자들, …」은 괜찮다. 「부처, …」로 시작하는 것만 막는다
+                errors.append(f"{it['id']}: 화자가 부처가 아닌데 귀속 문구가 부처로 시작해요")
+            # 손으로 적은 표가 아니라 인용표기에서 이름을 얻은 자리만 본다.
+            # 표는 사람이 확인해 쓴 문구라 대표 화자 하나만 적어 둔 것이 정상이다
+            elif it["attribution"]["speaker_source"] == "citation":
+                head = re.split(r"[(·,\s↔]", it["speaker_name"].strip(), maxsplit=1)[0]
+                if head and head not in label:
+                    errors.append(
+                        f"{it['id']}: 귀속 문구에 화자 {head!r} 가 안 보여요 ({label!r})"
+                    )
+        # 감수를 통과한 구절은 화자를 모른 채로 나갈 수 없다
+        if it["review"]["status"] == "approved" and it["speaker_kind"] == "unknown":
+            errors.append(f"{it['id']}: 감수를 통과했는데 화자 종류가 unknown 이에요")
 
     per_theme = Counter(t for it in shipping for t in it["themes"])
     for theme in sorted(allowed):
@@ -701,13 +879,15 @@ def build() -> tuple[dict, list[str]]:
             errors.append(f"{it['id']}: 빠진 구절이 아닌데 items 밖으로 나갔어요")
     seed = {
         "_note": (
-            "tools/build_scripture_seed.py 가 data/scriptures/경전 감수본 (감수후 v1).md 에서 "
+            "tools/build_scripture_seed.py 가 data/scriptures/경전 감수본 (감수후 v2).md 에서 "
             "만든 파일이다. 손으로 고치지 않는다. review.status 가 approved 인 구절만 운영에 "
             "나가고, rejected 는 어느 환경에서도 나가지 않는다."
         ),
         "counts": {
             "total": len(shipping),
             "approved": status_count["approved"],
+            # approved 안에서 감수가 문장을 고쳐 통과시킨 것
+            "approved_with_fix": sum(1 for it in shipping if it["review"]["fix_applied"]),
             "needs_review": status_count["needs_review"],
             "rejected": status_count["rejected"],
             "direct_buddha_speech": sum(
@@ -743,7 +923,8 @@ def main() -> int:
     short = sum(1 for it in seed["items"] if len(it["retrieval_text"]) < PLANNED_RETRIEVAL_LEN)
 
     print(
-        f"구절 {counts['total']}개 · 감수 통과 {counts['approved']}개 · "
+        f"구절 {counts['total']}개 · 감수 통과 {counts['approved']}개"
+        f"(그중 고침 반영 {counts['approved_with_fix']}개) · "
         f"미감수 {counts['needs_review']}개 · 제외 {counts['rejected']}개"
     )
     print(
