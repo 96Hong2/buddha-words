@@ -84,6 +84,21 @@ test('카드의 감수 도장은 구절 상태를 그대로 따라간다', async
   expect((await card.innerText()).includes(DRAFT_NOTE)).toBe(false);
 });
 
+test('미감수 구절이 오면 카드가 감수했다고 적지 않는다', async ({ page, stub }) => {
+  // 이 검사가 없으면 도장 코드를 무조건 참으로 바꿔도 이 파일 전체가 통과한다. 실제로 그랬다.
+  // 시드에 초안이 남지 않아 스텁 스위치로 미감수 구절을 만들어 그 갈래를 본다
+  await stub({ draftScripture: true });
+  const [card, item] = await openShareCard(page, DEEP_CONCERN);
+
+  // 시드는 여전히 통과분이다. 바뀐 것은 서버가 내주는 저본 문구뿐이다
+  expect(item.review.status).toBe('approved');
+
+  await expect(card.locator('.sh-card__ai')).toHaveText(DRAFT_NOTE);
+  expect((await card.innerText()).includes(REVIEWED_NOTE), '초안 구절에 감수 도장이 찍혔어요').toBe(
+    false,
+  );
+});
+
 test('감수를 통과한 구절 카드에는 그대로 감수했다고 적는다', async ({ page }) => {
   const [card, item] = await openShareCard(page, APPROVED_CONCERN);
   expect(item.id, '이 고민문이 더는 육조단경 행유품으로 떨어지지 않아요').toBe('maha.platform.3');
@@ -134,6 +149,22 @@ test('공유 링크 첫 화면의 소표기도 구절 상태를 따라간다', a
   const note = page.locator('.sh-land__ai');
   await expect(note).toContainText('풀이는 AI 가 썼어요');
   expect((await landing.innerText()).includes('아직 받지 않았'), '통과 구절에 초안 문구가 붙었어요').toBe(
+    false,
+  );
+});
+
+test('공유 링크 첫 화면도 미감수 구절에는 감수했다고 적지 않는다', async ({ page, stub }) => {
+  await stub({ draftScripture: true });
+  await openShareCard(page, DEEP_CONCERN);
+
+  const linkButton = page.getByTestId('share-link');
+  await expect(linkButton).toHaveAttribute('data-share-url', /\/s\/.+/);
+  await page.goto((await linkButton.getAttribute('data-share-url')) ?? '/s/none');
+
+  const landing = page.getByTestId('landing');
+  await expect(landing).toBeVisible();
+  await expect(page.locator('.sh-land__ai')).toContainText('문헌 감수를 아직 받지 않았고');
+  expect((await landing.innerText()).includes('감수했'), '초안 구절에 감수 도장이 찍혔어요').toBe(
     false,
   );
 });

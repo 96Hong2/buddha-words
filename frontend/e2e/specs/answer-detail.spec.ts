@@ -98,6 +98,43 @@ test('뜻풀이에 나온 낱말을 누르면 그 자리에서 뜻이 열린다'
   await expect(sheet).toBeHidden();
 });
 
+test('한 글자 용어가 남의 낱말 첫 글자를 잘라 가지 않는다', async ({ page, stub }) => {
+  // 시드에 한 글자 용어가 여덟 개 있다(업·소·문·섬·복·매·징). 낱말 경계를 안 보면
+  // 「소중한」의 「소」에 밑줄이 쳐지고, 누르면 십우도의 소 풀이가 뜬다.
+  // 실서버에서 풀이를 쓰는 것은 모델이라 어떤 문장이 올지 스텁이 흉내 낼 수 없어 주입한다
+  // 이 풀이에 홀로 선 「소」는 없다. 「소중한」·「소식」의 첫 글자뿐이라 칩이 하나도 안 붙어야 한다
+  await stub({
+    glossOverride: {
+      explanation: '소중한 것을 찾는 중이에요. 좋은 소식이 없어도 헤매는 시간은 길의 일부예요.',
+      terms: [{ word: '소', gloss: '십우도에서 찾는 대상이에요. 본래 마음을 소에 빗댔어요' }],
+    },
+  });
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = page.getByTestId('scripture-card');
+  await expect(card).toContainText('소중한 것을 찾는 중이에요');
+  await expect(
+    page.getByTestId('term-chip'),
+    '「소중한」의 첫 글자에 용어 밑줄이 쳐졌어요',
+  ).toHaveCount(0);
+});
+
+test('낱말 첫머리에 홀로 선 용어에는 그대로 칩이 붙는다', async ({ page, stub }) => {
+  // 위 검사만 두면 칩을 통째로 없애도 통과한다. 붙어야 하는 자리를 함께 본다
+  await stub({
+    glossOverride: {
+      explanation: '소 를 찾는 이야기예요. 소중한 것을 잃었다는 뜻은 아니에요.',
+      terms: [{ word: '소', gloss: '십우도에서 찾는 대상이에요. 본래 마음을 소에 빗댔어요' }],
+    },
+  });
+  await page.goto('/');
+  await askOnce(page);
+
+  await expect(page.getByTestId('term-chip')).toHaveCount(1);
+  await expect(page.getByTestId('term-chip').first()).toHaveText('소');
+});
+
 test('마지막 한마디까지 읽으면 하단 바가 올라온다', async ({ page }) => {
   await page.goto('/');
   await askOnce(page);

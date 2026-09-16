@@ -518,6 +518,40 @@ def quote_after(block: list[str], start: int) -> str:
     return " ".join(part for part in out if part)
 
 
+# 블록 위에 남긴 안내 인용. 경전 문장이 아니라 감수 절차 메모다
+_ASIDE_QUOTE = re.compile(r"^>\s*(☑|⚠|❌|✅|\*\*)")
+
+
+def orphan_quote(block: list[str]) -> int | None:
+    """「경전 번역문」 머리줄에 붙지 못한 인용문이 있으면 그 줄 번호(블록 안 기준).
+
+    감수자가 고친 문장을 머리줄 **위에** 적어 돌려준 적이 있다. 네 구절이 그랬다.
+    빌드는 머리줄 아래만 읽으므로 고친 문장이 조용히 버려지고, 감수가 틀렸다고 판정한
+    옛 문장이 그대로 출시됐다. 게다가 데이터에는 「고침 반영」 표시가 붙어 있어
+    나중에 봐도 이미 고쳐진 문장으로 읽혔다.
+
+    사람 주의력에 맡길 자리가 아니라서 게이트로 막는다. 인용문은 반드시 어떤 머리줄
+    바로 뒤에 와야 한다. 머리줄에 안 붙은 채 떠 있으면 어디에도 안 실린다는 뜻이다.
+    """
+    attached = False
+    for i, line in enumerate(block):
+        if _FIELD.match(line):
+            attached = True
+            continue
+        if line.startswith("> "):
+            # 감수자가 블록 위에 남긴 안내 인용(☑ 출처 확인 완료 · 초안이 남긴 확인 요청)은
+            # 경전 문장이 아니다. 굵은 글씨 표제로 시작해서 본문과 구별된다
+            if _ASIDE_QUOTE.match(line):
+                continue
+            if not attached:
+                return i
+            continue
+        if line.strip() != "":
+            # 인용문 사이의 빈 줄은 건너뛰되, 다른 글이 끼면 머리줄과의 연결이 끊긴다
+            attached = False
+    return None
+
+
 def parse_block(block: list[str]) -> dict:
     """구절 블록 하나를 읽는다. 없는 칸은 빈 값으로 두고 게이트가 잡게 한다."""
     head = _BLOCK_HEAD.match(block[0])
@@ -597,10 +631,22 @@ def parse_block(block: list[str]) -> dict:
     return parsed
 
 
-def terms_cap() -> int:
-    """용어 풀이를 몇 개까지 싣나. 정본은 spec 이고 여기서 읽어 쓴다."""
-    schema = json.loads(ANSWER_SCHEMA.read_text(encoding="utf-8"))
-    return int(schema["$defs"]["Scripture"]["properties"]["terms"]["maxItems"])
+def terms_cap() -> int | None:
+    """용어 풀이를 몇 개까지 싣나. 정본은 spec 이고 여기서 읽어 쓴다.
+
+    spec 이 상한을 안 적으면 None 이다. 그때는 세지 않는다. 상한을 지우는 것도 정당한
+    스펙 변경이라 이 스크립트가 그걸 막아설 자리가 아니다. 파일이나 키가 없는 것은 다르다.
+    그건 저장소가 깨진 것이므로 무슨 일인지 말하고 멈춘다.
+    """
+    try:
+        schema = json.loads(ANSWER_SCHEMA.read_text(encoding="utf-8"))
+        terms = schema["$defs"]["Scripture"]["properties"]["terms"]
+    except (OSError, ValueError, KeyError) as exc:
+        raise SystemExit(
+            f"{ANSWER_SCHEMA.name} 에서 Scripture.terms 를 못 읽었어요: {exc}"
+        ) from exc
+    cap = terms.get("maxItems")
+    return int(cap) if cap is not None else None
 
 
 def review_status(mark: str) -> tuple[str, bool]:
@@ -800,6 +846,25 @@ def build() -> tuple[dict, list[str]]:
     blocks = split_blocks(md)
     errors: list[str] = []
     items: list[dict] = []
+
+    # 감수자가 고친 문장을 머리줄 **위에** 적어 돌려준 적이 있다. 네 구절이 그랬고, 빌드는
+    # 머리줄 아래만 읽으므로 고친 문장이 조용히 버려졌다. 감수가 틀렸다고 판정한 옛 문장이
+    # 그대로 출시됐는데 데이터에는 「고침 반영」 표시가 붙어 있었다. 사람 주의력이 아니라
+    # 게이트로 막는다
+    floating = []
+    for block in blocks:
+        orphan = orphan_quote(block)
+        if orphan is not None:
+            head = _BLOCK_HEAD.match(block[0])
+            floating.append(
+                f"{head.group(2) if head else block[0][:20]} (블록 {orphan + 1}번째 줄)"
+            )
+    if floating:
+        errors.append(
+            "어떤 머리줄에도 안 붙은 인용문이 있어요: "
+            + " · ".join(floating)
+            + ". 고친 문장을 「**경전 번역문**」 아래로 옮겨 주세요"
+        )
     seen_ids: dict[str, int] = {}
     seen_body: dict[str, str] = defaultdict(str)
 
@@ -945,7 +1010,11 @@ def main() -> int:
     # 상한을 여기 적지 않고 spec 에서 읽는다. 두 곳에 적으면 한쪽만 고쳐져 어긋난다.
     # 넘치면 경고가 아니라 게이트다. 그대로 내보내는 순간 답변 계약을 깨기 때문이다
     cap = terms_cap()
-    over = [it["id"] for it in seed["items"] if len(it.get("terms", [])) > cap]
+    over = (
+        [it["id"] for it in seed["items"] if len(it.get("terms", [])) > cap]
+        if cap is not None
+        else []
+    )
     if over:
         errors.append(
             f"용어 풀이가 {cap}개를 넘는 구절 {len(over)}개 ({', '.join(over)}). "

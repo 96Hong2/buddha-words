@@ -31,6 +31,10 @@ ABUSE_WORRIES = (
     "어떻게 견뎌야 할까요.",
     "남편이 술만 마시면 물건을 던져요. 아이들 앞에서도 그래요. 참고 사는 게 맞을까요.",
     "아버지가 어릴 때부터 저를 때렸어요. 지금도 연락이 오면 손이 떨려요.",
+    # 「착취」가 학대 어휘에 없어서 깃발이 안 섰다. 그래서 감수가 이름을 대어 막아 둔
+    # `an.2.33`(부모 은혜)이 바로 이 글에 1순위로 올라왔다
+    "부모님이 저를 계속 착취하는 것 같아요. 돈도 시간도 다 가져가요.",
+    "어릴 때부터 부모님한테 이용만 당하며 자랐어요.",
 )
 SELF_BLAME_WORRIES = (
     "다 제 탓인 것 같아요. 제가 준비를 못 해서 이렇게 됐어요. 후회만 남아요.",
@@ -52,6 +56,11 @@ MONEY_WORRY = "연봉은 오르는데 삶이 계속 헛헛해요. 돈만 보고 
 PRACTICE_WORRY = (
     "명상을 배우고 있는데, 연봉은 오르는데 삶이 계속 헛헛해요. 돈만 보고 달려온 것 같아요."
 )
+# 규칙을 안 태우면 출가 문맥 구절(`ud.3.6`)이 1순위로 올라오는 고민. 파이프라인이 그걸
+# 한 칸 내리는지 여기서 잰다. v2 풀에서 MONEY_WORRY 는 자연 1위가 이미 출가가 아니라
+# 배선을 끊어도 통과해 버린다(main 에서는 dhp.75 가 그 자리를 지키고 있었다).
+MONASTIC_TOP_WORRY = "직장에서 인정받지 못하는 것 같아 괴로워요"
+
 
 # 학대 고민에 붙으면 가해자의 말이 되는 구절들.
 # dhp.223 은 계획 02 가 학대 고민의 must_not 으로 이름을 박아 둔 구절이다
@@ -601,6 +610,24 @@ def test_a_monastic_verse_is_not_the_first_pick_for_a_work_worry() -> None:
     # 빼지는 않는다. 목록에는 그대로 있다.
     # 어느 구절이 뽑히는지는 풀이 바뀌면 달라지므로 id 를 박지 않고 성질로 잰다
     assert any(safety.monastic(repo.by_id(sid)) for sid in picked), picked
+
+
+def test_the_pipeline_really_demotes_a_monastic_verse_that_would_be_first() -> None:
+    """규칙이 **파이프라인 안에서** 도는지 잰다. 함수만 따로 부르면 배선이 끊겨도 초록이다.
+
+    실제로 그랬다. `repo.candidates` 안의 `demote_monastic` 호출 두 곳을 통째로 끊어도
+    434건이 전부 통과했다. 그걸 지키던 것은 MONEY_WORRY 쪽이었는데, 그 자연 1위였던
+    `dhp.75` 가 전수 감수에서 빠지면서 문이 같이 사라졌다.
+
+    그래서 지금 풀에서 실제로 출가 구절이 1위로 올라오는 고민문을 골라 둔다. 풀이 바뀌어
+    전제가 깨지면 두 번째 단언이 먼저 실패해 「이 글은 더 이상 이 규칙을 안 지난다」고 알린다.
+    """
+    picked = ids(MONASTIC_TOP_WORRY)
+    first = repo.by_id(picked[0])
+    assert first is not None
+    assert not safety.monastic(first), picked[:3]
+    # 전제: 이 글에는 출가 구절이 후보 앞쪽에 있다. 없으면 이 검사가 아무것도 안 잰다
+    assert any(safety.monastic(repo.by_id(sid)) for sid in picked[:3]), picked[:5]
 
 
 def test_a_practice_worry_keeps_the_monastic_verse_at_the_top() -> None:
