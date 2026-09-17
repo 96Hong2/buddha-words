@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useOverlayBackClose } from '../../app/providers';
-import { useAnalytics } from '../../shared/analytics';
+import { immediateBucket, useAnalytics } from '../../shared/analytics';
 import {
   ARCHIVE_PASS_SKU,
   isArchivePassEnabled,
@@ -75,9 +75,24 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
 
   useOverlayBackClose(open, onClose);
 
+  /**
+   * 열린 시각. 닫을 때 얼마 만에 닫았는지 함께 남긴다.
+   * 2초 안에 닫혔으면 사람이 원해서 연 화면이 아니라 길을 막고 선 화면이다.
+   */
+  const openedAt = useRef(0);
+
   useEffect(() => {
     if (!open) return;
     analytics.log('paywall_view', { trigger });
+    openedAt.current = Date.now();
+    return () => {
+      if (openedAt.current === 0) return;
+      analytics.log('paywall_close', {
+        trigger,
+        within_bucket_s: immediateBucket(Date.now() - openedAt.current),
+      });
+      openedAt.current = 0;
+    };
   }, [analytics, open, trigger]);
 
   useEffect(() => {

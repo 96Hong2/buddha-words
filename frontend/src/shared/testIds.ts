@@ -4,6 +4,13 @@
  */
 
 export const TEST_IDS = {
+  // 온보딩
+  onboarding: 'onboarding',
+  onboardingStep1: 'onboarding-step-1',
+  onboardingStep2: 'onboarding-step-2',
+  onboardingNext: 'onboarding-next',
+  onboardingSkip: 'onboarding-skip',
+
   // 홈 · 입력
   home: 'home',
   entryCard: 'entry-card',
@@ -100,6 +107,15 @@ export const TEST_IDS = {
   sheetDim: 'sheet-dim',
   errorState: 'error-state',
   retry: 'retry',
+
+  // CX 계측이 더한 자리
+  feedbackUp: 'feedback-up',
+  feedbackDown: 'feedback-down',
+  feedbackThanks: 'feedback-thanks',
+  negativeReasonSheet: 'negative-reason-sheet',
+  negativeReasonOption: 'negative-reason-option',
+  actionCommit: 'action-commit',
+  debugEvents: 'debug-events',
 } as const;
 
 export type TestId = (typeof TEST_IDS)[keyof typeof TEST_IDS];

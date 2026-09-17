@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
 import type { ApiResponse } from '../../shared/api';
 import { isArchivePassEnabled, useSession } from '../../shared/session/session';
+import { itemsBucket, useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { sceneForScreen } from '../../shared/visual/scene';
 
@@ -69,6 +70,18 @@ export function ArchiveScreen() {
   /** 펼쳐 보는 중인 항목. 카드를 누르면 여기 들어온다 */
   const [opened, setOpened] = useState<SavedAnswer | null>(null);
 
+  const analytics = useAnalytics();
+
+  /**
+   * 보관함을 연 사실과 그 안에 몇 개가 있나.
+   * 「어떤 기능은 클릭조차 하지 않는가」를 물어보려면 화면을 연 횟수가 있어야 한다.
+   */
+  useEffect(() => {
+    analytics.log('archive_view', { items_bucket: itemsBucket(saved.length) }, { kind: 'screen' });
+    // 마운트할 때 한 번이다. 지우고 다시 세면 같은 방문이 여러 번으로 셈해진다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analytics]);
+
   const passEnabled = isArchivePassEnabled();
   const owned = archivePass === 'owned';
   const today = useMemo(() => todayCard(response), [response]);
@@ -82,6 +95,13 @@ export function ArchiveScreen() {
   const todayOnly = savedToday ? null : today;
   const empty = todayOnly == null && saved.length === 0;
   const art = sceneForScreen('archiveEmpty');
+
+  function open(item: SavedAnswer) {
+    setOpened(item);
+    // 며칠 전에 간직한 것을 다시 여나. 보관함이 쌓아 두는 자리인지 다시 읽는 자리인지 가른다
+    const days = Math.max(0, Math.floor((Date.now() - item.savedAt) / 86_400_000));
+    analytics.log('archive_item_open', { days_since: days }, { kind: 'click' });
+  }
 
   function remove(answerId: string) {
     removeSaved(answerId);
@@ -147,7 +167,7 @@ export function ArchiveScreen() {
                     key={item.answerId}
                     item={item}
                     today={today != null && today.answerId === item.answerId}
-                    onOpen={() => setOpened(item)}
+                    onOpen={() => open(item)}
                   />
                 ))}
               </>

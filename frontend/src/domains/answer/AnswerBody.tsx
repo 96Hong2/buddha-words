@@ -1,7 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { useAnalytics } from '../../shared/analytics';
+import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import {
   ApiFailure,
   useApiClient,
@@ -13,9 +13,12 @@ import { useSession } from '../../shared/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 
-import { elapsedBucket } from './buckets';
 import { ExtensionCard } from './ExtensionCard';
 import { PROGRESS_STEPS, StepList } from './LoadingScreen';
+import { FLAGS } from '../../shared/flags';
+
+import { AnswerFeedback } from './AnswerFeedback';
+import { NotificationPrompt } from './NotificationPrompt';
 import { ScriptureCard } from './ScriptureCard';
 
 /**
@@ -229,11 +232,23 @@ export function AnswerBody({
   const { sent, idempotencyKey, setResponse } = useSession();
 
   const [retrying, setRetrying] = useState(false);
-  const [helpful, setHelpful] = useState<'yes' | 'unsure' | null>(null);
   const [reported, setReported] = useState(false);
+  const [committed, setCommitted] = useState(false);
 
   const pass2 = answer.pass2;
   const scripture = answer.scriptures[0];
+  /**
+   * 사람이 읽어야 하는 글자 수. 「길수록 완독률이 떨어지나」를 물어보려면 필요하다.
+   * 본문을 로그에 싣지 않으므로 길이만 구간으로 남긴다.
+   */
+  const answerChars =
+    answer.modernBuddhaMessage.length +
+    (pass2.status === 'done'
+      ? pass2.scriptureExplanation.length +
+        pass2.personalAnalysis.reduce((sum, part) => sum + part.heading.length + part.body.length, 0) +
+        pass2.actions.reduce((sum, act) => sum + act.title.length + (act.why?.length ?? 0), 0) +
+        pass2.closingMessage.length
+      : 0);
   const terms: Term[] = pass2.status === 'done' ? (pass2.terms ?? scripture.terms ?? []) : [];
   const note =
     answer.routeNote != null
@@ -279,6 +294,31 @@ export function AnswerBody({
     }
   }
 
+  /**
+   * 행동 블록이 화면에 들어왔다.
+   *
+   * 「Action 까지 읽는 비율은?」이 이 앱에서 가장 중요한 질문 중 하나다. 답을 읽기만 하고
+   * 끝나는지, 오늘 할 일까지 가져가는지가 갈린다. 블록 도달(`answer_section_view`)과 따로
+   * 두는 이유는, 행동이 실제로 몇 개 왔는지(0개일 수도 있다)를 함께 봐야 하기 때문이다.
+   */
+  useEffect(() => {
+    if (pass2.status !== 'done' || pass2.actions.length === 0) return;
+    analytics.log(
+      'action_view',
+      { answer_id: answer.answerId, action_index: pass2.actions.length },
+      { kind: 'impression', once: `action_view:${answer.answerId}` },
+    );
+  }, [analytics, answer.answerId, pass2]);
+
+  function commitAction() {
+    setCommitted(true);
+    analytics.log(
+      'action_commit',
+      { answer_id: answer.answerId, action_index: 0 },
+      { kind: 'click', once: `action_commit:${answer.answerId}` },
+    );
+  }
+
   function report() {
     setReported(true);
     analytics.log(
@@ -291,7 +331,7 @@ export function AnswerBody({
   return (
     <div className="doc">
       {/* 묶음 A · ① 마음 태그 */}
-      <section className="block" {...testId(TEST_IDS.answerTags)}>
+      <section className="block" data-answer-section="tags" {...testId(TEST_IDS.answerTags)}>
         {/* 태그를 읽기 전에 이것이 무엇인지 먼저 말한다. 아래 칩을 판정으로 읽지 않게 */}
         <p className="tag-lead">{TAG_LEAD}</p>
         <div className="tags">
@@ -304,7 +344,7 @@ export function AnswerBody({
       </section>
 
       {/* 묶음 A · ② 오늘의 부처의 말 */}
-      <section className="block block--tight">
+      <section className="block block--tight" data-answer-section="message">
         {note != null && (
           <p className="deep-note">
             <SparkIcon />
@@ -323,11 +363,14 @@ export function AnswerBody({
       </section>
 
       {/* 묶음 B · ③ 실제 가르침 + ④ 이 말씀은 이런 뜻이에요 */}
-      <ScriptureCard
-        scripture={scripture}
-        explanation={pass2.status === 'done' ? pass2.scriptureExplanation : undefined}
-        terms={terms}
-      />
+      <div data-answer-section="scripture">
+        <ScriptureCard
+          answerId={answer.answerId}
+          scripture={scripture}
+          explanation={pass2.status === 'done' ? pass2.scriptureExplanation : undefined}
+          terms={terms}
+        />
+      </div>
 
       {pass2.status === 'pending' && <PendingBlock />}
 
@@ -369,7 +412,7 @@ export function AnswerBody({
       {pass2.status === 'done' && (
         <>
           {/* 묶음 C · ⑤ 당신의 이야기를 보면 */}
-          <section className="block card" {...testId(TEST_IDS.analysis)}>
+          <section className="block card" data-answer-section="analysis" {...testId(TEST_IDS.analysis)}>
             <div className="sec-head">
               <span className="ico">
                 <svg
@@ -406,7 +449,7 @@ export function AnswerBody({
           </section>
 
           {/* 묶음 D · ⑥ 지금 할 수 있는 것 + ⑦ 마지막 한마디 */}
-          <section className="block card">
+          <section className="block card" data-answer-section="action">
             <div className="sec-head" {...testId(TEST_IDS.actions)}>
               <span className="ico">
                 <svg
@@ -439,9 +482,31 @@ export function AnswerBody({
               ))}
             </ol>
 
+            {/*
+              「오늘 이것만 해볼게요」.
+              체크리스트를 만들지 않는다. 누른 사실만 남기고 화면은 한 줄로 답한다.
+              이 한 번의 탭이 「행동까지 갔나」를 재는 유일한 신호다. 플래그로 끈다.
+            */}
+            {FLAGS.actionCommit && pass2.actions.length > 0 && (
+              <div className="act-commit">
+                {committed ? (
+                  <p className="p-micro">좋아요. 오늘 하나면 충분해요</p>
+                ) : (
+                  <button
+                    type="button"
+                    className="act-commit-btn"
+                    onClick={commitAction}
+                    {...testId(TEST_IDS.actionCommit)}
+                  >
+                    오늘 이것만 해볼게요
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="pattern-band" aria-hidden="true" />
 
-            <div className="closing" ref={closingRef} {...testId(TEST_IDS.closing)}>
+            <div className="closing" data-answer-section="closing" ref={closingRef} {...testId(TEST_IDS.closing)}>
               <span className="ico">
                 <LotusMark size={22} />
               </span>
@@ -461,56 +526,14 @@ export function AnswerBody({
             />
           )}
 
-          <section className="feedback">
-            <p className="q">오늘 마음에 도움이 됐나요?</p>
-            <div className="fb-row">
-              <button
-                type="button"
-                className="fb-btn"
-                aria-pressed={helpful === 'yes'}
-                onClick={() => setHelpful('yes')}
-              >
-                <svg
-                  className="h"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 20.5C7.5 18 4 14.8 4 11.2A3.9 3.9 0 0 1 12 8.8 3.9 3.9 0 0 1 20 11.2c0 3.6-3.5 6.8-8 9.3z" />
-                </svg>
-                도움이 됐어요
-              </button>
-              <button
-                type="button"
-                className="fb-btn"
-                aria-pressed={helpful === 'unsure'}
-                onClick={() => setHelpful('unsure')}
-              >
-                <svg
-                  className="q2"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="8.5" />
-                  <path d="M9.7 9.6a2.4 2.4 0 0 1 4.6.8c0 1.6-2.3 2-2.3 3.4" />
-                  <path d="M12 17.2h.01" />
-                </svg>
-                잘 모르겠어요
-              </button>
-            </div>
+          <section className="feedback" data-answer-section="cta">
+            <AnswerFeedback
+              answerId={answer.answerId}
+              route={answer.route}
+              primaryTag={answer.emotionTags[0]}
+              answerChars={answerChars}
+            />
+            <NotificationPrompt />
             {reported ? (
               <p className="p-micro">알려 주셔서 고마워요. 이 답변을 다시 살펴볼게요</p>
             ) : (

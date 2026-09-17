@@ -139,6 +139,8 @@ export function ShareSheet({
   onOpenSettings,
 }: ShareSheetProps) {
   const analytics = useAnalytics();
+  /** 이번에 연 시트가 실제로 공유로 끝났나. 정리 함수가 이 값을 보고 취소를 센다 */
+  const completedRef = useRef<(() => void) | null>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const [block, setBlock] = useState<Block | null>(null);
   const [saved, setSaved] = useState(false);
@@ -160,6 +162,15 @@ export function ShareSheet({
   useEffect(() => {
     if (!open) return;
     analytics.log('share_start', { answer_id: answerId, card_kind: CARD_KIND });
+    // 열고 아무것도 안 하고 닫은 것도 사실이다. 공유가 어디서 끊기는지 이 짝으로 본다
+    let completed = false;
+    const done = () => {
+      completed = true;
+    };
+    completedRef.current = done;
+    return () => {
+      if (!completed) analytics.log('share_cancel', { answer_id: answerId });
+    };
   }, [open, answerId, analytics]);
 
   useEffect(() => {
@@ -200,6 +211,7 @@ export function ShareSheet({
 
   function complete(method: 'link' | 'image'): void {
     analytics.log('share_complete', { answer_id: answerId, card_kind: CARD_KIND, method });
+    completedRef.current?.();
   }
 
   /**

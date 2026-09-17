@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import { useAnalytics } from '../../shared/analytics';
+import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
-import { elapsedBucket } from './buckets';
 
 type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
 

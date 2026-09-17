@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router';
 
 import { ApiFailure, messageFor, type ErrorCode } from '../../shared/api';
 import { useApiClient } from '../../shared/api';
-import { useAnalytics } from '../../shared/analytics';
+import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { useSession } from '../../shared/session';
 import { sceneForScreen } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 
-import { elapsedBucket } from './buckets';
 import './answer.css';
 
 /** 네 단계는 실제 진행에 묶여 있다. 앞 둘이 요청1, 뒤 둘은 답변 화면의 스켈레톤 자리다 */
@@ -138,6 +137,25 @@ export function LoadingScreen() {
           elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
           regenerated: false,
         });
+        /**
+         * 어느 갈래로 어떤 등급의 모델이 돌았나.
+         *
+         * 이 값이 없으면 「Deep 답을 받은 사람이 Normal 보다 더 오래 남는가」도,
+         * 「비싼 등급이 그 값을 하는가」도 물어볼 수 없다. `answer_id` 로 만족도·완독률·
+         * 공유·리텐션에 이어 붙인다.
+         *
+         * 등급은 갈래가 정한다(DEEP=premium, 나머지=cheap). 예산이 몰려 내려간 판은
+         * 서버가 `routeNote` 로 밝히므로 그때는 내려간 값으로 적는다. 지어내지 않는다.
+         * 값 자체(토큰·달러)는 기기가 모른다. 그쪽은 서버의 `llm_spend` 로그가 남긴다.
+         */
+        const downgraded = response.routeNote === 'downgraded_budget';
+        analytics.log('model_route', {
+          route: response.route,
+          model_tier: response.route === 'deep' && !downgraded ? 'premium' : 'cheap',
+          use_rag: true,
+          confidence_bucket: undefined,
+          floor_applied: downgraded,
+        });
       }
 
       // 기다리는 동안 다음 이야기가 시작됐으면 이 답은 화면에 올리지 않는다.
@@ -206,6 +224,33 @@ export function LoadingScreen() {
       setFailure(failed);
     }
   }, [analytics, client, idempotencyKey, navigate, sent, setResponse]);
+
+  /**
+   * 답을 만드는 중에 앱을 떠났나.
+   *
+   * 생성이 20초를 넘기는 일이 있는데, 그동안 기다리지 못하고 나가는 사람이 얼마나 되는지
+   * 몰랐다. 여기가 「답변 생성 시간이 길어질수록 이탈하는가」에 답하는 유일한 자리다.
+   * 답이 도착해 화면이 넘어간 뒤에는 세지 않는다.
+   */
+  const waitingFrom = useRef(0);
+  const settled = useRef(false);
+
+  useEffect(() => {
+    waitingFrom.current = Date.now();
+    function onHide() {
+      if (document.visibilityState !== 'hidden' || settled.current) return;
+      settled.current = true;
+      analytics.log('friction_generation_abandon', {
+        route: 'unknown',
+        elapsed_bucket_ms: elapsedBucket(Date.now() - waitingFrom.current),
+      });
+    }
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      settled.current = true;
+      document.removeEventListener('visibilitychange', onHide);
+    };
+  }, [analytics]);
 
   useEffect(() => {
     // 적은 글 없이 이 화면에 들어올 수는 없다. 새로고침으로 들어오면 홈으로 돌린다.
