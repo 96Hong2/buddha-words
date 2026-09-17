@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:web && ait build",
+    "build": "npm run build:web && npm run check:bundle && ait build",
     "build:web": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "check:spec": "node ../tools/check_spec.mjs",
     "check:router": "node --experimental-strip-types ../spec/router.test.ts",
-    "verify": "npm run check:spec && npm run check:router && npm run typecheck && npm run e2e"
+    "verify": "npm run check:spec && npm run check:router && npm run typecheck && npm run e2e",
+    "check:bundle": "node ../tools/check_bundle.mjs dist"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "^3.2.0",
