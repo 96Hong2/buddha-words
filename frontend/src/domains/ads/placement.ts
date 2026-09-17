@@ -16,12 +16,41 @@ export const AD_PLACEMENT = {
 export type AdPlacement = (typeof AD_PLACEMENT)[keyof typeof AD_PLACEMENT];
 
 /**
- * 콘솔 광고 그룹 id.
+ * 개발에서 쓰는 공식 테스트 보상형 광고 그룹.
  *
- * 실광고 그룹(`rewarded_extension` · `rewarded_continue`)은 아직 발급 전이라 두 자리 모두
- * 개발·QA 테스트 id 를 본다. 실광고 id 로 테스트하면 정책 위반이다.
+ * ⚠ **운영 번들에는 이 문자열이 실리면 안 된다.** 콘솔 검토는 앱을 돌려 보지 않고 번들 안을
+ * 훑어서, 테스트 광고 id 가 나오면 반려한다. 1호 제품이 실제로 이것으로 반려됐다(2026-09-16).
+ * 실행할 때 갈라서는 늦다. 그 판은 운영에서 안 타는 가지여도 문자열이 번들에 남는다.
+ *
+ * `import.meta.env.DEV` 는 vite 가 빌드 때 `false` 로 갈아 끼우므로 이 가지가 통째로 지워진다.
+ * 그래서 이 비교는 변수로 빼지 않고 여기서 직접 적는다.
  */
-export const AD_GROUP_ID: Record<AdPlacement, string> = {
-  extension: 'ait-ad-test-rewarded-id',
-  continue: 'ait-ad-test-rewarded-id',
+const TEST_GROUP = import.meta.env.DEV ? 'ait-ad-test-rewarded-id' : null;
+
+/** 빌드 때 넣는 환경변수 이름. 값은 `frontend/.env.example` 을 본다 */
+export const AD_GROUP_ENV: Record<AdPlacement, string> = {
+  extension: 'VITE_AD_GROUP_EXTENSION',
+  continue: 'VITE_AD_GROUP_CONTINUE',
 };
+
+function trimmed(raw: unknown): string | null {
+  return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : null;
+}
+
+/**
+ * 이 자리에 띄울 광고 그룹 id. 없으면 null 이고, 그러면 화면이 광고 없이 지나간다.
+ *
+ * **레포가 public 이라 실제 id 를 코드에 적지 않는다.** 빌드할 때 환경변수로만 준다.
+ * 콘솔이 발급하기 전까지는 운영 번들에도 값이 없고, 그 동안은 광고를 본 사람이 0 명이다.
+ * 그 상태로 수익 로그를 읽으면 안 된다.
+ *
+ * `import.meta.env.VITE_...` 는 vite 가 빌드 때 값으로 갈아 끼운다. 키를 변수로 꺼내면
+ * 그 치환이 안 걸려 운영 빌드에서 값이 사라진다. 그래서 여기서만 직접 적는다.
+ */
+export function adGroupId(placement: AdPlacement): string | null {
+  const configured =
+    placement === 'extension'
+      ? trimmed(import.meta.env.VITE_AD_GROUP_EXTENSION)
+      : trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE);
+  return configured ?? TEST_GROUP;
+}
