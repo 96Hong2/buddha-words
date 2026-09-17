@@ -18,6 +18,7 @@ import {
   readRecall,
   type RecallEntry,
 } from '../../domains/daily/RecallCard';
+import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
 import { ExhaustedNotice } from '../../domains/quota/ExhaustedNotice';
 import {
@@ -29,7 +30,9 @@ import {
 } from '../../domains/quota/quota';
 import type { Quota } from '../../shared/api';
 import { resolveApiMode } from '../../shared/api/client';
+import { FLAGS } from '../../shared/flags';
 import { markAdWatched } from '../../shared/api/http';
+import { markEntryCardSeen } from '../../domains/concern/EntryCard';
 import { useSession } from '../../shared/session';
 import { useBridge } from '../providers';
 import { ROUTES } from '../router';
@@ -47,6 +50,14 @@ import { ROUTES } from '../router';
  *
  * 스텁 판에는 사용량을 세는 서버가 없다. 그 판에서만 화면이 기기 사본으로 문을 연다.
  */
+/** 진입 카드와 같은 기준(기기 시간대 자정)으로 오늘을 적는다 */
+function todayISO(): string {
+  const now = new Date();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 function serverOpensTheGate(): boolean {
   return resolveApiMode() === 'http';
 }
@@ -61,6 +72,16 @@ export function HomeRoute() {
   const { state } = useLocation();
   const bridge = useBridge();
   const { beginSubmit, sent } = useSession();
+
+  /**
+   * 온보딩을 아직 안 봤나. 마운트할 때 한 번만 읽는다.
+   *
+   * 플래그가 `none` 이면(B안) 온보딩 없이 바로 입력이다. 그 판에서도 본 것으로 적어 두어,
+   * 나중에 플래그를 켜도 이미 쓰던 사람에게 첫 화면이 다시 뜨지 않게 한다.
+   */
+  const [onboarding, setOnboarding] = useState(
+    () => FLAGS.onboarding === 'two_step' && onboardingPending(),
+  );
 
   const [quota, setQuota] = useState<QuotaState>(readQuota);
   const [continueOpen, setContinueOpen] = useState(false);
@@ -201,6 +222,17 @@ export function HomeRoute() {
     ),
     [bridge, dailyOpen, recall],
   );
+
+  /**
+   * 온보딩과 진입 카드가 잇달아 뜨면 첫 실행이 덮개 두 장으로 시작한다.
+   * 온보딩을 본 날은 오늘의 한마디 카드를 띄우지 않는다. 홈의 카드 자리에는 그대로 있다.
+   */
+  const doneOnboarding = useCallback(() => {
+    markEntryCardSeen(todayISO());
+    setOnboarding(false);
+  }, []);
+
+  if (onboarding) return <OnboardingScreen onDone={doneOnboarding} />;
 
   return (
     <>

@@ -1,0 +1,133 @@
+/*
+ * 첫 실행 온보딩 두 장.
+ * 홈과 같은 여백·글자 토큰을 쓴다. 이 화면만의 색이나 크기를 새로 만들지 않는다.
+ */
+
+.ob {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter) calc(var(--s-5) + env(safe-area-inset-bottom));
+  /* 한글은 단어 중간에서 끊기면 읽는 속도가 크게 떨어진다 */
+  word-break: keep-all;
+}
+
+.ob-stage {
+  flex: none;
+  margin-top: var(--s-5);
+  border-radius: var(--r-image);
+  overflow: hidden;
+  background: var(--surface-illust);
+}
+
+.ob-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ob-copy {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+  padding: var(--s-5) 0;
+}
+
+.ob-copy h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-display-m);
+  line-height: var(--lh-display-m);
+  letter-spacing: var(--ls-display-m);
+  text-wrap: balance;
+  color: var(--text);
+}
+
+.ob-copy p {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body-l);
+  color: var(--text-muted);
+}
+
+.ob-list {
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.ob-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text);
+}
+
+.ob-hint {
+  margin-top: var(--s-4);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.ob-foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.ob-cta {
+  height: var(--btn);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--sage);
+  color: var(--on-btn);
+  font-size: var(--t-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ob-cta:focus-visible,
+.ob-skip:focus-visible {
+  outline: var(--focus);
+  outline-offset: 2px;
+}
+
+.ob-skip {
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--t-caption);
+  cursor: pointer;
+}
+
+.ob-dots {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-top: var(--s-3);
+}
+
+.ob-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.ob-dots i.on {
+  background: var(--sage);
+}

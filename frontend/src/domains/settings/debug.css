@@ -1,0 +1,79 @@
+/* 개발 전용 이벤트 확인 화면. 운영 번들에는 실리지 않는다 */
+.dbg {
+  padding: var(--s-4) var(--gutter) 96px;
+  font-size: 13px;
+  color: var(--text);
+}
+.dbg-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+.dbg-bar h1 {
+  margin: 0;
+  font-size: var(--t-body);
+}
+.dbg-bar button {
+  min-height: 32px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.dbg-empty {
+  color: var(--text-muted);
+}
+.dbg-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.dbg-row {
+  padding: var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card);
+}
+.dbg-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+}
+.dbg-kind,
+.dbg-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.dbg-time {
+  margin-left: auto;
+}
+.dbg-params {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
+  gap: 2px var(--s-2);
+  font-size: 12px;
+}
+.dbg-params > div {
+  display: contents;
+}
+.dbg-params dt {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.dbg-params dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* 값이 길면 원문이 섞였다는 신호다. 눈에 띄게 둔다 */
+.dbg-long {
+  color: #b3261e;
+  font-weight: 600;
+}

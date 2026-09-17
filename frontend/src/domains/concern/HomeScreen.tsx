@@ -2,11 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useBridge } from '../../app/providers';
 import { ROUTES } from '../../app/router';
 import { useAnalytics } from '../../shared/analytics';
 import { useApiClient, type DailyQuote } from '../../shared/api';
-import { recordVisit } from '../../shared/lib/visitLog';
 import { useSession } from '../../shared/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { sceneForScreen } from '../../shared/visual/scene';
@@ -16,6 +14,7 @@ import { DepthIndicator } from './DepthIndicator';
 import { EntryCard, entryCardPending, markEntryCardSeen, type EntryCardDismiss } from './EntryCard';
 import { ExampleChips } from './ExampleChips';
 import { DraftNotice, ReturnCard } from './HomeCards';
+import { useInputFunnel } from './useInputFunnel';
 
 import './concern.css';
 
@@ -52,7 +51,6 @@ export interface HomeScreenProps {
 
 export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = {}) {
   const navigate = useNavigate();
-  const bridge = useBridge();
   const analytics = useAnalytics();
   const client = useApiClient();
   const { draft, setDraft, response, beginSubmit } = useSession();
@@ -74,6 +72,9 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
   const home = sceneForScreen('home');
   const text = draft.trim();
 
+  // 쓰는 동안의 깔때기. 구간이 바뀔 때만 보낸다
+  const funnel = useInputFunnel(draft, restored);
+
   const focusField = useCallback(() => {
     fieldRef.current?.focus();
   }, []);
@@ -85,20 +86,6 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
   const keepFocus = useCallback((event: MouseEvent) => {
     event.preventDefault();
   }, []);
-
-  // 앱을 연 사실. 세션당 한 번이고, 몇 번째 실행인지는 구간으로만 남긴다
-  const opened = useRef(false);
-  useEffect(() => {
-    if (opened.current) return;
-    opened.current = true;
-    void recordVisit(bridge.storage, Date.now()).then((visit) => {
-      analytics.appOpen('app_open', {
-        is_first_open: visit.isFirstOpen,
-        open_bucket: visit.openBucket,
-        entry: 'home',
-      });
-    });
-  }, [analytics, bridge]);
 
   // 오늘의 한마디가 도착하면 진입 카드가 먼저 온다. 하루 한 번이라 그 자리에서 날짜를 적어 둔다.
   // 한 번만 돈다. 조회가 다시 돌 때 카드가 되살아나면 닫은 사람 앞에 또 뜬다.
@@ -145,13 +132,15 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
   // 실제 호출은 대기 화면이 한다. 여기서는 보낼 글과 멱등키만 세션에 남긴다
   const submit = useCallback(() => {
     if (text === '') return;
+    // 세는 것이 먼저다. 아래에서 화면이 넘어가면 이 컴포넌트가 사라진다
+    funnel.markSubmit(text);
     if (onSubmit != null) {
       onSubmit(text);
       return;
     }
     beginSubmit(text);
     navigate(ROUTES.loading);
-  }, [beginSubmit, navigate, onSubmit, text]);
+  }, [beginSubmit, funnel, navigate, onSubmit, text]);
 
   const showReturn = response != null;
   const showDraftNotice = restored && text !== '';

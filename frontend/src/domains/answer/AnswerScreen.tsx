@@ -9,6 +9,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 
 import { AnswerBody } from './AnswerBody';
+import { useAnswerConsumption } from './useAnswerConsumption';
 import { InvalidAnswer } from './InvalidAnswer';
 import { LightAnswer } from './LightAnswer';
 import './answer.css';
@@ -61,18 +62,30 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
   const closingRef = useRef<HTMLDivElement | null>(null);
   /** 답변이 바뀔 때만 비운다. 화면이 다시 마운트돼도 같은 답변이면 다시 찍지 않는다 */
   const read = useRef({ id: '', marks: new Set<number>() });
+  /** 지금까지 내려간 최대 비율. 나갈 때 어디까지 읽었는지 이 값으로 남긴다 */
+  const deepest = useRef(0);
+
+  // 블록별 도달과 이탈. 화면에 아무것도 더하지 않고 보기만 한다
+  const consumption = useAnswerConsumption(
+    answer.answerId,
+    answer.route,
+    () => deepest.current,
+  );
 
   useEffect(() => {
     function sync() {
       if (read.current.id !== answer.answerId) {
         read.current = { id: answer.answerId, marks: new Set<number>() };
+        deepest.current = 0;
       }
 
       const total = document.documentElement.scrollHeight;
       const seen = window.scrollY + window.innerHeight;
       const ratio = total <= window.innerHeight ? 1 : Math.min(1, seen / total);
 
-      setProgress(Math.max(6, Math.round(ratio * 100)));
+      const percent = Math.round(ratio * 100);
+      deepest.current = Math.max(deepest.current, percent);
+      setProgress(Math.max(6, percent));
       setScrolled(window.scrollY > 24);
 
       for (const mark of READ_MARKS) {
@@ -144,7 +157,10 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
         <button
           type="button"
           className="btn btn--ghost"
-          onClick={wires.onShare}
+          onClick={() => {
+            consumption.markExit('share');
+            wires.onShare?.();
+          }}
           {...testId(TEST_IDS.shareButton)}
         >
           <svg
@@ -166,7 +182,10 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
         <button
           type="button"
           className="btn btn--solid"
-          onClick={wires.onSave}
+          onClick={() => {
+            consumption.markExit('save');
+            wires.onSave?.();
+          }}
           {...testId(TEST_IDS.saveButton)}
         >
           <svg

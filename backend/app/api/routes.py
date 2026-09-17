@@ -244,14 +244,17 @@ async def concern(body: ConcernRequest, anon_key: AnonKey, zone: UserZone) -> di
             {"reason": "ad_required", "quota": quota},
         )
 
+    before_usd = budget.spent_today()
     try:
         if route == "light":
             light = await compose.compose_light(body.text, llm, outcome.quota)
+            _log_llm_spend("light", route, before_usd)
             usage.remember(anon_key, body.idempotency_key, light, zone)
             return light
         payload = await compose.compose_pass1(
             body.text, decision, llm, anon_key, outcome.quota, query_vector
         )
+        _log_llm_spend("pass1", route, before_usd)
     except Exception:
         # 성공한 생성만 센다. 실패하면 잡아 둔 자리를 되돌린다
         usage.release(anon_key, outcome.gate, zone, body.idempotency_key)
@@ -267,13 +270,39 @@ async def concern(body: ConcernRequest, anon_key: AnonKey, zone: UserZone) -> di
     return payload
 
 
+def _log_llm_spend(stage: str, route: str, before: float) -> None:
+    """모델을 한 번 지나는 데 든 값을 한 줄 남긴다.
+
+    **왜 여기냐면**, 비용을 아는 곳은 서버뿐이고 광고 수익을 아는 곳은 콘솔뿐이다.
+    기여이익(광고 + 결제 − LLM 비용)을 계산하려면 세 번째 자리인 비용이 날짜별로 남아야 한다.
+    행동 로그(토스 Analytics)에는 실을 수 없다. 기기가 이 값을 모르기 때문이다.
+
+    장부의 앞뒤 차이로 잰다. 한 인스턴스에서 요청이 겹치면 **어느 답에 얼마가 들었는지는
+    어긋날 수 있지만 하루 합계는 정확하다.** 필요한 것이 합계라 이 정도로 충분하고,
+    이 값을 정확히 나누려면 provider 가 호출마다 값을 돌려주게 고쳐야 한다.
+
+    고민 글도 답변 본문도 익명키도 싣지 않는다. 남기는 것은 단계·갈래·금액뿐이다.
+    """
+    spent = round(budget.spent_today() - before, 6)
+    if spent <= 0:
+        return
+    log.info(
+        "llm_spend",
+        extra={"event": "llm_spend", "stage": stage, "route": route, "cost_usd": spent},
+    )
+
+
 @router.post("/concern/pass2")
 async def concern_pass2(body: Pass2Request, anon_key: AnonKey, zone: UserZone) -> dict[str, Any]:
     """2차 패스. 구절 id 는 pending 행에서 읽는다. 클라이언트가 보낸 구절을 믿지 않는다."""
     row = compose.get_pending(body.answer_id, anon_key)
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "그 답변을 찾을 수 없어요.")
-    return await compose.compose_pass2(row, get_llm_client(), usage.snapshot(anon_key, zone))
+    before_usd = budget.spent_today()
+    try:
+        return await compose.compose_pass2(row, get_llm_client(), usage.snapshot(anon_key, zone))
+    finally:
+        _log_llm_spend("pass2", row.route, before_usd)
 
 
 @router.post("/concern/continue")

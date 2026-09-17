@@ -11,6 +11,8 @@ export const ROUTES = {
   privacy: '/settings/privacy',
   helpLines: '/settings/help',
   landing: '/s/:token',
+  /** 개발에서만 열린다. 운영 번들에는 이 화면이 실리지 않는다 */
+  debugEvents: '/settings/debug-events',
 } as const;
 
 export type RouteKey = keyof typeof ROUTES;

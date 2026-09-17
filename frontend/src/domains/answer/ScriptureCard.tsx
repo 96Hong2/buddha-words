@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState, type ReactNode } from 'react';
 
+import { useAnalytics } from '../../shared/analytics';
 import { attributionLine, type Scripture, type Term } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { useOverlayBackClose } from '../../app/providers';
@@ -10,6 +11,8 @@ export interface ScriptureCardProps {
   scripture: Scripture;
   /** 요청2가 채우는 「이 말씀은 이런 뜻이에요」. 아직 없으면 경전만 그린다 */
   explanation?: string;
+  /** 관심도 로그에 붙일 답변 id. 공유 링크 화면처럼 답변 밖에서 쓰면 없다 */
+  answerId?: string;
   terms?: Term[];
 }
 
@@ -132,8 +135,36 @@ function markTerms(
 }
 
 /** 묶음 B. 경전 원문과 출처, 그리고 그 뜻을 쉽게 푼 글이 한 카드에 들어간다 */
-export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureCardProps) {
+export function ScriptureCard({ scripture, explanation, terms = [], answerId }: ScriptureCardProps) {
+  const analytics = useAnalytics();
   const [sheet, setSheet] = useState<OpenSheet>(null);
+
+  /**
+   * 「원문 보기」와 용어 칩이 실제로 눌리나.
+   *
+   * 이 앱이 「AI 상담」인지 「경전을 읽는 자리」인지를 가르는 유일한 신호다.
+   * 답변만 읽고 끝나면 앞엣것이고, 원문을 펼치면 뒤엣것이다. 제품의 방향이 여기 달려 있다.
+   * 답변 하나에 한 번씩만 센다. 시트를 열었다 닫았다 해도 관심은 한 번이다.
+   */
+  function openOrigin() {
+    setSheet({ kind: 'origin' });
+    if (answerId == null) return;
+    analytics.log(
+      'scripture_expand',
+      { answer_id: answerId, scripture_id: scripture.id },
+      { kind: 'click', once: `scripture_expand:${answerId}:${scripture.id}` },
+    );
+  }
+
+  function openTerm(term: Term, index: number) {
+    setSheet({ kind: 'term', term });
+    if (answerId == null) return;
+    analytics.log(
+      'term_explanation_open',
+      { answer_id: answerId, term_index: index },
+      { kind: 'click', once: `term_open:${answerId}:${index}` },
+    );
+  }
 
   useOverlayBackClose(sheet != null, () => setSheet(null));
 
@@ -183,7 +214,7 @@ export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureC
         <p className="cite" {...testId(TEST_IDS.scriptureCitation)}>
           {attribution}
         </p>
-        <button type="button" className="src-btn" onClick={() => setSheet({ kind: 'origin' })}>
+        <button type="button" className="src-btn" onClick={openOrigin}>
           원문 보기
           <svg
             width="15"
@@ -211,7 +242,12 @@ export function ScriptureCard({ scripture, explanation, terms = [] }: ScriptureC
           </div>
           {paragraphs.map((line, index) => (
             <p className="body" key={index}>
-              {markTerms(line, terms, seen, (term) => setSheet({ kind: 'term', term }))}
+              {markTerms(line, terms, seen, (term) =>
+                openTerm(
+                  term,
+                  terms.findIndex((item) => item.word === term.word),
+                ),
+              )}
             </p>
           ))}
         </div>

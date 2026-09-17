@@ -16,6 +16,7 @@ import { test, expect, devices, type Browser, type Page } from '@playwright/test
 import type { StubDial } from '../../src/shared/api/stubData';
 import { DEEP_CONCERN, dismissEntry, revealBottomBar } from '../support/flow';
 import { videosDir } from '../support/shots';
+import { seenOnboarding } from '../support/storage';
 
 /** 읽을 시간. 눌리자마자 다음 장면으로 넘어가면 영상이 무슨 일인지 안 보인다 */
 const BEAT = 900;
@@ -41,6 +42,9 @@ async function record(
     locale: 'ko-KR',
     timezoneId: 'Asia/Seoul',
     recordVideo: { dir: join(dir, '_raw') },
+    // 창을 직접 만드는 자리라 프로젝트 설정의 storageState 가 안 걸린다.
+    // 영상은 「다시 온 사람」의 화면이라 온보딩을 본 것으로 두고 찍는다
+    storageState: seenOnboarding(),
   });
   const page = await context.newPage();
 

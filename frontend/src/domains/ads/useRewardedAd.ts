@@ -9,10 +9,10 @@
  * 값이 없다. 그 판에서 CTA 만 띄우면 눌러도 아무 일이 없거나, 지어낸 id 로 부르게 된다.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useBridge } from '../../app/providers';
-import { useAnalytics } from '../../shared/analytics';
+import { immediateBucket, useAnalytics } from '../../shared/analytics';
 import { readAdOptOut } from '../../shared/lib/adOptOut';
 
 import { adGroupId, type AdPlacement } from './placement';
@@ -55,6 +55,43 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
     };
   }, [bridge, placement]);
 
+  /**
+   * 띄울 수 있는 상태가 됐다. 제안을 **본 것**(deep_extension_view · second_question_start)보다 앞이다.
+   * 둘을 갈라야 「자격은 됐는데 제안이 안 보였다」와 「보고도 안 눌렀다」가 구분된다.
+   */
+  useEffect(() => {
+    if (!ready || !supported) return;
+    analytics.log('ad_eligible', { placement, answer_id: undefined }, { once: `ad_eligible:${placement}` });
+  }, [analytics, placement, ready, supported]);
+
+  /**
+   * 광고를 끝까지 본 뒤 곧바로 앱을 떠났나.
+   *
+   * **수익만 보면 안 되는 자리다.** 광고가 가장 많이 도는 위치가 사람이 가장 많이 나가는
+   * 위치이기도 하면, 그 자리는 옮겨야 한다. 그 판단에 필요한 유일한 신호가 이것이다.
+   * 광고가 끝난 뒤 짧은 시간 안에 화면이 숨겨지면 이탈로 본다.
+   */
+  const watchedAt = useRef(0);
+  const watchedAnswer = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    function onHide() {
+      if (document.visibilityState !== 'hidden') return;
+      if (watchedAt.current === 0) return;
+      const since = Date.now() - watchedAt.current;
+      // 한참 뒤에 닫은 것은 광고와 무관하다
+      if (since > 60_000) return;
+      watchedAt.current = 0;
+      analytics.log('post_ad_exit', {
+        placement,
+        answer_id: watchedAnswer.current,
+        within_bucket_s: immediateBucket(since),
+      });
+    }
+    document.addEventListener('visibilitychange', onHide);
+    return () => document.removeEventListener('visibilitychange', onHide);
+  }, [analytics, placement]);
+
   const show = useCallback(
     async (answerId?: string): Promise<boolean> => {
       if (!supported) {
@@ -88,6 +125,10 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
         answer_id: answerId,
         reward_granted: true,
       });
+      // 보상을 받고 하던 일을 이어갔다. 위 이탈 신호와 짝이 되는 값이다
+      watchedAt.current = Date.now();
+      watchedAnswer.current = answerId;
+      analytics.log('post_ad_continue', { placement, answer_id: answerId });
       return true;
     },
     [analytics, bridge, placement, supported],
