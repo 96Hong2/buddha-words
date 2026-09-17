@@ -37,10 +37,16 @@ class Settings(BaseSettings):
 
     # 미니앱 WebView 와 콘솔 QR 테스트 origin.
     # 이 목록은 「이 주소에서 오는 요청을 받는다」는 뜻이다. 사람을 보낼 곳은 아래 web_origin 이다
+    #
+    # ⚠ 같은 번들이 심사 전과 출시 후에 **다른 호스트**로 서비스된다.
+    # 콘솔에서 받은 테스트 링크·QR 로 들어가면 private-apps, 출시 뒤에는 apps 다.
+    # 출시 호스트만 넣어 두었더니 실기기에서 예비요청이 전부 400 으로 막혀,
+    # 어떤 고민을 보내도 「지금은 답을 만들지 못했어요」만 떴다. 둘 다 있어야 한다.
     cors_origins: list[str] = [
         "http://localhost:5173",
         "http://localhost:5183",
         "https://buddha-words.apps.tossmini.com",
+        "https://buddha-words.private-apps.tossmini.com",
     ]
 
     # 공유 링크(/s/{토큰})를 누른 사람을 넘길 웹 앱 주소. 넘기는 자리는 `api/routes.py` 다.
