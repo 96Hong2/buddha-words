@@ -7,6 +7,7 @@ import {
   PermissionError,
   SafeArea,
   Screen,
+  Share,
   Storage,
   TossAds,
   User,
@@ -43,6 +44,8 @@ import {
   type PurchaseOrder,
   type PurchaseResult,
   type SafeAreaInsets,
+  type ShareBridge,
+  type ShareResult,
 } from './types';
 
 const DEFAULT_MAX_WIDTH = 1600;
@@ -345,6 +348,37 @@ class TossPurchaseBridge implements PurchaseBridge {
   }
 }
 
+/**
+ * 네이티브 공유 시트.
+ *
+ * SDK 가 취소와 실패를 갈라 주지 않아서, 던지면 전부 `dismissed` 로 본다. 사람이 시트를
+ * 닫은 것이 거의 전부이고, 그 사람에게 오류 화면을 보이는 쪽이 더 나쁘다. 정말로 못 여는
+ * 기기는 `supports('share')` 가 미리 걸러 낸다.
+ */
+class TossShareBridge implements ShareBridge {
+  async sendMessage(message: string): Promise<ShareResult> {
+    if (!shareSupported()) return 'unsupported';
+    try {
+      await Share.sendMessage({ message });
+      return 'sent';
+    } catch {
+      return 'dismissed';
+    }
+  }
+}
+
+/**
+ * 이 앱 버전에서 공유 시트를 열 수 있나.
+ *
+ * SDK 타입 선언에는 `isSupported` 가 없는데 다른 API 는 다 달고 있다. 런타임에 있으면
+ * 그 답을 쓰고, 없으면 **열 수 있는 것으로 본다.** 여기서 못 연다고 단정하면 실제로는
+ * 되는 기기에서도 공유 버튼이 복사로 떨어진다. 정말 못 열면 호출이 던지고 부르는 쪽이 받는다.
+ */
+function shareSupported(): boolean {
+  const gate = (Share.sendMessage as unknown as { isSupported?: () => boolean }).isSupported;
+  return typeof gate === 'function' ? gate() : true;
+}
+
 export class TossMiniAppBridge implements MiniAppBridge {
   readonly environment: BridgeEnvironment;
   readonly platform: BridgePlatform;
@@ -355,6 +389,7 @@ export class TossMiniAppBridge implements MiniAppBridge {
   readonly ads = new TossAdsBridge();
   readonly purchase = new TossPurchaseBridge();
   readonly analytics = new TossAnalyticsBridge();
+  readonly share = new TossShareBridge();
 
   constructor() {
     this.environment = Environment.environment;
@@ -392,6 +427,8 @@ export class TossMiniAppBridge implements MiniAppBridge {
       case 'analytics':
         // 낮은 버전에서는 SDK 가 조용히 무시한다. 화면이 로그 때문에 갈릴 일은 없다.
         return true;
+      case 'share':
+        return shareSupported();
     }
   }
 

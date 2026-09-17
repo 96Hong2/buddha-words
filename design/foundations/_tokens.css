@@ -187,17 +187,31 @@
      굵기 400 은 경전 번역문에만 쓴다.
        MaruBuri 는 획이 가늘어 500 이 없다. 나머지 sans 본문은 500 을 최소로 한다. */
 
-  --t-display-l: 28px;  --lh-display-l: 1.42;  --ls-display-l: -0.02em;
-  --t-display-m: 22px;  --lh-display-m: 1.55;  --ls-display-m: -0.015em;
-  --t-title:     18px;  --lh-title:     1.45;  --ls-title:     -0.01em;
-  --t-scripture: 17px;  --lh-scripture: 1.90;  --ls-scripture: 0.01em;
-  --t-body-l:    17px;  --lh-body-l:    1.80;  --ls-body-l:    0;
-  --t-body:      15px;  --lh-body:      1.65;  --ls-body:      0;
-  --t-label:     14px;  --lh-label:     1.20;  --ls-label:     -0.005em;
-  --t-caption:   13px;  --lh-caption:   1.50;  --ls-caption:   0;
+  /* ── 글자 크기는 한 손잡이로 함께 움직인다 ──────────────────────────
+     모든 크기가 `--t-scale` 을 곱한다. 설정에서 손잡이 하나를 돌리면 화면 전체가
+     같은 비율로 커진다. 자리마다 따로 키우면 위계가 무너져서 큰 글씨가 오히려 읽기
+     나빠진다.
+
+     기준값을 한 단 올렸다(본문 15 → 16). 실기기에서 「깨알같다」는 말을 들었고,
+     16px 은 모바일 본문의 사실상 표준이다. 15px 은 우리가 정한 값이지 근거가 있던
+     값이 아니었다.
+
+     `--t-micro` 만 스케일에서 뺀다. 광고 'Ad' 표기 자리라 커지면 그 표기가 본문처럼
+     읽힌다. 작게 두는 것이 그 자리의 목적이다. */
+
+  --t-scale: 1;
+
+  --t-display-l: calc(29px * var(--t-scale));  --lh-display-l: 1.42;  --ls-display-l: -0.02em;
+  --t-display-m: calc(23px * var(--t-scale));  --lh-display-m: 1.55;  --ls-display-m: -0.015em;
+  --t-title:     calc(19px * var(--t-scale));  --lh-title:     1.45;  --ls-title:     -0.01em;
+  --t-scripture: calc(18px * var(--t-scale));  --lh-scripture: 1.90;  --ls-scripture: 0.01em;
+  --t-body-l:    calc(18px * var(--t-scale));  --lh-body-l:    1.80;  --ls-body-l:    0;
+  --t-body:      calc(16px * var(--t-scale));  --lh-body:      1.72;  --ls-body:      0;
+  --t-label:     calc(15px * var(--t-scale));  --lh-label:     1.25;  --ls-label:     -0.005em;
+  --t-caption:   calc(14px * var(--t-scale));  --lh-caption:   1.55;  --ls-caption:   0;
 
   /* 8단 밖의 예외 하나. 광고 'Ad' 표기와 법적 고지처럼 읽히지 않아도 되는 자리만. */
-  --t-micro: 11px;  --lh-micro: 1.3;
+  --t-micro: 11.5px;  --lh-micro: 1.35;
 
   --w-regular:  400;  /* 경전 번역문 전용 */
   --w-medium:   500;
@@ -333,4 +347,29 @@
   object-fit: contain;
   mix-blend-mode: multiply;
   background: transparent;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   글자 크기 네 단
+
+   설정에서 고른 값이 `<html data-text="...">` 로 박힌다. 값이 없으면 보통이다.
+   기기 설정을 읽지 않고 앱이 따로 가진 값을 쓰는 이유: 토스 WebView 는 OS 글자 크기를
+   그대로 물려주지 않고, 물려받더라도 이 앱은 경전 번역문처럼 크기에 민감한 글이 많아
+   앱 안에서 직접 고르는 편이 결과가 낫다.
+
+   비율은 한 단에 약 13% 다. 그보다 촘촘하면 눌러도 바뀐 것 같지 않고, 더 벌리면
+   한 단만 올려도 줄이 확 늘어 읽던 자리를 잃는다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root[data-text='s'] {
+  --t-scale: 0.92;
+}
+
+:root[data-text='l'] {
+  --t-scale: 1.13;
+}
+
+:root[data-text='xl'] {
+  --t-scale: 1.26;
 }

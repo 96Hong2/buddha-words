@@ -8,6 +8,7 @@ import { useSession } from '../../shared/session';
 import { sceneForScreen } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
+import { useRewardedAd } from '../ads/useRewardedAd';
 
 import './answer.css';
 
@@ -96,7 +97,19 @@ function LotusMark() {
  * 답변을 만드는 동안 보는 화면.
  *
  * 여기서 요청1을 부르고, 종류에 따라 갈라 보낸다. 요청2는 답변 화면으로 넘어간 뒤에
- * 이어서 부른다. 이 화면에는 광고를 두지 않는다.
+ * 이어서 부른다.
+ *
+ * ── 광고는 요청과 **나란히** 돈다 ───────────────────────────────────
+ *
+ * 광고를 띄우고 나서 요청을 보내면 기다리는 시간이 광고만큼 길어진다. 그래서 제출은
+ * 화면이 뜨는 즉시 나가고, 광고는 그 위를 덮는다. 사람이 광고를 보는 20초가 원래
+ * 비어 있던 대기 시간이라 **답이 늦어지지 않는다.**
+ *
+ * 광고를 닫았을 때 답이 아직이면 이 화면이 그대로 이어진다. 답이 이미 왔으면 그 사이
+ * 화면이 넘어가 있어 광고를 닫는 순간 답변이 보인다. 둘 다 따로 처리할 것이 없다.
+ *
+ * 답이 먼저 도착했으면 광고를 띄우지 않는다. 다 만든 답을 광고로 막는 것은 기다리는
+ * 시간을 채우는 일이 아니라 길을 막는 일이다.
  */
 export function LoadingScreen() {
   const client = useApiClient();
@@ -112,6 +125,14 @@ export function LoadingScreen() {
   const submittedKey = useRef<string | null>(null);
   const scene = sceneForScreen('loading');
 
+  const ad = useRewardedAd('generation');
+  /** 답이 왔거나 실패로 끝났나. 광고를 띄우기 전에 이 값을 본다 */
+  const settledAnswer = useRef(false);
+  /** 광고를 이미 한 번 띄웠나. 한 번 기다리는 동안 한 번이다 */
+  const adShown = useRef(false);
+  /** 광고가 화면을 덮고 있나. 앱을 떠난 것으로 잘못 세지 않으려고 본다 */
+  const adCovering = useRef(false);
+
   const submit = useCallback(async () => {
     const startedAt = Date.now();
     // 이 제출의 키. 아래에서 답이 올 때마다 아직 이 이야기가 화면의 주인인지 이 값으로 본다
@@ -122,6 +143,8 @@ export function LoadingScreen() {
         text: sent,
         idempotencyKey: myKey,
       });
+      // 답이 왔다. 아직 안 띄운 광고는 이제 띄우지 않는다
+      settledAnswer.current = true;
       if (response.responseType === 'light') {
         analytics.log('answer_generated', {
           answer_id: response.answerId,
@@ -211,6 +234,7 @@ export function LoadingScreen() {
         });
       }
     } catch (error) {
+      settledAnswer.current = true;
       const failed =
         error instanceof ApiFailure ? error : new ApiFailure('provider', '보내지 못했어요.');
       analytics.log('answer_failed', { pass: 1, reason: failed.reason });
@@ -239,6 +263,8 @@ export function LoadingScreen() {
     waitingFrom.current = Date.now();
     function onHide() {
       if (document.visibilityState !== 'hidden' || settled.current) return;
+      // 전면 광고가 덮으면 WebView 도 숨겨진다. 그것을 나간 것으로 세면 이 지표가 통째로 망가진다
+      if (adCovering.current) return;
       settled.current = true;
       analytics.log('friction_generation_abandon', {
         route: 'unknown',
@@ -262,6 +288,25 @@ export function LoadingScreen() {
     submittedKey.current = idempotencyKey;
     void submit();
   }, [idempotencyKey, navigate, sent, submit]);
+
+  /**
+   * 기다리는 동안 광고를 한 번 덮는다.
+   *
+   * 제출은 위 효과에서 이미 나갔다. 여기서 기다리게 만드는 것은 아무것도 없고, 답이
+   * 오는 길과 광고가 도는 길이 서로를 막지 않는다.
+   *
+   * 못 띄우는 기기·광고 그룹 id 가 없는 번들에서는 `supported` 가 false 라 이 효과가
+   * 통째로 지나간다. 그때는 예전처럼 대기 화면만 보인다.
+   */
+  useEffect(() => {
+    if (adShown.current || !ad.ready || !ad.supported) return;
+    if (settledAnswer.current || failure != null) return;
+    adShown.current = true;
+    adCovering.current = true;
+    void ad.show().finally(() => {
+      adCovering.current = false;
+    });
+  }, [ad, failure]);
 
   useEffect(() => {
     if (failure != null) return;

@@ -7,6 +7,7 @@
 
 import { test, expect, type Page } from '../support/fixtures';
 import { shot } from '../support/shots';
+import { saveAnswerFromScreen } from '../support/flow';
 
 const CONCERN = [
   '요즘 회사에서 팀장님이 제 의견을 계속 무시하세요.',
@@ -139,13 +140,16 @@ test('공유 카드: 모든 내용이 담기고 고민 원문은 들어가지 �
 });
 
 /**
- * 「링크 보내기」를 실제로 끝까지 누른다.
+ * 「공유하기」를 실제로 끝까지 누른다.
  *
- * 브라우저는 기본으로 복사를 막아 둔다. 그 상태에서 누르면 예전에는 아무 일도 일어나지 않아
- * 사용자가 복사된 줄 알고 빈 클립보드를 붙여 넣었다. 막혔으면 막혔다고 떠야 한다.
- * 번호가 14b 인 것은 14(공유 시트) 바로 다음 장면이라 뒤 번호를 밀지 않으려고 그렇게 두었다.
+ * 이 버튼은 토스 네이티브 공유 시트를 연다. 받는 앱(카톡·메시지·메일)은 기기가 고른다.
+ * 예전에는 이 자리가 조용히 주소만 복사하고 시트를 닫아서, 누른 사람은 아무 일도
+ * 일어나지 않았다고 느꼈다. 실제로 그 신고를 받았다.
+ *
+ * 시트를 못 여는 기기에서는 주소를 복사하고 **복사했다고 말한다.** 말없이 복사하지 않는다.
+ * 복사마저 막히면 막혔다고 알리고 그 글을 화면에 내놓는다.
  */
-test('링크 보내기: 복사가 막히면 알려 주고, 풀리면 주소가 복사된다', async ({ page, context }) => {
+test('공유하기: 네이티브 시트로 나가고, 그 글에 고민 원문이 없다', async ({ page }) => {
   await page.goto('/');
   await askOnce(page);
 
@@ -157,31 +161,70 @@ test('링크 보내기: 복사가 막히면 알려 주고, 풀리면 주소가 �
   await expect(linkButton).toHaveAttribute('data-share-url', /\/s\/.+/);
   const url = await linkButton.getAttribute('data-share-url');
 
-  // 막힌 채로 한 번: 조용히 지나가지 않고 막힌 이유와 주소를 내놓는다
   await linkButton.click();
-  await expect(page.getByText('복사가 막혀 있어요')).toBeVisible();
-  await expect(page.getByText(url ?? '')).toBeVisible();
-  await expect(page.getByTestId('share-sheet')).toBeVisible();
-  await shot(page, '39 공유 - 복사가 막혔을 때');
-
-  // 풀어 주고 다시: 시트가 닫히고 클립보드에 그 주소가 들어간다
-  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.getByRole('button', { name: '다시 복사하기' }).click();
+  // 보냈으면 시트가 닫힌다. 복사 안내가 뜨지 않는다
   await expect(page.getByTestId('share-sheet')).toHaveCount(0);
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url);
+  await expect(page.getByText('복사가 막혀 있어요')).toHaveCount(0);
+
+  // 실제로 나간 글. 앱 밖으로 글이 나가는 유일한 길이라 여기를 본다
+  const sent = await page.evaluate(() => window.__buddhaShares ?? []);
+  expect(sent).toHaveLength(1);
+  const message = sent[0];
+  expect(message).toContain(url ?? '');
+
+  const scripture = (await page.getByTestId('scripture-text').first().innerText()).trim();
+  expect(message.replace(/\s+/g, ' ')).toContain(scripture.replace(/\s+/g, ' '));
+
+  // 오늘 받은 한마디도, 적은 글도 나가지 않는다
+  const line = (
+    await page.getByTestId('buddha-message').locator('blockquote').innerText()
+  ).replace(/\s+/g, ' ');
+  expect(message).not.toContain(line.slice(0, 12));
+  expect(message).not.toContain('팀장님');
+  expect(message).not.toContain('그만둘까');
 });
 
 /**
- * 공유 시트의 두 번째 버튼은 **실제로 되는 것**이어야 한다.
+ * 공유 시트를 못 여는 기기.
  *
- * 앨범에 저장할 길이 아직 없는데 「이미지로 저장하기」를 세워 두면, 누른 사람은 어느 기기에서든
- * 「이 버전에서는 저장이 안 돼요」만 만나고 최신 토스에서도 같은 말을 본다. 그 자리에는 글 복사가
- * 선다. 카드에 나가는 글과 같은 것이 클립보드에 들어가고, 고민 원문은 거기에도 없다.
- *
- * 카드가 경전 구절만 싣게 되면서 이 글도 같이 바뀌었다. 오늘 받은 한마디는 그 고민을 읽고 쓴
- * 문장이라 받는 사람에게 상황이 비친다. 클립보드는 카드보다 더 쉽게 어디로든 붙여진다.
+ * 그때는 주소를 복사하고 **복사했다고 말한다.** 복사마저 막히면(브라우저 기본값) 막혔다고
+ * 알리고 그 글을 화면에 내놓는다. 조용히 지나가면 사용자는 복사된 줄 알고 빈 클립보드를
+ * 붙여 넣는다.
  */
-test('공유 시트의 두 번째 버튼은 눌러서 끝까지 간다', async ({ page, context }) => {
+test('공유 시트를 못 열면 복사하고 복사했다고 말한다', async ({ page, context }) => {
+  await page.addInitScript(() => {
+    window.__buddhaBridge = { ...window.__buddhaBridge, share: 'unsupported' };
+  });
+  await page.goto('/');
+  await askOnce(page);
+
+  await revealBottomBar(page);
+  await page.getByTestId('share-button').click();
+  const linkButton = page.getByTestId('share-link');
+  await expect(linkButton).toHaveAttribute('data-share-url', /\/s\/.+/);
+  const url = await linkButton.getAttribute('data-share-url');
+
+  // 복사가 막힌 채로 한 번: 조용히 지나가지 않고 막힌 이유와 주소를 내놓는다
+  await linkButton.click();
+  await expect(page.getByText('복사가 막혀 있어요')).toBeVisible();
+  await expect(page.getByText(url ?? '', { exact: false })).toBeVisible();
+  await shot(page, '39 공유 - 복사가 막혔을 때');
+
+  // 풀어 주고 다시: 복사됐다고 말한다
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.getByRole('button', { name: '다시 복사하기' }).click();
+  await expect(page.getByText('링크가 복사됐어요')).toBeVisible();
+});
+
+/**
+ * 「링크 복사하기」는 주소만 가져간다. 붙여 넣을 곳을 이미 아는 사람을 위한 자리다.
+ *
+ * 예전 이 자리에는 「이미지로 저장하기」가 있었는데 앨범에 저장할 길이 없어서 누구든 누르면
+ * 안내 하나만 만났다. 그다음에는 「글로 복사하기」였는데 나가는 글이 버튼마다 달라
+ * 형식이 제멋대로였다. 지금은 나가는 글을 한 곳에서 만들고(shareText.ts) 이 자리는
+ * 주소만 맡는다.
+ */
+test('링크 복사하기는 주소만 가져가고 복사했다고 말한다', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/');
   await askOnce(page);
@@ -194,56 +237,32 @@ test('공유 시트의 두 번째 버튼은 눌러서 끝까지 간다', async (
   await expect(page.getByTestId('share-image')).toHaveCount(0);
 
   const linkUrl = await page.getByTestId('share-link').getAttribute('data-share-url');
-  await page.getByTestId('share-text').click();
+  await page.getByTestId('share-copy').click();
 
-  // 막혔다는 안내 없이 시트가 닫히고, 클립보드에 경전과 주소가 들어간다
-  await expect(page.getByTestId('share-sheet')).toHaveCount(0);
-  const copied = (await page.evaluate(() => navigator.clipboard.readText())).replace(/\s+/g, ' ');
-  const message = (
-    await page.getByTestId('buddha-message').locator('blockquote').innerText()
-  ).replace(/\s+/g, ' ');
-  const scripture = (await page.getByTestId('scripture-text').first().innerText()).replace(
-    /\s+/g,
-    ' ',
-  );
-  expect(copied).toContain(scripture);
-  expect(copied).toContain(linkUrl ?? '');
-  // 한마디는 나가지 않는다. 경구체 두 문장이라 앞 열두 자만 맞아도 그 문장이 넘어온 것이다
-  expect(copied).not.toContain(message.slice(0, 12));
-  expect(copied).not.toContain('팀장님');
-  expect(copied).not.toContain('그만둘까');
+  await expect(page.getByText('링크가 복사됐어요')).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(linkUrl);
 });
 
-test('간직: 셋까지 쌓이고 네 번째에 보관 안내가 뜬다', async ({ page, stub }) => {
-  // 네 번 묻는 시나리오라 기본 30초로는 모자란다. 답변 생성은 여기서 볼 것이 아니라 빠르게 넘긴다.
+test('간직: 몇 개를 담아도 막히지 않는다', async ({ page, stub }) => {
+  /*
+   * 예전에는 셋까지 담기고 네 번째에 이용권 시트가 길을 막았다. 그 제한을 없앴다.
+   * 네 번을 담아도 파는 화면이 뜨지 않아야 한다.
+   */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   await page.goto('/');
 
-  for (let i = 1; i <= 3; i += 1) {
+  for (let i = 1; i <= 4; i += 1) {
     await askOnce(page, `${CONCERN}\n(${i}번째 이야기예요)`);
-    await revealBottomBar(page);
-    await page.getByTestId('save-button').click();
+    await saveAnswerFromScreen(page);
     await expect(page.getByTestId('paywall')).toHaveCount(0);
     await page.goto('/');
   }
 
-  await askOnce(page, `${CONCERN}\n(네 번째 이야기예요)`);
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
-  await expect(page.getByTestId('paywall')).toBeVisible();
-  // 시트가 다 올라와 구매 버튼이 화면 안에 들어와야 한다. 올라오는 중에 재면 늘 통과한다
-  const buy = page.getByTestId('paywall-buy');
-  await expect(buy).toBeInViewport();
-  await shot(page, '29 보관함 - 네 번째에 뜨는 이용권 안내');
-
-  // 「무료」라는 말을 쓰지 않는다
-  await expect(page.getByTestId('paywall')).not.toContainText('무료');
-
   await page.goto('/archive');
   await expect(page.getByTestId('archive')).toBeVisible();
-  await expect(page.getByTestId('archive-item')).toHaveCount(3);
-  await shot(page, '28 보관함 - 간직한 말씀 세 개', { fullPage: true });
+  await expect(page.getByTestId('archive-item')).toHaveCount(4);
+  await shot(page, '28 보관함 - 간직한 말씀 네 개', { fullPage: true });
 });
 
 test('같은 날 두 번째 고민: 이어가기 시트가 뜨고 광고를 보면 이어진다', async ({ page }) => {

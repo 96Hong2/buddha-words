@@ -7,7 +7,7 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
-import { askOnce, dismissEntry } from '../support/flow';
+import { askOnce, dismissEntry, revealBottomBar } from '../support/flow';
 import { wideShot } from '../support/shots';
 
 /** index.css 의 --app-max 와 같은 값 */
@@ -81,9 +81,12 @@ test('넓은 화면에서 보관함과 이용권 시트가 가운데 기둥 안�
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/archive');
-  await page
-    .getByRole('button', { name: '이용권이 있으면 개수 제한 없이 간직할 수 있어요' })
-    .click();
+  // 파는 자리가 보관함에서 간직 시트로 옮겨 갔다. 답변을 받아 그리로 간다
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await page.getByTestId('save-gate-buy').click();
   await expect(page.getByTestId('paywall')).toBeVisible();
   await expectColumn(page);
   await wideShot(page, '1280px - 이용권 시트');

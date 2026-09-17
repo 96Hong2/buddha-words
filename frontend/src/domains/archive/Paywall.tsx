@@ -29,8 +29,8 @@ export type PurchaseOutcome = ArchivePurchaseOutcome;
 
 export interface PaywallProps {
   open: boolean;
-  /** 어디서 열렸나. 네 번째 간직하기면 save_4th, 지난 이야기를 눌렀으면 archive_locked */
-  trigger: 'save_4th' | 'archive_locked';
+  /** 어디서 열렸나. 간직 광고 자리면 save_ad, 보관함에서 열었으면 archive_locked */
+  trigger: 'save_ad' | 'archive_locked';
   onClose: () => void;
   /**
    * 이용권 결제를 갈아 끼울 때만 넘긴다. 안 넘기면 세션이 브릿지로 실제 결제를 연다.
@@ -49,7 +49,7 @@ export interface PaywallProps {
 /**
  * O5 이용권 시트.
  *
- * 사용자가 네 번째로 간직하려 했을 때 열린다. 진입하자마자 뜨지 않는다.
+ * 지금은 자동으로 뜨지 않는다. 간직 개수 제한이 없어져서 길을 막고 서는 자리가 사라졌다.
  * 닫는 길은 셋이다: 닫기 버튼 · 시트 바깥 · 시스템 뒤로가기.
  */
 export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: PaywallProps) {
@@ -166,11 +166,10 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
         {!enabled ? (
           <>
             <h2 className="pw-title" id="pw-title">
-              지금은 3개까지 간직할 수 있어요
+              짧은 광고를 보면 간직할 수 있어요
             </h2>
             <p className="pw-sub">
-              새로 간직하려면 보관함에서 하나를 지워 주세요. 오늘 받은 답변은 그대로 볼 수 있고,
-              공유 카드로 보내 둘 수도 있어요.
+              간직할 수 있는 개수에는 제한이 없어요.
             </p>
           </>
         ) : owned ? (
@@ -178,17 +177,15 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
             <h2 className="pw-title" id="pw-title">
               이미 이용권이 있어요
             </h2>
-            <p className="pw-sub">
-              간직 개수에 제한이 없어요. 마음에 남는 말을 계속 간직할 수 있어요.
-            </p>
+            <p className="pw-sub">광고 없이 바로 간직할 수 있어요.</p>
           </>
         ) : (
           <>
             <h2 className="pw-title" id="pw-title">
-              마음에 남은 말을 계속 간직할까요?
+              광고 없이 간직할까요?
             </h2>
             <p className="pw-sub">
-              지금은 3개까지 보관할 수 있어요. 이용권이 있으면 개수 제한 없이 간직할 수 있어요.
+              간직할 때마다 보는 짧은 광고가 없어져요. 개수 제한은 원래 없어요.
             </p>
 
             {/*
@@ -196,7 +193,7 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
               지난 고민 열람·즐겨찾기·태그별 모아보기는 아직 없어서 적지 않는다.
             */}
             <ul className="pw-benefits">
-              <li>간직 개수 제한 없이 보관</li>
+              <li>간직할 때 광고를 보지 않아요</li>
               <li>앱을 다시 깔아도 이용권 그대로</li>
             </ul>
 
@@ -216,8 +213,8 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
             */}
             <p className="pw-note">
               간직하지 않고 지나간 이야기는 다시 불러올 수 없어요. 적으신 글과 답변을 서버에 남기지
-              않거든요. 공유 링크를 만들었을 때만 카드에 담긴 경전 문장과 풀이 한 줄이 30일 동안
-              남고, 적으신 고민 글은 그때도 함께 가지 않아요.
+              않거든요. 공유 링크를 만들었을 때만 그 링크에 담길 내용이 30일 동안 남고, 적으신
+              고민 글은 그때도 함께 가지 않아요.
             </p>
 
             {unverified && (

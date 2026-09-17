@@ -105,6 +105,44 @@ class ShareCardData:
 # 글이 실리는 칸은 앞의 셋이고 `reviewed` 는 참거짓 깃발이라 문장을 실어 나르지 못한다
 ALLOWED_FIELDS = frozenset(f.name for f in fields(ShareCardData))
 
+
+@dataclass(frozen=True, slots=True)
+class ShareFullData:
+    """답변 전체를 링크로 보낼 때 함께 가는 것.
+
+    ── 왜 이것이 따로 있나 ────────────────────────────────────────────────
+
+    카드(`ShareCardData`)는 이 고민과 **무관하게 존재하던 글**만 담는다. 그래서 아무나
+    받아도 보낸 사람의 사정이 드러나지 않는다. 그 성질은 지킬 값어치가 있어서 칸을 늘리지
+    않고 자료형을 새로 뒀다.
+
+    여기 담기는 것 중 `analysis` 와 `closing` 은 **그 고민을 읽고 쓴 글**이다. 받는 사람이
+    무슨 일이 있었는지 짐작할 수 있다. 그래서 이 자료형은 사람이 「전체 보내기」를 직접
+    고른 경우에만 채워지고, 고르는 화면이 무엇이 함께 가는지 먼저 보여 준다.
+
+    **고민 원문은 여기에도 없다.** 사람이 적은 문장 자체는 어느 칸에도 담기지 않는다.
+    담을 자리를 만들지 않는 것이 규칙이고, 그 규칙은 카드와 똑같이 시그니처로 지킨다.
+    """
+
+    # 「오늘의 부처의 말」 한 줄
+    buddha_message: str
+    # 경전 풀이 전문. 카드의 gloss_line 은 이 글의 첫 문장이다
+    explanation: str
+    # 「당신의 이야기를 보면」. [{"heading": ..., "body": ...}]
+    analysis: list[dict[str, str]]
+    # 「지금 할 수 있는 것」. [{"title": ..., "why": ...}]
+    actions: list[dict[str, str]]
+    # 마지막 한마디
+    closing: str
+
+
+# 전체 공유가 받는 것의 전부. 카드와 같은 이유로 늘어나지 않는지 본다
+FULL_ALLOWED_FIELDS = frozenset(f.name for f in fields(ShareFullData))
+
+# 본문 안에서 읽는 열쇠. 여기 없는 열쇠는 랜딩에 그려지지 않는다
+FULL_SECTION_KEYS = ("heading", "body")
+FULL_ACTION_KEYS = ("title", "why")
+
 _SENTENCE_END = re.compile(r"[.!?]")
 
 

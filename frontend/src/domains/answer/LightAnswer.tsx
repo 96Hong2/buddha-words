@@ -34,7 +34,7 @@ export function LightAnswer({ answer }: LightAnswerProps) {
             훨씬 깊게 같이 볼 수 있어요.
           </div>
         </div>
-        <p className="p-micro">이 답변은 AI 가 만들었어요 · 사용 횟수를 세지 않아요</p>
+        <p className="p-micro">사용 횟수를 세지 않아요</p>
       </div>
 
       <div className="foot">

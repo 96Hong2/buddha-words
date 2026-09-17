@@ -24,9 +24,6 @@ import {
 
 const KEY = 'buddha.archive.v1';
 
-/** 여기까지 쌓이고 그다음부터 이용권을 묻는다 */
-export const SAVE_LIMIT = 3;
-
 /**
  * 다시 펼쳐 보려고 함께 남기는 답변 본문.
  *
@@ -77,12 +74,10 @@ export interface SavedAnswer {
 export type SavedInput = Omit<SavedAnswer, 'savedAt'>;
 
 export type SaveResult =
-  /** 간직했다. `slotIndex` 는 몇 번째 자리인지(1부터) */
+  /** 간직했다. `slotIndex` 는 몇 번째로 간직한 것인지(1부터) */
   | { status: 'saved'; slotIndex: number }
-  /** 이미 간직한 답변이다. 자리를 더 쓰지 않는다 */
-  | { status: 'already'; slotIndex: number }
-  /** 자리가 다 찼다. 네 번째라 Paywall 을 연다 */
-  | { status: 'limit'; slotIndex: number };
+  /** 이미 간직한 답변이다. 같은 것을 두 번 담지 않는다 */
+  | { status: 'already'; slotIndex: number };
 
 interface Stored {
   version: 1;
@@ -264,24 +259,24 @@ export function countSaved(): number {
   return read().length;
 }
 
-export interface SaveOptions {
-  /**
-   * 자리 수를 세지 않고 담는다. 마음 보관함 이용권을 가진 사람이다.
-   *
-   * 이용권이 파는 것이 이 자리 제한을 푸는 것 하나다. 여기서 안 풀면 돈을 낸 사람이
-   * 네 번째에 또 같은 안내를 본다.
-   */
-  unlimited?: boolean;
+/**
+ * 이 답변이 이미 보관함에 있나.
+ *
+ * 간직하기 앞에 광고를 두면서 필요해졌다. 이미 담긴 것을 또 담으라고 광고를 보여 주면
+ * 끝까지 보고 나서 「이미 보관함에 있어요」를 만난다. 그건 값을 받고 아무것도 안 준 것이다.
+ */
+export function isSaved(answerId: string): boolean {
+  return read().some((item) => item.answerId === answerId);
 }
 
 /**
  * 간직한다.
  *
- * 자리가 찼으면 아무것도 쓰지 않고 `limit` 을 돌려준다. 부르는 쪽이 그 값을 보고 Paywall 을 연다.
- * 저장이 막힌 기기에서도 `limit` 이 아니라 `saved` 로 답한다. 화면이 「간직했어요」라고 말한 뒤
- * 목록에 없으면 그것대로 이상하지만, 자리가 찬 것처럼 이용권을 묻는 쪽이 더 나쁘다.
+ * **개수 제한이 없다.** 예전에는 셋까지만 담기고 넷째부터 이용권을 물었는데, 간직하기는
+ * 사람이 그 말을 다시 보고 싶어서 누르는 자리라 거기를 막으면 앱이 주려는 것 자체가 막힌다.
+ * 지금 문지기는 짧은 광고 하나이고 그 판단은 부르는 쪽(AnswerRoute)이 한다.
  */
-export function saveAnswer(entry: SavedInput, options: SaveOptions = {}): SaveResult {
+export function saveAnswer(entry: SavedInput): SaveResult {
   const items = read();
 
   const already = items.findIndex((item) => item.answerId === entry.answerId);
@@ -295,18 +290,11 @@ export function saveAnswer(entry: SavedInput, options: SaveOptions = {}): SaveRe
   }
 
   const slotIndex = items.length + 1;
-  if (!options.unlimited && items.length >= SAVE_LIMIT) return { status: 'limit', slotIndex };
-
   write([...items, { ...entry, savedAt: Date.now() }]);
   return { status: 'saved', slotIndex };
 }
 
-/**
- * 간직한 것 하나를 지운다. 지운 것이 있으면 true.
- *
- * 자리가 셋뿐이라 지우는 길이 없으면 네 번째부터는 아무것도 못 한다. 「하나를 지워 주세요」라고
- * 안내하면서 지울 자리를 안 두면 그 말이 거짓이 된다.
- */
+/** 간직한 것 하나를 지운다. 지운 것이 있으면 true */
 export function removeSaved(answerId: string): boolean {
   const items = read();
   const left = items.filter((item) => item.answerId !== answerId);

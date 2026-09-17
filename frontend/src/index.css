@@ -36,11 +36,18 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.6;
+  /* 토큰을 쓴다. 설정에서 글자 크기를 바꾸면 여기부터 따라 움직인다 */
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   /* WebView 안에서 길게 눌러 텍스트가 잡히면 스크롤이 끊긴다 */
   -webkit-tap-highlight-color: transparent;
+  /*
+    한글은 단어 중간에서 줄이 바뀌면 읽는 속도가 눈에 띄게 떨어진다. 도메인 CSS 마다
+    따로 적어 두었더니 공유 시트·위로 화면처럼 빠진 자리가 생겼다. 여기서 한 번 건다.
+  */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 button {

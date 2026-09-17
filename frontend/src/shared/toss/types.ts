@@ -24,7 +24,9 @@ export type BridgeCapability =
   /** 인앱결제. 토스 앱 5.219.0 부터다. */
   | 'purchase'
   | 'notification'
-  | 'analytics';
+  | 'analytics'
+  /** 네이티브 공유 시트. 카톡·메시지·메일이 여기서 갈린다. */
+  | 'share';
 
 /**
  * 토스 알림 동의 요청의 결과.
@@ -188,6 +190,28 @@ export interface PurchaseBridge {
 }
 
 /**
+ * 네이티브 공유 시트 한 번의 끝.
+ *
+ * `dismissed` 는 시트는 떴는데 아무 데도 안 보내고 닫은 것이다. 실패가 아니라 사람이
+ * 고른 결과라 부르는 쪽이 오류를 보이면 안 된다. 시트 자체를 못 연 것만 `unsupported` 다.
+ */
+export type ShareResult = 'sent' | 'dismissed' | 'unsupported';
+
+/**
+ * 공유.
+ *
+ * 토스가 여는 네이티브 시트라 받는 사람 목록(카톡·메시지·메일·AirDrop)은 기기가 정한다.
+ * 우리는 보낼 글만 넘긴다. **그 글에 고민 원문이 들어가지 않는 것은 부르는 쪽 책임이다.**
+ *
+ * ⚠ 시트가 어디로 보냈는지는 돌려주지 않는다. iOS·안드로이드 모두 앱을 알려 주지 않아서,
+ * 우리가 아는 것은 「보냈다」와 「그냥 닫았다」뿐이다. 어느 메신저로 갔는지는 셀 수 없다.
+ */
+export interface ShareBridge {
+  /** 시스템 공유 시트를 연다. 던지지 않는다. */
+  sendMessage(message: string): Promise<ShareResult>;
+}
+
+/**
  * 행동 로그 한 줄에 실을 값.
  *
  * 문자열·숫자·불리언만 받는다. 중첩 객체를 허용하면 언젠가 응답 본문이 통째로 실린다.
@@ -314,4 +338,5 @@ export interface MiniAppBridge {
   readonly ads: AdsBridge;
   readonly purchase: PurchaseBridge;
   readonly analytics: AnalyticsBridge;
+  readonly share: ShareBridge;
 }

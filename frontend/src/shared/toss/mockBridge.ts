@@ -24,6 +24,8 @@ import {
   type PurchaseOrder,
   type PurchaseResult,
   type SafeAreaInsets,
+  type ShareBridge,
+  type ShareResult,
 } from './types';
 
 /**
@@ -57,6 +59,13 @@ export interface MockScenario {
    */
   purchase?: 'ok' | 'cancel' | 'failed' | 'unsupported';
   /**
+   * 공유 시트에서 무슨 일이 벌어지나.
+   *
+   * `dismissed` 는 시트를 열었다 아무 데도 안 보내고 닫은 것이다. 실패가 아니라 결과라
+   * 화면이 오류를 보이면 안 되고, 그것을 e2e 가 본다.
+   */
+  share?: 'sent' | 'dismissed' | 'unsupported';
+  /**
    * 주문서를 누를 때까지 붙들어 둔다.
    *
    * 기본은 잠깐 떴다가 스스로 닫히는 것이라 테스트가 빠르다. 주문서를 화면으로 남겨야
@@ -88,6 +97,13 @@ declare global {
      * `pressBack()` 을 직접 불러야 BackHandler 배선을 실제로 지나간다.
      */
     __buddhaBridgeInstance?: MockMiniAppBridge;
+    /**
+     * 공유 시트로 내보내려 한 글 전부.
+     *
+     * 앱 밖으로 글이 나가는 유일한 길이라 e2e 가 여기를 본다. 고민 원문 조각이 하나라도
+     * 섞이면 그 자리에서 실패한다.
+     */
+    __buddhaShares?: string[];
   }
 }
 
@@ -323,6 +339,23 @@ class MockAnalyticsBridge implements AnalyticsBridge {
   }
 }
 
+/**
+ * 브라우저에는 네이티브 공유 시트가 없다.
+ *
+ * 무엇을 보내려 했는지 창에 남긴다. e2e 가 그 값을 읽어 **고민 원문이 실리지 않았는지**
+ * 확인한다. 공유는 앱 밖으로 글이 나가는 유일한 길이라 그 검사를 여기에 붙여 둔다.
+ */
+class MockShareBridge implements ShareBridge {
+  constructor(private readonly outcome: 'sent' | 'dismissed' | 'unsupported') {}
+
+  async sendMessage(message: string): Promise<ShareResult> {
+    if (typeof window !== 'undefined') {
+      (window.__buddhaShares ??= []).push(message);
+    }
+    return this.outcome;
+  }
+}
+
 export class MockMiniAppBridge implements MiniAppBridge {
   readonly environment: BridgeEnvironment = 'browser';
   readonly platform: BridgePlatform = 'web';
@@ -333,6 +366,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
   readonly ads: AdsBridge;
   readonly purchase: PurchaseBridge;
   readonly analytics: AnalyticsBridge = new MockAnalyticsBridge();
+  readonly share: ShareBridge;
 
   private accessoryListeners = new Set<(id: string) => void>();
   private backListeners = new Set<() => void>();
@@ -345,6 +379,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
     this.scenario = { ...readScenarioDial(), ...scenario };
     this.ads = new MockAdsBridge(this.scenario);
     this.purchase = new MockPurchaseBridge(this.scenario);
+    this.share = new MockShareBridge(this.scenario.share ?? 'sent');
     // 브라우저에는 시스템 뒤로가기가 없다. e2e 가 이 인스턴스를 잡아 직접 누른다.
     if (typeof window !== 'undefined') window.__buddhaBridgeInstance = this;
   }
@@ -354,6 +389,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
     if (capability === 'ads') return this.scenario.ads !== 'unsupported';
     if (capability === 'fullScreenAd') return this.scenario.fullScreenAd !== 'unsupported';
     if (capability === 'purchase') return this.scenario.purchase !== 'unsupported';
+    if (capability === 'share') return this.scenario.share !== 'unsupported';
     return true;
   }
 

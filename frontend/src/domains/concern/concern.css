@@ -378,7 +378,9 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  width: 120px;
+  /* 탭이 셋이 되면서 고정 폭을 뺐다. 셋으로 나눠 갖는다 */
+  flex: 1 1 0;
+  min-width: 0;
   height: 48px;
   border: 0;
   background: none;

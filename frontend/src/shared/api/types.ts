@@ -265,6 +265,16 @@ export type SharedCard =
  * 서는 자리가 배포마다 달라서, 화면이 만들면 그때마다 어긋난다.
  * 스텁 판에는 넘길 백엔드가 없어 `null` 이고, 그때만 화면이 자기 자리를 쓴다.
  */
+/**
+ * 링크에 무엇을 실을까.
+ *
+ * `scripture` 는 이 고민과 무관하게 존재하던 경전 구절과 그 뜻까지다. 아무나 받아도
+ * 보낸 사람 사정이 드러나지 않는다.
+ * `full` 은 답변 전체다. 「당신의 이야기를 보면」이 함께 가므로 받는 사람이 무슨 일이
+ * 있었는지 짐작할 수 있다. 그래서 고르는 화면이 무엇이 가는지 먼저 보여 준다.
+ */
+export type ShareScope = 'scripture' | 'full';
+
 export interface ShareLink {
   token: string;
   landingUrl: string | null;

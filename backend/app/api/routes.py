@@ -19,7 +19,7 @@ from dataclasses import replace
 from datetime import date as date_type
 from functools import lru_cache
 from html import escape
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
@@ -372,6 +372,8 @@ class ShareRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     answer_id: str = Field(alias="answerId", max_length=64)
+    # 무엇을 보낼지. 기본은 경전 구절 카드다. 화면이 고르지 않으면 적게 나가는 쪽으로 간다
+    scope: Literal["scripture", "full"] = "scripture"
 
 
 @router.post("/share")
@@ -389,6 +391,12 @@ async def share_create(body: ShareRequest, anon_key: AnonKey, request: Request) 
     if scripture is None:
         raise HTTPException(status.HTTP_409_CONFLICT, "카드에 실을 구절이 없어요.")
     card = share.card_from_row(row, scripture)
+    # 전체 보내기를 고른 링크에만 답변 본문이 함께 담긴다. 고민 원문은 어느 쪽에도 없다
+    full = (
+        share.full_from_row(row, getattr(row, "modern_message", "") or "")
+        if body.scope == "full"
+        else None
+    )
     # 그릴 수 없는 글자가 있으면 링크를 만들기 전에 막는다. 두부가 찍힌 카드는 되돌릴 수 없다
     try:
         share.check_renderable(card)
@@ -399,9 +407,10 @@ async def share_create(body: ShareRequest, anon_key: AnonKey, request: Request) 
             extra={"event": "share_card_unrenderable", "why": str(exc)},
         )
         raise HTTPException(status.HTTP_409_CONFLICT, "카드로 만들 수 없는 글자가 있어요.") from exc
-    share_id = share.put(card)
+    share_id = share.put(card, full)
     return {
         "shareId": share_id,
+        "scope": "full" if full is not None else "scripture",
         # 링크로 나가는 주소. 절대주소라야 메신저에 그대로 붙는다
         "landingUrl": f"{_origin(request)}/s/{share_id}",
         "cardUrl": f"/share/{share_id}/card.png",
@@ -505,6 +514,27 @@ def _landing_style() -> str:
         f"border:1px solid {_hex('accent-rule')};background:transparent;color:{_hex('text')};"
         "font-size:16px;font-weight:600;text-decoration:none}"
         f"p.foot{{margin:16px 0 0;font-size:13px;color:{_hex('text-weak')}}}"
+        # ── 전체 보내기 랜딩. 앱의 답변 화면과 같은 차례로 읽힌다 ──
+        # 본문은 읽는 글이라 왼쪽으로 맞춘다. 가운데로 맞춘 긴 글은 줄마다 시작점이 흔들린다
+        f".full{{margin:0 0 22px;text-align:left}}"
+        f".full .msg{{margin:0 0 18px;font-size:19px;line-height:1.62;font-weight:600;"
+        f"color:{_hex('text')}}}"
+        f".full blockquote{{margin:0 0 22px;padding:18px 18px 16px;border-radius:16px;"
+        f"background:{_hex('surface-illust')};border:1px solid {_hex('accent-rule')}}}"
+        f".full .qlab{{display:inline-block;margin-bottom:8px;font-size:12px;font-weight:700;"
+        f"letter-spacing:.02em;color:{_hex('accent-text')}}}"
+        f".full blockquote p{{margin:0 0 10px;font-size:16px;line-height:1.72;"
+        f"color:{_hex('text')}}}"
+        f".full cite{{display:block;font-size:13px;font-style:normal;color:{_hex('text-weak')}}}"
+        f".full h2{{margin:24px 0 10px;font-size:15px;font-weight:700;color:{_hex('accent-text')}}}"
+        f".full h3{{margin:16px 0 6px;font-size:15px;font-weight:600;color:{_hex('text')}}}"
+        f".full p.body{{margin:0 0 12px;font-size:15px;line-height:1.75;color:{_hex('text')}}}"
+        f".full ol{{margin:0;padding-left:20px}}"
+        f".full li{{margin:0 0 12px;font-size:15px;line-height:1.72;color:{_hex('text')}}}"
+        f".full li .why{{display:block;margin-top:4px;font-size:14px;color:{_hex('text-muted')}}}"
+        f".full .closing{{margin:22px 0 0;padding-top:18px;font-size:15px;line-height:1.75;"
+        f"border-top:1px solid {_hex('accent-rule')};color:{_hex('text-muted')}}}"
+        f".full .madeby{{margin:18px 0 0;font-size:12px;color:{_hex('text-weak')}}}"
     )
 
 
@@ -560,6 +590,66 @@ def _clip(text: str, limit: int) -> str:
     if len(flat) <= limit:
         return flat
     return flat[: limit - 1].rstrip() + "…"
+
+
+# 전체 보내기 랜딩의 머리말과 꼬리말
+FULL_FROM = "친구가 받은 답이에요"
+FULL_MADE_BY = "풀이와 조언은 AI 가 썼고, 경전 원문은 문헌에서 옮긴 것이에요"
+FULL_NO_CONCERN = "보낸 사람이 적은 고민 글은 담기지 않아요"
+
+# 앱 화면과 같은 소제목을 쓴다. 받은 사람이 앱에 들어와도 같은 차례를 본다
+FULL_HEAD_EXPLANATION = "이 말씀은 이런 뜻이에요"
+FULL_HEAD_ANALYSIS = "당신의 이야기를 보면"
+FULL_HEAD_ACTIONS = "지금 할 수 있는 것"
+
+
+def _full_body(card: share.ShareCardData, full: share.ShareFullData) -> str:
+    """답변 전체를 앱에서 보던 차례 그대로 그린다.
+
+    여기 실리는 글은 전부 저장 자리에서 읽은 것이다. 고민 원문은 담긴 적이 없어 그릴 수도 없다.
+    모든 글은 escape 를 지나간다. 경전 구절도 모델이 쓴 글도 우리가 만든 태그가 아니다.
+    """
+    parts: list[str] = ['<div class="full">']
+
+    if full.buddha_message:
+        parts.append(f'<p class="msg">{escape(full.buddha_message)}</p>')
+
+    parts.append(
+        "<blockquote>"
+        f'<span class="qlab">{escape(share.QUOTE_LABEL)}</span>'
+        f"<p>{escape(card.scripture_text)}</p>"
+        f"<cite>{escape(card.scripture_attribution)}</cite>"
+        "</blockquote>"
+    )
+
+    if full.explanation:
+        parts.append(f"<h2>{escape(FULL_HEAD_EXPLANATION)}</h2>")
+        parts.append(f'<p class="body">{escape(full.explanation)}</p>')
+
+    sections = [item for item in full.analysis if item.get("body")]
+    if sections:
+        parts.append(f"<h2>{escape(FULL_HEAD_ANALYSIS)}</h2>")
+        for item in sections:
+            heading = item.get("heading") or ""
+            if heading:
+                parts.append(f"<h3>{escape(heading)}</h3>")
+            parts.append(f'<p class="body">{escape(item["body"])}</p>')
+
+    actions = [item for item in full.actions if item.get("title")]
+    if actions:
+        parts.append(f"<h2>{escape(FULL_HEAD_ACTIONS)}</h2><ol>")
+        for item in actions:
+            why = item.get("why") or ""
+            tail = f'<span class="why">{escape(why)}</span>' if why else ""
+            parts.append(f'<li>{escape(item["title"])}{tail}</li>')
+        parts.append("</ol>")
+
+    if full.closing:
+        parts.append(f'<p class="closing">{escape(full.closing)}</p>')
+
+    parts.append(f'<p class="madeby">{escape(FULL_MADE_BY)}</p>')
+    parts.append("</div>")
+    return "".join(parts)
 
 
 def _preview_text(scripture: str, attribution: str) -> str:
@@ -636,14 +726,18 @@ def _landing_document(
 @router.get("/s/{token}")
 def share_landing(token: str, request: Request) -> Response:
     """공유 링크를 받은 쪽이 여는 자리. 크롤러에게는 미리보기, 사람은 SPA 랜딩으로."""
-    card = share.get(token) if SHARE_ID.match(token) else None
+    found = share.get_full(token) if SHARE_ID.match(token) else None
+    card = found[0] if found else None
+    full = found[1] if found else None
     origin = _origin(request)
     canonical = f"{origin}/s/{token}"
 
     # 넘길 곳은 같은 경로다. 살아 있으면 카드와 입력창, 죽었으면 SPA 의 만료 화면이 맞는다
     web = _forward_to(request, f"/s/{token}")
     crawler = CRAWLER_UA.search(request.headers.get("user-agent", "")) is not None
-    script = "" if web is None or crawler else _forward_script(web)
+    # 전체 보내기 링크는 **넘기지 않는다.** 답변 본문은 이 문서에만 있고 SPA 랜딩은 카드만
+    # 그린다. 넘기면 받은 사람이 보러 온 글을 못 보고 카드 한 장에서 끝난다
+    script = "" if web is None or crawler or full is not None else _forward_script(web)
     # 스크립트가 안 도는 사람(자바스크립트 꺼짐 · 넘김을 막은 UA)이 쓰는 버튼.
     # 딥링크만 두면 토스가 없는 사람과 PC 에서 막다른 곳이 된다
     web_cta = (
@@ -676,16 +770,29 @@ def share_landing(token: str, request: Request) -> Response:
             headers={"Cache-Control": "no-store"},
         )
 
-    # 미리보기에 싣는 것은 여기까지다. 경전 구절과 그 말을 한 이가 누구인가
+    # 미리보기에 싣는 것은 여기까지다. 경전 구절과 그 말을 한 이가 누구인가.
+    #
+    # ⚠ 전체 보내기 링크도 **미리보기 글은 똑같다.** 대화방 목록에 그대로 펼쳐지는 자리라,
+    # 여기에 개인 풀이를 실으면 링크를 연 적도 없는 사람들이 먼저 읽는다. 링크를 눌러
+    # 들어온 사람만 전체를 본다. 그림도 경전 카드 그대로다
     description = _preview_text(card.scripture_text, card.scripture_attribution)
-    body = (
-        '<p class="from">친구가 보낸 말씀이에요</p>'
-        f'<img src="/share/{token}/card.png" alt="친구가 보낸 말씀 카드" '
-        f'width="{share.CARD_SIZE[0]}" height="{share.CARD_SIZE[1]}" />'
-        f"{web_cta}"
-        f'<a class="{app_class}" href="{APP_SCHEME}/s/{token}">{escape(LANDING_CTA)}</a>'
-        f'<p class="foot">{escape(NO_CONCERN_NOTE)}</p>'
-    )
+    if full is not None:
+        body = (
+            f'<p class="from">{escape(FULL_FROM)}</p>'
+            f"{_full_body(card, full)}"
+            f"{web_cta}"
+            f'<a class="{app_class}" href="{APP_SCHEME}">{escape(LANDING_CTA)}</a>'
+            f'<p class="foot">{escape(FULL_NO_CONCERN)}</p>'
+        )
+    else:
+        body = (
+            '<p class="from">친구가 보낸 말씀이에요</p>'
+            f'<img src="/share/{token}/card.png" alt="친구가 보낸 말씀 카드" '
+            f'width="{share.CARD_SIZE[0]}" height="{share.CARD_SIZE[1]}" />'
+            f"{web_cta}"
+            f'<a class="{app_class}" href="{APP_SCHEME}/s/{token}">{escape(LANDING_CTA)}</a>'
+            f'<p class="foot">{escape(NO_CONCERN_NOTE)}</p>'
+        )
     return Response(
         _landing_document(
             title=LANDING_TITLE,

@@ -19,12 +19,16 @@ const SAVED = [1, 2, 3].map((n) => ({
   visualTheme: 'choice',
 }));
 
-/** 제한이 걸린 「간직할 자리」 안내. 이 버튼이 Paywall 을 연다 */
-const LOCKED_NOTE = '이용권이 있으면 개수 제한 없이 간직할 수 있어요';
-/** 이용권을 가진 뒤의 「간직할 자리」 */
-const OPEN_NOTE = /간직할 수 있는 개수에 제한이 없어요/;
-/** 판매를 끈 빌드의 「간직할 자리」. 파는 말 대신 지금 할 수 있는 일을 적는다 */
-const OFF_NOTE = '간직할 자리는 3개까지예요';
+/**
+ * 간직 시트 맨 아래의 파는 말. 이 버튼이 Paywall 을 연다.
+ *
+ * 간직 개수 제한이 없어지면서 보관함에 있던 「간직할 자리」 안내가 사라졌다. 이용권이 지금
+ * 파는 것은 간직할 때 보는 짧은 광고를 건너뛰는 것 하나다. 그래서 파는 자리도 광고를 보기
+ * 싫은 사람이 서 있는 곳, 곧 간직 시트 안으로 옮겼다.
+ */
+const BUY_LINK = '광고 없이 간직하기';
+/** 이용권을 가진 뒤 보관함이 하는 말 */
+const OPEN_NOTE = /광고 없이 바로 간직할 수 있어요/;
 /** 결제가 끝나지 않았을 때 사람이 읽는 문구 */
 const FAIL_NOTICE = '결제를 끝내지 못했어요. 잠시 뒤에 다시 시도해 주세요.';
 /** 주문서를 못 여는 앱 버전에서 사람이 읽는 문구 */
@@ -73,10 +77,34 @@ async function openArchive(page: Page, setup: Setup = {}) {
   await expect(page.getByTestId('archive')).toBeVisible();
 }
 
-/** 잠긴 자리를 눌러 Paywall 을 연다 */
+/**
+ * 간직 시트까지 걸어가 「광고 없이 간직하기」로 Paywall 을 연다.
+ *
+ * 보관함이 아니라 답변 화면에서 간다. 파는 자리가 그리로 옮겨 갔다.
+ */
 async function openPaywall(page: Page) {
-  await page.getByRole('button', { name: LOCKED_NOTE }).click();
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await expect(page.getByTestId('save-gate')).toBeVisible();
+  await page.getByTestId('save-gate-buy').click();
   await expect(page.getByTestId('paywall')).toBeVisible();
+}
+
+/** 목 브릿지 시나리오와 이용권 플래그만 깔고 앱을 연다. 보관함으로 가지 않는다 */
+async function primeApp(page: Page, setup: Setup = {}) {
+  await page.addInitScript(
+    (init) => {
+      if (init.scenario != null) window.__buddhaBridge = init.scenario;
+      if (init.archivePassFlag != null) {
+        (window as unknown as { __buddhaFlags: unknown }).__buddhaFlags = {
+          iap: { archivePass: init.archivePassFlag },
+        };
+      }
+    },
+    { ...setup },
+  );
 }
 
 /** 창에 쌓인 행동 로그 이름만 뽑는다 */
@@ -90,14 +118,31 @@ async function expectReadableCopy(page: Page) {
   expect(text).not.toMatch(FORBIDDEN_COPY);
 }
 
-test('간직할 자리 안내는 로딩 뼈대가 아니라 글로 읽힌다', async ({ page }) => {
-  await openArchive(page);
+test('파는 말은 간직 시트 맨 아래 한 줄이다', async ({ page }) => {
+  /*
+   * 파는 자리가 보관함에서 간직 시트로 옮겨 왔다. 광고를 보기 싫은 사람이 지금 정확히
+   * 거기 서 있어서다.
+   *
+   * 여기서 보는 것은 **크기**다. 이 시트의 기본 길은 광고를 보는 쪽이고 파는 말은 곁길이다.
+   * 파는 말이 큰 버튼이 되면 간직하려던 사람이 매번 결제 권유부터 만난다.
+   */
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
 
-  // 회색 막대만 있으면 아직 안 만든 화면으로 읽힌다. 무엇이 제한이고 어떻게 푸는지가 글로 있어야 한다
-  const locked = page.getByRole('button', { name: LOCKED_NOTE });
-  await expect(locked).toContainText('간직할 자리는 3개까지예요');
-  await expect(locked).toContainText('이용권 보기');
-  await expect(page.getByText('3개까지', { exact: true })).toBeVisible();
+  const gate = page.getByTestId('save-gate');
+  await expect(gate).toBeVisible();
+  const watch = page.getByTestId('save-gate-watch');
+  const buy = page.getByTestId('save-gate-buy');
+  await expect(watch).toBeVisible();
+  await expect(buy).toContainText(BUY_LINK);
+
+  // 광고를 보는 버튼이 파는 줄보다 크다
+  const watchBox = await watch.boundingBox();
+  const buyBox = await buy.boundingBox();
+  expect(watchBox!.height).toBeGreaterThan(buyBox!.height);
+  await shot(page, '30 이용권 - 간직 시트 맨 아래의 파는 줄');
 });
 
 test('구매 성공: 주문서를 끝내면 간직 개수 제한이 풀린다', async ({ page }) => {
@@ -120,16 +165,20 @@ test('구매 성공: 주문서를 끝내면 간직 개수 제한이 풀린다', 
   await order.click();
   await expect(order).toBeHidden();
 
-  // 시트는 닫히고 흐린 자리가 걷힌다
+  // 시트는 닫히고, 사려던 이유였던 간직이 그 자리에서 끝난다
   await expect(page.getByTestId('paywall')).toHaveCount(0);
-  await expect(page.getByText(OPEN_NOTE)).toBeVisible();
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toHaveCount(0);
-  await shot(page, '31 이용권 - 사고 나서 열린 보관함', { fullPage: true });
+  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
+  // 로그는 판을 옮기기 전에 읽는다. goto 는 창을 새로 띄워 쌓인 로그를 지운다
   const names = await logNames(page);
   expect(names).toContain('purchase_start');
   expect(names).toContain('purchase_complete');
   expect(names).not.toContain('purchase_fail');
+
+  // 보관함은 이제 광고 없이 간직한다고 알린다
+  await page.goto('/archive');
+  await expect(page.getByText(OPEN_NOTE)).toBeVisible();
+  await shot(page, '31 이용권 - 사고 나서 열린 보관함', { fullPage: true });
 });
 
 test('구매 취소: 아무 일도 일어나지 않는다', async ({ page }) => {
@@ -148,7 +197,8 @@ test('구매 취소: 아무 일도 일어나지 않는다', async ({ page }) => 
 
   await page.getByTestId('sheet-close').first().click();
   await expect(page.getByTestId('paywall')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toBeVisible();
+  // 못 샀으면 보관함에 이용권 표시가 없다
+  await expect(page.getByText(OPEN_NOTE)).toHaveCount(0);
   await expect(page.getByText(OPEN_NOTE)).toHaveCount(0);
 
   const names = await logNames(page);
@@ -172,7 +222,8 @@ test('구매 실패: 읽을 수 있는 문구가 뜨고 보관함은 잠긴 채�
   await expect(page.getByTestId('paywall-buy')).toBeEnabled();
 
   await page.getByTestId('sheet-close').first().click();
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toBeVisible();
+  // 못 샀으면 보관함에 이용권 표시가 없다
+  await expect(page.getByText(OPEN_NOTE)).toHaveCount(0);
 });
 
 test('미지원 기기: 다시 시도하라 하지 않고 할 수 있는 일을 알려 준다', async ({ page }) => {
@@ -196,7 +247,8 @@ test('미지원 기기: 다시 시도하라 하지 않고 할 수 있는 일을 
 
   // 보관함은 잠긴 채로 남는다
   await page.getByTestId('sheet-close').first().click();
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toBeVisible();
+  // 못 샀으면 보관함에 이용권 표시가 없다
+  await expect(page.getByText(OPEN_NOTE)).toHaveCount(0);
 });
 
 test('구매 뒤 새로고침해도 이용권이 남는다. 되살리는 것은 기기 캐시가 아니라 주문 이력이다', async ({
@@ -206,6 +258,8 @@ test('구매 뒤 새로고침해도 이용권이 남는다. 되살리는 것은 
   await openPaywall(page);
 
   await page.getByTestId('paywall-buy').click();
+  await expect(page.getByTestId('paywall')).toHaveCount(0);
+  await page.goto('/archive');
   await expect(page.getByText(OPEN_NOTE)).toBeVisible();
 
   // 기기 캐시를 지운다. 이게 남아 있으면 복원이 실제로 돌았는지 알 수 없다
@@ -214,7 +268,6 @@ test('구매 뒤 새로고침해도 이용권이 남는다. 되살리는 것은 
 
   await expect(page.getByTestId('archive')).toBeVisible();
   await expect(page.getByText(OPEN_NOTE)).toBeVisible();
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toHaveCount(0);
   await shot(page, '36 이용권 - 새로고침 뒤에도 남는다', { fullPage: true });
 });
 
@@ -223,7 +276,6 @@ test('복원: 기기에 아무것도 없어도 토스에 산 기록이 있으면
   await openArchive(page, { scenario: { purchaseOwned: ['archive_pass'] } });
 
   await expect(page.getByText(OPEN_NOTE)).toBeVisible();
-  await expect(page.getByRole('button', { name: LOCKED_NOTE })).toHaveCount(0);
   await shot(page, '35 이용권 - 다시 깔아도 복원된다', { fullPage: true });
 });
 
@@ -237,20 +289,18 @@ test('복원 실패: 주문 이력을 못 읽으면 산 적 없는 것으로 치
   await expect(page.getByText(OPEN_NOTE)).toBeVisible();
 });
 
-test('플래그를 끄면 파는 화면 대신 옛 문구가 뜬다', async ({ page }) => {
-  await openArchive(page, { archivePassFlag: false });
+test('플래그를 끄면 파는 줄이 아예 서지 않는다', async ({ page }) => {
+  await primeApp(page, { archivePassFlag: false });
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
 
-  const note = page.getByRole('button', { name: OFF_NOTE });
-  await expect(note).toBeVisible();
-  await note.click();
-
-  const paywall = page.getByTestId('paywall');
-  await expect(paywall).toBeVisible();
-  await expect(paywall).toContainText('지금은 3개까지 간직할 수 있어요');
-  await expect(paywall).not.toContainText('₩4,900');
-  await expect(page.getByTestId('paywall-buy')).toHaveCount(0);
-  // 시트가 다 올라와야 닫기가 손에 닿는다. 올라오는 중에 재면 늘 통과한다
-  await expect(page.getByTestId('sheet-close').first()).toBeInViewport();
+  const gate = page.getByTestId('save-gate');
+  await expect(gate).toBeVisible();
+  // 팔지 않는 판에서는 파는 줄이 없다. 광고를 보는 길만 남는다
+  await expect(page.getByTestId('save-gate-buy')).toHaveCount(0);
+  await expect(page.getByTestId('save-gate-watch')).toBeVisible();
   await shot(page, '37 이용권 - 파는 기능을 껐을 때');
 });
 
@@ -286,7 +336,7 @@ test('시트는 지금 실제로 되는 것만 판다', async ({ page }) => {
   const wall = page.getByTestId('paywall');
 
   // 이용권이 실제로 여는 것은 간직 자리 제한 하나다
-  await expect(wall).toContainText('간직 개수 제한 없이 보관');
+  await expect(wall).toContainText('간직할 때 광고를 보지 않아요');
   await expect(wall).toContainText('앱을 다시 깔아도 이용권 그대로');
 
   // 이 판에 없는 기능은 적지 않는다. 지난 고민 열람·즐겨찾기·태그별 모아보기는 아직 없다
@@ -300,7 +350,7 @@ test('시트는 지금 실제로 되는 것만 판다', async ({ page }) => {
   // 공유 링크를 만들면 카드의 한 줄 풀이가 서버에 30일 남는다. 돈을 받기 직전이라 그 예외까지
   // 적어야 하고, 공유한 적 없는 사람에게는 해당되지 않는다는 것이 「만들었을 때만」으로 읽혀야 한다
   await expect(wall).toContainText(
-    '공유 링크를 만들었을 때만 카드에 담긴 경전 문장과 풀이 한 줄이 30일 동안 남고',
+    '공유 링크를 만들었을 때만 그 링크에 담길 내용이 30일 동안 남고',
   );
   await expect(wall).toContainText('적으신 고민 글은 그때도 함께 가지 않아요');
 
@@ -308,19 +358,13 @@ test('시트는 지금 실제로 되는 것만 판다', async ({ page }) => {
   await shot(page, '30-1 이용권 - 시트가 파는 것');
 });
 
-test('네 번째 간직하기에서 사면 하려던 일이 끝난다', async ({ page, stub }) => {
+test('간직 시트에서 사면 하려던 일이 끝난다', async ({ page, stub }) => {
   // 답변을 한 번 받아야 간직할 것이 생긴다. 답변 생성은 여기서 볼 것이 아니라 빠르게 넘긴다
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   await openArchive(page, { scenario: { purchase: 'ok' } });
 
-  await page.goto('/');
-  await askOnce(page);
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
-
-  // 자리가 셋 다 찼다. 여기서 이용권을 산다
-  await expect(page.getByTestId('paywall')).toBeVisible();
+  await openPaywall(page);
   await page.getByTestId('paywall-buy').click();
   await expect(page.getByTestId('paywall')).toHaveCount(0);
 
@@ -328,10 +372,9 @@ test('네 번째 간직하기에서 사면 하려던 일이 끝난다', async ({
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
   await shot(page, '31-1 이용권 - 사고 나서 그 답변이 간직됐다');
 
+  // 앞서 깔아 둔 셋에 방금 담은 하나가 더해졌다
   await page.goto('/archive');
   await expect(page.getByTestId('archive-item')).toHaveCount(4);
-  // 이용권을 샀으니 자리 수를 더 세지 않는다
-  await expect(page.getByText('3 / 3')).toHaveCount(0);
   await shot(page, '28-1 보관함 - 이용권으로 넷째까지 간직했다', { fullPage: true });
 });
 
@@ -344,10 +387,9 @@ test('설정: 이용권 상태를 보고, 다시 깐 뒤에도 복원으로 되�
   await page.goto('/settings');
   await expect(page.getByTestId('archive-pass')).toContainText('없음');
 
-  await page.goto('/archive');
   await openPaywall(page);
   await page.getByTestId('paywall-buy').click();
-  await expect(page.getByText(OPEN_NOTE)).toBeVisible();
+  await expect(page.getByTestId('paywall')).toHaveCount(0);
 
   // 산 사람이 자기가 무엇을 샀는지 확인하는 자리
   await page.goto('/settings');
@@ -363,7 +405,7 @@ test('설정: 이용권 상태를 보고, 다시 깐 뒤에도 복원으로 되�
   // 앱을 다시 깐 기기처럼 기기 캐시를 지우고 스스로 되찾는다
   await page.evaluate((key) => localStorage.removeItem(key), PASS_CACHE_KEY);
   await page.getByTestId('archive-pass-restore').click();
-  await expect(page.getByText('이용권을 찾았어요. 간직 개수에 제한이 없어요.')).toBeVisible();
+  await expect(page.getByText('이용권을 찾았어요. 광고 없이 간직할 수 있어요.')).toBeVisible();
   await expect(page.getByTestId('archive-pass')).toContainText('있음');
   await shot(page, '41-2 설정 - 구매 내역을 다시 확인했다');
 });
@@ -398,12 +440,8 @@ test('판매를 끈 빌드에는 이용권을 파는 자리도 확인하는 자�
   await expect(page.getByTestId('archive-pass')).toHaveCount(0);
   await expect(page.getByTestId('settings')).not.toContainText('이용권');
 
-  // 그래도 막다른 곳이 아니다. 자리가 찼을 때 할 수 있는 일을 알려 주고 닫힌다
+  // 보관함에도 파는 자리가 없다. 간직은 광고 하나로 그냥 된다
   await page.goto('/archive');
-  await page.getByRole('button', { name: OFF_NOTE }).click();
-  const wall = page.getByTestId('paywall');
-  await expect(wall).toContainText('보관함에서 하나를 지워 주세요');
-  await expect(wall).not.toContainText('₩4,900');
-  await page.getByTestId('sheet-close').first().click();
-  await expect(wall).toHaveCount(0);
+  await expect(page.getByTestId('archive')).toBeVisible();
+  await expect(page.getByTestId('archive')).not.toContainText('이용권');
 });

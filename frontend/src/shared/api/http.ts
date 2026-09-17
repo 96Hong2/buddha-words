@@ -500,8 +500,10 @@ export function createHttpClient(baseUrl: string, options: ApiClientOptions): Ap
      * 메신저에 붙일 주소도 서버가 준 `landingUrl` 을 그대로 쓴다. 여기서 다시 조립하면
      * 서버가 실제로 서 있는 자리와 어긋날 수 있다.
      */
-    async createShareToken({ answerId }) {
-      const data = asRecord(await call({ path: '/share', method: 'POST', body: { answerId } }));
+    async createShareToken({ answerId, scope }) {
+      const data = asRecord(
+        await call({ path: '/share', method: 'POST', body: { answerId, scope: scope ?? 'scripture' } }),
+      );
       return { token: asShareId(data.shareId), landingUrl: asLandingUrl(data.landingUrl) };
     },
 

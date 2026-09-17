@@ -177,24 +177,63 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | `post_ad_continue` | 보상을 받고 이어갔을 때 | 광고가 흐름을 끊지 않았나 |
 | `post_ad_exit` | 광고 뒤 곧바로 앱을 떠났을 때 | **수익이 높아도 사람이 나가는 자리를 찾는다** |
 
-`placement` 값: `extension` · `continue`
+`placement` 값: `generation` · `extension` · `continue` · `save`
+
+**자리가 둘에서 넷으로 늘었다(2026-09-17).** 새로 생긴 둘은 사람이 이미 기다리거나 멈춰
+서는 자리다.
+
+| 자리 | 언제 | 무엇을 덮나 |
+| --- | --- | --- |
+| `generation` | 답을 만드는 동안 | 원래 비어 있던 20초. **요청과 나란히 돈다. 답이 늦어지지 않는다** |
+| `save` | 간직하기를 누를 때 | 누른 뒤 곧바로 끝나 다음 화면이 없던 자리 |
+
+읽는 도중·쓰는 도중에는 여전히 광고가 없다.
+
+⚠ `generation` 은 **가드레일을 같이 봐야 하는 자리다.** 기다리다 나가는 사람
+(`friction_generation_abandon`)이 켜기 전보다 늘면 그 광고는 대기 시간을 채운 것이 아니라
+길을 막은 것이다. KPI `gen_ad_cost` 가 그 비교다.
+
+광고가 화면을 덮으면 WebView 도 숨겨진다. 그것을 앱을 떠난 것으로 세지 않는다
+(`LoadingScreen` 의 `adCovering`). 세면 이 지표가 통째로 망가진다.
 
 ### 보관 · 결제
 
 | 이름 | 언제 | 왜 |
 | --- | --- | --- |
-| `save_click` | 간직하기 | 저장한 사람의 리텐션 |
+| `save_click` | 간직하기를 **누른** 순간 | 하려던 사람이 몇인가 |
+| `save_gate_view` | 「짧은 광고를 보면」 시트가 뜰 때 | 광고를 제안받은 사람 |
+| `save_gate_accept` | 「보고 간직하기」를 누를 때 | 광고 수락률(`save_gate_conv`) |
+| `save_complete` | 실제로 **담겼을** 때 (`gate`) | 누른 것과 담긴 것 사이의 이탈 |
 | `archive_view` | 보관함을 열 때 | 안 쓰는 기능인지 본다 |
 | `archive_item_open` | 간직한 것을 다시 열 때 (`days_since`) | 쌓아 두는 자리인가 다시 읽는 자리인가 |
 | `paywall_view` / `paywall_close` | 이용권 화면 열고 닫을 때 | `within_bucket_s` 가 2초 미만이면 길을 막고 선 화면이다 |
 | `purchase_start` / `_complete` / `_fail` | 결제 흐름 | 전환율 |
+
+**개수 제한이 없어졌다(2026-09-17).** 셋까지 담기고 넷째부터 이용권을 묻던 규칙을 뺐다.
+간직하기는 그 말을 다시 보고 싶어서 누르는 자리라 거기를 막으면 앱이 주려는 것 자체가
+막힌다. 지금 문지기는 짧은 광고 하나이고 `gate` 값이 어느 길로 담겼는지 적는다.
+
+`gate` 값: `ad`(광고를 봤다) · `pass`(이용권) · `free`(광고를 못 띄우는 판)
+
+`save_click` 과 `save_complete` 를 가른 이유: 광고가 중간에 서면서 **누른 사람과 담긴 사람이
+달라졌다.** 하나로 두면 광고가 얼마나 떨구는지 영영 못 본다(KPI `save_conv`).
 
 ### 공유 · 리텐션
 
 | 이름 | 왜 |
 | --- | --- |
 | `share_start` / `share_complete` / `share_cancel` | 공유가 어디서 끊기나 |
+| `share_scope_select` | 무엇을 보낼지 고른 순간 (`scope`) | 경전만인가 답 전체인가 |
 | `share_landing_open` / `share_landing_cta` | 받은 사람이 들어와 쓰기 시작하나 (K-factor) |
+| `app_share_view` / `app_share_complete` | 세 번째 답 뒤의 앱 권하기 | 답이 아니라 앱 자체를 권한 결과 |
+| `home_add_view` / `home_add_dismiss` | 홈에 추가 안내 | 권해서 실제로 닫는지 |
+| `text_size_change` | 글자 크기를 바꿀 때 (`size`) | 큰 글씨를 쓰는 사람이 얼마나 되나 |
+
+`share_complete` 의 `method` 값: `system`(네이티브 공유 시트) · `copy`(주소 복사) ·
+`image`(앨범 저장). `card_kind` 는 `scripture` 와 `full` 둘이다.
+
+**공유가 두 갈래가 됐다(2026-09-17).** `full` 을 고르면 답변 본문이 링크에 30일 남는다.
+그 사실은 고르는 화면과 개인정보 안내가 함께 말한다. 고민 원문은 어느 쪽에도 담기지 않는다.
 | `daily_quote_impression` / `_open` | 오늘의 한마디가 재방문을 만드나 |
 | `entry_card_dismiss` | 첫 카드를 어떻게 닫나 |
 | `recall_card_impression` / `_click` | 지난 고민 회고가 먹히나 |
