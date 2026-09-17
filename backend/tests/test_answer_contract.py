@@ -700,11 +700,14 @@ def test_timezone_header_survives_preflight(client: TestClient) -> None:
     assert "x-timezone" in allowed
 
 
-# 토스가 같은 번들을 서비스하는 주소. 심사 전과 출시 후가 다르다.
-# 실기기 로그에서 그대로 받아 적은 값이고, 값을 지어내면 이 검사는 아무것도 막지 못한다
+# 토스가 같은 번들을 서비스하는 주소 넷. 심사 전(private-)과 출시 후가 다르고,
+# SDK 세대에 따라 apps 와 web 이 갈린다. apps 쪽은 실기기 로그에서 받아 적었다.
+# 값을 설정에서 읽어 오면 한 줄을 지워도 같이 지워져 통과한다. 그래서 여기 적는다
 WEBVIEW_ORIGINS = [
     "https://buddha-words.apps.tossmini.com",
     "https://buddha-words.private-apps.tossmini.com",
+    "https://buddha-words.web.tossmini.com",
+    "https://buddha-words.private-web.tossmini.com",
 ]
 
 
