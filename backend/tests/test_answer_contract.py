@@ -700,6 +700,33 @@ def test_timezone_header_survives_preflight(client: TestClient) -> None:
     assert "x-timezone" in allowed
 
 
+# 토스가 같은 번들을 서비스하는 주소. 심사 전과 출시 후가 다르다.
+# 실기기 로그에서 그대로 받아 적은 값이고, 값을 지어내면 이 검사는 아무것도 막지 못한다
+WEBVIEW_ORIGINS = [
+    "https://buddha-words.apps.tossmini.com",
+    "https://buddha-words.private-apps.tossmini.com",
+]
+
+
+@pytest.mark.parametrize("origin", WEBVIEW_ORIGINS)
+def test_the_webview_gets_past_the_preflight(client: TestClient, origin: str) -> None:
+    """실기기가 서는 자리다. 여기서 막히면 앱은 어떤 고민에도 오류 화면만 준다.
+
+    주소를 상수로 적어 둔다. 설정 목록을 읽어 그대로 돌려주면 한 줄을 지워도 같이 지워져
+    통과한다. 실제로 출시 호스트 하나만 넣고 나간 판이 실기기에서 전부 막혔다.
+    """
+    res = client.options(
+        "/concern",
+        headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type, x-anon-key, x-timezone",
+        },
+    )
+    assert res.status_code == 200, f"{origin} 가 막혔다: {res.text}"
+    assert res.headers["access-control-allow-origin"] == origin
+
+
 def test_timezone_header_moves_the_reset_time(client: TestClient) -> None:
     """자정 기준이 기기 시간대로 간다. 헤더가 없으면 서울이다."""
     anon = {"X-Anon-Key": f"anon-{uuid.uuid4().hex}"}
