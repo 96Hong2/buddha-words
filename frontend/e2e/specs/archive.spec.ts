@@ -6,7 +6,7 @@
  * 자리가 차면 지울 길이 없었다. 이 스펙은 그 셋을 실제 화면으로 본다.
  */
 
-import { DEEP_CONCERN, askOnce, revealBottomBar } from '../support/flow';
+import { DEEP_CONCERN, askOnce, revealBottomBar, saveAnswerFromScreen} from '../support/flow';
 import { expect, test, type Page } from '../support/fixtures';
 import { shot } from '../support/shots';
 
@@ -54,8 +54,7 @@ test('간직한 답변을 보관함에서 다시 펼친다. 앱을 새로 열어
   // 간직하기 전에 이 답이 어디까지 남는지 화면이 먼저 말한다
   await expect(page.getByTestId('keep-note')).toContainText('앱을 닫으면 사라져요');
 
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   // goto 는 판을 새로 띄운다. 세션의 답변은 사라지고 기기에 남은 것만 남는다
@@ -145,8 +144,7 @@ test('오늘 받은 답을 간직하면 보관함에 한 장만 남는다', asyn
   // 간직한 뒤. 같은 답이 두 자리에 겹쳐 보이지 않는다
   await page.getByRole('button', { name: '이야기하기' }).click();
   await page.getByTestId('return-card').getByRole('button').click();
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
 
   await page.getByTestId('again-button').click();
   await page.getByRole('button', { name: '보관함' }).click();
@@ -158,29 +156,30 @@ test('오늘 받은 답을 간직하면 보관함에 한 장만 남는다', asyn
   await expect(page.getByTestId('archive-item')).toContainText('오늘');
 });
 
-test('자리가 차도 막다른 곳이 아니다. 하나를 지우면 다시 간직할 수 있다', async ({
-  page,
-  stub,
-}) => {
+test('넷째도 그냥 간직된다. 지우는 길도 있다', async ({ page, stub }) => {
+  /*
+   * 예전에는 셋까지만 담기고 넷째에서 이용권 시트가 길을 막았다. 그 제한을 없앴다.
+   * 간직하기는 그 말을 다시 보고 싶어서 누르는 자리라, 거기를 막으면 앱이 주려는 것 자체가
+   * 막힌다. 지금 문지기는 짧은 광고 하나뿐이고 개수는 세지 않는다.
+   *
+   * 지우는 길은 그대로 살아 있어야 한다. 제한이 없다고 지울 수 없으면 잘못 담은 것이
+   * 영영 남는다.
+   */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   await seedThree(page);
   await page.goto('/');
   await askOnce(page, DEEP_CONCERN);
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
 
-  // 네 번째다. 여기서 「하나를 지워 주세요」라고 하면서 지울 자리가 없었다
-  const wall = page.getByTestId('paywall');
-  await expect(wall).toBeVisible();
-  await page.getByTestId('sheet-close').click();
-  await expect(wall).toHaveCount(0);
+  // 넷째인데 막는 것이 없다
+  await expect(page.getByTestId('paywall')).toHaveCount(0);
+  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.getByTestId('again-button').click();
   await page.getByRole('button', { name: '보관함' }).click();
-  // 간직한 셋에 아직 간직하지 않은 오늘 이야기 한 장이 더 있다
   await expect(page.getByTestId('archive-item')).toHaveCount(4);
-  await expect(page.getByText('3 / 3')).toBeVisible();
+  await expect(page.getByText('4개')).toBeVisible();
 
   // 지우는 길. 되돌릴 수 없으니 한 번 더 묻는다
   await page.getByTestId('archive-item').filter({ hasText: '1번째로 간직한 말이에요' }).click();
@@ -195,20 +194,46 @@ test('자리가 차도 막다른 곳이 아니다. 하나를 지우면 다시 �
   await page.getByTestId('archive-delete-confirm').click();
   await expect(page.getByTestId('archive-detail')).toHaveCount(0);
   await expect(page.getByTestId('archive-item')).toHaveCount(3);
-  await expect(page.getByText('2 / 3')).toBeVisible();
+  await expect(page.getByText('3개')).toBeVisible();
   await shot(page, '28-4 보관함 - 하나를 지운 뒤', { fullPage: true });
+});
 
-  // 지운 자리가 실제로 비었다. 다시 간직할 수 있다
-  await page.getByRole('button', { name: '이야기하기' }).click();
-  await page.getByTestId('return-card').getByRole('button').click();
+test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ page, stub }) => {
+  /*
+   * 개수 제한 대신 들어온 문지기다. 여기서 보는 것 셋:
+   *   1. 누르자마자 광고가 뜨지 않는다. 무엇을 하려는지 한 장 물어본다
+   *   2. 「다음에」로 물러서면 담기지 않는다
+   *   3. 보고 나면 담긴다
+   */
+  test.setTimeout(90_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await page.goto('/');
+  await askOnce(page, DEEP_CONCERN);
+
   await revealBottomBar(page);
   await page.getByTestId('save-button').click();
-  await expect(page.getByTestId('paywall')).toHaveCount(0);
+
+  const gate = page.getByTestId('save-gate');
+  await expect(gate).toBeVisible();
+  await expect(gate).toContainText('짧은 광고를 보면 간직할 수 있어요');
+  // 광고를 강조하지 않는다. 개수 제한이 없다는 말이 함께 있어야 무엇을 잃는지가 분명하다
+  await expect(gate).toContainText('개수 제한은 없어요');
+  await shot(page, '28-5 간직 - 광고를 보면 간직할 수 있어요');
+
+  // 물러서면 아무 일도 없다. 담겼다는 말이 뜨지 않는다
+  await page.getByTestId('sheet-close').click();
+  await expect(gate).toHaveCount(0);
+  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toHaveCount(0);
+
+  // 같은 자리에서 다시 눌러 보고 나면 담긴다
+  await page.getByTestId('save-button').click();
+  await expect(gate).toBeVisible();
+  await page.getByTestId('save-gate-watch').click();
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
+  // 기기에 실제로 남았다. 새로 띄워도 한 장이 있다
   await page.goto('/archive');
-  await expect(page.getByTestId('archive-item')).toHaveCount(3);
-  await expect(page.getByText('3 / 3')).toBeVisible();
+  await expect(page.getByTestId('archive-item')).toHaveCount(1);
 });
 
 /**
@@ -293,8 +318,7 @@ test('다른 답을 간직해도 앞서 간직한 저본과 한문 원문이 지
   await askOnce(page);
 
   // 오늘 받은 답을 간직한다. 이때 앞서 간직해 둔 것까지 통째로 다시 쓰인다
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   const kept = (await storedItems(page)).find((item) => item.answerId === 'seed-origin');
@@ -335,8 +359,7 @@ test('광고를 보고 받은 다른 관점도 간직한 답에 함께 남는다
   await askOnce(page);
 
   // 먼저 간직하고 광고는 그 뒤에 본다. 카드가 마지막 한마디 아래에 있어 이 순서가 자연스럽다
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.getByTestId('extension-card').scrollIntoViewIfNeeded();

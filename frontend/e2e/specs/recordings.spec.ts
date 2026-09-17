@@ -134,18 +134,26 @@ test('영상 2: 공유 카드를 만들어 보낸다', async ({ browser }) => {
       expect(card).not.toContain('팀장님');
       expect(card).not.toContain('그만둘까');
 
+      // 무엇을 보낼지 고르는 자리. 미리보기가 함께 바뀐다
+      await page.getByTestId('share-scope-full').click();
+      await expect(page.getByTestId('share-full-preview')).toBeVisible();
+      await beat(page, 2);
+      await page.getByTestId('share-scope-scripture').click();
+      await expect(page.getByTestId('share-card')).toBeVisible();
+      await beat(page);
+
       const link = page.getByTestId('share-link');
       await expect(link).toHaveAttribute('data-share-url', /\/s\/.+/);
       await link.click();
-      // 복사가 막힌 브라우저다. 조용히 지나가지 않고 막혔다고 알린다
-      await expect(page.getByText('복사가 막혀 있어요')).toBeVisible();
+      // 네이티브 공유 시트로 나간다. 보냈으면 시트가 닫힌다
+      await expect(sheet).toHaveCount(0);
       await beat(page, 2);
     },
     { stub: { pass1Ms: 300, pass2Ms: 400 } },
   );
 });
 
-test('영상 3: 보관함에 간직하고 네 번째에 이용권 안내가 뜬다', async ({ browser }) => {
+test('영상 3: 짧은 광고를 보고 간직한다. 개수 제한은 없다', async ({ browser }) => {
   test.setTimeout(180_000);
   await record(
     browser,
@@ -171,21 +179,17 @@ test('영상 3: 보관함에 간직하고 네 번째에 이용권 안내가 뜬�
         await ask(`${DEEP_CONCERN}\n(${i}번째 이야기예요)`);
         await revealBottomBar(page);
         await page.getByTestId('save-button').click();
+
+        // 간직 앞에 짧은 광고 안내가 한 장 선다. 개수 제한은 없다
+        const gate = page.getByTestId('save-gate');
+        await expect(gate).toBeVisible();
+        if (i === 1) await beat(page, 2);
+        await page.getByTestId('save-gate-watch').click();
         await expect(page.getByTestId('paywall')).toHaveCount(0);
         await beat(page);
         await page.goto('/');
       }
 
-      await ask(`${DEEP_CONCERN}\n(네 번째 이야기예요)`);
-      await revealBottomBar(page);
-      await page.getByTestId('save-button').click();
-
-      const paywall = page.getByTestId('paywall');
-      await expect(paywall).toBeVisible();
-      await expect(page.getByTestId('paywall-buy')).toBeInViewport();
-      await beat(page, 2);
-
-      await page.getByTestId('sheet-close').first().click();
       await page.goto('/archive');
       await expect(page.getByTestId('archive-item')).toHaveCount(3);
       await beat(page, 2);

@@ -1,0 +1,117 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   권유 카드
+
+   앱이 사용자에게 무언가를 부탁하는 유일한 자리다. 그래서 화면을 덮지 않고,
+   본문보다 조용한 색을 쓰고, 닫는 길을 둘(X · 다음에) 둔다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.gr-card {
+  margin: 14px 0 0;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--accent-rule);
+  background: var(--surface-illust);
+}
+
+.gr-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gr-card__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.gr-card__x {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px 0 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-weak);
+  border-radius: 50%;
+}
+
+.gr-card__x svg {
+  width: 14px;
+  height: 14px;
+}
+
+.gr-card__how {
+  margin: 8px 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.gr-card__how b {
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+/* 화면 위 더보기 버튼과 눈으로 맞출 수 있게 점 셋을 그대로 그린다 */
+.gr-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  background: var(--surface);
+  vertical-align: middle;
+}
+
+.gr-dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.gr-card__later {
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-weak);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/*
+ * 답변 맨 아래에 서는 판. 본문과 같은 폭으로 맞춘다.
+ *
+ * 아래 여백이 큰 이유: 답변 화면 바닥에는 공유·간직 바가 화면에 붙어 떠 있다(position: fixed).
+ * 여백이 없으면 스크롤을 끝까지 내렸을 때 이 카드가 그 바 뒤로 들어가 눌리지 않는다.
+ * e2e 가 그것을 먼저 잡았다. 바 높이(64) + 아래 여백(24) + 안전영역만큼 비운다.
+ */
+.gr-card--answer {
+  margin: 20px var(--gutter) calc(96px + var(--safe-bottom, 0px));
+}
+
+.gr-card__cta {
+  width: 100%;
+  margin: 12px 0 0;
+  min-height: var(--tap-min);
+  padding: 11px 16px;
+  border: 1px solid var(--accent-rule);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}
+
+.gr-card__cta:disabled {
+  opacity: 0.6;
+}

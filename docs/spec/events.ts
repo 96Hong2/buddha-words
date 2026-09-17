@@ -8,7 +8,7 @@
  * 콘솔 「핵심 지표」 설정(guide/analytics/conversion-metrics):
  *   활성 지표(1개)   answer_generated
  *   대표 전환(1개)   answer_read_70   ← 답변을 70% 이상 읽은 사용자. 광고보다 먼저 이걸 본다
- *   보조 전환(2개)   rewarded_ad_complete · save_click
+ *   보조 전환(2개)   rewarded_ad_complete · save_complete
  */
 
 export const EVENTS = {
@@ -59,7 +59,7 @@ export const EVENTS = {
   action_commit:       { params: ['answer_id', 'action_index'] as const },   // 「오늘 이것만 해볼게요」. 플래그로 끈다
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
-  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue
+  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: generation | extension | continue | save
   rewarded_ad_complete:{ params: ['placement', 'answer_id', 'reward_granted'] as const },
   rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
@@ -69,17 +69,25 @@ export const EVENTS = {
   // 같은 날 두 번째 고민
   second_question_start:{ params: ['continues_used', 'gate'] as const },                  // gate: free | ad_continue | exhausted
   // 공유
-  share_start:         { params: ['answer_id', 'card_kind'] as const },                   // card_kind: modern_message
-  share_complete:      { params: ['answer_id', 'card_kind', 'method'] as const },         // method: link | image
-  share_landing_open:  { params: ['token_valid'] as const },
+  share_start:         { params: ['answer_id', 'card_kind'] as const },                   // card_kind: scripture | full
+  share_scope_select:  { params: ['answer_id', 'scope'] as const },                       // scope: scripture | full. 무엇을 보낼지 고른 순간
+  share_complete:      { params: ['answer_id', 'card_kind', 'method'] as const },         // method: system | copy | image
+  share_landing_open:  { params: ['token_valid', 'scope'] as const },
   share_cancel:        { params: ['answer_id'] as const },
   share_landing_cta:   { params: [] as const },                                           // 「나도 내 고민에 맞는 말을 받아보기」
-  // 보관·결제
-  save_click:          { params: ['answer_id', 'slot_index'] as const },                  // slot_index: 1~3 무료, 4 부터 paywall
-  paywall_view:        { params: ['trigger'] as const },                                  // trigger: save_4th | archive_locked
-  paywall_close:       { params: ['trigger', 'within_bucket_s'] as const },               // 2초 안에 닫혔으면 잘못 열린 것이다
+  // 앱 자체를 권한다. 세 번째 이야기를 마친 뒤 한 번만 뜬다
+  app_share_view:      { params: ['answers_total'] as const },
+  app_share_complete:  { params: ['method'] as const },                                   // method: system | copy
+  // 보관
+  save_click:          { params: ['answer_id', 'slot_index'] as const },                  // 누른 순간. 담긴 것은 save_complete 다
+  save_gate_view:      { params: ['answer_id'] as const },                                // 「짧은 광고를 보면」 시트를 봤다
+  save_gate_accept:    { params: ['answer_id'] as const },                                // 「보고 간직하기」를 눌렀다
+  save_complete:       { params: ['answer_id', 'slot_index', 'gate'] as const },          // gate: ad | pass | free. 실제로 담겼다
   archive_view:        { params: ['items_bucket'] as const },
   archive_item_open:   { params: ['days_since'] as const },
+  // 결제
+  paywall_view:        { params: ['trigger'] as const },                                  // trigger: save_ad | archive_locked
+  paywall_close:       { params: ['trigger', 'within_bucket_s'] as const },               // 2초 안에 닫혔으면 잘못 열린 것이다
   purchase_start:      { params: ['sku'] as const },
   purchase_complete:   { params: ['sku', 'amount_krw'] as const },
   purchase_fail:       { params: ['sku', 'error_code'] as const },
@@ -92,6 +100,11 @@ export const EVENTS = {
   // 마찰. 사람이 막힌 자리를 화면 녹화 없이 알아내는 최소한의 신호다
   friction_repeat_submit:{ params: ['within_bucket_ms'] as const },                        // 3초 안에 전송을 다시 눌렀다
   friction_generation_abandon:{ params: ['route', 'elapsed_bucket_ms'] as const },         // 답을 만드는 중에 나갔다
+  // 읽기 설정. 글자 크기는 한 번 정하면 계속 쓰므로 바꾼 사실만 남긴다
+  text_size_change:    { params: ['size', 'from'] as const },                              // size: s | m | l | xl, from: settings | onboarding
+  // 홈에 추가. 온보딩을 마친 첫 화면에서 한 번만 권한다
+  home_add_view:       { params: [] as const },
+  home_add_dismiss:    { params: ['how'] as const },                                       // how: close | later
   // 알림. 첫 답을 본 뒤에만 묻는다. 플래그로 끈다
   notification_prompt_view:  { params: ['surface'] as const },
   notification_prompt_accept:{ params: ['surface'] as const },
@@ -131,6 +144,9 @@ export const KPI = {
   quality:          { name: '답변 70% 완독률',         num: 'answer_read_70', den: 'answer_generated(pass=2|light)', target: 'normal·deep 따로 본다' },
   deep_engagement:  { name: 'Deep Extension 클릭률',   num: 'rewarded_ad_start(placement=extension)', den: 'deep_extension_view', target: '실측 후 정한다' },
   ad_optin:         { name: '보상형 opt-in',           num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
+  save_gate_conv:   { name: '간직 광고 수락률',          num: 'save_gate_accept', den: 'save_gate_view', target: '낮으면 간직을 막고 선 것이다' },
+  save_conv:        { name: '누른 뒤 실제로 담김',        num: 'save_complete', den: 'save_click', target: '광고가 중간에서 얼마나 떨구는지 본다' },
+  gen_ad_cost:      { name: '생성 중 광고의 대가',        num: 'friction_generation_abandon', den: 'concern_submit', target: 'placement=generation 을 켜기 전후로 비교한다' },
   ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start', target: '' },
   ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete', den: 'answer_generated(pass=2|light)', target: '' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
@@ -142,6 +158,8 @@ export const KPI = {
   daily_quote:      { name: '오늘의 한마디 재방문',      num: 'daily_quote_open', den: 'daily_quote_impression', target: '' },
   recall:           { name: '지난 고민 회고 클릭률',     num: 'recall_card_click', den: 'recall_card_impression', target: '' },
   viral_share:      { name: '공유 완료 / 답변 생성',     num: 'share_complete', den: 'answer_generated(pass=2|light)', target: '' },
+  share_scope_mix:  { name: '전체 공유 비율',            num: 'share_scope_select(scope=full)', den: 'share_scope_select', target: '무엇을 보내고 싶어 하는지 본다' },
+  app_share_conv:   { name: '앱 권유 수락률',            num: 'app_share_complete', den: 'app_share_view', target: '' },
   viral_landing:    { name: '공유 링크 → 고민 입력',     num: 'share_landing_cta → input_type_*', den: 'share_landing_open', target: '' },
   // ── 활성화 깔때기. 한 단계라도 빠지면 그 자리가 제품을 막고 있다 ──
   onboarding_done:  { name: '온보딩 완주율',            num: 'onboarding_complete', den: 'onboarding_view(step=1)', target: '≥ 85%' },
@@ -164,7 +182,7 @@ export const KPI = {
   stickiness:       { name: 'DAU/WAU',                num: 'DAU', den: 'WAU', target: '' },
   questions_per_dau:{ name: '하루 한 명당 고민 수',      num: 'concern_submit', den: 'DAU', target: '' },
   sessions_per_user:{ name: '하루 한 명당 세션 수',      num: 'session_start', den: 'DAU', target: '' },
-  k_factor:         { name: 'K-factor',               num: '(share_complete / DAU) × (share_landing_cta / share_landing_open)', den: '', target: '1 을 넘으면 자생한다' },
+  k_factor:         { name: 'K-factor',               num: '((share_complete + app_share_complete) / DAU) × (share_landing_cta / share_landing_open)', den: '', target: '1 을 넘으면 자생한다' },
   organic_ratio:    { name: '자생 유입 비율',           num: 'app_open(is_first_open, entry=share_link)', den: 'app_open(is_first_open)', target: '' },
   margin_per_dau:   { name: '한 명당 기여이익',         num: '광고수익 + 결제수익 − Σ model_cost_estimate', den: 'DAU', target: '> 0 이어야 사용자를 더 받을 수 있다' },
 } as const;
@@ -175,9 +193,9 @@ export const KPI = {
  */
 export const COHORTS = {
   /** 값을 실제로 느낀 사람. 이 비율이 Carrying Capacity 의 바닥이다 */
-  healthy_activated: 'answer_read_70 OR action_view OR share_complete OR save_click',
+  healthy_activated: 'answer_read_70 OR action_view OR share_complete OR save_complete',
   /** 수익화 표면까지 온 사람 */
-  monetizable: 'deep_extension_view OR second_question_start(gate=ad_continue) OR paywall_view',
+  monetizable: 'rewarded_ad_start OR paywall_view',
   /** 그날 번 것이 그날 쓴 것보다 큰 사용자-일 */
   profitable_user_day: '(광고수익 + 결제수익) > Σ model_cost_estimate',
 } as const;

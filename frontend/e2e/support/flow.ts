@@ -70,3 +70,25 @@ export function todayISO(offsetDays = 0): string {
   const pad = (n: number) => `${n}`.padStart(2, '0');
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
+
+/**
+ * 간직하기 한 번.
+ *
+ * 간직 앞에 짧은 광고가 서면서 누르는 곳이 둘이 됐다. 시트가 뜨면 「보고 간직하기」까지
+ * 눌러 주고, 광고를 못 띄우는 판이면 시트 없이 바로 끝난다. 두 갈래를 스펙마다 적으면
+ * 광고를 켜고 끌 때마다 같은 곳을 여러 번 고치게 된다.
+ *
+ * **게이트 자체를 보는 스펙은 이 함수를 쓰지 않는다.** 그쪽은 시트가 뜨는 것이 확인 대상이라
+ * 직접 누른다.
+ */
+export async function saveAnswerFromScreen(page: Page): Promise<void> {
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+
+  const gate = page.getByTestId('save-gate');
+  // 광고를 못 띄우는 판에서는 시트 없이 곧바로 담긴다. 잠깐 기다렸다 없으면 지나간다
+  if (await gate.isVisible({ timeout: 1500 }).catch(() => false)) {
+    await page.getByTestId('save-gate-watch').click();
+    await expect(gate).toBeHidden();
+  }
+}

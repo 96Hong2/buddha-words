@@ -476,7 +476,9 @@
 }
 
 .arch-tab {
-  flex: 0 0 120px;
+  /* 탭이 셋이 되면서 고정 폭을 뺐다. 셋으로 나눠 갖는다 */
+  flex: 1 1 0;
+  min-width: 0;
   height: 48px;
   display: flex;
   flex-direction: column;
@@ -861,4 +863,19 @@
   font-size: var(--t-micro);
   line-height: var(--lh-micro);
   color: var(--text-weak);
+}
+
+/* 시트 맨 아래 조용한 링크. 파는 말은 여기까지다 */
+.pw-quiet {
+  display: block;
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-weak);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }

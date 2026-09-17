@@ -95,7 +95,9 @@ test('오늘의 부처의 말 아래 줄이 그 한마디를 부처의 가르침
   await askOnce(page, DEEP_CONCERN);
 
   const today = page.getByTestId('buddha-message');
-  await expect(today).toContainText('이 고민에 맞춰 AI 가 쓴 말이에요');
+  // AI 가 썼다는 말은 화면 맨 위 배지가 스크롤 내내 달고 다닌다. 여기서 또 적지 않고
+  // 이 자리에서만 할 수 있는 말(경전은 따로 있다)을 한다
+  await expect(today).toContainText('경전 원문은 바로 아래에 있어요');
 
   /*
    * 감수를 통과한 16구절 중 6구절은 부처의 말이 아니라 원효·승만부인·조주 선사·뿐니까
@@ -182,8 +184,15 @@ test('공유 시트의 안심 문구가 카드에 실제로 실리는 것을 말
   await revealBottomBar(page);
   await page.getByTestId('share-button').click();
 
+  // 「경전 구절만」이 기본이다. 그 범위에서 참인 말을 한다
   await expect(page.getByTestId('share-sheet')).toContainText(
-    '카드에는 경전 구절과 그 뜻만 담겨요. 적으신 이야기도 마음 태그도 들어가지 않아요',
+    '경전 구절과 그 뜻만 담겨요. 적으신 이야기도 마음 태그도 들어가지 않아요',
+  );
+
+  // 「답변 전체」로 바꾸면 안심 문구도 함께 바뀐다. 무엇이 더 가는지 고르기 전에 말한다
+  await page.getByTestId('share-scope-full').click();
+  await expect(page.getByTestId('share-sheet')).toContainText(
+    '무슨 일이 있었는지 받는 사람이 짐작할 수 있어요',
   );
 });
 

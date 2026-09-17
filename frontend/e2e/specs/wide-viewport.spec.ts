@@ -17,6 +17,7 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
+import { askOnce, revealBottomBar } from '../support/flow';
 
 /** index.css 의 --app-max 와 같은 값 */
 const APP_MAX = 430;
@@ -267,9 +268,12 @@ test('넓은 화면에서 이용권 시트가 기둥 안에서 열린다', async
   await page.goto('/archive');
   await expect(page.getByTestId('archive')).toBeVisible();
 
-  await page
-    .getByRole('button', { name: '이용권이 있으면 개수 제한 없이 간직할 수 있어요' })
-    .click();
+  // 파는 자리가 보관함에서 간직 시트로 옮겨 갔다. 답변을 받아 그리로 간다
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await page.getByTestId('save-gate-buy').click();
   await expect(page.getByTestId('paywall')).toBeVisible();
   await expectInsideColumn(page, '.pw-sheet');
 });

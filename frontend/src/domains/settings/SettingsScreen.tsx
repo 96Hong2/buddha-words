@@ -8,6 +8,14 @@ import {
   type ArchivePassState,
 } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
+import { useAnalytics } from '../../shared/analytics';
+import {
+  readTextSize,
+  TEXT_SIZE_LABEL,
+  TEXT_SIZES,
+  writeTextSize,
+  type TextSize,
+} from '../../shared/prefs/textSize';
 
 import './settings.css';
 
@@ -16,14 +24,14 @@ const CONTACT_EMAIL = 'help@buddhawords.kr';
 
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
-  owned: { value: '있음', desc: '간직 개수에 제한이 없어요' },
-  none: { value: '없음', desc: '보관함에서 네 번째로 간직할 때 살 수 있어요' },
+  owned: { value: '있음', desc: '광고 없이 바로 간직할 수 있어요' },
+  none: { value: '없음', desc: '지금은 짧은 광고를 보면 간직할 수 있어요' },
   unknown: { value: '확인 중', desc: '토스에 남은 구매 내역을 읽고 있어요' },
 };
 
 /** 구매 내역을 다시 읽고 나서 하는 말 */
 const RESTORE_NOTICE: Record<ArchivePassState, string> = {
-  owned: '이용권을 찾았어요. 간직 개수에 제한이 없어요.',
+  owned: '이용권을 찾았어요. 광고 없이 간직할 수 있어요.',
   none: '이 토스 계정으로 산 이용권이 없어요.',
   unknown: '구매 내역을 확인하지 못했어요. 잠시 뒤에 다시 눌러 주세요.',
 };
@@ -47,9 +55,22 @@ function Chevron() {
 
 export function SettingsScreen() {
   const navigate = useNavigate();
+  const analytics = useAnalytics();
   const { archivePass, refreshArchivePass } = useSession();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [textSize, setTextSize] = useState<TextSize>(() => readTextSize());
+
+  /** 고른 즉시 화면 전체가 커진다. 저장 버튼을 따로 두지 않는다 */
+  const pickTextSize = useCallback(
+    (size: TextSize) => {
+      if (size === textSize) return;
+      setTextSize(size);
+      writeTextSize(size);
+      analytics.log('text_size_change', { size, from: 'settings' }, { kind: 'click' });
+    },
+    [analytics, textSize],
+  );
 
   /**
    * 산 사람이 자기 것을 확인하는 자리.
@@ -76,7 +97,41 @@ export function SettingsScreen() {
     <div className="set-screen" {...testId(TEST_IDS.settings)}>
       <div className="set-pad">
         <h1 className="set-title">설정</h1>
-        <p className="set-sub">앱에 대해 알아둘 것을 한 곳에 모았어요</p>
+        <p className="set-sub">읽기 편한 크기로 맞추고, 알아둘 것을 한 곳에서 볼 수 있어요</p>
+
+        {/*
+          글자 크기.
+          
+          맨 위에 둔다. 이 설정을 찾는 사람은 지금 글씨가 작아서 온 것이고, 그 사람이
+          목록을 훑어 내려가게 만들면 찾는 동안 계속 작은 글씨를 읽어야 한다.
+
+          미리보기 문장을 함께 둔다. 「크게」가 얼마나 큰지는 눌러 보기 전에는 모른다.
+        */}
+        <p className="set-group">글자 크기</p>
+        <div className="set-list">
+          <div className="set-textsize" {...testId(TEST_IDS.textSize)}>
+            <div className="set-textsize__row" role="radiogroup" aria-label="글자 크기">
+              {TEXT_SIZES.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  role="radio"
+                  aria-checked={textSize === size}
+                  className={`set-textsize__btn${textSize === size ? ' is-on' : ''}`}
+                  onClick={() => pickTextSize(size)}
+                  data-size={size}
+                  {...testId(TEST_IDS.textSizeOption)}
+                >
+                  <span className="set-textsize__a">가</span>
+                  <span className="set-textsize__l">{TEXT_SIZE_LABEL[size]}</span>
+                </button>
+              ))}
+            </div>
+            <p className="set-textsize__preview">
+              마음은 붙잡기 어렵고 가볍게 흔들립니다. 지혜로운 이는 그 마음을 바르게 합니다.
+            </p>
+          </div>
+        </div>
 
         {showPass && (
           <>
@@ -240,7 +295,54 @@ export function SettingsScreen() {
           <div className="set-foot-name">부처의 말</div>
           <div className="set-foot-ver">버전 {__APP_VERSION__} · 답변은 AI가 만들어요</div>
         </div>
+
+        {/* 탭바가 자리를 덮지 않게 그만큼 비워 둔다 */}
+        <div className="set-tab-space" />
       </div>
+
+      <nav className="arch-tabbar" aria-label="화면 이동">
+        <button type="button" className="arch-tab" onClick={() => navigate(ROUTES.home)}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 4.5c4.3 0 7.8 2.8 7.8 6.3s-3.5 6.3-7.8 6.3c-.9 0-1.7-.1-2.5-.35L5.2 18.4l1.1-3.1C5 14.2 4.2 12.8 4.2 10.8 4.2 7.3 7.7 4.5 12 4.5z" />
+          </svg>
+          이야기하기
+        </button>
+        <button type="button" className="arch-tab" onClick={() => navigate(ROUTES.archive)}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7.2 4h9.6a1 1 0 0 1 1 1v14.3l-5.8-3.4-5.8 3.4V5a1 1 0 0 1 1-1z" />
+          </svg>
+          보관함
+        </button>
+        <span className="arch-tab arch-tab--on" aria-current="page">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3.1" />
+            <path d="M19.2 14.6a1.5 1.5 0 0 0 .3 1.7l.1.1a1.8 1.8 0 1 1-2.6 2.6l-.1-.1a1.5 1.5 0 0 0-2.6 1.1v.2a1.8 1.8 0 1 1-3.6 0v-.1a1.5 1.5 0 0 0-2.6-1.1l-.1.1a1.8 1.8 0 1 1-2.6-2.6l.1-.1a1.5 1.5 0 0 0-1.1-2.6h-.2a1.8 1.8 0 1 1 0-3.6h.1a1.5 1.5 0 0 0 1.1-2.6l-.1-.1a1.8 1.8 0 1 1 2.6-2.6l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.2a1.8 1.8 0 1 1 3.6 0v.1a1.5 1.5 0 0 0 2.6 1.1l.1-.1a1.8 1.8 0 1 1 2.6 2.6l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.2a1.8 1.8 0 1 1 0 3.6h-.1a1.5 1.5 0 0 0-1.4.9z" />
+          </svg>
+          설정
+        </span>
+      </nav>
     </div>
   );
 }

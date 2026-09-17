@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useAnalytics } from '../../shared/analytics';
@@ -50,6 +50,14 @@ export interface AnswerScreenProps {
   adReady?: boolean;
   /** 이 기기에서 광고를 띄울 수 있나 */
   adSupported?: boolean;
+  /**
+   * 답변 맨 아래, 공유·간직 바 위에 들어가는 자리.
+   *
+   * 지금 여기 오는 것은 앱 권하기 카드 하나다. 답을 다 읽고 내려온 사람만 만난다.
+   * answer 도메인은 그것이 무엇인지 모른다. 성장 도메인을 여기서 import 하면 답변 화면이
+   * 마케팅 화면을 알게 된다.
+   */
+  footer?: ReactNode;
 }
 
 function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenProps) {
@@ -152,6 +160,8 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
       </div>
 
       <AnswerBody answer={answer} closingRef={closingRef} barOn={barOn} {...wires} />
+
+      {wires.footer}
 
       <div className={barOn ? 'bottombar on' : 'bottombar'} {...testId(TEST_IDS.bottomBar)}>
         <button

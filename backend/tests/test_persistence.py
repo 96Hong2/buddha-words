@@ -122,8 +122,15 @@ def _ask(client: TestClient, headers: dict[str, str]) -> str:
     return answer_id
 
 
-def _share(client: TestClient, headers: dict[str, str], answer_id: str) -> dict[str, str]:
-    res = client.post("/share", json={"answerId": answer_id}, headers=headers)
+def _share(
+    client: TestClient,
+    headers: dict[str, str],
+    answer_id: str,
+    scope: str = "scripture",
+) -> dict[str, str]:
+    res = client.post(
+        "/share", json={"answerId": answer_id, "scope": scope}, headers=headers
+    )
     assert res.status_code == 200, res.text
     return res.json()
 
@@ -223,12 +230,44 @@ def test_the_saved_rows_hold_no_answer_body(client: TestClient, headers: dict[st
 def test_the_saved_rows_hold_only_the_card_fields(
     client: TestClient, headers: dict[str, str]
 ) -> None:
-    """적힌 칸이 카드가 받는 칸과 정확히 같다. 딴 것이 끼어들면 여기가 먼저 걸린다."""
+    """경전 구절만 보낸 링크에는 카드 칸 말고 아무것도 적히지 않는다.
+
+    줄은 봉투로 감싸여 있다(`store.put`). 봉투 안 카드 칸이 정확히 같아야 하고, 전체
+    보내기를 고르지 않았으면 `full` 자리 자체가 없어야 한다. 있으면 고르지도 않은 사람의
+    답변 본문이 30일 저장되고 있다는 뜻이다.
+    """
     answer_id = _ask(client, headers)
     link = _share(client, headers, answer_id)
 
     saved = _rows()[link["shareId"]]
-    assert set(saved) == card_mod.ALLOWED_FIELDS
+    assert set(saved) == {"v", "card"}
+    assert set(saved["card"]) == card_mod.ALLOWED_FIELDS
+
+
+def test_full_share_saves_the_answer_but_never_the_concern(
+    client: TestClient, headers: dict[str, str]
+) -> None:
+    """전체 보내기는 답변 본문을 담는다. **고민 원문은 그때도 담기지 않는다.**
+
+    이 자리가 개인정보 약속의 새 경계다. 전체 보내기를 고르면 답변 본문이 30일 남고,
+    그 사실은 공유 시트와 개인정보 안내가 사람에게 먼저 알린다. 그래도 사람이 적은 문장
+    자체는 어디에도 담길 자리가 없다(`ShareFullData` 에 칸이 없다).
+    """
+    answer_id = _ask(client, headers)
+    row = compose.get_pending(answer_id, headers["X-Anon-Key"])
+    assert row is not None and row.pass2 is not None
+    link = _share(client, headers, answer_id, scope="full")
+
+    saved = _rows()[link["shareId"]]
+    assert set(saved) == {"v", "card", "full"}
+    assert set(saved["full"]) == card_mod.FULL_ALLOWED_FIELDS
+    # 담기로 한 것은 실제로 담겼다. 빈 칸만 저장해 놓고 통과하면 시험이 아무것도 안 지킨다
+    assert saved["full"]["closing"] == row.pass2["closingMessage"]
+
+    written = _written()
+    for window in _windows(DEEP_CONCERN, 6):
+        assert window not in written, f"고민 원문 조각이 저장 자리에 남았어요: {window}"
+    assert row.anon_key not in written, "익명키도 저장 자리에 두지 않아요."
 
 
 def test_rendered_png_is_not_saved(client: TestClient, headers: dict[str, str]) -> None:
@@ -310,7 +349,9 @@ def test_a_card_whose_fields_no_longer_match_closes_only_that_link(
     stale = _share(client, headers, answer_id)
     found = store._table().get(stale["shareId"])
     assert found is not None
-    store._table().put(stale["shareId"], {**found[0], "no_such_field": "옛 판이 남긴 칸"}, found[1])
+    # 봉투가 아니라 **카드 칸**을 어긋나게 한다. 카드를 되살리지 못하는 줄이 그 대상이다
+    broken = {**found[0], "card": {**found[0]["card"], "no_such_field": "옛 판이 남긴 칸"}}
+    store._table().put(stale["shareId"], broken, found[1])
     fresh = _share(client, headers, answer_id)
 
     _restart()

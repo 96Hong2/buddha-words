@@ -80,7 +80,15 @@ if (apiUrls.length === 0) {
 
 // ── 4. 준 값이 실제로 박혔나 ──────────────────────────────────────────────
 // 빌드가 성공했다고 값이 들어간 것은 아니다. 환경변수 이름을 틀리면 조용히 빠진다.
-for (const name of ['VITE_AD_GROUP_EXTENSION', 'VITE_AD_GROUP_CONTINUE']) {
+const AD_GROUP_VARS = [
+  'VITE_AD_GROUP_DEFAULT',
+  'VITE_AD_GROUP_GENERATION',
+  'VITE_AD_GROUP_EXTENSION',
+  'VITE_AD_GROUP_CONTINUE',
+  'VITE_AD_GROUP_SAVE',
+];
+
+for (const name of AD_GROUP_VARS) {
   const given = process.env[name]?.trim();
   if (!given) continue;
   if (!blob.includes(given)) {
@@ -91,7 +99,7 @@ for (const name of ['VITE_AD_GROUP_EXTENSION', 'VITE_AD_GROUP_CONTINUE']) {
   }
 }
 
-const adsIn = process.env.VITE_AD_GROUP_EXTENSION?.trim() || process.env.VITE_AD_GROUP_CONTINUE?.trim();
+const adsGiven = AD_GROUP_VARS.filter((name) => process.env[name]?.trim());
 
 if (problems.length > 0) {
   console.error(`✗ 번들 검사 실패 (${root})\n`);
@@ -102,7 +110,7 @@ if (problems.length > 0) {
 console.log(`✓ 번들 검사 통과 (${files.length}개 파일, ${root})`);
 console.log(`  백엔드 주소: ${apiUrls.join(', ')}`);
 console.log(
-  adsIn
-    ? '  광고 그룹 id: 들어 있다'
+  adsGiven.length > 0
+    ? `  광고 그룹 id: 들어 있다 (${adsGiven.join(', ')})`
     : '  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다',
 );

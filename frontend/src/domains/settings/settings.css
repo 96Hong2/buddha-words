@@ -419,3 +419,81 @@
   color: var(--text);
   font-weight: var(--w-medium);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   글자 크기 고르기
+
+   네 칸이 각각 자기 크기로 「가」를 보여 준다. 라벨만 있으면 「크게」가 얼마나 큰지
+   눌러 보기 전에는 모른다. 아래 미리보기 문장은 화면 전체와 같은 토큰을 쓰므로
+   고르는 즉시 함께 커진다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.set-textsize {
+  padding: 16px;
+}
+
+.set-textsize__row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.set-textsize__btn {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  padding: 10px 4px 8px;
+  border: 1px solid var(--accent-rule);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-muted);
+  min-height: var(--tap-min);
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.set-textsize__btn.is-on {
+  border-color: var(--accent-text);
+  background: var(--surface-illust);
+  color: var(--accent-text);
+}
+
+/* 칸마다 실제 그 크기로 보인다. 고르기 전에 결과를 알 수 있다 */
+.set-textsize__a {
+  font-weight: var(--w-bold);
+  line-height: 1.1;
+}
+
+.set-textsize__btn[data-size='s'] .set-textsize__a {
+  font-size: 14px;
+}
+.set-textsize__btn[data-size='m'] .set-textsize__a {
+  font-size: 16px;
+}
+.set-textsize__btn[data-size='l'] .set-textsize__a {
+  font-size: 18px;
+}
+.set-textsize__btn[data-size='xl'] .set-textsize__a {
+  font-size: 20px;
+}
+
+.set-textsize__l {
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+}
+
+.set-textsize__preview {
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--accent-rule);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  color: var(--text-muted);
+}
+
+/* 설정 화면에도 탭바가 선다. 보관함 것과 같은 클래스를 쓴다(archive.css) */
+.set-tab-space {
+  height: 96px;
+}

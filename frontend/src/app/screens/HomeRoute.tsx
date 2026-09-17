@@ -33,6 +33,8 @@ import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { markAdWatched } from '../../shared/api/http';
 import { markEntryCardSeen } from '../../domains/concern/EntryCard';
+import { HomeAddCard } from '../../domains/growth/HomeAddCard';
+import { readMilestones } from '../../shared/prefs/milestones';
 import { useSession } from '../../shared/session';
 import { useBridge } from '../providers';
 import { ROUTES } from '../router';
@@ -87,6 +89,15 @@ export function HomeRoute() {
   const [continueOpen, setContinueOpen] = useState(false);
   const [exhausted, setExhausted] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
+  /**
+   * 홈에 추가 안내를 띄울까.
+   *
+   * 온보딩을 이미 지난 사람에게만 뜬다. 처음 여는 사람은 온보딩 두 장을 지나 곧바로
+   * 여기로 오므로 그 실행에서 한 번 보게 되고, 닫으면 다시 뜨지 않는다.
+   */
+  const [homeAdd, setHomeAdd] = useState(
+    () => !onboardingPending() && !readMilestones().homeAddDone,
+  );
   const [recall, setRecall] = useState<RecallEntry | null>(null);
   /** 시트가 열려 있는 동안 들고 있는 글. 시트를 닫아도 입력창에는 그대로 남는다 */
   const held = useRef('');
@@ -218,9 +229,11 @@ export function HomeRoute() {
             />
           </>
         )}
+
+        {homeAdd && <HomeAddCard onClose={() => setHomeAdd(false)} />}
       </>
     ),
-    [bridge, dailyOpen, recall],
+    [bridge, dailyOpen, homeAdd, recall],
   );
 
   /**
@@ -230,6 +243,9 @@ export function HomeRoute() {
   const doneOnboarding = useCallback(() => {
     markEntryCardSeen(todayISO());
     setOnboarding(false);
+    // 온보딩을 막 지난 사람이 이 안내의 주 대상이다. 상태를 처음 잡을 때는 아직
+    // 온보딩 중이라 꺼져 있었으니 여기서 켠다
+    if (!readMilestones().homeAddDone) setHomeAdd(true);
   }, []);
 
   if (onboarding) return <OnboardingScreen onDone={doneOnboarding} />;

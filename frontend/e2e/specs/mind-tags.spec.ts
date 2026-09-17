@@ -18,7 +18,7 @@
  */
 
 import { expect, test, type Page } from '../support/fixtures';
-import { askOnce, revealBottomBar } from '../support/flow';
+import { askOnce, saveAnswerFromScreen } from '../support/flow';
 
 /**
  * 「아직 남은 마음(attachment)」이 붙는 고민.
@@ -121,8 +121,7 @@ test('같은 마음에 답변 화면과 보관함이 같은 이름을 붙인다'
 
   const onAnswer = await chips(page, '.ans .tags .tag');
 
-  await revealBottomBar(page);
-  await page.getByTestId('save-button').click();
+  await saveAnswerFromScreen(page);
   await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.goto('/archive');
@@ -163,10 +162,15 @@ test('상단 배지가 경전까지 AI 가 쓴 것처럼 말하지 않는다', a
   await expect(badge).toBeInViewport();
   expect((await badge.innerText()).trim(), '경전 카드 위에서 배지 말이 달라졌어요').toBe(text);
 
-  // 화면을 다 읽고 나가는 자리에서 한 번 풀어 적는다
+  /*
+   * 화면을 다 읽고 나가는 자리.
+   *
+   * 무엇이 AI 이고 무엇이 아닌가는 위 배지가 이미 말했다. 같은 말을 여기서 세 번째로
+   * 하지 않고, 이 자리에서만 할 수 있는 말(어디서 확인하나 · 의학 조언이 아니다)을 한다.
+   */
   const notice = page.locator('.ans .notice p').first();
-  await expect(notice).toContainText('경전 원문은 앱이 지어낸 문장이 아니');
-  await expect(notice).toContainText('풀이와 조언은 AI 가 썼어요');
+  await expect(notice).toContainText('「원문 보기」에 적어 두었어요');
+  await expect(notice).toContainText('의학·법률 조언이 아니에요');
   // 감수 도장은 근거가 있는 자리에서만 찍는다. 후보 풀에는 감수 전 구절이 함께 들어 있어
   // 이 줄은 어느 구절이 붙었는지 모른 채 「사람이 감수했다」고 적을 수 없다
   expect(

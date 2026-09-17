@@ -80,11 +80,7 @@ export function SolaceScreen() {
 
           <ChannelBands channels={below} level="distress" place="bottom" />
 
-          <p className="sf-sc-micro">
-            {SOLACE_COPY.micro[0]}
-            <br />
-            {SOLACE_COPY.micro[1]}
-          </p>
+          <p className="sf-sc-micro">{SOLACE_COPY.micro.join(' ')}</p>
         </div>
       </div>
 

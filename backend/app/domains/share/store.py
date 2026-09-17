@@ -28,7 +28,7 @@ from typing import Any, Protocol
 
 from app.core import persist
 from app.core.config import get_settings
-from app.domains.share.card import ShareCardData, one_line_gloss
+from app.domains.share.card import ShareCardData, ShareFullData, one_line_gloss
 
 log = logging.getLogger(__name__)
 
@@ -223,6 +223,34 @@ def reset_store() -> None:
     _RENDERED.clear()
 
 
+def full_from_row(row: AnswerRow, message: str) -> ShareFullData | None:
+    """답변 행에서 전체 보내기에 담을 것을 뽑는다. 2차 패스가 없으면 담을 것이 없다.
+
+    `message` 는 「오늘의 부처의 말」 한 줄이고 화면이 넘겨 준다. 행에서 읽지 않는 이유는
+    `ROW_FIELDS_READ` 를 그대로 두기 위해서다. 그 목록이 좁을수록 원문이 새어 나올 길이 없다.
+
+    **고민 원문은 어느 칸으로도 오지 않는다.** 여기서 읽는 것은 2차 패스가 만든 글뿐이다.
+    """
+    pass2 = getattr(row, "pass2", None) or {}
+    if pass2.get("status") != "done":
+        return None
+    sections = [
+        {"heading": str(item.get("heading", "")), "body": str(item.get("body", ""))}
+        for item in pass2.get("personalAnalysis") or []
+    ]
+    actions = [
+        {"title": str(item.get("title", "")), "why": str(item.get("why") or "")}
+        for item in pass2.get("actions") or []
+    ]
+    return ShareFullData(
+        buddha_message=message,
+        explanation=str(pass2.get("scriptureExplanation", "")),
+        analysis=sections,
+        actions=actions,
+        closing=str(pass2.get("closingMessage", "")),
+    )
+
+
 def card_from_row(row: AnswerRow, scripture: Any) -> ShareCardData:
     """답변 행과 경전에서 카드 세 조각을 뽑는다.
 
@@ -246,25 +274,50 @@ def card_from_row(row: AnswerRow, scripture: Any) -> ShareCardData:
     )
 
 
-def put(card: ShareCardData) -> str:
+# 담긴 줄이 어느 판인가. 없으면 봉투가 생기기 전에 저장된 줄이다
+ENVELOPE_VERSION = 2
+
+
+def put(card: ShareCardData, full: ShareFullData | None = None) -> str:
+    """링크 하나를 연다. `full` 을 주면 답변 전체를 함께 담는다.
+
+    봉투로 감싸는 이유: 예전에는 카드 칸을 그대로 한 줄에 폈다. 거기에 답변 전체를 더하면
+    두 자료형의 칸이 한 사전에서 섞여, 어느 글이 어느 약속으로 들어온 것인지 알 수 없게 된다.
+    봉투를 씌우면 「카드에 담길 수 있는 것」과 「전체 보내기를 고른 사람만 함께 보내는 것」이
+    저장된 글자 위에서도 갈린다.
+    """
     now = time.time()
     _sweep(now)
     token = secrets.token_urlsafe(16)
-    _table().put(token, asdict(card), now)
-    log.info("share_card_created", extra={"share_id": token})
+    payload: dict[str, Any] = {"v": ENVELOPE_VERSION, "card": asdict(card)}
+    if full is not None:
+        payload["full"] = asdict(full)
+    _table().put(token, payload, now)
+    log.info(
+        "share_card_created",
+        extra={"share_id": token, "scope": "full" if full is not None else "scripture"},
+    )
     return token
 
 
-def _card(share_id: str, fields: dict[str, Any]) -> ShareCardData | None:
-    """적혀 있던 칸으로 카드를 되살린다.
+def _decode(share_id: str, fields: dict[str, Any]) -> tuple[ShareCardData, ShareFullData | None] | None:
+    """적혀 있던 글자로 카드와 전체 본문을 되살린다.
 
     카드의 칸이 바뀐 뒤에 배포하면 그 전에 저장된 줄이 안 맞을 수 있다. 그때 터지면 링크
     하나 때문에 이 자리가 통째로 500 이 된다. 없는 링크로 보고 그 줄만 닫되, 왜 못 읽었는지는
     남긴다. 칸을 추측해 채우지는 않는다. 엉뚱한 글이 박힌 카드는 카톡에서 되돌릴 수 없다.
+
+    봉투가 생기기 전(2026-09-17 이전) 줄은 카드 칸이 그대로 펴져 있다. 그 링크도 30일은
+    살아 있어야 해서 옛 모양을 그대로 읽는다.
     """
     try:
-        return ShareCardData(**fields)
-    except TypeError:
+        if fields.get("v") == ENVELOPE_VERSION:
+            card = ShareCardData(**fields["card"])
+            raw_full = fields.get("full")
+            full = ShareFullData(**raw_full) if raw_full else None
+            return card, full
+        return ShareCardData(**fields), None
+    except (TypeError, KeyError):
         log.warning(
             "share_card_unreadable",
             extra={
@@ -277,9 +330,16 @@ def _card(share_id: str, fields: dict[str, Any]) -> ShareCardData | None:
 
 
 def get(share_id: str) -> ShareCardData | None:
+    """카드만 읽는다. 전체 본문까지 필요하면 `get_full` 을 쓴다."""
+    found = get_full(share_id)
+    return found[0] if found else None
+
+
+def get_full(share_id: str) -> tuple[ShareCardData, ShareFullData | None] | None:
+    """카드와, 전체 보내기를 고른 링크면 답변 본문까지."""
     _sweep(time.time())
     found = _table().get(share_id)
-    return _card(share_id, found[0]) if found else None
+    return _decode(share_id, found[0]) if found else None
 
 
 def rendered(share_id: str, kind: str, make: Callable[[ShareCardData], bytes]) -> bytes | None:
@@ -290,9 +350,10 @@ def rendered(share_id: str, kind: str, make: Callable[[ShareCardData], bytes]) -
     if found is None:
         return None
     fields, created_at = found
-    card = _card(share_id, fields)
-    if card is None:
+    decoded = _decode(share_id, fields)
+    if decoded is None:
         return None
+    card = decoded[0]
     _, cache = _RENDERED.setdefault(share_id, (created_at, {}))
     if kind not in cache:
         cache[kind] = make(card)

@@ -21,6 +21,7 @@ import type {
   Pass2,
   SharedCard,
   ShareLink,
+  ShareScope,
 } from './types';
 
 // 실패 사유 클래스는 `errors.ts` 에 산다. 화면은 여기서도 그대로 꺼내 쓴다
@@ -50,7 +51,11 @@ export interface ApiClient {
   /** 오늘의 한마디. 모델을 부르지 않는다 */
   fetchDailyQuote(dateISO: string): Promise<DailyQuote>;
   /** 공유 링크를 만든다. 토큰도 메신저에 붙일 주소도 서버가 내준다 */
-  createShareToken(req: { answerId: string; card: SharedCard }): Promise<ShareLink>;
+  createShareToken(req: {
+    answerId: string;
+    card: SharedCard;
+    scope?: ShareScope;
+  }): Promise<ShareLink>;
   /** 링크로 들어온 사람이 보는 카드. 보낸 사람의 고민 원문은 담기지 않는다 */
   fetchSharedCard(token: string): Promise<SharedCard | null>;
 }

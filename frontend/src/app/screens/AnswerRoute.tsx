@@ -10,10 +10,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRewardedAd } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
-import { countSaved, Paywall, saveAnswer } from '../../domains/archive';
+import { countSaved, isSaved, Paywall, saveAnswer, SaveGate } from '../../domains/archive';
+import { AppShareCard } from '../../domains/growth/AppShareCard';
+import { countAnswer, shouldOfferAppShare } from '../../shared/prefs/milestones';
 import { writeRecall } from '../../domains/daily/RecallCard';
 import { dayKey, recordAndSave, saveFromServer } from '../../domains/quota/quota';
 import { ShareSheet, type ShareLinkState } from '../../domains/share/ShareSheet';
+import type { ShareScope } from '../../shared/api';
 import { useAnalytics } from '../../shared/analytics';
 import type { ApiAnswer } from '../../shared/api';
 import { useApiClient } from '../../shared/api';
@@ -41,29 +44,33 @@ function shareUrlFor(token: string): string {
   return `${origin}/s/${token}`;
 }
 
+/**
+ * 앱 자체를 권할 때 보내는 주소.
+ *
+ * 답변 공유와 달리 특정 답으로 가지 않는다. 받는 사람이 열면 자기 이야기를 쓰는 첫 화면이다.
+ * 백엔드가 서 있으면 그쪽 주소를 쓴다. 토스 딥링크(`intoss://`)는 토스가 깔린 기기에서만
+ * 열려서, 카톡으로 받은 사람 중 토스가 없는 쪽이 막다른 곳에 선다.
+ */
+function appShareUrl(): string {
+  const api = resolveApiMode() === 'http' ? resolveApiBaseUrl() : null;
+  if (api != null) return api;
+  return typeof window === 'undefined' ? '' : window.location.origin;
+}
+
 /** 카드에 올릴 해설. 첫 문장만 쓰는 일은 공유 카드가 한다 */
 function glossOf(answer: ApiAnswer): string {
   return answer.pass2.status === 'done' ? answer.pass2.scriptureExplanation : '';
 }
 
 /** 간직하기 한 번의 끝. `failed` 는 담으려다 못 담은 것이다 */
-type StoreOutcome = 'saved' | 'already' | 'limit' | 'failed';
+type StoreOutcome = 'saved' | 'already' | 'failed';
 
 /** 간직한 뒤에 뜨는 말. 담기지 않았으면 담겼다고 하지 않는다 */
-const SAVE_TOAST: Record<Exclude<StoreOutcome, 'limit'>, string> = {
+const SAVE_TOAST: Record<StoreOutcome, string> = {
   saved: '보관함에 간직했어요. 앱을 닫아도 남아요',
   already: '이미 보관함에 있어요',
   failed: '지금은 간직하지 못했어요. 잠시 뒤에 다시 눌러 주세요',
 };
-
-/**
- * 이용권을 샀는데도 자리가 찼다고 나온 자리.
- *
- * 여기까지 오면 안 되지만, 오면 조용히 넘어가지 않는다. 돈을 낸 사람이 간직됐다고 믿고
- * 앱을 닫는 것이 가장 나쁘다. 지금 할 수 있는 일을 알려 준다.
- */
-const PURCHASED_BUT_FULL =
-  '이용권은 확인했는데 지금 간직하지 못했어요. 보관함에서 하나를 지우고 다시 눌러 주세요';
 
 export function AnswerRoute() {
   const bridge = useBridge();
@@ -71,11 +78,20 @@ export function AnswerRoute() {
   const analytics = useAnalytics();
   const { response, archivePass } = useSession();
   const ad = useRewardedAd('extension');
+  const saveAd = useRewardedAd('save');
 
   const [shareOpen, setShareOpen] = useState(false);
+  /** 무엇을 보낼지. 기본은 적게 나가는 쪽이다 */
+  const [scope, setScope] = useState<ShareScope>('scripture');
   const [link, setLink] = useState<ShareLinkState>({ status: 'making' });
-  const [paywallOpen, setPaywallOpen] = useState(false);
+  /** 간직 앞에 서는 광고 안내 시트 */
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateBusy, setGateBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  /** 세 번째 답을 받은 사람에게 한 번 뜨는 앱 권하기 */
+  const [appShareOpen, setAppShareOpen] = useState(false);
+  /** 간직 시트에서 「광고 없이」를 눌렀을 때 여는 이용권 시트 */
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const answer = response != null && response.responseType === 'answer' ? response : null;
   /** 광고를 보고 받은 「다른 관점」. 간직할 때 함께 담는다 */
@@ -100,6 +116,21 @@ export function AnswerRoute() {
     }
     if ('quota' in response && response.quota != null) saveFromServer(response.quota);
   }, [response]);
+
+  /**
+   * 지금까지 받은 답이 몇 개인가. 세 번째에 앱 권하기가 한 번 뜬다.
+   *
+   * 하루 사용량(quota)과 따로 센다. 그쪽은 자정에 리셋되고 이쪽은 계속 쌓인다.
+   * 답이 **다 만들어진 뒤**에 센다. 요청1만 온 화면에서 권하면 아직 답을 못 본 사람에게
+   * 남에게 권하라고 하는 셈이다.
+   */
+  const milestoned = useRef('');
+  useEffect(() => {
+    if (answer == null || answer.pass2.status !== 'done') return;
+    if (milestoned.current === answer.answerId) return;
+    milestoned.current = answer.answerId;
+    if (shouldOfferAppShare(countAnswer())) setAppShareOpen(true);
+  }, [answer]);
 
   // 내일 홈에서 물어볼 한 줄. 남기는 것은 행동 제목뿐이고 고민 원문은 담지 않는다
   const recalled = useRef('');
@@ -132,7 +163,7 @@ export function AnswerRoute() {
    * 광고를 보고 받은 「다른 관점」도 같이 담는다. 이것만 빠지면 광고를 끝까지 본 대가가 사라진다.
    */
   const store = useCallback(
-    (unlimited: boolean): StoreOutcome => {
+    (gate: 'ad' | 'pass' | 'free'): StoreOutcome => {
       if (answer == null) return 'failed';
       const pass2 = answer.pass2;
       const before = countSaved();
@@ -161,41 +192,83 @@ export function AnswerRoute() {
                   },
           },
         },
-        { unlimited },
-      );
-      analytics.log(
-        'save_click',
-        { answer_id: answer.answerId, slot_index: result.slotIndex },
-        { kind: 'click' },
       );
 
-      if (result.status === 'limit') return 'limit';
       if (result.status === 'already') return 'already';
       // 담았다는 답을 그대로 믿지 않는다. 저장소가 막힌 기기에서는 담겨 있지 않다
-      return countSaved() > before ? 'saved' : 'failed';
+      if (countSaved() <= before) return 'failed';
+      // 실제로 담긴 것만 센다. 누른 것(save_click)과 담긴 것을 가르는 자리다
+      analytics.log('save_complete', {
+        answer_id: answer.answerId,
+        slot_index: result.slotIndex,
+        gate,
+      });
+      return 'saved';
     },
     [analytics, answer, extension],
   );
 
+  /**
+   * 간직하기를 눌렀다.
+   *
+   * 문지기는 짧은 광고 하나다. 셋까지 공짜로 담기던 개수 제한은 없앴다.
+   * 아래 셋은 광고를 거치지 않는다. 광고가 **간직 자체를 막으면 안 되기** 때문이다.
+   *
+   *   이미 담긴 답변   담을 것이 없다. 광고를 보여 줄 이유가 없다
+   *   이용권을 산 사람  그 사람이 산 것이 지금은 이것이다
+   *   광고를 못 띄우는 판 구버전·광고 끄기·그룹 id 가 없는 번들. 그냥 담는다
+   */
   const save = useCallback(() => {
-    const outcome = store(archivePass === 'owned');
-    if (outcome === 'limit') {
-      setPaywallOpen(true);
+    if (answer == null) return;
+    analytics.log(
+      'save_click',
+      { answer_id: answer.answerId, slot_index: countSaved() + 1 },
+      { kind: 'click' },
+    );
+
+    if (isSaved(answer.answerId)) {
+      /*
+       * 이미 담긴 답이라 광고를 보여 줄 이유가 없다.
+       *
+       * 그래도 `store` 를 부른다. 간직한 **뒤에** 광고를 보고 「다른 관점」을 받는 순서가
+       * 있어서, 그때 다시 간직하기를 누르면 그 조각을 마저 담아야 한다(archiveStore 의
+       * `fillDetail`). 여기서 토스트만 띄우고 돌아가면 광고를 끝까지 본 대가가 사라진다.
+       */
+      setToast(SAVE_TOAST[store('free')]);
       return;
     }
-    setToast(SAVE_TOAST[outcome]);
-  }, [archivePass, store]);
+    if (archivePass === 'owned') {
+      setToast(SAVE_TOAST[store('pass')]);
+      return;
+    }
+    if (!saveAd.ready || !saveAd.supported) {
+      setToast(SAVE_TOAST[store('free')]);
+      return;
+    }
+    setGateOpen(true);
+  }, [analytics, answer, archivePass, saveAd.ready, saveAd.supported, store]);
 
-  /**
-   * 이용권을 사고 돌아온 자리.
-   *
-   * 사람이 사려던 이유는 이 답변을 간직하는 것이었다. 그 일을 마저 한다.
-   * 그래도 못 담았으면 담은 척하지 않고 그대로 말한다.
-   */
-  const saveAfterPurchase = useCallback(() => {
-    const outcome = store(true);
-    setToast(outcome === 'limit' ? PURCHASED_BUT_FULL : SAVE_TOAST[outcome]);
-  }, [store]);
+  /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
+  const watchAndSave = useCallback(async () => {
+    if (answer == null || gateBusy) return;
+    analytics.log('save_gate_accept', { answer_id: answer.answerId }, { kind: 'click' });
+    setGateBusy(true);
+    let watched = false;
+    try {
+      watched = await saveAd.show(answer.answerId);
+    } catch {
+      watched = false;
+    }
+    setGateBusy(false);
+    setGateOpen(false);
+    // 스스로 닫은 사람에게는 아무 말도 하지 않는다. 실패라고 말할 일이 아니다.
+    // 다만 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
+    if (watched) {
+      setToast(SAVE_TOAST[store('ad')]);
+      return;
+    }
+    if (!saveAd.supported) setToast(SAVE_TOAST[store('free')]);
+  }, [analytics, answer, gateBusy, saveAd, store]);
 
   const watchAd = useCallback(() => ad.show(answer?.answerId), [ad, answer]);
 
@@ -205,31 +278,59 @@ export function AnswerRoute() {
    * **결과를 반드시 받는다.** 예전에는 이 호출을 던져만 두어서, 실패하면 아무도 잡지 않는
    * 거절로 끝나고 화면은 링크가 만들어진 것처럼 굴었다. 지금은 시트가 세 상태를 그대로 그린다.
    */
-  const makeLink = useCallback(() => {
-    if (answer == null) return;
-    setLink({ status: 'making' });
-    client
-      .createShareToken({
-        answerId: answer.answerId,
-        card: {
-          kind: 'fields',
-          buddhaMessage: answer.modernBuddhaMessage,
-          scripture: answer.scriptures[0],
-          emotionTags: answer.emotionTags,
-          explanation: answer.pass2.status === 'done' ? [answer.pass2.scriptureExplanation] : [],
-        },
-      })
-      // 주소는 서버가 준 것을 그대로 쓴다. 못 받은 판에서만 화면이 조립한다
-      .then(({ token, landingUrl }) =>
-        setLink({ status: 'ready', url: landingUrl ?? shareUrlFor(token) }),
-      )
-      .catch(() => setLink({ status: 'failed' }));
-  }, [answer, client]);
+  const makeLink = useCallback(
+    (want: ShareScope) => {
+      if (answer == null) return;
+      setLink({ status: 'making' });
+      client
+        .createShareToken({
+          answerId: answer.answerId,
+          scope: want,
+          card: {
+            kind: 'fields',
+            buddhaMessage: answer.modernBuddhaMessage,
+            scripture: answer.scriptures[0],
+            emotionTags: answer.emotionTags,
+            explanation: answer.pass2.status === 'done' ? [answer.pass2.scriptureExplanation] : [],
+          },
+        })
+        // 주소는 서버가 준 것을 그대로 쓴다. 못 받은 판에서만 화면이 조립한다
+        .then(({ token, landingUrl }) =>
+          setLink({ status: 'ready', url: landingUrl ?? shareUrlFor(token) }),
+        )
+        .catch(() => setLink({ status: 'failed' }));
+    },
+    [answer, client],
+  );
+
+  /**
+   * 범위를 바꾸면 링크를 다시 연다.
+   *
+   * 링크 하나에 무엇이 담겼는지는 만들 때 정해진다. 바꾸고 나서 옛 주소를 보내면 고른 것과
+   * 다른 것이 나간다.
+   */
+  const changeScope = useCallback(
+    (next: ShareScope) => {
+      setScope(next);
+      makeLink(next);
+    },
+    [makeLink],
+  );
 
   const openShare = useCallback(() => {
     setShareOpen(true);
-    makeLink();
+    setScope('scripture');
+    makeLink('scripture');
   }, [makeLink]);
+
+  /** 네이티브 공유 시트를 연다. 받는 앱은 기기가 고른다 */
+  const sendMessage = useCallback(
+    async (message: string) => {
+      if (!bridge.supports('share')) return 'unsupported' as const;
+      return bridge.share.sendMessage(message);
+    },
+    [bridge],
+  );
 
   return (
     <>
@@ -239,6 +340,15 @@ export function AnswerRoute() {
         onWatchAd={watchAd}
         adReady={ad.ready}
         adSupported={ad.ready && ad.supported}
+        footer={
+          appShareOpen ? (
+            <AppShareCard
+              url={appShareUrl()}
+              onSendMessage={sendMessage}
+              onDone={() => setAppShareOpen(false)}
+            />
+          ) : null
+        }
       />
 
       {answer != null && (
@@ -248,16 +358,35 @@ export function AnswerRoute() {
           answerId={answer.answerId}
           scripture={answer.scriptures[0]}
           gloss={glossOf(answer)}
+          scope={scope}
+          onScopeChange={changeScope}
+          answer={answer}
           link={link}
-          onRetryLink={makeLink}
+          onRetryLink={() => makeLink(scope)}
+          onSendMessage={sendMessage}
+        />
+      )}
+
+      {answer != null && (
+        <SaveGate
+          open={gateOpen}
+          answerId={answer.answerId}
+          pending={gateBusy}
+          onClose={() => setGateOpen(false)}
+          onWatch={() => void watchAndSave()}
+          onBuyPass={() => {
+            setGateOpen(false);
+            setPaywallOpen(true);
+          }}
         />
       )}
 
       <Paywall
         open={paywallOpen}
-        trigger="save_4th"
+        trigger="save_ad"
         onClose={() => setPaywallOpen(false)}
-        onPurchased={saveAfterPurchase}
+        // 사려던 이유는 이 답변을 간직하는 것이었다. 사고 나면 그 일을 마저 한다
+        onPurchased={() => setToast(SAVE_TOAST[store('pass')])}
       />
 
       {toast != null && (

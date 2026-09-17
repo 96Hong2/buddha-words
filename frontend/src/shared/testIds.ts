@@ -83,6 +83,16 @@ export const TEST_IDS = {
   shareLink: 'share-link',
   shareImage: 'share-image',
   shareText: 'share-text',
+  shareCopy: 'share-copy',
+  shareScopeScripture: 'share-scope-scripture',
+  shareScopeFull: 'share-scope-full',
+  shareFullPreview: 'share-full-preview',
+
+  // 성장. 사람이 부탁하지 않은 말이라 한 번만 뜬다
+  homeAdd: 'home-add',
+  homeAddClose: 'home-add-close',
+  appShare: 'app-share',
+  appShareSend: 'app-share-send',
   landing: 'landing',
   archive: 'archive',
   archiveItem: 'archive-item',
@@ -91,6 +101,9 @@ export const TEST_IDS = {
   archiveDeleteConfirm: 'archive-delete-confirm',
   paywall: 'paywall',
   paywallBuy: 'paywall-buy',
+  saveGate: 'save-gate',
+  saveGateWatch: 'save-gate-watch',
+  saveGateBuy: 'save-gate-buy',
 
   // 설정
   settingsButton: 'settings-button',
@@ -101,6 +114,8 @@ export const TEST_IDS = {
   privacy: 'privacy',
   helpLines: 'help-lines',
   adOptOut: 'ad-opt-out',
+  textSize: 'text-size',
+  textSizeOption: 'text-size-option',
 
   // 공통
   sheetClose: 'sheet-close',

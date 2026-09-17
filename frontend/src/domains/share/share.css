@@ -622,3 +622,136 @@
   font-weight: var(--w-bold);
   color: var(--accent-text);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   무엇을 보낼지 고르는 자리
+   
+   두 칸짜리 세그먼트다. 탭처럼 생겼지만 화면을 바꾸는 것이 아니라 고르는 것이라
+   role 은 radiogroup 이다. 고른 값에 따라 아래 미리보기와 안내 문구가 함께 바뀐다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.sh-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface-illust);
+}
+
+.sh-scope__btn {
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.sh-scope__btn.is-on {
+  background: var(--surface);
+  color: var(--accent-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+
+.sh-scope__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── 전체 보내기 미리보기. 나갈 것을 줄여서 그대로 보인다 ── */
+
+.sh-full {
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--accent-rule);
+  background: var(--surface);
+  text-align: left;
+}
+
+.sh-full__msg {
+  margin: 0 0 12px;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.sh-full__quote {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-illust);
+}
+
+.sh-full__quote p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-small);
+  line-height: 1.68;
+  color: var(--text);
+  /* 미리보기라 두 줄까지만 보인다. 전체는 링크 너머에 있다 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sh-full__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.sh-full__list li {
+  display: grid;
+  gap: 2px;
+}
+
+.sh-full__h {
+  font-size: var(--t-micro);
+  font-weight: var(--w-bold);
+  color: var(--accent-text);
+}
+
+.sh-full__b {
+  font-size: var(--t-small);
+  line-height: 1.6;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sh-full__more {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--accent-rule);
+  font-size: var(--t-micro);
+  color: var(--text-weak);
+}
+
+/* 복사가 막힌 사람이 손으로 끌어 가져가는 자리 */
+.sh-fall__manual {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-illust);
+  font-size: var(--t-small);
+  line-height: 1.6;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: text;
+  text-align: left;
+}

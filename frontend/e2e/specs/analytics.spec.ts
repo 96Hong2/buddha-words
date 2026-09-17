@@ -10,6 +10,7 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
+import { revealBottomBar } from '../support/flow';
 
 /** 원문 대조에 쓴다. 이 문장이 로그 어딘가에 통째로 들어가면 실패다 */
 const CONCERN = [
@@ -203,4 +204,61 @@ test('원문을 펼치면 경전 관심도가 남는다', async ({ page }) => {
   const rows = (await logs(page)).filter((row) => row.name === 'scripture_expand');
   expect(rows.length, '원문을 펼친 사실이 안 남았다').toBe(1);
   expect(rows[0].params).toHaveProperty('scripture_id');
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// 6. 이번 판에서 늘어난 자리
+//
+// 간직과 공유는 이 앱이 사람에게 값을 줬는지 재는 두 신호다(코호트 healthy_activated).
+// 그 둘의 배선이 바뀌었으므로 실제로 찍히는지 여기서 본다.
+// ────────────────────────────────────────────────────────────────────────────
+
+test('간직은 누른 것과 담긴 것을 갈라 남긴다', async ({ page }) => {
+  await page.goto('/');
+  await answerOnce(page);
+
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await expect(page.getByTestId('save-gate')).toBeVisible();
+
+  // 시트를 본 것까지가 여기다. 아직 담기지 않았다
+  let seen = await names(page);
+  expect(seen).toContain('save_click');
+  expect(seen).toContain('save_gate_view');
+  expect(seen, '광고를 보기도 전에 담겼다고 적혔다').not.toContain('save_complete');
+
+  await page.getByTestId('save-gate-watch').click();
+  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
+
+  seen = await names(page);
+  expect(seen).toContain('save_gate_accept');
+  expect(seen).toContain('save_complete');
+
+  // 어느 길로 담겼는지 적는다. 광고가 얼마나 떨구는지는 이 값으로 가른다
+  const done = (await logs(page)).find((row) => row.name === 'save_complete');
+  expect(done?.params.gate).toBe('ad');
+});
+
+test('공유는 무엇을 보내기로 골랐는지 남긴다', async ({ page }) => {
+  await page.goto('/');
+  await answerOnce(page);
+
+  await revealBottomBar(page);
+  await page.getByTestId('share-button').click();
+  await expect(page.getByTestId('share-sheet')).toBeVisible();
+
+  await page.getByTestId('share-scope-full').click();
+  const picked = (await logs(page)).find((row) => row.name === 'share_scope_select');
+  expect(picked?.params.scope).toBe('full');
+
+  await page.getByTestId('share-link').click();
+  const done = (await logs(page)).find((row) => row.name === 'share_complete');
+  expect(done?.params.method).toBe('system');
+  expect(done?.params.card_kind).toBe('full');
+
+  // 여기서도 고민 원문은 어느 값에도 없다
+  const dump = JSON.stringify(await logs(page));
+  for (const piece of SECRETS) {
+    expect(dump, `고민 원문 조각이 로그에 실렸다: ${piece}`).not.toContain(piece);
+  }
 });

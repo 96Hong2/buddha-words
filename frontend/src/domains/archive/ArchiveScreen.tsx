@@ -3,15 +3,14 @@ import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
 import type { ApiResponse } from '../../shared/api';
-import { isArchivePassEnabled, useSession } from '../../shared/session/session';
+import { useSession } from '../../shared/session/session';
 import { itemsBucket, useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { sceneForScreen } from '../../shared/visual/scene';
 
 import { ArchiveDetail } from './ArchiveDetail';
-import { ArchiveItem, ChevronIcon } from './ArchiveItem';
-import { listSaved, removeSaved, SAVE_LIMIT, type SavedAnswer } from './archiveStore';
-import { Paywall } from './Paywall';
+import { ArchiveItem } from './ArchiveItem';
+import { listSaved, removeSaved, type SavedAnswer } from './archiveStore';
 
 import './archive.css';
 
@@ -28,23 +27,6 @@ function todayCard(response: ApiResponse | null): SavedAnswer | null {
 }
 
 /** 잠긴 자리의 자물쇠 */
-function LockIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="4.75" y="10.5" width="14.5" height="9.5" rx="2.6" />
-      <path d="M8.4 10.5V7.9a3.6 3.6 0 0 1 7.2 0v2.6" />
-    </svg>
-  );
-}
-
 /** 이용권으로 열린 자리 */
 function CheckIcon() {
   return (
@@ -66,7 +48,6 @@ export function ArchiveScreen() {
   const navigate = useNavigate();
   const { response, archivePass } = useSession();
   const [saved, setSaved] = useState<SavedAnswer[]>(listSaved);
-  const [paywallOpen, setPaywallOpen] = useState(false);
   /** 펼쳐 보는 중인 항목. 카드를 누르면 여기 들어온다 */
   const [opened, setOpened] = useState<SavedAnswer | null>(null);
 
@@ -82,7 +63,6 @@ export function ArchiveScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analytics]);
 
-  const passEnabled = isArchivePassEnabled();
   const owned = archivePass === 'owned';
   const today = useMemo(() => todayCard(response), [response]);
 
@@ -156,11 +136,7 @@ export function ArchiveScreen() {
               <>
                 <div className={`arch-sec${todayOnly == null ? ' arch-sec--first' : ''}`}>
                   <h2 className="arch-sec-title">간직한 말씀</h2>
-                  {!owned && (
-                    <span className="arch-sec-count">
-                      {saved.length} / {SAVE_LIMIT}
-                    </span>
-                  )}
+                  <span className="arch-sec-count">{saved.length}개</span>
                 </div>
                 {saved.map((item) => (
                   <ArchiveItem
@@ -173,49 +149,22 @@ export function ArchiveScreen() {
               </>
             )}
 
-            <div className="arch-sec">
-              <h2 className="arch-sec-title">간직할 자리</h2>
-              <span className={`arch-sec-state${owned ? ' arch-sec-state--open' : ''}`}>
-                {owned ? '제한 없음' : `${SAVE_LIMIT}개까지`}
-              </span>
-            </div>
-
             {/*
-              여기는 이용권이 실제로 하는 일만 적는다.
-              「지난 이야기가 여기에 쌓여요」라고 적어 두었던 자리인데, 간직하지 않은 답변은
-              기기에도 서버에도 남지 않아서 이용권을 산 뒤에도 아무것도 쌓이지 않는다.
-              돈을 낸 사람이 빈 자리를 계속 보게 되고, 같은 화면의 이용권 시트가 「간직하지 않고
-              지나간 이야기는 다시 불러올 수 없어요」라고 정반대로 말한다.
-              지금 이용권이 푸는 것은 간직 자리 제한 하나뿐이라 그것만 적는다.
+              간직 개수 제한이 없어져서 「몇 개까지」를 세던 자리가 사라졌다.
+              이용권이 지금 하는 일은 간직할 때 짧은 광고를 건너뛰는 것 하나다.
+              산 사람에게만 그 사실을 알리고, 안 산 사람에게 파는 말을 먼저 걸지 않는다.
+              광고를 본 값이 이용권보다 싸고, 여기는 파는 화면이 아니라 다시 읽는 화면이다.
             */}
-            {owned ? (
+            {owned && (
               <div className="arch-past arch-past--open">
                 <span className="arch-past-mark" aria-hidden="true">
                   <CheckIcon />
                 </span>
                 <span className="arch-past-texts">
                   <span className="arch-past-title">이용권이 있어요</span>
-                  <span className="arch-past-note">간직할 수 있는 개수에 제한이 없어요</span>
+                  <span className="arch-past-note">광고 없이 바로 간직할 수 있어요</span>
                 </span>
               </div>
-            ) : (
-              <button type="button" className="arch-past" onClick={() => setPaywallOpen(true)}>
-                <span className="arch-past-mark" aria-hidden="true">
-                  <LockIcon />
-                </span>
-                <span className="arch-past-texts">
-                  <span className="arch-past-title">간직할 자리는 {SAVE_LIMIT}개까지예요</span>
-                  <span className="arch-past-note">
-                    {passEnabled
-                      ? '이용권이 있으면 개수 제한 없이 간직할 수 있어요'
-                      : '새로 간직하려면 간직한 말씀 하나를 지워 주세요'}
-                  </span>
-                  <span className="arch-past-cta">
-                    {passEnabled ? '이용권 보기' : '자세히 보기'}
-                    <ChevronIcon />
-                  </span>
-                </span>
-              </button>
             )}
 
             <div className="arch-pattern" aria-hidden="true" />
@@ -252,6 +201,21 @@ export function ArchiveScreen() {
           </svg>
           보관함
         </span>
+        <button type="button" className="arch-tab" onClick={() => navigate(ROUTES.settings)}>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3.1" />
+            <path d="M19.2 14.6a1.5 1.5 0 0 0 .3 1.7l.1.1a1.8 1.8 0 1 1-2.6 2.6l-.1-.1a1.5 1.5 0 0 0-2.6 1.1v.2a1.8 1.8 0 1 1-3.6 0v-.1a1.5 1.5 0 0 0-2.6-1.1l-.1.1a1.8 1.8 0 1 1-2.6-2.6l.1-.1a1.5 1.5 0 0 0-1.1-2.6h-.2a1.8 1.8 0 1 1 0-3.6h.1a1.5 1.5 0 0 0 1.1-2.6l-.1-.1a1.8 1.8 0 1 1 2.6-2.6l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.2a1.8 1.8 0 1 1 3.6 0v.1a1.5 1.5 0 0 0 2.6 1.1l.1-.1a1.8 1.8 0 1 1 2.6 2.6l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.2a1.8 1.8 0 1 1 0 3.6h-.1a1.5 1.5 0 0 0-1.4.9z" />
+          </svg>
+          설정
+        </button>
       </nav>
 
       <ArchiveDetail
@@ -261,7 +225,6 @@ export function ArchiveScreen() {
         onDelete={remove}
       />
 
-      <Paywall open={paywallOpen} trigger="archive_locked" onClose={() => setPaywallOpen(false)} />
     </div>
   );
 }
