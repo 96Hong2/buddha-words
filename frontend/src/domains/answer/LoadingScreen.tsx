@@ -9,6 +9,7 @@ import { sceneForScreen } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 import { useRewardedAd } from '../ads/useRewardedAd';
+import { FLAGS } from '../../shared/flags';
 
 import './answer.css';
 
@@ -110,6 +111,9 @@ function LotusMark() {
  *
  * 답이 먼저 도착했으면 광고를 띄우지 않는다. 다 만든 답을 광고로 막는 것은 기다리는
  * 시간을 채우는 일이 아니라 길을 막는 일이다.
+ *
+ * ⚠ **이 자리는 네 광고 자리 중 사람이 누르지 않는 유일한 곳이라 심사 위험이 있다.**
+ * `VITE_FLAG_GENERATION_AD=off` 로 이 자리만 끈다. 근거는 `shared/flags/flags.ts`.
  */
 export function LoadingScreen() {
   const client = useApiClient();
@@ -299,6 +303,8 @@ export function LoadingScreen() {
    * 통째로 지나간다. 그때는 예전처럼 대기 화면만 보인다.
    */
   useEffect(() => {
+    // 심사에서 걸릴 수 있는 자리라 한 줄로 끌 수 있다. 꺼도 나머지 세 자리는 그대로 돈다
+    if (!FLAGS.generationAd) return;
     if (adShown.current || !ad.ready || !ad.supported) return;
     if (settledAnswer.current || failure != null) return;
     adShown.current = true;
