@@ -174,13 +174,19 @@
   display: block;
   resize: none;
   margin-top: var(--s-4);
-  min-height: 132px;
-  max-height: 236px;
+  min-height: 176px;
+  max-height: 300px;
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: var(--r-button);
-  padding: var(--s-4);
+  /*
+   * 아래 여백이 위보다 크다. 마지막 줄까지 내려썼을 때 글자가 테두리에 붙어
+   * 「더 쓸 자리가 없다」고 보였다. 칸 안에서 스크롤할 때도 이 여백이 남아
+   * 방금 친 줄 아래에 숨 쉴 자리가 생긴다.
+   */
+  padding: var(--s-4) var(--s-4) var(--s-6);
+  scroll-padding-bottom: var(--s-6);
   font-family: inherit;
   font-size: var(--t-body-l);
   line-height: var(--lh-body-l);
@@ -310,43 +316,6 @@
 
 /* ── 복귀 카드 ───────────────────────────────────────────────────────────── */
 
-.home-screen .recall {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  margin-top: var(--s-2);
-  padding: var(--s-4);
-  background: var(--surface);
-  border-radius: var(--r-card);
-  box-shadow: var(--sh-card);
-}
-
-.home-screen .recall p {
-  margin: 0;
-  flex: 1;
-  font-size: var(--t-body);
-  line-height: var(--lh-body);
-  font-weight: var(--w-semibold);
-  color: var(--text);
-}
-
-.home-screen .recall button {
-  flex: none;
-  height: 36px;
-  padding: 0 6px 0 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  border: 0;
-  border-radius: var(--r-pill);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-family: inherit;
-  font-size: var(--t-label);
-  font-weight: var(--w-semibold);
-}
-
 /* ── 홈 카드 자리. 카드 자체는 daily 도메인이 그린다 ─────────────────────── */
 
 .home-screen .home-cards {
@@ -366,7 +335,12 @@
   height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  /*
+   * 안쪽 여백. 탭이 flex:1 로 자리를 나눠 가져서, 이게 없으면 선택된 탭의 pill 배경이
+   * 바 왼쪽 끝에 그대로 붙는다. 실기기에서 「좌측 여백이 없다」로 보였다.
+   */
+  gap: 4px;
+  padding: 0 8px;
   background: var(--surface);
   border-radius: var(--r-pill);
   box-shadow: var(--sh-tabbar);
@@ -510,11 +484,11 @@
 }
 
 /* 보이는 높이가 44px 미만인 버튼은 닿는 영역만 넓힌다 */
-.home-screen :is(.chip, .recall button, .draft button) {
+.home-screen :is(.chip, .draft button) {
   position: relative;
 }
 
-.home-screen :is(.chip, .recall button, .draft button)::before {
+.home-screen :is(.chip, .draft button)::before {
   content: "";
   position: absolute;
   left: 0;
@@ -528,4 +502,52 @@
 .entry-card button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   쓰던 글을 지울지 묻는 카드
+
+   덮개를 쓰지 않는다. 답하기 전에도 탭바와 아래 카드가 그대로 눌린다.
+   진입 즉시 바텀시트를 세우지 않는 것이 이 저장소의 절대 규칙이다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.home-screen .draft-ask {
+  margin-bottom: var(--s-3);
+  padding: 12px 14px 12px;
+  border: 1px solid var(--accent-rule);
+  border-radius: 14px;
+  background: var(--surface-illust);
+}
+
+.home-screen .draft-ask__title {
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.home-screen .draft-ask__buttons {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: 10px;
+}
+
+.home-screen .draft-ask__btn {
+  flex: 1 1 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.home-screen .draft-ask__btn--keep {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
 }

@@ -58,7 +58,7 @@ export const FLAGS = {
    */
   negativeReasonSampling: ratio(import.meta.env.VITE_NEGATIVE_REASON_SAMPLING, 0.2),
 
-  /** 「오늘 이것만 해볼게요」. 체크리스트를 만들지 않는다. 눌렀다는 사실만 남긴다 */
+  /** 「내일 했는지 물어봐 주세요」. 체크리스트를 만들지 않는다. 누르면 다음 날 한 번 묻는다 */
   actionCommit: flag(import.meta.env.VITE_FLAG_ACTION_COMMIT, true),
 
   /**
@@ -78,12 +78,15 @@ export const FLAGS = {
   generationAd: flag(import.meta.env.VITE_FLAG_GENERATION_AD, true),
 
   /**
-   * 답변 끝의 알림 권유. 기본은 꺼 둔다.
+   * 알림 권유. 세 번째 답 뒤 한 번, 그리고 설정에 늘 한 줄.
    *
-   * 콘솔 스마트발송 템플릿 코드가 없으면 실기기에서 동의 화면 자체가 뜨지 않는다.
-   * 코드가 준비되고 나서 켠다.
+   * ⚠ **콘솔 스마트발송 템플릿 코드(`VITE_NOTIFICATION_TEMPLATE_CODE`)가 없으면 실기기에서
+   * 동의 화면 자체가 안 뜬다.** 코드 없이 켜면 눌러도 아무 일이 없는 버튼이 된다.
+   * 그래서 이 플래그가 켜져 있어도 `notifyUsable()` 이 코드와 기기 지원을 둘 다 본다.
+   *
+   * 기본값이 on 인 것은 사용자가 그렇게 지시했기 때문이다. 템플릿 코드는 배포에서 준다.
    */
-  notificationPrompt: flag(import.meta.env.VITE_FLAG_NOTIFICATION_PROMPT, false),
+  notificationPrompt: flag(import.meta.env.VITE_FLAG_NOTIFICATION_PROMPT, true),
 } as const;
 
 /**

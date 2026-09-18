@@ -92,7 +92,7 @@ test('입력칸이 iPhone 폭에서도 같은 상한까지만 자란다', async 
   // Chromium 판(screens.spec.ts 「입력칸이 자란다」)과 같은 상한이다.
   // WKWebView 가 줄 높이를 다르게 잡아도 이 선을 넘으면 전송 버튼이 화면 밖으로 밀린다
   expect(grown).toBeGreaterThan(small);
-  expect(grown).toBeLessThanOrEqual(240);
+  expect(grown).toBeLessThanOrEqual(304);
 
   const scrollable = await field.evaluate((el) => el.scrollHeight > el.clientHeight);
   expect(scrollable, '상한에 닿았는데 칸 안에서 스크롤되지 않아요').toBe(true);

@@ -55,7 +55,6 @@ test('간직한 답변을 보관함에서 다시 펼친다. 앱을 새로 열어
   await expect(page.getByTestId('keep-note')).toContainText('앱을 닫으면 사라져요');
 
   await saveAnswerFromScreen(page);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   // goto 는 판을 새로 띄운다. 세션의 답변은 사라지고 기기에 남은 것만 남는다
   await page.goto('/archive');
@@ -141,9 +140,10 @@ test('오늘 받은 답을 간직하면 보관함에 한 장만 남는다', asyn
   await expect(page.getByText('이 답변은 앱을 닫으면 사라져요')).toBeVisible();
   await expect(page.getByTestId('archive-item')).toHaveCount(1);
 
-  // 간직한 뒤. 같은 답이 두 자리에 겹쳐 보이지 않는다
-  await page.getByRole('button', { name: '이야기하기' }).click();
-  await page.getByTestId('return-card').getByRole('button').click();
+  // 간직한 뒤. 같은 답이 두 자리에 겹쳐 보이지 않는다.
+  // 답변으로 돌아가는 길은 이 카드다. 홈의 복귀 카드는 없앴다(이미 다 보고 온 사람에게도 떴다)
+  await page.getByTestId('archive-item').click();
+  await expect(page.getByTestId('answer')).toBeVisible();
   await saveAnswerFromScreen(page);
 
   await page.getByTestId('again-button').click();
@@ -172,9 +172,8 @@ test('넷째도 그냥 간직된다. 지우는 길도 있다', async ({ page, st
   await askOnce(page, DEEP_CONCERN);
   await saveAnswerFromScreen(page);
 
-  // 넷째인데 막는 것이 없다
+  // 넷째인데 막는 것이 없다. 담긴 것은 헬퍼가 완료 시트로 확인했다
   await expect(page.getByTestId('paywall')).toHaveCount(0);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.getByTestId('again-button').click();
   await page.getByRole('button', { name: '보관함' }).click();
@@ -223,13 +222,15 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
   // 물러서면 아무 일도 없다. 담겼다는 말이 뜨지 않는다
   await page.getByTestId('sheet-close').click();
   await expect(gate).toHaveCount(0);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toHaveCount(0);
+  await expect(page.getByTestId('save-done')).toHaveCount(0);
 
   // 같은 자리에서 다시 눌러 보고 나면 담긴다
   await page.getByTestId('save-button').click();
   await expect(gate).toBeVisible();
   await page.getByTestId('save-gate-watch').click();
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
+  await expect(page.getByTestId('save-done')).toContainText('보관함에 간직했어요');
+  // 완료 시트는 스스로 닫히지 않는다. 읽던 답에 남는 쪽을 골라 다음 걸음으로 간다
+  await page.getByTestId('save-done-stay').click();
 
   // 기기에 실제로 남았다. 새로 띄워도 한 장이 있다
   await page.goto('/archive');
@@ -319,7 +320,6 @@ test('다른 답을 간직해도 앞서 간직한 저본과 한문 원문이 지
 
   // 오늘 받은 답을 간직한다. 이때 앞서 간직해 둔 것까지 통째로 다시 쓰인다
   await saveAnswerFromScreen(page);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   const kept = (await storedItems(page)).find((item) => item.answerId === 'seed-origin');
   const source = kept?.detail?.scripture?.source;
@@ -360,7 +360,6 @@ test('광고를 보고 받은 다른 관점도 간직한 답에 함께 남는다
 
   // 먼저 간직하고 광고는 그 뒤에 본다. 카드가 마지막 한마디 아래에 있어 이 순서가 자연스럽다
   await saveAnswerFromScreen(page);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.getByTestId('extension-card').scrollIntoViewIfNeeded();
   await page.getByTestId('extension-cta').click();
@@ -375,7 +374,8 @@ test('광고를 보고 받은 다른 관점도 간직한 답에 함께 남는다
 
   // 이미 간직한 답이라 자리를 더 쓰지 않는다. 그래도 그새 받은 관점은 마저 담긴다
   await page.getByTestId('save-button').click();
-  await expect(page.getByText('이미 보관함에 있어요')).toBeVisible();
+  await expect(page.getByTestId('save-done')).toContainText('이미 보관함에 있어요');
+  await page.getByTestId('save-done-stay').click();
   await shot(page, '28-5 답변 - 광고로 받은 다른 관점을 간직한 뒤');
 
   const [kept] = await storedItems(page);
@@ -418,4 +418,65 @@ test('광고를 보고 받은 다른 관점도 간직한 답에 함께 남는다
   });
   expect(width.scroll).toBeLessThanOrEqual(width.client);
   expect(width.doc).toBeLessThanOrEqual(width.win);
+});
+
+/** 앞선 판에서 간직해 한 줄만 남은 것 여럿. 목록이 길어졌을 때를 재려고 심는다 */
+async function seedMany(page: Page, count: number): Promise<void> {
+  await page.addInitScript((n) => {
+    if (localStorage.getItem('buddha.archive.v1') != null) return;
+    const items = Array.from({ length: n }, (_, i) => ({
+      answerId: `many-${i + 1}`,
+      savedAt: Date.now() - (i + 1) * 3_600_000,
+      line: `가까울수록 사이를 두어라. (${i + 1}번째로 간직한 말이에요)`,
+      tags: ['fatigue'],
+      visualTheme: 'rest',
+    }));
+    localStorage.setItem('buddha.archive.v1', JSON.stringify({ version: 1, items }));
+  }, count);
+}
+
+test('보관함이 길어지면 한 쪽씩 보여 주고, 즐겨찾기가 먼저 온다', async ({ page }) => {
+  /*
+   * 간직 개수 제한을 없애면서 목록에 끝이 없어졌다. 스무 장이 넘어가면 아래로만 긴 화면이
+   * 되고, 처음 담은 것이 사실상 사라진다. 한 쪽은 열 장이고 즐겨찾기가 맨 앞에 온다.
+   */
+  await seedMany(page, 23);
+  await page.goto('/archive');
+  await expect(page.getByTestId('archive')).toBeVisible();
+
+  // 스물셋을 다 그리지 않는다. 열 장과 「13개 더 보기」다
+  await expect(page.getByTestId('archive-item')).toHaveCount(10);
+  const more = page.getByTestId('archive-more');
+  await expect(more).toContainText('13개 더 보기');
+  await shot(page, '29 보관함 - 한 쪽씩 보여 준다', { fullPage: true });
+
+  await more.click();
+  await expect(page.getByTestId('archive-item')).toHaveCount(20);
+  await more.click();
+  await expect(page.getByTestId('archive-item')).toHaveCount(23);
+  // 끝에 닿으면 버튼이 사라진다. 눌러도 아무 일이 없는 버튼을 남기지 않는다
+  await expect(more).toHaveCount(0);
+
+  /*
+   * 맨 뒤(가장 오래 전에 담은 것)에 별을 켠다. 즐겨찾기가 먼저 오지 않으면 그것은
+   * 두 번째 쪽에 남아, 즐겨찾기가 아무 일도 안 한 것이 된다.
+   */
+  const last = page.getByTestId('archive-item').last();
+  await expect(last).toContainText('23번째로 간직한 말이에요');
+  await page.getByTestId('archive-favorite').last().click();
+
+  await expect(page.getByTestId('archive-item').first()).toContainText('23번째로 간직한 말이에요');
+
+  // 필터는 즐겨찾기가 생긴 뒤에만 선다. 늘 비어 있는 칸은 길만 늘린다
+  const filters = page.getByTestId('archive-filter');
+  await expect(filters).toHaveCount(2);
+  await filters.nth(1).click();
+  await expect(page.getByTestId('archive-item')).toHaveCount(1);
+  await shot(page, '29-1 보관함 - 즐겨찾기만 보기', { fullPage: true });
+
+  // 앱을 다시 열어도 별이 남는다
+  await page.reload();
+  await expect(page.getByTestId('archive-item').first()).toContainText('23번째로 간직한 말이에요');
+  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
+  expect(names).toContain('archive_view');
 });

@@ -93,7 +93,7 @@
  *
  * 아래 여백이 큰 이유: 답변 화면 바닥에는 공유·간직 바가 화면에 붙어 떠 있다(position: fixed).
  * 여백이 없으면 스크롤을 끝까지 내렸을 때 이 카드가 그 바 뒤로 들어가 눌리지 않는다.
- * e2e 가 그것을 먼저 잡았다. 바 높이(64) + 아래 여백(24) + 안전영역만큼 비운다.
+ * e2e 가 그것을 먼저 잡았다. 바 높이(76) + 여유만큼 비운다.
  */
 .gr-card--answer {
   margin: 20px var(--gutter) calc(96px + var(--safe-bottom, 0px));
@@ -114,4 +114,73 @@
 
 .gr-card__cta:disabled {
   opacity: 0.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   화면 위로 올라오는 권유 한 장
+
+   덮개(dim)를 쓰지 않는다. 뒤 본문은 그대로 읽히고 스크롤도 막지 않는다.
+   답을 받으러 온 사람이 하려던 일을 가리지 않으면서, 스크롤 위치와 상관없이
+   한 번은 보이게 하는 선이 여기다.
+
+   자리는 공유·간직 바 위다. 그 바가 76px(패딩 12 + 버튼 44 + 패딩 20) 높이로 화면에
+   붙어 떠 있어서, 이 카드를 바닥에 붙이면 버튼 둘이 카드 뒤로 들어가 눌리지 않는다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.gr-nudge {
+  position: fixed;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(96px + var(--safe-bottom, 0px));
+  z-index: 6;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--accent-rule);
+  background: var(--surface-illust);
+  box-shadow: 0 10px 28px rgba(43, 36, 29, 0.18);
+  animation: gr-nudge-in 220ms ease-out both;
+}
+
+@keyframes gr-nudge-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-nudge {
+    animation: none;
+  }
+}
+
+/* 카드 안에서는 「다음에」가 CTA 아래 가운데에 선다. 문서 흐름 카드와 다른 점이다 */
+.gr-nudge .gr-card__later {
+  display: block;
+  margin: 10px auto 0;
+}
+
+.gr-toast {
+  position: fixed;
+  left: 50%;
+  /*
+   * 권유 카드 위다. 180px 일 때는 카드 본문(96~246px) 한가운데에 얹혀서,
+   * 「복사했어요」가 방금 누른 버튼을 가린 채 1.8초 떠 있었다.
+   */
+  bottom: calc(266px + var(--safe-bottom, 0px));
+  z-index: 7;
+  transform: translateX(-50%);
+  max-width: calc(100% - 48px);
+  padding: 10px 16px;
+  border-radius: var(--r-pill);
+  background: var(--text);
+  color: var(--surface);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-semibold);
+  text-align: center;
 }

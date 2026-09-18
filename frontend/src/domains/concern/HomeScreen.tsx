@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNo
 import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
-import { useAnalytics } from '../../shared/analytics';
+import { charsBucket, useAnalytics } from '../../shared/analytics';
 import { useApiClient, type DailyQuote } from '../../shared/api';
 import { useSession } from '../../shared/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
@@ -13,7 +13,7 @@ import { ConcernField } from './ConcernField';
 import { DepthIndicator } from './DepthIndicator';
 import { EntryCard, entryCardPending, markEntryCardSeen, type EntryCardDismiss } from './EntryCard';
 import { ExampleChips } from './ExampleChips';
-import { DraftNotice, ReturnCard } from './HomeCards';
+import { DraftConfirm, DraftNotice } from './HomeCards';
 import { useInputFunnel } from './useInputFunnel';
 
 import './concern.css';
@@ -45,11 +45,18 @@ export interface HomeScreenProps {
    * 카드 자리와 같은 것을 받는다. 그 안내가 오늘의 한마디로 가는 길을 두려면 구절이 왔는지 알아야 한다.
    */
   notice?: (slot: HomeCardSlot) => ReactNode;
-  /** 입력 묶음 아래 카드 자리. 오늘의 한마디·회고 카드가 여기 들어온다 */
+  /** 입력 묶음 아래 카드 자리. 오늘의 한마디 카드가 여기 들어온다 */
   renderCards?: (slot: HomeCardSlot) => ReactNode;
+  /**
+   * 입력칸 **바로 위** 자리.
+   *
+   * 지금 여기 오는 것은 「어제 적어 드린 그거 해 보셨나요」 하나다. 사람이 답변에서
+   * 부탁한 질문이라 아래 카드 자리가 아니라 먼저 보이는 자리에 둔다. 덮개는 쓰지 않는다.
+   */
+  topCard?: ReactNode;
 }
 
-export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = {}) {
+export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScreenProps = {}) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const client = useApiClient();
@@ -59,6 +66,10 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
   const [focused, setFocused] = useState(false);
   /** 앱을 열었을 때 이미 남아 있던 글인가. 이번에 쓴 글과 갈라야 「남겨 뒀어요」 줄이 맞는다 */
   const [restored, setRestored] = useState(() => draft.trim() !== '');
+  /** 답을 받고 이 화면으로 돌아온 것인가. 마운트할 때 한 번 정하고 바뀌지 않는다 */
+  const fromAnswer = useRef(response != null);
+  /** 쓰던 글을 지울지 묻는 시트. 답을 받고 돌아왔는데 글이 남아 있을 때만 연다 */
+  const [askClear, setAskClear] = useState(() => response != null && draft.trim() !== '');
 
   const [dateISO] = useState(todayISO);
   const [entryTurn] = useState(() => entryCardPending(dateISO));
@@ -129,6 +140,28 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
     focusField();
   }, [focusField, setDraft]);
 
+  // 시트가 뜬 사실을 한 번 남긴다. 「글이 남아 있는 채로 돌아오는 일」이 얼마나 잦은지 본다
+  useEffect(() => {
+    if (!askClear) return;
+    analytics.log(
+      'draft_confirm_view',
+      { chars_bucket: charsBucket(draft.length) },
+      { kind: 'impression', once: 'draft_confirm_view' },
+    );
+    // 마운트할 때 한 번이다. 글자가 바뀔 때마다 다시 찍지 않는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analytics, askClear]);
+
+  const answerDraft = useCallback(
+    (choice: 'clear' | 'keep') => {
+      analytics.log('draft_confirm_choice', { choice }, { kind: 'click' });
+      setAskClear(false);
+      if (choice === 'clear') clearDraft();
+      else focusField();
+    },
+    [analytics, clearDraft, focusField],
+  );
+
   // 실제 호출은 대기 화면이 한다. 여기서는 보낼 글과 멱등키만 세션에 남긴다
   const submit = useCallback(() => {
     if (text === '') return;
@@ -142,16 +175,30 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
     navigate(ROUTES.loading);
   }, [beginSubmit, funnel, navigate, onSubmit, text]);
 
-  const showReturn = response != null;
-  const showDraftNotice = restored && text !== '';
+  /**
+   * 답을 받고 돌아온 자리인가.
+   *
+   * 여기서 하던 「방금 물어본 이야기의 답이 준비됐어요」 카드는 없앴다. 답을 **이미 다 보고**
+   * 뒤로 온 사람에게도 똑같이 떠서, 본 것을 보러 가라고 매번 권했다. 답으로 돌아가는 길은
+   * 보관함의 「오늘 나눈 이야기」가 이미 준다.
+   *
+   * 대신 이 신호로 다른 것을 한다. 답을 받고 왔는데 쓰던 글이 그대로 남아 있으면, 그 글은
+   * 방금 보낸 글이다. 새 이야기를 쓰려는 사람 앞에 지난 글이 놓여 있는 것이라 한 번 묻는다.
+   */
+  const showDraftNotice = restored && text !== '' && !fromAnswer.current;
 
   return (
     <div {...testId(TEST_IDS.home)} className="home-screen">
       <div className="body">
         <div className="svc">
+          {/*
+            전에는 이름 뒤에 「AI 가 경전을 찾아 풀어 드려요」가 붙어 있었다.
+            AI 표시는 답변 화면 맨 위 배지가 이미 하고 있고, 그 표시는 고지 의무가 요구하는
+            자리라 거기 한 곳이면 된다. 홈 제목까지 같은 말을 하면 이 앱이 「경전을 읽는 자리」가
+            아니라 「AI 를 쓰는 자리」로 먼저 읽힌다.
+          */}
           <p className="svc-line">
             <b>부처의 말</b>
-            <i>·</i>AI 가 경전을 찾아 풀어 드려요
           </p>
           <button
             {...testId(TEST_IDS.settingsButton)}
@@ -177,16 +224,8 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
           </button>
         </div>
 
-        {showReturn && <ReturnCard onOpen={() => navigate(ROUTES.answer)} />}
-
         {/* 키보드가 올라오면 제목이 한 줄로 접히고 입력 묶음이 위로 붙는다 */}
-        {showReturn ? (
-          <h2 className="hero">
-            무슨 일이 있었나요?
-            <br />
-            편하게 이야기해 주세요
-          </h2>
-        ) : focused ? (
+        {focused ? (
           <div className="hero-row">
             <h2 className="hero">무슨 일이 있었나요?</h2>
             {home != null && <img className="home-face home-face--sm" src={home.src} alt="" />}
@@ -203,6 +242,9 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
         )}
 
         <div className="cluster">
+          {topCard}
+          {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
+          <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />
           {showDraftNotice && <DraftNotice onClear={clearDraft} />}
 
           <ConcernField
@@ -226,8 +268,9 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
           >
             이야기 보내기
           </button>
+          {/* 「답변은 AI 가 만들어요」는 답변 화면 배지가 이미 말한다. 여기서는 쓰는 사람에게 필요한 것만 */}
           <p className="micro">
-            답변은 AI 가 만들어요 · <span className="nb">이름·연락처</span>는 적지 않아도 괜찮아요
+            <span className="nb">이름·연락처</span>는 적지 않아도 괜찮아요
           </p>
           {notice?.({ quote, focusField })}
         </div>

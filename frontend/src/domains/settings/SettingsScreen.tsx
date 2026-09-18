@@ -1,7 +1,16 @@
-import { useCallback, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
+import { useBridge } from '../../app/providers';
+import {
+  notifyTemplateCode,
+  notifyUsable,
+  readNotify,
+  writeNotify,
+  type NotifyState,
+} from '../../shared/prefs/notify';
+import { markNotifyDone, readMilestones } from '../../shared/prefs/milestones';
 import {
   isArchivePassEnabled,
   useSession,
@@ -36,6 +45,27 @@ const RESTORE_NOTICE: Record<ArchivePassState, string> = {
   unknown: '구매 내역을 확인하지 못했어요. 잠시 뒤에 다시 눌러 주세요.',
 };
 
+/**
+ * 알림 자리에 지금 무엇이 적히나.
+ *
+ * 「켜짐」이라고 단정하지 않는다. 우리가 아는 것은 「동의를 받아 두었다」이고, 사람이 토스
+ * 설정에서 끈 것은 알 수 없다. SDK 가 지금 상태를 되묻는 길을 주지 않는다.
+ */
+const NOTIFY_ROW: Record<NotifyState, { value: string; desc: string }> = {
+  unset: { value: '받기', desc: '하루 한 번, 마음을 들여다볼 시간을 알려드려요' },
+  on: { value: '받기로 함', desc: '토스 앱 알림 설정에서 끌 수 있어요' },
+  declined: { value: '받기', desc: '다시 받고 싶으면 눌러 주세요' },
+  unsupported: { value: '받기', desc: '지금 토스 앱 버전에서는 켤 수 없어요' },
+};
+
+/** 동의를 묻고 나서 하는 말 */
+const NOTIFY_NOTICE: Record<NotifyState, string> = {
+  unset: '',
+  on: '알림을 받기로 했어요.',
+  declined: '알림을 받지 않기로 했어요. 언제든 다시 켤 수 있어요.',
+  unsupported: '지금은 알림을 켤 수 없어요. 토스 앱을 업데이트해 주세요.',
+};
+
 function Chevron() {
   return (
     <span className="set-chev" aria-hidden="true">
@@ -55,11 +85,65 @@ function Chevron() {
 
 export function SettingsScreen() {
   const navigate = useNavigate();
+  const bridge = useBridge();
   const analytics = useAnalytics();
   const { archivePass, refreshArchivePass } = useSession();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [textSize, setTextSize] = useState<TextSize>(() => readTextSize());
+
+  const [notify, setNotify] = useState<NotifyState>(() => readNotify());
+  const [asking, setAsking] = useState(false);
+  const [notifyNotice, setNotifyNotice] = useState<string | null>(null);
+  /** 홈 추가 경로 안내를 펼쳤나. 시트를 열 만한 내용이 아니라 한 줄로 편다 */
+  const [homeAddOpen, setHomeAddOpen] = useState(false);
+
+  /**
+   * 알림 줄을 그릴까.
+   *
+   * 못 켜는 판에서는 **줄 자체를 안 그린다.** 눌러야만 「안 돼요」라고 답하는 줄은,
+   * 사람을 한 번 헛되이 누르게 하고 그 원인(콘솔 템플릿 코드가 없음)도 못 알려 준다.
+   */
+  const canNotify = notifyUsable(bridge.supports('notification'));
+
+  useEffect(() => {
+    if (!homeAddOpen) return;
+    analytics.log(
+      'home_add_view',
+      { from: 'settings', answers_total: readMilestones().answers },
+      { kind: 'impression' },
+    );
+  }, [analytics, homeAddOpen]);
+
+  /**
+   * 알림 동의를 묻는다.
+   *
+   * **켠 사람도 다시 누를 수 있다.** 앱인토스 SDK 는 동의를 요청하는 길만 주고, 끄는 길도
+   * 지금 상태를 되묻는 길도 안 준다. 사람이 토스 설정에서 끈 것을 우리는 모른다.
+   * 그 상태에서 「받기로 함」이라 말하면서 버튼까지 막으면 앱 안에서 다시 켤 길이 없어진다.
+   * 그래서 끄는 곳은 토스 설정이라고 적고, 여기서 「꺼짐」으로 바꿔 놓지는 않는다.
+   */
+  const askNotify = useCallback(() => {
+    if (asking) return;
+    setAsking(true);
+    setNotifyNotice(null);
+    analytics.log('notification_prompt_accept', { surface: 'settings' }, { kind: 'click' });
+    void bridge
+      .requestNotificationAgreement(notifyTemplateCode())
+      .then((result): 'granted' | 'denied' => (result === 'agreementRejected' ? 'denied' : 'granted'))
+      .catch((): 'unsupported' => 'unsupported')
+      .then((result) => {
+        analytics.log('notification_permission', { result });
+        const next: NotifyState =
+          result === 'granted' ? 'on' : result === 'denied' ? 'declined' : 'unsupported';
+        writeNotify(next);
+        setNotify(next);
+        setNotifyNotice(NOTIFY_NOTICE[next]);
+        // 여기서 켠 사람에게 세 번째 답에서 같은 것을 또 묻지 않는다
+        if (next === 'on') markNotifyDone();
+      })
+      .finally(() => setAsking(false));
+  }, [analytics, asking, bridge]);
 
   /** 고른 즉시 화면 전체가 커진다. 저장 버튼을 따로 두지 않는다 */
   const pickTextSize = useCallback(
@@ -97,7 +181,7 @@ export function SettingsScreen() {
     <div className="set-screen" {...testId(TEST_IDS.settings)}>
       <div className="set-pad">
         <h1 className="set-title">설정</h1>
-        <p className="set-sub">읽기 편한 크기로 맞추고, 알아둘 것을 한 곳에서 볼 수 있어요</p>
+        <p className="set-sub">글자 크기를 맞추고, 알림과 이용 안내를 한 곳에서 볼 수 있어요</p>
 
         {/*
           글자 크기.
@@ -192,6 +276,99 @@ export function SettingsScreen() {
               </p>
             )}
           </>
+        )}
+
+        {/*
+          알림과 홈 추가.
+
+          둘 다 답변 화면에서 한 번씩 권하는 것인데, 그 한 번을 놓쳤거나 나중에 마음이
+          바뀐 사람이 찾아올 자리가 없었다. 권유는 사라지지만 설정은 남는다.
+        */}
+        <p className="set-group">{canNotify ? '알림과 바로가기' : '바로가기'}</p>
+        <div className="set-list">
+          {canNotify && (
+          <button
+            type="button"
+            className="set-item"
+            onClick={askNotify}
+            /*
+              켠 사람도 다시 누를 수 있다. SDK 는 지금 상태를 되묻는 길을 안 준다.
+              토스 설정에서 끈 사람에게 「받기로 함」이라 말하면서 버튼까지 막으면,
+              앱 안에서 다시 켤 길이 아예 없어진다. 다시 불러도 해롭지 않다.
+            */
+            disabled={asking}
+            {...testId(TEST_IDS.settingsNotify)}
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 9.6a6 6 0 1 0-12 0c0 4.2-1.4 5.6-1.4 5.6h14.8S18 13.8 18 9.6z" />
+                <path d="M10.3 18.6a2 2 0 0 0 3.4 0" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">하루 한 번 알림</span>
+              <span className="set-item-desc">{NOTIFY_ROW[notify].desc}</span>
+            </span>
+            <span className="set-value">{asking ? '여는 중' : NOTIFY_ROW[notify].value}</span>
+          </button>
+          )}
+
+          <button
+            type="button"
+            className="set-item"
+            onClick={() => setHomeAddOpen((now) => !now)}
+            aria-expanded={homeAddOpen}
+            {...testId(TEST_IDS.settingsHomeAdd)}
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4.5 10.8 12 4.6l7.5 6.2V19a.8.8 0 0 1-.8.8H5.3a.8.8 0 0 1-.8-.8z" />
+                <path d="M12 16.4v-4.6M9.7 14.1h4.6" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">토스 홈에 추가하기</span>
+              <span className="set-item-desc">홈에서 바로 열 수 있어요</span>
+            </span>
+            <Chevron />
+          </button>
+        </div>
+
+        {/*
+          앱인토스에 홈 추가를 부르는 API 가 없다. 사람이 상단 더보기(⋯)에서 직접 골라야 하고,
+          그 메뉴는 토스앱 5.246.0 부터 있다. 그래서 여기가 하는 일은 어디를 눌러야 하는지
+          가리키는 것뿐이다. 되지도 않는 버튼을 두고 누르면 「직접 해 주세요」라고 하는 쪽이 나쁘다.
+        */}
+        {homeAddOpen && (
+          <p className="set-hint set-hint--how">
+            화면 맨 위{' '}
+            <span className="set-dots" aria-label="더보기">
+              <i />
+              <i />
+              <i />
+            </span>{' '}
+            를 누르고 <b>홈 화면에 추가하기</b>를 고르세요
+          </p>
+        )}
+
+        {notifyNotice != null && (
+          <p className="set-hint" role="status">
+            {notifyNotice}
+          </p>
         )}
 
         <p className="set-group">안내</p>

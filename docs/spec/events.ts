@@ -43,6 +43,13 @@ export const EVENTS = {
   model_cost_estimate: { params: ['route', 'model_tier', 'input_tokens_bucket', 'output_tokens_bucket', 'cost_bucket_usd'] as const },
   // 답변
   answer_generated:    { params: ['answer_id', 'route', 'pass', 'elapsed_bucket_ms', 'regenerated'] as const },   // pass: 1 | 2 | light
+  /**
+   * 이 사람의 **몇 번째 답**인가. 답이 다 만들어진 뒤 답변 하나에 한 번이다.
+   *
+   * 하루 사용량(quota)과 다르다. 저쪽은 자정에 리셋되고 이쪽은 계속 쌓인다.
+   * **첫 사용을 광고 없이 주는 정책의 본전을 재는 유일한 자리다.** 분모가 1, 분자가 2 다.
+   */
+  answer_milestone:    { params: ['answers_total', 'is_first'] as const },
   answer_read_50:      { params: ['answer_id', 'route'] as const },
   answer_read_70:      { params: ['answer_id', 'route'] as const },   // 대표 전환
   answer_read_90:      { params: ['answer_id', 'route'] as const },
@@ -56,7 +63,6 @@ export const EVENTS = {
   term_explanation_open:{ params: ['answer_id', 'term_index'] as const },
   // 오늘 해볼 일
   action_view:         { params: ['answer_id', 'action_index'] as const },
-  action_commit:       { params: ['answer_id', 'action_index'] as const },   // 「오늘 이것만 해볼게요」. 플래그로 끈다
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
   rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: generation | extension | continue | save
@@ -64,6 +70,17 @@ export const EVENTS = {
   rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
   ad_eligible:         { params: ['placement', 'answer_id'] as const },                   // 띄울 수 있는 상태가 됐다. 제안을 본 것(deep_extension_view)보다 앞이다
+  /**
+   * 광고를 띄울 수 있는 자리인데 **띄우지 않고 지나갔다.** 이유를 반드시 함께 싣는다.
+   *
+   * 이게 없으면 「광고가 한 건도 안 돌았다」를 보고도 원인을 못 가른다. 첫 사용이라
+   * 일부러 건너뛴 것인지, 콘솔이 그룹 id 를 아직 안 줘서 번들에 값이 없는 것인지,
+   * 사람이 광고를 꺼 둔 것인지가 전부 「0건」으로 똑같이 보인다. 실제로 그 상태로
+   * 번들을 올려 놓고 광고가 안 뜬다는 것을 실기기에서야 알았다.
+   *
+   * reason: first_use | no_group | unsupported | opt_out | pass | already_saved | answer_ready | flag_off
+   */
+  ad_skipped:          { params: ['placement', 'reason'] as const },
   post_ad_continue:    { params: ['placement', 'answer_id'] as const },                   // 광고를 보고 하던 일을 이어갔다
   post_ad_exit:        { params: ['placement', 'answer_id', 'within_bucket_s'] as const },// 광고 뒤 곧바로 나갔다. 수익이 높아도 여기가 크면 그 자리는 나쁘다
   // 같은 날 두 번째 고민
@@ -78,13 +95,20 @@ export const EVENTS = {
   // 앱 자체를 권한다. 세 번째 이야기를 마친 뒤 한 번만 뜬다
   app_share_view:      { params: ['answers_total'] as const },
   app_share_complete:  { params: ['method'] as const },                                   // method: system | copy
+  app_share_dismiss:   { params: ['how'] as const },                                      // how: close | later. 보고 그냥 닫은 사람이 분석에서 사라지지 않게
   // 보관
   save_click:          { params: ['answer_id', 'slot_index'] as const },                  // 누른 순간. 담긴 것은 save_complete 다
   save_gate_view:      { params: ['answer_id'] as const },                                // 「짧은 광고를 보면」 시트를 봤다
   save_gate_accept:    { params: ['answer_id'] as const },                                // 「보고 간직하기」를 눌렀다
-  save_complete:       { params: ['answer_id', 'slot_index', 'gate'] as const },          // gate: ad | pass | free. 실제로 담겼다
+  save_complete:       { params: ['answer_id', 'slot_index', 'gate'] as const },          // gate: ad | pass | free | first_use. 실제로 담겼다
+  save_done_view:      { params: ['answer_id', 'kind'] as const },                        // kind: saved | already. 담고 나서 뜨는 한 장
+  save_done_action:    { params: ['action'] as const },                                   // action: archive | stay. 보러 갔나 읽던 답에 남았나
   archive_view:        { params: ['items_bucket'] as const },
   archive_item_open:   { params: ['days_since'] as const },
+  // 보관함이 길어져서 생긴 셋. 「담기만 하고 안 읽는다」와 「찾아서 다시 읽는다」를 가른다
+  archive_favorite:    { params: ['on'] as const },                                       // 별을 켰나 껐나
+  archive_filter:      { params: ['filter'] as const },                                   // filter: all | favorite
+  archive_more:        { params: ['page'] as const },                                     // 「더 보기」로 몇 쪽까지 내려갔나
   // 결제
   paywall_view:        { params: ['trigger'] as const },                                  // trigger: save_ad | archive_locked
   paywall_close:       { params: ['trigger', 'within_bucket_s'] as const },               // 2초 안에 닫혔으면 잘못 열린 것이다
@@ -95,18 +119,24 @@ export const EVENTS = {
   daily_quote_impression:{ params: ['quote_id', 'surface'] as const },                     // surface: entry_card | home_card
   daily_quote_open:    { params: ['quote_id', 'surface'] as const },
   entry_card_dismiss:  { params: ['quote_id', 'how'] as const },                           // how: cta | close | backdrop | back
-  recall_card_impression:{ params: ['days_since'] as const },
-  recall_card_click:   { params: ['days_since'] as const },
+  // 내일 되짚기. **사람이 「내일 물어봐 주세요」를 누른 경우에만** 다음 날 한 번 묻는다
+  tomorrow_ask_view:   { params: ['answer_id'] as const },                                 // 행동 아래 그 버튼이 화면에 들어왔다
+  tomorrow_ask_accept: { params: ['answer_id', 'notify'] as const },                       // notify: granted | denied | unsupported
+  recall_card_impression:{ params: ['days_since'] as const },                              // 다음 날 물어보는 시트가 떴다
+  recall_card_click:   { params: ['days_since', 'done'] as const },                        // done: true(해봤어요) | false(아직이요). 이 앱이 행동까지 갔는지 재는 유일한 답이다
   // 마찰. 사람이 막힌 자리를 화면 녹화 없이 알아내는 최소한의 신호다
   friction_repeat_submit:{ params: ['within_bucket_ms'] as const },                        // 3초 안에 전송을 다시 눌렀다
   friction_generation_abandon:{ params: ['route', 'elapsed_bucket_ms'] as const },         // 답을 만드는 중에 나갔다
+  // 답을 받고 돌아왔더니 쓰던 글이 남아 있다. 지울지 이어 쓸지 물어본 자리
+  draft_confirm_view:  { params: ['chars_bucket'] as const },
+  draft_confirm_choice:{ params: ['choice'] as const },                                    // choice: clear | keep
   // 읽기 설정. 글자 크기는 한 번 정하면 계속 쓰므로 바꾼 사실만 남긴다
   text_size_change:    { params: ['size', 'from'] as const },                              // size: s | m | l | xl, from: settings | onboarding
-  // 홈에 추가. 온보딩을 마친 첫 화면에서 한 번만 권한다
-  home_add_view:       { params: [] as const },
-  home_add_dismiss:    { params: ['how'] as const },                                       // how: close | later
-  // 알림. 첫 답을 본 뒤에만 묻는다. 플래그로 끈다
-  notification_prompt_view:  { params: ['surface'] as const },
+  // 홈에 추가. 첫 답(1회)과 다시 오는 사람(4회)에게 한 번씩, 그리고 설정에 늘 한 줄
+  home_add_view:       { params: ['from', 'answers_total'] as const },                     // from: nudge | settings
+  home_add_dismiss:    { params: ['how'] as const },                                       // how: close | later | already
+  // 알림. 세 번째 답을 받은 뒤 한 번 권하고, 설정에 늘 한 줄 둔다
+  notification_prompt_view:  { params: ['surface'] as const },                             // surface: nudge_card | settings | answer_end
   notification_prompt_accept:{ params: ['surface'] as const },
   notification_prompt_decline:{ params: ['surface'] as const },
   notification_permission:   { params: ['result'] as const },                              // result: granted | denied | unsupported
@@ -146,7 +176,24 @@ export const KPI = {
   ad_optin:         { name: '보상형 opt-in',           num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
   save_gate_conv:   { name: '간직 광고 수락률',          num: 'save_gate_accept', den: 'save_gate_view', target: '낮으면 간직을 막고 선 것이다' },
   save_conv:        { name: '누른 뒤 실제로 담김',        num: 'save_complete', den: 'save_click', target: '광고가 중간에서 얼마나 떨구는지 본다' },
+  save_done_conv:   { name: '담고 나서 보러 감',          num: 'save_done_action(action=archive)', den: 'save_done_view', target: '낮으면 보관함이 다시 안 읽히는 자리다' },
+  favorite_rate:    { name: '즐겨찾기 비율',             num: 'archive_favorite(on=true)', den: 'save_complete', target: '간직과 즐겨찾기가 갈리는지 본다' },
   gen_ad_cost:      { name: '생성 중 광고의 대가',        num: 'friction_generation_abandon', den: 'concern_submit', target: 'placement=generation 을 켜기 전후로 비교한다' },
+  // ── 첫 사용 무료의 본전. 이 셋이 없으면 「광고를 언제부터 띄울까」를 숫자로 못 정한다 ──
+  /**
+   * 첫 답을 받은 사람 중 몇 %가 두 번째 답까지 오는가.
+   *
+   * **손익분기는 `p = C / (R − C)` 다.** C 는 LLM 한 건 원가(NORMAL $0.001756 ·
+   * DEEP $0.002358, `MODELS.md` 실측), R 은 광고 한 편 수익(eCPM ÷ 1000)이다.
+   * 첫 사용에 광고가 없으니 그 한 건은 통째로 손실이고, 두 번째 사용의 광고가 그것까지 갚는다.
+   *
+   * 여기서 나오는 선 하나: **R ≥ 2C 가 아니면 전환율 100% 여도 적자다.**
+   * C ≈ $0.002 이므로 eCPM 이 $4(약 5,600원) 아래면 이 정책 자체가 성립하지 않는다.
+   * eCPM $8 이면 33%, $10 이면 25% 가 필요하다.
+   */
+  second_use_conv:  { name: '두 번째 사용 전환율',        num: 'answer_milestone(answers_total=2)', den: 'answer_milestone(answers_total=1)', target: 'p = C / (R − C). eCPM $8 기준 33%' },
+  ad_skip_reason:   { name: '광고를 건너뛴 이유',         num: 'ad_skipped(reason=X)', den: 'ad_skipped', target: 'no_group 이 남아 있으면 콘솔에서 그룹을 아직 안 준 것이다' },
+  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
   ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start', target: '' },
   ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete', den: 'answer_generated(pass=2|light)', target: '' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
@@ -156,7 +203,9 @@ export const KPI = {
   d7: { name: 'D7', num: 'app_open(days_since_first_open=7)', den: 'app_open(is_first_open)', target: '' },
   requestion:       { name: '재질문율',                num: 'second_question_start', den: 'answer_generated(pass=2|light) unique users', target: '' },
   daily_quote:      { name: '오늘의 한마디 재방문',      num: 'daily_quote_open', den: 'daily_quote_impression', target: '' },
+  tomorrow_ask_conv:{ name: '내일 물어봐 달라고 함',      num: 'tomorrow_ask_accept', den: 'tomorrow_ask_view', target: '행동을 가져갈 마음이 있었는지 본다' },
   recall:           { name: '지난 고민 회고 클릭률',     num: 'recall_card_click', den: 'recall_card_impression', target: '' },
+  recall_done:      { name: '실제로 해 봤다고 답함',      num: 'recall_card_click(done=true)', den: 'recall_card_click', target: '이 앱이 행동까지 갔는지 재는 유일한 답이다' },
   viral_share:      { name: '공유 완료 / 답변 생성',     num: 'share_complete', den: 'answer_generated(pass=2|light)', target: '' },
   share_scope_mix:  { name: '전체 공유 비율',            num: 'share_scope_select(scope=full)', den: 'share_scope_select', target: '무엇을 보내고 싶어 하는지 본다' },
   app_share_conv:   { name: '앱 권유 수락률',            num: 'app_share_complete', den: 'app_share_view', target: '' },

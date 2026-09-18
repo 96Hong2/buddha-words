@@ -35,12 +35,35 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
   const [ready, setReady] = useState(false);
   const [showing, setShowing] = useState(false);
 
+  /**
+   * 못 띄우는 이유를 한 번 남긴다.
+   *
+   * 화면에서는 셋이 똑같이 「광고가 없었다」로 보인다. 기기가 낡은 것인지, 콘솔이 아직
+   * 광고 그룹 id 를 안 줘서 번들에 값이 없는 것인지, 사람이 광고를 꺼 둔 것인지.
+   * **그 구분이 없어서 광고가 한 건도 안 도는 번들을 올려 놓고 실기기에서야 알았다.**
+   * `no_group` 이 남아 있으면 코드가 아니라 콘솔에서 할 일이 남은 것이다.
+   */
   useEffect(() => {
     let cancelled = false;
 
-    if (!bridge.supports('fullScreenAd') || adGroupId(placement) === null) {
+    if (!bridge.supports('fullScreenAd')) {
       setSupported(false);
       setReady(true);
+      analytics.log(
+        'ad_skipped',
+        { placement, reason: 'unsupported' },
+        { once: `ad_skipped:${placement}` },
+      );
+      return;
+    }
+    if (adGroupId(placement) === null) {
+      setSupported(false);
+      setReady(true);
+      analytics.log(
+        'ad_skipped',
+        { placement, reason: 'no_group' },
+        { once: `ad_skipped:${placement}` },
+      );
       return;
     }
 
@@ -48,12 +71,19 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       if (cancelled) return;
       setSupported(!optOut);
       setReady(true);
+      if (optOut) {
+        analytics.log(
+          'ad_skipped',
+          { placement, reason: 'opt_out' },
+          { once: `ad_skipped:${placement}` },
+        );
+      }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [bridge, placement]);
+  }, [analytics, bridge, placement]);
 
   /**
    * 띄울 수 있는 상태가 됐다. 제안을 **본 것**(deep_extension_view · second_question_start)보다 앞이다.

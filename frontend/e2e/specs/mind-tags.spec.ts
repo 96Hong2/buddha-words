@@ -122,7 +122,6 @@ test('같은 마음에 답변 화면과 보관함이 같은 이름을 붙인다'
   const onAnswer = await chips(page, '.ans .tags .tag');
 
   await saveAnswerFromScreen(page);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
 
   await page.goto('/archive');
   await expect(page.getByTestId('archive-item')).toHaveCount(1);

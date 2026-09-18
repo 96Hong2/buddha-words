@@ -10,6 +10,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
 import { useRewardedAd } from '../ads/useRewardedAd';
 import { FLAGS } from '../../shared/flags';
+import { isFirstStory } from '../../shared/prefs/milestones';
 
 import './answer.css';
 
@@ -299,20 +300,44 @@ export function LoadingScreen() {
    * 제출은 위 효과에서 이미 나갔다. 여기서 기다리게 만드는 것은 아무것도 없고, 답이
    * 오는 길과 광고가 도는 길이 서로를 막지 않는다.
    *
+   * ── 첫 이야기에는 띄우지 않는다 ─────────────────────────────────────
+   *
+   * 답을 한 번도 못 받아 본 사람은 이 앱이 무엇을 해 주는지 아직 모른다. 그 사람의 첫
+   * 화면을 전면 광고로 덮으면 **본 것이 광고 하나뿐이고 답은 보기 전에 나간다.**
+   * 값을 한 번 받아 본 사람에게만 값을 받으라고 한다.
+   *
    * 못 띄우는 기기·광고 그룹 id 가 없는 번들에서는 `supported` 가 false 라 이 효과가
-   * 통째로 지나간다. 그때는 예전처럼 대기 화면만 보인다.
+   * 통째로 지나간다. 셋 다 화면에서는 똑같이 「광고가 없었다」로 보이므로, 왜 없었는지를
+   * `ad_skipped` 로 남긴다. 그게 없으면 0건을 보고도 원인을 못 가른다.
    */
   useEffect(() => {
-    // 심사에서 걸릴 수 있는 자리라 한 줄로 끌 수 있다. 꺼도 나머지 세 자리는 그대로 돈다
-    if (!FLAGS.generationAd) return;
-    if (adShown.current || !ad.ready || !ad.supported) return;
+    if (adShown.current || !ad.ready) return;
     if (settledAnswer.current || failure != null) return;
+
+    // 심사에서 걸릴 수 있는 자리라 한 줄로 끌 수 있다. 꺼도 나머지 세 자리는 그대로 돈다
+    if (!FLAGS.generationAd) {
+      adShown.current = true;
+      analytics.log('ad_skipped', { placement: 'generation', reason: 'flag_off' });
+      return;
+    }
+    if (isFirstStory()) {
+      adShown.current = true;
+      analytics.log('ad_skipped', { placement: 'generation', reason: 'first_use' });
+      return;
+    }
+    if (!ad.supported) {
+      adShown.current = true;
+      // 그룹 id 가 없는 것과 기기가 못 띄우는 것을 화면은 가르지 못한다. 둘을 함께 적는다
+      analytics.log('ad_skipped', { placement: 'generation', reason: 'unsupported' });
+      return;
+    }
+
     adShown.current = true;
     adCovering.current = true;
     void ad.show().finally(() => {
       adCovering.current = false;
     });
-  }, [ad, failure]);
+  }, [ad, analytics, failure]);
 
   useEffect(() => {
     if (failure != null) return;

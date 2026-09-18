@@ -3,8 +3,10 @@ export {
   saveAnswer,
   listSaved,
   countSaved,
+  countFavorites,
   isSaved,
   removeSaved,
+  toggleFavorite,
   type SavedAnswer,
   type SavedDetail,
   type SavedInput,
@@ -12,6 +14,7 @@ export {
 } from './archiveStore';
 export { Paywall, type PaywallProps, type PurchaseOutcome } from './Paywall';
 export { SaveGate, type SaveGateProps } from './SaveGate';
+export { SaveDone, type SaveDoneKind, type SaveDoneProps } from './SaveDone';
 export { ArchiveItem, type ArchiveItemProps } from './ArchiveItem';
 export { ArchiveDetail, type ArchiveDetailProps } from './ArchiveDetail';
 export { ArchiveScreen } from './ArchiveScreen';

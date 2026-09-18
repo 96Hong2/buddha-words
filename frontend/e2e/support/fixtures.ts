@@ -15,8 +15,7 @@ import { test as base, expect, type Page } from '@playwright/test';
 import { DEV_STACK_URLS, FONT_CDN } from './env';
 import type { StubDial } from '../../src/shared/api/stubData';
 
-/** 온보딩을 본 것으로 적어 두는 표. 제품 코드의 onboardingStore 와 같은 키다 */
-const ONBOARDING_KEY = 'buddha.onboarding.v1';
+import { MILESTONES_KEY, ONBOARDING_KEY, SEEDED_MILESTONES } from './storage';
 
 export interface Fixtures {
   page: Page;
@@ -30,14 +29,24 @@ export const test = base.extend<Fixtures>({
   page: async ({ page }, use, testInfo) => {
     const errors: string[] = [];
 
-    // 온보딩은 홈 대신 그려진다. 재지 않는 spec 에서는 본 것으로 두고 시작한다
-    await page.addInitScript((key) => {
-      try {
-        localStorage.setItem(key, 'done');
-      } catch {
-        // 저장소가 막힌 판에서는 온보딩이 뜬다. 그 spec 이 알아서 지나간다
-      }
-    }, ONBOARDING_KEY);
+    // 온보딩은 홈 대신 그려진다. 재지 않는 spec 에서는 본 것으로 두고 시작한다.
+    // 답 횟수도 같은 이유로 지나온 것으로 둔다. 첫 답에는 광고가 없고 권유가 한 장 떠서,
+    // 그 둘이 대상이 아닌 spec 이 전부 거기에 걸린다. 자세한 이유는 support/storage.ts
+    await page.addInitScript(
+      ([key, milestonesKey, milestones]) => {
+        try {
+          localStorage.setItem(key, 'done');
+          // `asNewcomer` 를 부른 spec 에서는 심지 않는다. 이 스크립트는 화면을 옮길 때마다
+          // 다시 도는데, 그때마다 다시 심으면 첫 답 뒤에 쌓인 횟수가 매번 9 로 되돌아간다
+          if (sessionStorage.getItem('e2e.newcomer') == null) {
+            localStorage.setItem(milestonesKey, milestones);
+          }
+        } catch {
+          // 저장소가 막힌 판에서는 온보딩이 뜬다. 그 spec 이 알아서 지나간다
+        }
+      },
+      [ONBOARDING_KEY, MILESTONES_KEY, SEEDED_MILESTONES] as const,
+    );
 
     page.on('console', (msg) => {
       if (msg.type() !== 'error') return;

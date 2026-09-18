@@ -68,40 +68,84 @@ export function TagChips({ tags }: { tags: EmotionTag[] }) {
   );
 }
 
+/** 즐겨찾기 별. 켜면 채우고 끄면 선만 남는다 */
+function StarIcon({ on }: { on: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill={on ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 4l2.5 5.1 5.6.8-4.05 3.95.95 5.55L12 16.8l-5.05 2.6.95-5.55L3.85 9.9l5.6-.8z" />
+    </svg>
+  );
+}
+
 export interface ArchiveItemProps {
   item: SavedAnswer;
   /** 오늘 나눈 이야기 자리에 놓을 때. 날짜 옆에 「오늘」이 붙는다 */
   today?: boolean;
   /** 누르면 답변 전체를 펼친다 */
   onOpen: () => void;
+  /**
+   * 즐겨찾기를 켜고 끈다. 주지 않으면 별을 그리지 않는다.
+   * 「오늘 나눈 이야기」는 아직 기기에 없는 답이라 켤 자리가 없다.
+   */
+  onToggleFavorite?: () => void;
 }
 
 /**
  * 간직한 말씀 한 장.
  *
- * `button` 이다. 예전에는 `article` 이라 눌러도 아무 일이 없었고, 한 줄은 두 줄에서 잘려
- * 나머지를 볼 길이 없었다. 지금은 카드 전체가 눌리는 자리이고 한 줄을 자르지 않는다.
+ * 카드 전체가 눌리는 `button` 이다. 예전에는 `article` 이라 눌러도 아무 일이 없었다.
+ *
+ * 즐겨찾기 별은 그 버튼 **밖**에 둔다. 버튼 안에 버튼을 넣을 수 없기도 하고, 안에 두면
+ * 별을 누르려던 손가락이 카드를 열어 버린다. 그래서 카드를 감싸는 자리를 하나 두고
+ * 별을 그 위에 얹는다.
  */
-export function ArchiveItem({ item, today = false, onOpen }: ArchiveItemProps) {
+export function ArchiveItem({ item, today = false, onOpen, onToggleFavorite }: ArchiveItemProps) {
   const scene = sceneForTheme(item.visualTheme);
+  const on = item.favorite === true;
 
   return (
-    <button type="button" className="arch-card" onClick={onOpen} {...testId(TEST_IDS.archiveItem)}>
-      <span className="arch-body">
-        <span className="arch-meta">
-          <span className="arch-date">{DATE_FORMAT.format(item.savedAt)}</span>
-          {today && <span className="arch-badge-today">오늘</span>}
+    <div className="arch-row">
+      <button type="button" className="arch-card" onClick={onOpen} {...testId(TEST_IDS.archiveItem)}>
+        <span className="arch-body">
+          <span className="arch-meta">
+            <span className="arch-date">{DATE_FORMAT.format(item.savedAt)}</span>
+            {today && <span className="arch-badge-today">오늘</span>}
+          </span>
+          <span className="arch-line">{item.line}</span>
+          <TagChips tags={item.tags} />
+          <span className="arch-card-cta">
+            답변 다시 보기
+            <ChevronIcon />
+          </span>
         </span>
-        <span className="arch-line">{item.line}</span>
-        <TagChips tags={item.tags} />
-        <span className="arch-card-cta">
-          답변 다시 보기
-          <ChevronIcon />
+        <span className="arch-thumb" style={{ background: scene.backdrop }}>
+          <img className="buddha-v2" src={scene.src} alt="" />
         </span>
-      </span>
-      <span className="arch-thumb" style={{ background: scene.backdrop }}>
-        <img className="buddha-v2" src={scene.src} alt="" />
-      </span>
-    </button>
+      </button>
+
+      {onToggleFavorite != null && (
+        <button
+          type="button"
+          className={on ? 'arch-fav is-on' : 'arch-fav'}
+          aria-pressed={on}
+          /*
+            날짜를 붙인다. 열 장짜리 목록에서 라벨이 다 같으면 스크린리더 사용자는
+            「즐겨찾기에 넣기」를 열 번 듣고 어느 카드 것인지 알 수 없다.
+          */
+          aria-label={`${DATE_FORMAT.format(item.savedAt)} ${on ? '즐겨찾기 해제' : '즐겨찾기에 넣기'}`}
+          onClick={onToggleFavorite}
+          {...testId(TEST_IDS.archiveFavorite)}
+        >
+          <StarIcon on={on} />
+        </button>
+      )}
+    </div>
   );
 }
