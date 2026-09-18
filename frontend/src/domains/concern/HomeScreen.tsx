@@ -45,11 +45,18 @@ export interface HomeScreenProps {
    * 카드 자리와 같은 것을 받는다. 그 안내가 오늘의 한마디로 가는 길을 두려면 구절이 왔는지 알아야 한다.
    */
   notice?: (slot: HomeCardSlot) => ReactNode;
-  /** 입력 묶음 아래 카드 자리. 오늘의 한마디·회고 카드가 여기 들어온다 */
+  /** 입력 묶음 아래 카드 자리. 오늘의 한마디 카드가 여기 들어온다 */
   renderCards?: (slot: HomeCardSlot) => ReactNode;
+  /**
+   * 입력칸 **바로 위** 자리.
+   *
+   * 지금 여기 오는 것은 「어제 적어 드린 그거 해 보셨나요」 하나다. 사람이 답변에서
+   * 부탁한 질문이라 아래 카드 자리가 아니라 먼저 보이는 자리에 둔다. 덮개는 쓰지 않는다.
+   */
+  topCard?: ReactNode;
 }
 
-export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = {}) {
+export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScreenProps = {}) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const client = useApiClient();
@@ -235,8 +242,9 @@ export function HomeScreen({ onSubmit, notice, renderCards }: HomeScreenProps = 
         )}
 
         <div className="cluster">
+          {topCard}
           {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
-          <DraftConfirm open={askClear} onAnswer={answerDraft} />
+          <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />
           {showDraftNotice && <DraftNotice onClear={clearDraft} />}
 
           <ConcernField

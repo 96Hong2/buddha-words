@@ -76,6 +76,9 @@ test('첫 이야기에는 광고를 덮지 않고, 왜 안 띄웠는지를 남�
 
   expect(elapsed, '첫 답이 광고를 기다린 것처럼 늦게 왔어요').toBeLessThan(15_000);
 
+  // 몇 번째 답인지는 요청2까지 끝나야 세어진다. 그전에 세면 답을 못 본 사람까지 셈에 든다
+  await expect(page.getByTestId('analysis')).toBeVisible({ timeout: 20_000 });
+
   const names = await logNames(page);
   expect(names).toContain('answer_generated');
   // 첫 이야기에는 광고를 부르지도 않는다
@@ -231,7 +234,56 @@ test('설정에서도 알림과 홈 추가를 찾을 수 있다', async ({ page 
   await expect(notify).toBeVisible();
   await notify.click();
   await expect(page.getByText('알림을 받기로 했어요')).toBeVisible();
-  // 켠 뒤에는 다시 누를 수 없다. 끄는 길은 토스 설정이라 여기서 끈 척하지 않는다
-  await expect(notify).toBeDisabled();
+  /*
+   * 켠 뒤에도 다시 누를 수 있다. SDK 는 지금 상태를 되묻는 길을 안 줘서, 사람이 토스
+   * 설정에서 끈 것을 우리는 모른다. 그 상태에서 버튼까지 막으면 앱 안에서 다시 켤 길이 없다.
+   */
+  await expect(notify).toBeEnabled();
+  await expect(notify).toContainText('받기로 함');
   await shot(page, '47 설정 - 알림과 홈 추가');
+});
+
+test('같은 답으로 왕복해도 답 수가 늘지 않는다', async ({ page, stub }) => {
+  /*
+   * 답을 몇 번 받았나는 광고 면제와 권유 시간표를 **둘 다** 쥔다. 그런데 세는 자리가
+   * 답변 화면 안의 ref 였다. 답변 화면은 떠날 때 언마운트되고, 보관함의 「오늘 나눈 이야기」를
+   * 누르면 같은 답으로 다시 들어온다. 그 길을 두 번 왕복하면 답 하나가 셋으로 세어져,
+   * 한 번밖에 안 받은 사람이 권유 세 장을 다 쓰고 광고 면제도 잃었다.
+   *
+   * 지금은 마지막으로 센 답변 아이디를 저장소가 들고 있다.
+   */
+  test.setTimeout(120_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await asNewcomer(page);
+
+  await page.goto('/');
+  await askOnce(page);
+  await expect(page.getByTestId('home-add')).toBeVisible();
+  await page.getByTestId('nudge-close').click();
+
+  // 답변 → 홈 → 보관함 → 같은 답으로 복귀. 두 번 왕복한다
+  for (let i = 0; i < 2; i += 1) {
+    await page.getByTestId('again-button').click();
+    await page.getByRole('button', { name: '보관함' }).click();
+    await expect(page.getByTestId('archive')).toBeVisible();
+    await page.getByTestId('archive-item').click();
+    await expect(page.getByTestId('answer')).toBeVisible();
+    await expect(page.getByTestId('analysis')).toBeVisible({ timeout: 20_000 });
+  }
+
+  const answers = await page.evaluate(() => {
+    const raw = localStorage.getItem('buddha.milestones.v2');
+    return raw == null ? null : (JSON.parse(raw) as { answers: number }).answers;
+  });
+  expect(answers, '같은 답으로 돌아왔는데 답 수가 늘었어요').toBe(1);
+
+  // 그래서 권유도 그대로 첫 자리다. 앱 알리기·알림이 앞당겨지지 않는다
+  await expect(page.getByTestId('app-share')).toHaveCount(0);
+  await expect(page.getByTestId('notify-nudge')).toHaveCount(0);
+
+  // 첫 답이라 간직도 여전히 광고 없이 된다
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await expect(page.getByTestId('save-gate')).toHaveCount(0);
+  await expect(page.getByTestId('save-done')).toBeVisible();
 });

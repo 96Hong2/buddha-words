@@ -23,9 +23,14 @@ import { writeNotify, notifyTemplateCode } from '../../shared/prefs/notify';
 import { writeRecall } from '../../shared/prefs/recall';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
-/** 눌렀을 때 그 자리에 남는 말. 알림이 실제로 갈 수 있는지에 따라 가른다 */
-const DONE_WITH_PUSH = '내일 이 시간에 여쭤볼게요';
-const DONE_WITHOUT_PUSH = '내일 앱을 열면 여쭤볼게요';
+/**
+ * 눌렀을 때 그 자리에 남는 말.
+ *
+ * **시각을 약속하지 않는다.** 알림 동의를 받아도 실제로 보내는 것은 콘솔 스마트발송이고,
+ * 우리가 그 시각을 정하지 않는다. 지금 확실한 것은 「다음에 열면 묻는다」 하나뿐이라
+ * 그것만 적는다. 「내일 이 시간에」라고 적어 두었다가 아무것도 안 오면 거짓말이 된다.
+ */
+const DONE_NOTE = '내일 앱을 열면 여쭤볼게요';
 
 /** 오늘 날짜 (사용자 시간대). 진입 카드·사용량과 같은 기준이다 */
 function todayISO(): string {
@@ -45,7 +50,6 @@ export function TomorrowReminder({ answerId, actionTitle }: TomorrowReminderProp
   const bridge = useBridge();
   const analytics = useAnalytics();
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
-  const [note, setNote] = useState(DONE_WITHOUT_PUSH);
   const seen = useRef('');
 
   useEffect(() => {
@@ -78,11 +82,10 @@ export function TomorrowReminder({ answerId, actionTitle }: TomorrowReminderProp
     });
 
     analytics.log('tomorrow_ask_accept', { answer_id: answerId, notify }, { kind: 'click' });
-    setNote(notify === 'granted' ? DONE_WITH_PUSH : DONE_WITHOUT_PUSH);
     setState('done');
   }
 
-  if (state === 'done') return <p className="p-micro">{note}</p>;
+  if (state === 'done') return <p className="p-micro">{DONE_NOTE}</p>;
 
   return (
     <button
@@ -92,7 +95,7 @@ export function TomorrowReminder({ answerId, actionTitle }: TomorrowReminderProp
       onClick={() => void accept()}
       {...testId(TEST_IDS.tomorrowAsk)}
     >
-      {state === 'busy' ? '맞춰 두는 중이에요' : '내일 했는지 물어봐 주세요'}
+      {state === 'busy' ? '준비하고 있어요' : '내일 했는지 물어봐 주세요'}
     </button>
   );
 }

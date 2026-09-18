@@ -83,11 +83,41 @@ const srcFiles = walk(join(ROOT, 'frontend/src')).filter((f) => /\.(ts|tsx)$/.te
   const known = new Set([...events.matchAll(/^\s{2}([a-z_0-9]+):\s*\{\s*params/gm)].map((m) => m[1]));
   if (known.size === 0) fail('spec/events.ts 에서 이벤트 이름을 하나도 못 읽었습니다.');
 
+  /**
+   * 이벤트마다 적어 둔 파라미터 이름.
+   *
+   * 이름만 보고 넘어가면 오타 하나가 조용히 지나간다. `.log()` 의 params 는
+   * `Record<string, ...>` 이라 타입이 안 잡고, 콘솔에도 그냥 들어간다. 그러면 그 값을
+   * 쓰는 KPI 가 **빈 칸으로 나오는데 이유를 알 수 없다.** 여기서 한 번 대조한다.
+   */
+  const params = new Map(
+    [...events.matchAll(/^\s{2}([a-z_0-9]+):\s*\{\s*params:\s*\[([^\]]*)\]/gm)].map((m) => [
+      m[1],
+      new Set([...m[2].matchAll(/'([^']+)'/g)].map((p) => p[1])),
+    ]),
+  );
+
   for (const file of srcFiles) {
     const text = readFileSync(file, 'utf8');
     for (const m of text.matchAll(/\.log\(\s*'([^']+)'/g)) {
       if (!known.has(m[1])) {
         fail(`${relative(ROOT, file)} 가 events.ts 에 없는 이벤트 '${m[1]}' 를 보냅니다.`);
+      }
+    }
+
+    /*
+      `.log('name', { a, b: 1 })` 의 키를 읽는다. 중괄호가 한 겹인 객체 리터럴만 본다.
+      변수로 만들어 넘기는 자리는 못 읽는데, 못 읽은 것을 틀렸다고 하지는 않는다.
+    */
+    for (const m of text.matchAll(/\.log\(\s*'([a-z_0-9]+)',\s*\{([^{}]*)\}/g)) {
+      const allowed = params.get(m[1]);
+      if (allowed == null) continue;
+      for (const key of m[2].matchAll(/(?:^|,)\s*([a-z_0-9]+)\s*[:,}]/g)) {
+        if (!allowed.has(key[1])) {
+          fail(
+            `${relative(ROOT, file)} 의 '${m[1]}' 가 events.ts 에 없는 값 '${key[1]}' 를 싣습니다.`,
+          );
+        }
       }
     }
   }

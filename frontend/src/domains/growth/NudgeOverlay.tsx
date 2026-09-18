@@ -18,17 +18,12 @@
  * `shared/prefs/milestones` 의 시간표 한 곳이 정하고, 이 컴포넌트는 받은 하나만 그린다.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
-import {
-  markAppShareDone,
-  markHomeAddDone,
-  markHomeAddShown,
-  markNotifyDone,
-  type Nudge,
-} from '../../shared/prefs/milestones';
+import { markHomeAddDone, type Nudge } from '../../shared/prefs/milestones';
 import { readNotify, writeNotify } from '../../shared/prefs/notify';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
@@ -77,49 +72,50 @@ export function NudgeOverlay({
 }: NudgeOverlayProps) {
   const analytics = useAnalytics();
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  /** 뜨는 말 한 줄. `close` 가 false 면 카드를 그대로 둔다 */
+  const [toast, setToast] = useState<{ text: string; close: boolean } | null>(null);
+
+  // 다른 오버레이 아홉과 같은 자리다. 뒤로가기로도 닫힌다
+  useOverlayBackClose(true, () => close('close'));
 
   /**
-   * 띄운 순간 「했다」로 적는다.
+   * 봤다는 사실만 남긴다. **「띄웠다」로 세는 일은 여기서 하지 않는다.**
    *
-   * 거절도 대답이다. 닫았다고 다시 묻지 않는다. 홈 추가만 두 번인데, 그 두 번째는
-   * 시간표가 정하는 것이라 여기서는 「몇 번 띄웠나」만 센다.
-   *
-   * **한 번만 돈다.** StrictMode 는 개발에서 효과를 두 번 돌리는데, 그대로 두면 한 번
-   * 띄우고 두 번 센 것이 되어 네 번째 자리의 홈 추가가 통째로 사라진다. 노출 로그도 두 번 찍힌다.
+   * 이 카드는 공유 시트·간직 시트가 열릴 때 언마운트되고 시트를 닫으면 다시 마운트된다.
+   * 여기서 세면 한 번 띄운 것이 둘로 세어져 네 번째 자리의 홈 추가가 통째로 사라진다.
+   * 세는 자리는 띄우기로 정한 곳(AnswerRoute)이다. 로그도 같은 이유로 `once` 를 건다.
    */
-  const marked = useRef(false);
   useEffect(() => {
-    if (marked.current) return;
-    marked.current = true;
-
+    const key = `nudge:${nudge}:${answersTotal}`;
     if (nudge === 'home_add') {
       analytics.log(
         'home_add_view',
         { from: 'nudge', answers_total: answersTotal },
-        { kind: 'impression' },
+        { kind: 'impression', once: key },
       );
-      markHomeAddShown();
       return;
     }
     if (nudge === 'app_share') {
-      analytics.log('app_share_view', { answers_total: answersTotal }, { kind: 'impression' });
-      markAppShareDone();
+      analytics.log(
+        'app_share_view',
+        { answers_total: answersTotal },
+        { kind: 'impression', once: key },
+      );
       return;
     }
     analytics.log(
       'notification_prompt_view',
       { surface: 'nudge_card' },
-      { kind: 'impression' },
+      { kind: 'impression', once: key },
     );
-    markNotifyDone();
   }, [analytics, answersTotal, nudge]);
 
   useEffect(() => {
     if (toast == null) return;
+    const shouldClose = toast.close;
     const timer = setTimeout(() => {
       setToast(null);
-      onDone();
+      if (shouldClose) onDone();
     }, 1800);
     return () => clearTimeout(timer);
   }, [toast, onDone]);
@@ -131,6 +127,9 @@ export function NudgeOverlay({
       if (how === 'already') markHomeAddDone();
     } else if (nudge === 'notify') {
       analytics.log('notification_prompt_decline', { surface: 'nudge_card' }, { kind: 'click' });
+    } else {
+      // 보고 그냥 닫은 사람이 분석에서 사라지지 않게 한다
+      analytics.log('app_share_dismiss', { how }, { kind: 'click' });
     }
     onDone();
   }
@@ -160,9 +159,10 @@ export function NudgeOverlay({
     try {
       await navigator.clipboard.writeText(message);
       analytics.log('app_share_complete', { method: 'copy' });
-      setToast('링크가 복사됐어요');
+      setToast({ text: '친구에게 보낼 글을 복사했어요', close: true });
     } catch {
-      setToast('지금은 보내지 못했어요');
+      // 거절과 실패는 다르다. 기술적으로 못 보낸 사람의 기회를 빼앗지 않는다
+      setToast({ text: '지금은 보내지 못했어요. 다시 눌러 주세요', close: false });
     }
   }
 
@@ -180,7 +180,7 @@ export function NudgeOverlay({
     analytics.log('notification_permission', { result });
     writeNotify(result === 'granted' ? 'on' : result === 'denied' ? 'declined' : 'unsupported');
     if (result === 'granted') {
-      setToast('내일 이 시간에 알려드릴게요');
+      setToast({ text: '알림을 받기로 했어요', close: true });
       return;
     }
     onDone();
@@ -209,10 +209,10 @@ export function NudgeOverlay({
     if (nudge === 'app_share') {
       return {
         testId: TEST_IDS.appShare,
-        title: '비슷한 마음인 사람이 떠오르나요?',
-        how: <>앱만 건네줄 수 있어요. 지금까지 나눈 이야기는 함께 가지 않아요.</>,
+        title: '요즘 비슷한 마음일 것 같은 사람이 있나요?',
+        how: <>앱만 건네줄 수 있어요. 적으신 이야기는 전해지지 않아요.</>,
         cta: {
-          label: busy ? '여는 중이에요' : '친구에게 앱 알려주기',
+          label: busy ? '보내는 중이에요' : '친구에게 앱 알려주기',
           testId: TEST_IDS.appShareSend,
           run: share,
         },
@@ -224,7 +224,7 @@ export function NudgeOverlay({
       title: '매일 하루를 돌아봐요',
       how: <>하루 한 번, 마음을 들여다볼 시간을 알려드려요. 언제든 설정에서 끌 수 있어요.</>,
       cta: {
-        label: busy ? '여는 중이에요' : '알림 받을게요',
+        label: busy ? '묻는 중이에요' : '알림 받을게요',
         testId: TEST_IDS.notifyNudgeAccept,
         run: askNotify,
       },
@@ -273,7 +273,7 @@ export function NudgeOverlay({
 
       {toast != null ? (
         <div className="gr-toast" role="status">
-          {toast}
+          {toast.text}
         </div>
       ) : null}
     </>,
@@ -281,7 +281,12 @@ export function NudgeOverlay({
   );
 }
 
-/** 알림을 이미 받기로 한 사람에게는 그 권유를 띄우지 않는다 */
+/**
+ * 알림을 이미 받기로 했거나 못 쓰는 사람인가.
+ *
+ * 설정 화면에서 먼저 켠 사람에게 세 번째 답에서 같은 부탁을 또 하지 않는다.
+ * 권유는 한 사람에게 한 번뿐이라, 이미 답한 사람에게 쓰면 그 한 번이 없어진다.
+ */
 export function notifyAlreadySettled(): boolean {
   const state = readNotify();
   return state === 'on' || state === 'unsupported';

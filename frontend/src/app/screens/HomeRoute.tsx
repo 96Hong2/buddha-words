@@ -11,7 +11,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen';
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
-import { RecallSheet } from '../../domains/daily/RecallSheet';
+import { RecallAsk } from '../../domains/daily/RecallAsk';
 import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
 import { ExhaustedNotice } from '../../domains/quota/ExhaustedNotice';
@@ -27,7 +27,15 @@ import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { markAdWatched } from '../../shared/api/http';
 import { markEntryCardSeen } from '../../domains/concern/EntryCard';
-import { clearRecall, daysSince, readRecall, type RecallEntry } from '../../shared/prefs/recall';
+import {
+  clearRecall,
+  daysSince,
+  hushRecallToday,
+  readRecall,
+  recallHushedToday,
+  RECALL_MAX_DAYS,
+  type RecallEntry,
+} from '../../shared/prefs/recall';
 import { useSession } from '../../shared/session';
 import { useBridge } from '../providers';
 import { ROUTES } from '../router';
@@ -122,11 +130,25 @@ export function HomeRoute() {
     setContinueOpen(true);
   }, [navigate, sent, state]);
 
+  /**
+   * 물어볼 것이 남아 있나.
+   *
+   * 셋을 다 본다. 오늘 받은 답을 두고 「어제 이야기」라고 물을 수 없고(1일), 한 달 전 것을
+   * 들고 와도 그 사람은 이미 잊었다(7일). 오늘 한 번 닫았으면 그날은 더 묻지 않는다.
+   */
   useEffect(() => {
     let alive = true;
     void readRecall(bridge.storage).then((entry) => {
-      // 오늘 받은 답을 두고 「어제 이야기」라고 물을 수는 없다
-      if (alive) setRecall(entry != null && daysSince(entry.date) >= 1 ? entry : null);
+      if (!alive) return;
+      if (entry == null) {
+        setRecall(null);
+        return;
+      }
+      const since = daysSince(entry.date);
+      const dueToday = since >= 1 && since <= RECALL_MAX_DAYS;
+      setRecall(dueToday && !recallHushedToday() ? entry : null);
+      // 이레가 지나면 조용히 버린다. 남겨 두면 다음 달에도 계속 걸린다
+      if (since > RECALL_MAX_DAYS) void clearRecall(bridge.storage);
     });
     return () => {
       alive = false;
@@ -217,6 +239,17 @@ export function HomeRoute() {
   }, [bridge]);
 
   /**
+   * 답하지 않고 닫았다.
+   *
+   * 기기에서 지우지는 않는다. 답할 마음이 남아 있을 수 있다. 다만 **오늘은 더 묻지 않는다.**
+   * 이 표가 없으면 앱을 열 때마다 같은 질문이 다시 서고, 그것이 예전 회고 카드가 받은 불평이다.
+   */
+  const hushRecall = useCallback(() => {
+    hushRecallToday();
+    setRecall(null);
+  }, []);
+
+  /**
    * 온보딩과 진입 카드가 잇달아 뜨면 첫 실행이 덮개 두 장으로 시작한다.
    * 온보딩을 본 날은 오늘의 한마디 카드를 띄우지 않는다. 홈의 카드 자리에는 그대로 있다.
    *
@@ -236,6 +269,8 @@ export function HomeRoute() {
         onSubmit={submit}
         notice={exhausted ? renderNotice : undefined}
         renderCards={renderCards}
+        /* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 입력칸 바로 위에 한 번 */
+        topCard={<RecallAsk entry={recall} onRespond={respondRecall} onClose={hushRecall} />}
       />
 
       <ContinueSheet
@@ -246,13 +281,6 @@ export function HomeRoute() {
         onContinue={goOn}
       />
 
-      {/* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 한 번 */}
-      <RecallSheet
-        entry={recall}
-        onRespond={respondRecall}
-        // 닫기는 답이 아니다. 기기에서 지우지 않아 다음에 열 때 한 번 더 묻는다
-        onClose={() => setRecall(null)}
-      />
     </>
   );
 }

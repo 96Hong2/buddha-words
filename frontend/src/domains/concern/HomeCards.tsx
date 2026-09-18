@@ -49,15 +49,11 @@ export function DraftConfirm({ open, onAnswer }: DraftConfirmProps) {
   return (
     <div className="draft-ask" role="group" aria-label="쓰시던 이야기" {...testId(TEST_IDS.draftConfirm)}>
       <p className="draft-ask__title">쓰시던 이야기가 남아 있어요</p>
+      {/*
+        되돌릴 수 없는 쪽을 뒤에 둔다. 읽는 순서·포커스 순서에서 지우기가 먼저 오면
+        스크린리더 사용자는 삭제를 먼저 듣는다.
+      */}
       <div className="draft-ask__buttons">
-        <button
-          type="button"
-          className="draft-ask__btn"
-          onClick={() => onAnswer('clear')}
-          {...testId(TEST_IDS.draftConfirmClear)}
-        >
-          지우고 새로 쓰기
-        </button>
         <button
           type="button"
           className="draft-ask__btn draft-ask__btn--keep"
@@ -65,6 +61,14 @@ export function DraftConfirm({ open, onAnswer }: DraftConfirmProps) {
           {...testId(TEST_IDS.draftConfirmKeep)}
         >
           이어서 쓰기
+        </button>
+        <button
+          type="button"
+          className="draft-ask__btn"
+          onClick={() => onAnswer('clear')}
+          {...testId(TEST_IDS.draftConfirmClear)}
+        >
+          지우고 새로 쓰기
         </button>
       </div>
     </div>

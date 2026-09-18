@@ -95,6 +95,7 @@ export const EVENTS = {
   // 앱 자체를 권한다. 세 번째 이야기를 마친 뒤 한 번만 뜬다
   app_share_view:      { params: ['answers_total'] as const },
   app_share_complete:  { params: ['method'] as const },                                   // method: system | copy
+  app_share_dismiss:   { params: ['how'] as const },                                      // how: close | later. 보고 그냥 닫은 사람이 분석에서 사라지지 않게
   // 보관
   save_click:          { params: ['answer_id', 'slot_index'] as const },                  // 누른 순간. 담긴 것은 save_complete 다
   save_gate_view:      { params: ['answer_id'] as const },                                // 「짧은 광고를 보면」 시트를 봤다

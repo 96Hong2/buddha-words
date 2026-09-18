@@ -20,8 +20,14 @@ import {
   SaveGate,
   type SaveDoneKind,
 } from '../../domains/archive';
-import { NudgeOverlay } from '../../domains/growth/NudgeOverlay';
-import { countAnswer, nudgeFor, type Nudge } from '../../shared/prefs/milestones';
+import { NudgeOverlay, notifyAlreadySettled } from '../../domains/growth/NudgeOverlay';
+import {
+  countAnswer,
+  markNudgeShown,
+  nudgeFor,
+  readMilestones,
+  type Nudge,
+} from '../../shared/prefs/milestones';
 import { notifyUsable, notifyTemplateCode } from '../../shared/prefs/notify';
 import { recordAndSave, saveFromServer } from '../../domains/quota/quota';
 import { ShareSheet, type ShareLinkState } from '../../domains/share/ShareSheet';
@@ -99,9 +105,12 @@ export function AnswerRoute() {
   const [done, setDone] = useState<SaveDoneKind | null>(null);
   /**
    * 이 사람의 몇 번째 답인가. 광고를 띄울지와 무엇을 권할지를 이 수 하나가 정한다.
-   * 0 은 아직 안 센 것이다(요청2가 오기 전).
+   *
+   * **저장소에서 읽어 시작한다.** 0 으로 두면 요청2가 도착하기 전까지 몇 번째 답이든
+   * 「첫 답」으로 보여, 그 사이에 간직하기를 누른 사람이 늘 광고 없이 담긴다.
+   * 아래 효과가 이번 답을 세고 나면 그 값으로 덮인다.
    */
-  const [answersTotal, setAnswersTotal] = useState(0);
+  const [answersTotal, setAnswersTotal] = useState(() => readMilestones().answers);
   /** 이번 답에서 띄울 권유 하나. 없으면 아무것도 안 뜬다 */
   const [nudge, setNudge] = useState<Nudge | null>(null);
   /** 간직 시트에서 「광고 없이」를 눌렀을 때 여는 이용권 시트 */
@@ -147,14 +156,29 @@ export function AnswerRoute() {
     if (milestoned.current === answer.answerId) return;
     milestoned.current = answer.answerId;
 
-    const total = countAnswer();
+    // 같은 답으로 두 번 세지 않는 일은 저장소가 한다. 화면 ref 로는 못 막는다.
+    // 보관함의 「오늘 나눈 이야기」로 같은 답에 다시 들어오면 이 화면이 새로 마운트된다
+    const total = countAnswer(answer.answerId);
     setAnswersTotal(total);
     // 첫 사용 무료의 본전을 재는 자리. 분모가 1, 분자가 2 다
-    analytics.log('answer_milestone', { answers_total: total, is_first: total === 1 });
+    analytics.log(
+      'answer_milestone',
+      { answers_total: total, is_first: total === 1 },
+      { once: `answer_milestone:${answer.answerId}` },
+    );
 
     const next = nudgeFor(total);
-    // 알림을 못 켜는 판에서 알림을 권하면 눌러도 아무 일이 없다. 그 한 번을 죽은 버튼에 쓰지 않는다
-    if (next === 'notify' && !notifyUsable(bridge.supports('notification'))) return;
+    if (next == null) return;
+    // 알림을 못 켜는 판이거나 이미 켠 사람이다. 그 한 번을 죽은 버튼·이미 한 대답에 쓰지 않는다
+    if (next === 'notify' && (!notifyUsable(bridge.supports('notification')) || notifyAlreadySettled())) {
+      return;
+    }
+    /*
+     * 「띄웠다」를 여기서 센다. 카드 안에서 세면 안 된다. 카드는 공유 시트·간직 시트가
+     * 열릴 때 언마운트되고 시트를 닫으면 다시 마운트되는데, 그때 컴포넌트 안의 가드는
+     * 비어 있다. 한 번 띄운 것이 둘로 세어져 네 번째 자리의 홈 추가가 통째로 사라졌다.
+     */
+    markNudgeShown(next);
     setNudge(next);
   }, [analytics, answer, bridge]);
 

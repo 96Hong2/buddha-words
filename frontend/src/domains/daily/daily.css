@@ -151,112 +151,75 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   다음 날 한 번 묻는 시트
+   다음 날 한 번 묻는 카드
 
-   홈 카드였던 것을 시트로 옮겼다. 매일 홈 첫 줄에 서 있던 질문을, 사람이
-   「내일 물어봐 주세요」를 누른 경우에만 한 번 묻는 자리로 바꿨다.
+   덮개를 쓰지 않는다. 진입 즉시 바텀시트를 세우지 않는 것이 절대 규칙이다.
+   자리는 입력칸 바로 위다. 사람이 「내일 물어봐 주세요」를 누른 경우에만 온다.
    ───────────────────────────────────────────────────────────────────────── */
 
-.recall-root {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
+.recall-ask {
+  margin-bottom: var(--s-3);
+  padding: 12px 14px;
+  border: 1px solid var(--accent-rule);
+  border-radius: 14px;
+  background: var(--surface-illust);
 }
 
-.recall-dim {
-  position: absolute;
-  inset: 0;
-  background: rgba(43, 36, 29, 0.36);
+.recall-ask__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
-.recall-sheet {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 10px var(--gutter) calc(20px + var(--safe-bottom, 0px));
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
-  animation: recall-up 200ms ease-out both;
-}
-
-@keyframes recall-up {
-  from {
-    transform: translateY(16px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .recall-sheet {
-    animation: none;
-  }
-}
-
-.recall-sheet__grabber {
-  display: block;
-  width: 36px;
-  height: 4px;
-  margin: 0 auto 16px;
-  border-radius: var(--r-pill);
-  background: var(--line);
-}
-
-.recall-sheet__key {
-  margin: 0 0 6px;
-  font-size: var(--t-label);
-  font-weight: var(--w-bold);
-  letter-spacing: var(--ls-label);
-  color: var(--accent-text);
-}
-
-.recall-sheet__title {
+.recall-ask__title {
+  flex: 1;
   margin: 0;
-  font-size: var(--t-title);
-  line-height: var(--lh-title);
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
   font-weight: var(--w-bold);
   color: var(--text);
-  text-wrap: balance;
 }
 
-.recall-sheet__buttons {
+.recall-ask__x {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: -4px -4px 0 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-weak);
+  border-radius: 50%;
+}
+
+.recall-ask__x svg {
+  width: 14px;
+  height: 14px;
+}
+
+.recall-ask__buttons {
   display: flex;
   gap: var(--s-2);
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
-.recall-sheet__btn {
+.recall-ask__btn {
   flex: 1 1 0;
-  min-height: var(--tap-min);
-  padding: 12px 10px;
+  min-height: 40px;
+  padding: 8px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--surface);
   font-family: inherit;
-  font-size: var(--t-body);
+  font-size: var(--t-label);
   font-weight: var(--w-bold);
   color: var(--text);
 }
 
-.recall-sheet__btn--yes {
+.recall-ask__btn--yes {
   border-color: transparent;
   background: var(--text);
   color: var(--surface);
-}
-
-.recall-sheet__close {
-  display: block;
-  width: 100%;
-  margin: 12px 0 0;
-  padding: 8px;
-  border: 0;
-  background: transparent;
-  font-family: inherit;
-  font-size: var(--t-caption);
-  font-weight: var(--w-semibold);
-  color: var(--text-weak);
 }

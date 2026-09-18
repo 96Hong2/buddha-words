@@ -94,7 +94,13 @@ export function ArchiveScreen() {
   const art = sceneForScreen('archiveEmpty');
 
   const favorites = saved.filter((item) => item.favorite === true);
-  const inFilter = filter === 'favorite' ? favorites : saved;
+  /*
+   * 즐겨찾기가 하나도 안 남으면 필터 칩 묶음이 사라진다. 그때 `filter` 가 'favorite' 에
+   * 그대로 있으면 **빈 목록에 갇히고 「전체」로 돌아갈 버튼도 없다.** 마지막 별을 끈
+   * 그 자리에서 실제로 그렇게 됐다. 칩이 없으면 필터도 없는 것으로 본다.
+   */
+  const filtering = favorites.length > 0 ? filter : 'all';
+  const inFilter = filtering === 'favorite' ? favorites : saved;
   const page = inFilter.slice(0, shown);
   const left = inFilter.length - page.length;
 
@@ -189,8 +195,8 @@ export function ArchiveScreen() {
                   <div className="arch-filter" role="group" aria-label="보기">
                     <button
                       type="button"
-                      className={filter === 'all' ? 'is-on' : undefined}
-                      aria-pressed={filter === 'all'}
+                      className={filtering === 'all' ? 'is-on' : undefined}
+                      aria-pressed={filtering === 'all'}
                       onClick={() => pickFilter('all')}
                       {...testId(TEST_IDS.archiveFilter)}
                     >
@@ -198,8 +204,8 @@ export function ArchiveScreen() {
                     </button>
                     <button
                       type="button"
-                      className={filter === 'favorite' ? 'is-on' : undefined}
-                      aria-pressed={filter === 'favorite'}
+                      className={filtering === 'favorite' ? 'is-on' : undefined}
+                      aria-pressed={filtering === 'favorite'}
                       onClick={() => pickFilter('favorite')}
                       {...testId(TEST_IDS.archiveFilter)}
                     >

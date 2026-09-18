@@ -77,9 +77,10 @@ test('며칠 만에 온 사람에게는 어제라고 하지 않는다', async ({
 
   const card = page.getByTestId('recall-sheet');
   await expect(card).toBeVisible();
-  // 일주일 전에 적어 드린 것을 「어제」라고 물으면 그날 일을 기억하는 사람에게 거짓말이 된다
+  // 일주일 전에 적어 드린 것을 「어제」라고 물으면 그날 일을 기억하는 사람에게 거짓말이 된다.
+  // 대신 날짜를 그대로 적는다. 「지난 이야기」 같은 라벨은 없앴다(바로 아래 줄이 같은 말을 했다)
   await expect(card).not.toContainText('어제');
-  await expect(card).toContainText('지난 이야기');
+  await expect(card).toContainText('에 적어 드린');
   await expect(card).toContainText('오늘 자기 전에 이 마음 한 줄만 적어 두기');
 });
 

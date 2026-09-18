@@ -20,6 +20,47 @@ import type { KeyValueStore } from '../toss';
 const KEY = 'recall-last';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * 며칠까지 물어볼까.
+ *
+ * 이레가 지나면 조용히 버린다. 한 달 만에 온 사람에게 「지난번에 적어 드린 그거 해 보셨나요」는
+ * 되짚기가 아니라 빚 독촉이다. 그 사람은 이미 잊었고, 잊은 것을 들춰내는 앱이 된다.
+ */
+export const RECALL_MAX_DAYS = 7;
+
+/** 오늘은 더 묻지 않기로 한 날. 닫기만 눌러도 여기 적는다 */
+const HUSH_KEY = 'buddha.recall-hush.v1';
+
+function today(): string {
+  const now = new Date();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * 답하지 않고 닫았다. 오늘은 더 묻지 않는다.
+ *
+ * 기기에서 지우지는 않는다. 답할 마음이 남아 있을 수 있다. 이 표가 없으면 앱을 열 때마다
+ * 같은 질문이 다시 서고, 그것이 예전 회고 카드가 받은 불평 그대로다.
+ * 동기 저장소를 쓰는 이유는 첫 페인트에 이미 정해져 있어야 하기 때문이다.
+ */
+export function hushRecallToday(): void {
+  try {
+    localStorage.setItem(HUSH_KEY, today());
+  } catch {
+    // 못 적으면 이번 실행에서만 조용하다. 다음에 한 번 더 뜬다
+  }
+}
+
+export function recallHushedToday(): boolean {
+  try {
+    return localStorage.getItem(HUSH_KEY) === today();
+  } catch {
+    return false;
+  }
+}
+
 /** 기기에 남기는 것 전부. 여기에 원문을 더하지 않는다 */
 export interface RecallEntry {
   answerId: string;

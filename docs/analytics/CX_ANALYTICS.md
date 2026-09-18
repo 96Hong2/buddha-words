@@ -478,8 +478,11 @@ rewarded_ad_complete → post_ad_continue` 와 그 옆에 `post_ad_exit`
 | `VITE_ONBOARDING` | `two_step` | `none` 이면 온보딩 없이 바로 입력(B안) |
 | `VITE_FLAG_ANSWER_FEEDBACK` | on | 답변 끝 👍👎 |
 | `VITE_NEGATIVE_REASON_SAMPLING` | `0.2` | 아쉽다고 한 사람 중 이유를 물을 비율 |
-| `VITE_FLAG_ACTION_COMMIT` | on | 「오늘 이것만 해볼게요」 |
-| `VITE_FLAG_NOTIFICATION_PROMPT` | **off** | 답변 끝 알림 권유. 콘솔 템플릿 코드가 있어야 켠다 |
+| `VITE_FLAG_ACTION_COMMIT` | on | 「내일 했는지 물어봐 주세요」 |
+| `VITE_FLAG_NOTIFICATION_PROMPT` | on | 세 번째 답 뒤 알림 권유와 설정의 알림 줄. **`VITE_NOTIFICATION_TEMPLATE_CODE` 가 없으면 켜져 있어도 안 그린다**(`notifyUsable`) |
+| `VITE_FLAG_GENERATION_AD` | on | 답을 만드는 동안 덮는 광고. ⚠ 네 자리 중 사람이 누르지 않는 유일한 곳이라 심사 위험이 있다. 끄려면 `=off` |
+| `VITE_AD_GROUP_DEFAULT` | 없음 | 콘솔이 발급한 보상형 광고 그룹 id. **없으면 네 자리 모두 광고 없이 지나간다**(`ad_skipped(reason=no_group)`) |
+| `VITE_NOTIFICATION_TEMPLATE_CODE` | 없음 | 콘솔 스마트발송 템플릿 코드. 없으면 실기기에서 동의 화면이 안 뜬다 |
 
 ### 온보딩 A/B
 

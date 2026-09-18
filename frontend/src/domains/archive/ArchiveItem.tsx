@@ -135,7 +135,11 @@ export function ArchiveItem({ item, today = false, onOpen, onToggleFavorite }: A
           type="button"
           className={on ? 'arch-fav is-on' : 'arch-fav'}
           aria-pressed={on}
-          aria-label={on ? '즐겨찾기 해제' : '즐겨찾기에 넣기'}
+          /*
+            날짜를 붙인다. 열 장짜리 목록에서 라벨이 다 같으면 스크린리더 사용자는
+            「즐겨찾기에 넣기」를 열 번 듣고 어느 카드 것인지 알 수 없다.
+          */
+          aria-label={`${DATE_FORMAT.format(item.savedAt)} ${on ? '즐겨찾기 해제' : '즐겨찾기에 넣기'}`}
           onClick={onToggleFavorite}
           {...testId(TEST_IDS.archiveFavorite)}
         >

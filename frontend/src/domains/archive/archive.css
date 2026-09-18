@@ -906,19 +906,28 @@
   position: relative;
 }
 
+/*
+ * 배경을 준다. 투명하게 두면 카드 오른쪽 아래에 아무 표시 없는 44px 히트 영역이 생겨,
+ * 「답변 다시 보기」 줄의 빈 곳을 누르려던 손가락이 즐겨찾기를 토글한다.
+ * 짧은 카드에서 그림과 겹칠 때 회색 별의 대비가 깨지던 것도 이 배경이 함께 푼다.
+ */
 .arch-fav {
   position: absolute;
-  right: 8px;
-  bottom: calc(var(--gap-card) + 6px);
-  width: var(--tap-min);
-  height: var(--tap-min);
+  right: 10px;
+  bottom: calc(var(--gap-card) + 8px);
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border: 0;
+  border: 1px solid var(--line);
   padding: 0;
-  background: transparent;
+  background: var(--surface);
   color: var(--text-weak);
   border-radius: 50%;
+}
+
+.arch-fav:active {
+  background: var(--surface-pressed);
 }
 
 .arch-fav svg {
@@ -927,6 +936,8 @@
 }
 
 .arch-fav.is-on {
+  border-color: var(--accent-rule);
+  background: var(--accent-soft);
   color: var(--accent-text);
 }
 
