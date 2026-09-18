@@ -1,7 +1,6 @@
 /* 홈 카드 둘과 오늘의 한마디 시트. 값은 시안(design/screens/s1-home.html) 그대로다. */
 
-.daily-card,
-.recall-card {
+.daily-card {
   display: flex;
   align-items: center;
   gap: var(--s-3);
@@ -24,9 +23,7 @@
   object-fit: cover;
   background: var(--surface-illust);
 }
-
-.daily-card__text,
-.recall-card__text {
+.daily-card__text {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -34,8 +31,7 @@
   gap: var(--s-1);
 }
 
-.daily-card__key,
-.recall-card__key {
+.daily-card__key {
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   font-weight: var(--w-semibold);
@@ -47,48 +43,11 @@
   font-weight: var(--w-medium);
   color: var(--text-muted);
 }
-
-.daily-card__line,
-.recall-card__line {
+.daily-card__line {
   font-family: var(--font-serif);
   font-size: var(--t-body);
   line-height: 1.5;
   color: var(--text);
-}
-
-/* 회고 카드는 답이 카드 안에서 끝나므로 버튼 줄이 아래로 떨어진다 */
-.recall-card {
-  flex-wrap: wrap;
-}
-
-.recall-card__buttons {
-  display: flex;
-  gap: var(--s-2);
-  width: 100%;
-}
-
-.recall-card__buttons button {
-  position: relative;
-  flex: 1;
-  min-height: 36px;
-  border: 1px solid var(--btn-ghost-line);
-  border-radius: var(--r-sm);
-  background: transparent;
-  font: inherit;
-  font-size: var(--t-caption);
-  font-weight: var(--w-semibold);
-  color: var(--text);
-}
-
-/* 보이는 높이가 44px 이 안 되는 버튼은 닿는 영역만 넓힌다 */
-.recall-card__buttons button::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: var(--tap-min);
-  transform: translateY(-50%);
 }
 
 .daily-sheet__title {
@@ -189,4 +148,115 @@
   border-radius: 16px;
   margin-bottom: var(--s-4);
   background: var(--surface-illust);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   다음 날 한 번 묻는 시트
+
+   홈 카드였던 것을 시트로 옮겼다. 매일 홈 첫 줄에 서 있던 질문을, 사람이
+   「내일 물어봐 주세요」를 누른 경우에만 한 번 묻는 자리로 바꿨다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.recall-root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.recall-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 36, 29, 0.36);
+}
+
+.recall-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px var(--gutter) calc(20px + var(--safe-bottom, 0px));
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  animation: recall-up 200ms ease-out both;
+}
+
+@keyframes recall-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recall-sheet {
+    animation: none;
+  }
+}
+
+.recall-sheet__grabber {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 16px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+}
+
+.recall-sheet__key {
+  margin: 0 0 6px;
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  letter-spacing: var(--ls-label);
+  color: var(--accent-text);
+}
+
+.recall-sheet__title {
+  margin: 0;
+  font-size: var(--t-title);
+  line-height: var(--lh-title);
+  font-weight: var(--w-bold);
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.recall-sheet__buttons {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: 20px;
+}
+
+.recall-sheet__btn {
+  flex: 1 1 0;
+  min-height: var(--tap-min);
+  padding: 12px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.recall-sheet__btn--yes {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}
+
+.recall-sheet__close {
+  display: block;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-weak);
 }

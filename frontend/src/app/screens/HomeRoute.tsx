@@ -11,13 +11,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen';
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
-import {
-  RecallCard,
-  clearRecall,
-  daysSince,
-  readRecall,
-  type RecallEntry,
-} from '../../domains/daily/RecallCard';
+import { RecallSheet } from '../../domains/daily/RecallSheet';
 import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
 import { ExhaustedNotice } from '../../domains/quota/ExhaustedNotice';
@@ -33,8 +27,7 @@ import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { markAdWatched } from '../../shared/api/http';
 import { markEntryCardSeen } from '../../domains/concern/EntryCard';
-import { HomeAddCard } from '../../domains/growth/HomeAddCard';
-import { readMilestones } from '../../shared/prefs/milestones';
+import { clearRecall, daysSince, readRecall, type RecallEntry } from '../../shared/prefs/recall';
 import { useSession } from '../../shared/session';
 import { useBridge } from '../providers';
 import { ROUTES } from '../router';
@@ -90,14 +83,12 @@ export function HomeRoute() {
   const [exhausted, setExhausted] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
   /**
-   * 홈에 추가 안내를 띄울까.
+   * 「어제 적어 드린 그거 해 보셨나요?」로 물어볼 것.
    *
-   * 온보딩을 이미 지난 사람에게만 뜬다. 처음 여는 사람은 온보딩 두 장을 지나 곧바로
-   * 여기로 오므로 그 실행에서 한 번 보게 되고, 닫으면 다시 뜨지 않는다.
+   * 예전에는 답을 받을 때마다 말없이 쌓여서 홈 카드로 매일 물었다. 지금은 답변에서
+   * 「내일 했는지 물어봐 주세요」를 **누른 사람에게만** 남고, 다음 날 시트로 한 번 묻는다.
+   * 안 눌렀으면 홈에는 아무것도 없다.
    */
-  const [homeAdd, setHomeAdd] = useState(
-    () => !onboardingPending() && !readMilestones().homeAddDone,
-  );
   const [recall, setRecall] = useState<RecallEntry | null>(null);
   /** 시트가 열려 있는 동안 들고 있는 글. 시트를 닫아도 입력창에는 그대로 남는다 */
   const held = useRef('');
@@ -204,48 +195,37 @@ export function HomeRoute() {
   );
 
   const renderCards = useCallback(
-    ({ quote, focusField }: HomeCardSlot): ReactNode => (
-      <>
-        {recall != null && (
-          <RecallCard
-            entry={recall}
-            onRespond={() => {
-              // 기기에서도 지운다. 화면에서만 치우면 앱을 다시 열 때 같은 것을 또 묻는다
-              void clearRecall(bridge.storage);
-              setRecall(null);
-              focusField();
-            }}
+    ({ quote, focusField }: HomeCardSlot): ReactNode =>
+      quote != null ? (
+        <>
+          <DailyQuoteCard quote={quote} onOpen={() => setDailyOpen(true)} />
+          <DailyQuoteSheet
+            open={dailyOpen}
+            quote={quote}
+            onClose={() => setDailyOpen(false)}
+            onStart={focusField}
           />
-        )}
-
-        {quote != null && (
-          <>
-            <DailyQuoteCard quote={quote} onOpen={() => setDailyOpen(true)} />
-            <DailyQuoteSheet
-              open={dailyOpen}
-              quote={quote}
-              onClose={() => setDailyOpen(false)}
-              onStart={focusField}
-            />
-          </>
-        )}
-
-        {homeAdd && <HomeAddCard onClose={() => setHomeAdd(false)} />}
-      </>
-    ),
-    [bridge, dailyOpen, homeAdd, recall],
+        </>
+      ) : null,
+    [dailyOpen],
   );
+
+  /** 물어본 것에 답했다. 기기에서도 지운다. 화면에서만 치우면 다음에 또 같은 것을 묻는다 */
+  const respondRecall = useCallback(() => {
+    void clearRecall(bridge.storage);
+    setRecall(null);
+  }, [bridge]);
 
   /**
    * 온보딩과 진입 카드가 잇달아 뜨면 첫 실행이 덮개 두 장으로 시작한다.
    * 온보딩을 본 날은 오늘의 한마디 카드를 띄우지 않는다. 홈의 카드 자리에는 그대로 있다.
+   *
+   * 홈에 추가 안내는 여기서 띄우지 않는다. 첫 화면에서 하려던 일(이야기 쓰기)을 가리지
+   * 않으려고 첫 답을 받은 뒤로 옮겼다(`AnswerRoute` 의 권유 시간표).
    */
   const doneOnboarding = useCallback(() => {
     markEntryCardSeen(todayISO());
     setOnboarding(false);
-    // 온보딩을 막 지난 사람이 이 안내의 주 대상이다. 상태를 처음 잡을 때는 아직
-    // 온보딩 중이라 꺼져 있었으니 여기서 켠다
-    if (!readMilestones().homeAddDone) setHomeAdd(true);
   }, []);
 
   if (onboarding) return <OnboardingScreen onDone={doneOnboarding} />;
@@ -264,6 +244,14 @@ export function HomeRoute() {
         continuesUsed={quota.continuesUsed}
         onClose={closeContinue}
         onContinue={goOn}
+      />
+
+      {/* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 한 번 */}
+      <RecallSheet
+        entry={recall}
+        onRespond={respondRecall}
+        // 닫기는 답이 아니다. 기기에서 지우지 않아 다음에 열 때 한 번 더 묻는다
+        onClose={() => setRecall(null)}
       />
     </>
   );

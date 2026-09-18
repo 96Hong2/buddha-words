@@ -228,7 +228,9 @@ test('간직은 누른 것과 담긴 것을 갈라 남긴다', async ({ page }) 
   expect(seen, '광고를 보기도 전에 담겼다고 적혔다').not.toContain('save_complete');
 
   await page.getByTestId('save-gate-watch').click();
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
+  await expect(page.getByTestId('save-done')).toContainText('보관함에 간직했어요');
+  // 완료 시트는 스스로 닫히지 않는다. 읽던 답에 남는 쪽을 골라 다음 걸음으로 간다
+  await page.getByTestId('save-done-stay').click();
 
   seen = await names(page);
   expect(seen).toContain('save_gate_accept');

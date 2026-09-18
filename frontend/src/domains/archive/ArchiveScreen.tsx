@@ -10,9 +10,23 @@ import { sceneForScreen } from '../../shared/visual/scene';
 
 import { ArchiveDetail } from './ArchiveDetail';
 import { ArchiveItem } from './ArchiveItem';
-import { listSaved, removeSaved, type SavedAnswer } from './archiveStore';
+import { listSaved, removeSaved, toggleFavorite, type SavedAnswer } from './archiveStore';
 
 import './archive.css';
+
+/**
+ * 한 번에 그리는 개수.
+ *
+ * 간직 개수 제한이 없어지면서 목록에 끝이 없어졌다. 스무 장이 넘어가면 아래로만 긴 화면이
+ * 되고, 방금 담은 것을 보러 온 사람이 스크롤로 그것을 찾는다. 열 장이면 한 화면에서
+ * 두어 번 넘기는 길이다.
+ *
+ * 무한 스크롤 대신 버튼을 둔다. 얼마나 남았는지 숫자로 보이고, 끝에 닿았다는 것도 분명하다.
+ */
+const PAGE = 10;
+
+/** 무엇만 볼까 */
+type Filter = 'all' | 'favorite';
 
 /** 오늘 나눈 이야기. 이번에 받은 답변을 그대로 카드 한 장으로 보여 준다 */
 function todayCard(response: ApiResponse | null): SavedAnswer | null {
@@ -50,6 +64,9 @@ export function ArchiveScreen() {
   const [saved, setSaved] = useState<SavedAnswer[]>(listSaved);
   /** 펼쳐 보는 중인 항목. 카드를 누르면 여기 들어온다 */
   const [opened, setOpened] = useState<SavedAnswer | null>(null);
+  const [filter, setFilter] = useState<Filter>('all');
+  /** 지금까지 몇 장을 펼쳤나. 「더 보기」를 누를 때마다 한 쪽씩 는다 */
+  const [shown, setShown] = useState(PAGE);
 
   const analytics = useAnalytics();
 
@@ -76,6 +93,11 @@ export function ArchiveScreen() {
   const empty = todayOnly == null && saved.length === 0;
   const art = sceneForScreen('archiveEmpty');
 
+  const favorites = saved.filter((item) => item.favorite === true);
+  const inFilter = filter === 'favorite' ? favorites : saved;
+  const page = inFilter.slice(0, shown);
+  const left = inFilter.length - page.length;
+
   function open(item: SavedAnswer) {
     setOpened(item);
     // 며칠 전에 간직한 것을 다시 여나. 보관함이 쌓아 두는 자리인지 다시 읽는 자리인지 가른다
@@ -87,6 +109,26 @@ export function ArchiveScreen() {
     removeSaved(answerId);
     setSaved(listSaved());
     setOpened(null);
+  }
+
+  function favorite(item: SavedAnswer) {
+    const on = toggleFavorite(item.answerId);
+    // 저장소가 정본이다. 화면 상태를 따로 세지 않고 다시 읽는다
+    setSaved(listSaved());
+    analytics.log('archive_favorite', { on }, { kind: 'click' });
+  }
+
+  function pickFilter(next: Filter) {
+    if (next === filter) return;
+    setFilter(next);
+    setShown(PAGE);
+    analytics.log('archive_filter', { filter: next }, { kind: 'click' });
+  }
+
+  function more() {
+    const next = shown + PAGE;
+    setShown(next);
+    analytics.log('archive_more', { page: Math.ceil(next / PAGE) }, { kind: 'click' });
   }
 
   return (
@@ -138,14 +180,54 @@ export function ArchiveScreen() {
                   <h2 className="arch-sec-title">간직한 말씀</h2>
                   <span className="arch-sec-count">{saved.length}개</span>
                 </div>
-                {saved.map((item) => (
+
+                {/*
+                  즐겨찾기가 하나도 없으면 필터를 그리지 않는다.
+                  누를 때마다 빈 화면이 나오는 칸은 길만 늘린다.
+                */}
+                {favorites.length > 0 && (
+                  <div className="arch-filter" role="group" aria-label="보기">
+                    <button
+                      type="button"
+                      className={filter === 'all' ? 'is-on' : undefined}
+                      aria-pressed={filter === 'all'}
+                      onClick={() => pickFilter('all')}
+                      {...testId(TEST_IDS.archiveFilter)}
+                    >
+                      전체 {saved.length}
+                    </button>
+                    <button
+                      type="button"
+                      className={filter === 'favorite' ? 'is-on' : undefined}
+                      aria-pressed={filter === 'favorite'}
+                      onClick={() => pickFilter('favorite')}
+                      {...testId(TEST_IDS.archiveFilter)}
+                    >
+                      즐겨찾기 {favorites.length}
+                    </button>
+                  </div>
+                )}
+
+                {page.map((item) => (
                   <ArchiveItem
                     key={item.answerId}
                     item={item}
                     today={today != null && today.answerId === item.answerId}
                     onOpen={() => open(item)}
+                    onToggleFavorite={() => favorite(item)}
                   />
                 ))}
+
+                {left > 0 && (
+                  <button
+                    type="button"
+                    className="arch-more"
+                    onClick={more}
+                    {...testId(TEST_IDS.archiveMore)}
+                  >
+                    {left}개 더 보기
+                  </button>
+                )}
               </>
             )}
 

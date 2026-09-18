@@ -69,9 +69,10 @@ test('입력칸이 자란다', async ({ page }) => {
   await field.fill(Array.from({ length: 12 }, (_, i) => `${i + 1}번째 줄입니다`).join('\n'));
   const grown = (await field.boundingBox())?.height ?? 0;
 
-  // 132px 에서 236px 까지 자란다. 그 뒤로는 칸 안에서 스크롤한다
+  // 176px 에서 300px 까지 자란다. 그 뒤로는 칸 안에서 스크롤한다.
+  // 예시 칩 하나를 빼면서 그 자리를 입력칸이 가져갔다
   expect(grown).toBeGreaterThan(small);
-  expect(grown).toBeLessThanOrEqual(240);
+  expect(grown).toBeLessThanOrEqual(304);
   const scrollable = await field.evaluate((el) => el.scrollHeight > el.clientHeight);
   expect(scrollable).toBe(true);
 });

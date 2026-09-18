@@ -879,3 +879,108 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* 간직 완료 시트의 체크 표시. 담겼다는 사실을 글보다 먼저 보여 준다 */
+.save-done__mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 2px 0 12px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.save-done__mark svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ── 즐겨찾기 별 ─────────────────────────────────────────────────────────
+   카드 버튼 밖에 서서 그 위에 얹힌다. 안에 두면 별을 누르려던 손가락이 카드를 연다.
+   자리는 그림 아래 오른쪽 빈 곳이다. 그림(68px)과 겹치지 않는다.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.arch-row {
+  position: relative;
+}
+
+.arch-fav {
+  position: absolute;
+  right: 8px;
+  bottom: calc(var(--gap-card) + 6px);
+  width: var(--tap-min);
+  height: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text-weak);
+  border-radius: 50%;
+}
+
+.arch-fav svg {
+  width: 22px;
+  height: 22px;
+}
+
+.arch-fav.is-on {
+  color: var(--accent-text);
+}
+
+.arch-fav:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── 필터 칩과 더 보기 ───────────────────────────────────────────────────
+   보관함이 길어지면서 생긴 둘이다. 필터는 목록 위, 더 보기는 목록 끝에 선다.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.arch-filter {
+  display: flex;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3);
+}
+
+.arch-filter button {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.arch-filter button.is-on {
+  border-color: var(--accent-rule);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.arch-more {
+  width: 100%;
+  min-height: var(--tap-min);
+  margin: var(--s-2) 0 0;
+  padding: 11px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-body);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.arch-empty-fav {
+  margin: var(--s-4) 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  text-align: center;
+}

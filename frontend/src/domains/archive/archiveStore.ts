@@ -69,6 +69,14 @@ export interface SavedAnswer {
   visualTheme: VisualTheme;
   /** 눌렀을 때 펼칠 답변 본문. 앞선 판에서 간직한 것에는 없다 */
   detail?: SavedDetail;
+  /**
+   * 보관함 안에서 따로 표시해 둔 것.
+   *
+   * 간직 개수 제한이 없어지면서 보관함이 길어졌다. 간직하기는 「이건 남겨 두자」이고
+   * 즐겨찾기는 그중에서도 「이건 자주 꺼내 본다」다. 둘을 같은 값으로 쓰면 목록이
+   * 길어질수록 처음 담은 것이 아래로 밀려 사실상 사라진다.
+   */
+  favorite?: boolean;
 }
 
 export type SavedInput = Omit<SavedAnswer, 'savedAt'>;
@@ -223,6 +231,7 @@ function parseSaved(value: unknown): SavedAnswer | null {
     tags: item.tags.filter(isEmotionTag),
     visualTheme: item.visualTheme,
     detail: parseDetail(item.detail),
+    favorite: item.favorite === true,
   };
 }
 
@@ -250,9 +259,36 @@ function write(items: SavedAnswer[]): boolean {
   }
 }
 
-/** 간직한 순서대로. 새로 간직한 것이 앞에 온다 */
+/**
+ * 간직한 순서대로. 새로 간직한 것이 앞에 온다.
+ *
+ * **즐겨찾기가 먼저 온다.** 목록이 길어지면 페이지를 넘겨야 하는데, 자주 꺼내 보는 것이
+ * 두 번째 페이지에 있으면 즐겨찾기가 아무 일도 안 한 것이 된다. 묶음 안에서는 최신순이다.
+ */
 export function listSaved(): SavedAnswer[] {
-  return read().sort((a, b) => b.savedAt - a.savedAt);
+  return read().sort((a, b) => {
+    const fa = a.favorite === true ? 1 : 0;
+    const fb = b.favorite === true ? 1 : 0;
+    if (fa !== fb) return fb - fa;
+    return b.savedAt - a.savedAt;
+  });
+}
+
+/** 즐겨찾기를 켜고 끈다. 지금 값이 무엇인지 돌려준다. 없는 답변이면 false */
+export function toggleFavorite(answerId: string): boolean {
+  const items = read();
+  const at = items.findIndex((item) => item.answerId === answerId);
+  if (at < 0) return false;
+  const was = items[at].favorite === true;
+  const next = [...items];
+  next[at] = { ...next[at], favorite: !was };
+  // 저장이 막힌 기기에서는 바뀌지 않는다. 바뀐 척 답하면 화면이 저장소와 어긋난다
+  return write(next) ? !was : was;
+}
+
+/** 즐겨찾기 개수. 필터 칩이 이 수를 적는다 */
+export function countFavorites(): number {
+  return read().filter((item) => item.favorite === true).length;
 }
 
 export function countSaved(): number {

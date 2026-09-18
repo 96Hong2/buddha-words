@@ -18,8 +18,8 @@ import { PROGRESS_STEPS, StepList } from './LoadingScreen';
 import { FLAGS } from '../../shared/flags';
 
 import { AnswerFeedback } from './AnswerFeedback';
-import { NotificationPrompt } from './NotificationPrompt';
 import { ScriptureCard } from './ScriptureCard';
+import { TomorrowReminder } from './TomorrowReminder';
 
 /**
  * 마음 태그의 한글 이름과 칩 색.
@@ -233,7 +233,6 @@ export function AnswerBody({
 
   const [retrying, setRetrying] = useState(false);
   const [reported, setReported] = useState(false);
-  const [committed, setCommitted] = useState(false);
 
   const pass2 = answer.pass2;
   const scripture = answer.scriptures[0];
@@ -309,15 +308,6 @@ export function AnswerBody({
       { kind: 'impression', once: `action_view:${answer.answerId}` },
     );
   }, [analytics, answer.answerId, pass2]);
-
-  function commitAction() {
-    setCommitted(true);
-    analytics.log(
-      'action_commit',
-      { answer_id: answer.answerId, action_index: 0 },
-      { kind: 'click', once: `action_commit:${answer.answerId}` },
-    );
-  }
 
   function report() {
     setReported(true);
@@ -479,24 +469,16 @@ export function AnswerBody({
             </ol>
 
             {/*
-              「오늘 이것만 해볼게요」.
-              체크리스트를 만들지 않는다. 누른 사실만 남기고 화면은 한 줄로 답한다.
-              이 한 번의 탭이 「행동까지 갔나」를 재는 유일한 신호다. 플래그로 끈다.
+              「내일 했는지 물어봐 주세요」.
+              체크리스트를 만들지 않는다. 누르면 그 행동 제목 하나만 기기에 남기고,
+              다음 날 한 번 묻는다. 눌러야만 남는다. 플래그로 끈다.
             */}
             {FLAGS.actionCommit && pass2.actions.length > 0 && (
               <div className="act-commit">
-                {committed ? (
-                  <p className="p-micro">좋아요. 오늘 하나면 충분해요</p>
-                ) : (
-                  <button
-                    type="button"
-                    className="act-commit-btn"
-                    onClick={commitAction}
-                    {...testId(TEST_IDS.actionCommit)}
-                  >
-                    오늘 이것만 해볼게요
-                  </button>
-                )}
+                <TomorrowReminder
+                  answerId={answer.answerId}
+                  actionTitle={pass2.actions[0].title}
+                />
               </div>
             )}
 
@@ -529,7 +511,6 @@ export function AnswerBody({
               primaryTag={answer.emotionTags[0]}
               answerChars={answerChars}
             />
-            <NotificationPrompt />
             {reported ? (
               <p className="p-micro">알려 주셔서 고마워요. 이 답변을 다시 살펴볼게요</p>
             ) : (

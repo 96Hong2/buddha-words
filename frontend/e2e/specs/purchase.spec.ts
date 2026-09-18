@@ -167,7 +167,9 @@ test('구매 성공: 주문서를 끝내면 간직 개수 제한이 풀린다', 
 
   // 시트는 닫히고, 사려던 이유였던 간직이 그 자리에서 끝난다
   await expect(page.getByTestId('paywall')).toHaveCount(0);
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
+  await expect(page.getByTestId('save-done')).toContainText('보관함에 간직했어요');
+  // 완료 시트는 스스로 닫히지 않는다. 읽던 답에 남는 쪽을 골라 다음 걸음으로 간다
+  await page.getByTestId('save-done-stay').click();
 
   // 로그는 판을 옮기기 전에 읽는다. goto 는 창을 새로 띄워 쌓인 로그를 지운다
   const names = await logNames(page);
@@ -369,7 +371,9 @@ test('간직 시트에서 사면 하려던 일이 끝난다', async ({ page, stu
   await expect(page.getByTestId('paywall')).toHaveCount(0);
 
   // 사려던 이유가 이 답변을 간직하는 것이었다. 시트만 닫히고 끝나면 안 된다
-  await expect(page.getByText('보관함에 간직했어요. 앱을 닫아도 남아요')).toBeVisible();
+  await expect(page.getByTestId('save-done')).toContainText('보관함에 간직했어요');
+  // 완료 시트는 스스로 닫히지 않는다. 읽던 답에 남는 쪽을 골라 다음 걸음으로 간다
+  await page.getByTestId('save-done-stay').click();
   await shot(page, '31-1 이용권 - 사고 나서 그 답변이 간직됐다');
 
   // 앞서 깔아 둔 셋에 방금 담은 하나가 더해졌다

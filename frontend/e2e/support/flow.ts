@@ -32,6 +32,19 @@ export async function dismissEntry(page: Page): Promise<void> {
   }
 }
 
+/**
+ * 「쓰시던 이야기가 남아 있어요」 카드를 치운다.
+ *
+ * 답을 받고 홈으로 돌아왔는데 보낸 글이 입력칸에 그대로 있으면 한 번 묻는다. 새 이야기를
+ * 쓰러 온 길에서는 지우는 쪽이다. 안 떠 있으면 아무 일도 하지 않는다.
+ */
+export async function dismissDraftConfirm(page: Page, choice: 'clear' | 'keep' = 'clear'): Promise<void> {
+  const card = page.getByTestId('draft-confirm');
+  if (!(await card.isVisible({ timeout: 1000 }).catch(() => false))) return;
+  await page.getByTestId(choice === 'clear' ? 'draft-confirm-clear' : 'draft-confirm-keep').click();
+  await expect(card).toHaveCount(0);
+}
+
 /** 하단 고정 바는 마지막 한마디까지 읽어야 올라온다 */
 export async function revealBottomBar(page: Page): Promise<void> {
   await page.getByTestId('closing').scrollIntoViewIfNeeded();
@@ -50,6 +63,8 @@ export async function askOnce(
   { waitPass2 = true }: AskOptions = {},
 ): Promise<void> {
   await dismissEntry(page);
+  // 답을 받고 돌아온 길이면 쓰던 글을 지울지 먼저 묻는다. 새 이야기를 쓰러 왔으니 지운다
+  await dismissDraftConfirm(page);
   await page.getByTestId('concern-field').fill(text);
   await page.getByTestId('submit').click();
 
@@ -72,23 +87,69 @@ export function todayISO(offsetDays = 0): string {
 }
 
 /**
+ * 답을 한 번도 받아 본 적 없는 사람으로 시작한다.
+ *
+ * 기본 출발점은 「이미 여러 번 받아 본 사람」이다(`support/storage.ts`). 첫 답에만
+ * 달라지는 것 둘(광고 면제 · 권유 카드)을 재는 spec 만 이걸 부른다.
+ *
+ * 표를 지우는 것만으로는 모자라다. 픽스처의 씨앗은 **화면을 옮길 때마다 다시 도므로**,
+ * 다음 goto 에서 횟수가 도로 9 가 된다. 그래서 sessionStorage 에 표를 세워 씨앗 쪽이
+ * 그 표를 보고 건너뛰게 한다. 표는 탭이 사는 동안 남으므로 답을 받은 횟수는 쌓인다.
+ */
+export async function asNewcomer(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem('e2e.newcomer', '1');
+      if (sessionStorage.getItem('e2e.newcomer.cleared') != null) return;
+      sessionStorage.setItem('e2e.newcomer.cleared', '1');
+      localStorage.removeItem('buddha.milestones.v2');
+      localStorage.removeItem('buddha.milestones.v1');
+    } catch {
+      /* 지울 수 없으면 그 spec 이 실패로 알려 준다 */
+    }
+  });
+}
+
+/**
+ * 화면 위로 올라온 권유 카드를 치운다.
+ *
+ * 답을 받고 나면 몇 번째냐에 따라 홈 추가·앱 알리기·알림 중 하나가 화면에 붙어 올라온다.
+ * 덮개는 없지만 답변 아래쪽을 가리므로, 그 자리를 보는 스펙은 먼저 치우고 시작한다.
+ * 안 떠 있으면 아무 일도 하지 않는다.
+ */
+export async function dismissNudge(page: Page): Promise<void> {
+  const close = page.getByTestId('nudge-close');
+  if (await close.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await close.click();
+    await expect(close).toHaveCount(0);
+  }
+}
+
+/**
  * 간직하기 한 번.
  *
- * 간직 앞에 짧은 광고가 서면서 누르는 곳이 둘이 됐다. 시트가 뜨면 「보고 간직하기」까지
- * 눌러 주고, 광고를 못 띄우는 판이면 시트 없이 바로 끝난다. 두 갈래를 스펙마다 적으면
- * 광고를 켜고 끌 때마다 같은 곳을 여러 번 고치게 된다.
+ * 누르는 곳이 셋이 됐다. 간직 앞에 짧은 광고 시트가 서고(광고를 못 띄우는 판과 첫 답에는
+ * 안 선다), 담기고 나면 「보관함 보러 가기 / 계속 보기」 시트가 뜬다. 여기서는 읽던 답에
+ * 남는 쪽을 고른다. 갈래를 스펙마다 적으면 광고를 켜고 끌 때마다 같은 곳을 여러 번 고친다.
  *
- * **게이트 자체를 보는 스펙은 이 함수를 쓰지 않는다.** 그쪽은 시트가 뜨는 것이 확인 대상이라
- * 직접 누른다.
+ * **게이트나 완료 시트 자체를 보는 스펙은 이 함수를 쓰지 않는다.** 그쪽은 시트가 뜨는 것이
+ * 확인 대상이라 직접 누른다.
  */
 export async function saveAnswerFromScreen(page: Page): Promise<void> {
+  await dismissNudge(page);
   await revealBottomBar(page);
   await page.getByTestId('save-button').click();
 
   const gate = page.getByTestId('save-gate');
-  // 광고를 못 띄우는 판에서는 시트 없이 곧바로 담긴다. 잠깐 기다렸다 없으면 지나간다
+  // 광고를 못 띄우는 판과 첫 답에서는 시트 없이 곧바로 담긴다. 잠깐 기다렸다 없으면 지나간다
   if (await gate.isVisible({ timeout: 1500 }).catch(() => false)) {
     await page.getByTestId('save-gate-watch').click();
     await expect(gate).toBeHidden();
   }
+
+  // 담기면 반드시 뜬다. 안 뜨면 담기지 않은 것이므로 여기서 실패해야 한다
+  const doneSheet = page.getByTestId('save-done');
+  await expect(doneSheet).toBeVisible();
+  await page.getByTestId('save-done-stay').click();
+  await expect(doneSheet).toHaveCount(0);
 }

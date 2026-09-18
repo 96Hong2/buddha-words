@@ -497,3 +497,34 @@
 .set-tab-space {
   height: 96px;
 }
+
+/* 홈 추가 경로 안내. 화면 위 더보기 버튼과 눈으로 맞출 수 있게 점 셋을 그대로 그린다 */
+.set-hint--how b {
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.set-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  background: var(--surface);
+  vertical-align: middle;
+}
+
+.set-dots i {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.set-item:disabled {
+  opacity: 1;
+}
+
+.set-item:disabled .set-value {
+  color: var(--accent-text);
+}

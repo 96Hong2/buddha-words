@@ -88,22 +88,31 @@ export const TEST_IDS = {
   shareScopeFull: 'share-scope-full',
   shareFullPreview: 'share-full-preview',
 
-  // 성장. 사람이 부탁하지 않은 말이라 한 번만 뜬다
+  // 성장. 사람이 부탁하지 않은 말이라 한 번씩만 뜨고, 한 화면에 둘이 겹치지 않는다
   homeAdd: 'home-add',
   homeAddClose: 'home-add-close',
   appShare: 'app-share',
   appShareSend: 'app-share-send',
+  notifyNudge: 'notify-nudge',
+  notifyNudgeAccept: 'notify-nudge-accept',
+  nudgeClose: 'nudge-close',
   landing: 'landing',
   archive: 'archive',
   archiveItem: 'archive-item',
   archiveDetail: 'archive-detail',
   archiveDelete: 'archive-delete',
   archiveDeleteConfirm: 'archive-delete-confirm',
+  archiveFavorite: 'archive-favorite',
+  archiveFilter: 'archive-filter',
+  archiveMore: 'archive-more',
   paywall: 'paywall',
   paywallBuy: 'paywall-buy',
   saveGate: 'save-gate',
   saveGateWatch: 'save-gate-watch',
   saveGateBuy: 'save-gate-buy',
+  saveDone: 'save-done',
+  saveDoneArchive: 'save-done-archive',
+  saveDoneStay: 'save-done-stay',
 
   // 설정
   settingsButton: 'settings-button',
@@ -116,6 +125,8 @@ export const TEST_IDS = {
   adOptOut: 'ad-opt-out',
   textSize: 'text-size',
   textSizeOption: 'text-size-option',
+  settingsHomeAdd: 'settings-home-add',
+  settingsNotify: 'settings-notify',
 
   // 공통
   sheetClose: 'sheet-close',
@@ -131,6 +142,17 @@ export const TEST_IDS = {
   negativeReasonOption: 'negative-reason-option',
   actionCommit: 'action-commit',
   debugEvents: 'debug-events',
+
+  // 내일 물어보기. 「오늘 이것만 해볼게요」 자리를 이어받았다
+  tomorrowAsk: 'tomorrow-ask',
+  recallSheet: 'recall-sheet',
+  recallYes: 'recall-yes',
+  recallNo: 'recall-no',
+
+  // 쓰던 글을 지울지 묻는 자리
+  draftConfirm: 'draft-confirm',
+  draftConfirmClear: 'draft-confirm-clear',
+  draftConfirmKeep: 'draft-confirm-keep',
 } as const;
 
 export type TestId = (typeof TEST_IDS)[keyof typeof TEST_IDS];

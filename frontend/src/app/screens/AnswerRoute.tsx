@@ -6,15 +6,24 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import { useRewardedAd } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
-import { countSaved, isSaved, Paywall, saveAnswer, SaveGate } from '../../domains/archive';
-import { AppShareCard } from '../../domains/growth/AppShareCard';
-import { countAnswer, shouldOfferAppShare } from '../../shared/prefs/milestones';
-import { writeRecall } from '../../domains/daily/RecallCard';
-import { dayKey, recordAndSave, saveFromServer } from '../../domains/quota/quota';
+import {
+  countSaved,
+  isSaved,
+  Paywall,
+  saveAnswer,
+  SaveDone,
+  SaveGate,
+  type SaveDoneKind,
+} from '../../domains/archive';
+import { NudgeOverlay } from '../../domains/growth/NudgeOverlay';
+import { countAnswer, nudgeFor, type Nudge } from '../../shared/prefs/milestones';
+import { notifyUsable, notifyTemplateCode } from '../../shared/prefs/notify';
+import { recordAndSave, saveFromServer } from '../../domains/quota/quota';
 import { ShareSheet, type ShareLinkState } from '../../domains/share/ShareSheet';
 import type { ShareScope } from '../../shared/api';
 import { useAnalytics } from '../../shared/analytics';
@@ -23,6 +32,7 @@ import { useApiClient } from '../../shared/api';
 import { resolveApiBaseUrl } from '../../shared/api/baseUrl';
 import { resolveApiMode } from '../../shared/api/client';
 import { useSession } from '../../shared/session';
+import { ROUTES } from '../router';
 import { useBridge } from '../providers';
 
 import './screens.css';
@@ -65,16 +75,13 @@ function glossOf(answer: ApiAnswer): string {
 /** 간직하기 한 번의 끝. `failed` 는 담으려다 못 담은 것이다 */
 type StoreOutcome = 'saved' | 'already' | 'failed';
 
-/** 간직한 뒤에 뜨는 말. 담기지 않았으면 담겼다고 하지 않는다 */
-const SAVE_TOAST: Record<StoreOutcome, string> = {
-  saved: '보관함에 간직했어요. 앱을 닫아도 남아요',
-  already: '이미 보관함에 있어요',
-  failed: '지금은 간직하지 못했어요. 잠시 뒤에 다시 눌러 주세요',
-};
+/** 담지 못했을 때만 토스트다. 담긴 경우는 완료 시트가 받는다 */
+const SAVE_FAIL_TOAST = '지금은 간직하지 못했어요. 잠시 뒤에 다시 눌러 주세요';
 
 export function AnswerRoute() {
   const bridge = useBridge();
   const client = useApiClient();
+  const navigate = useNavigate();
   const analytics = useAnalytics();
   const { response, archivePass } = useSession();
   const ad = useRewardedAd('extension');
@@ -88,8 +95,15 @@ export function AnswerRoute() {
   const [gateOpen, setGateOpen] = useState(false);
   const [gateBusy, setGateBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  /** 세 번째 답을 받은 사람에게 한 번 뜨는 앱 권하기 */
-  const [appShareOpen, setAppShareOpen] = useState(false);
+  /** 간직하고 나서 뜨는 한 장. 담긴 경우에만 연다 */
+  const [done, setDone] = useState<SaveDoneKind | null>(null);
+  /**
+   * 이 사람의 몇 번째 답인가. 광고를 띄울지와 무엇을 권할지를 이 수 하나가 정한다.
+   * 0 은 아직 안 센 것이다(요청2가 오기 전).
+   */
+  const [answersTotal, setAnswersTotal] = useState(0);
+  /** 이번 답에서 띄울 권유 하나. 없으면 아무것도 안 뜬다 */
+  const [nudge, setNudge] = useState<Nudge | null>(null);
   /** 간직 시트에서 「광고 없이」를 눌렀을 때 여는 이용권 시트 */
   const [paywallOpen, setPaywallOpen] = useState(false);
 
@@ -118,7 +132,10 @@ export function AnswerRoute() {
   }, [response]);
 
   /**
-   * 지금까지 받은 답이 몇 개인가. 세 번째에 앱 권하기가 한 번 뜬다.
+   * 지금까지 받은 답이 몇 개인가. 이 수 하나가 두 가지를 정한다.
+   *
+   *   광고    첫 답까지는 띄우지 않는다. 값을 한 번 받아 본 사람에게만 값을 받으라고 한다
+   *   권유    1·2·3·4 번째에 하나씩. 시간표는 milestones 한 곳에 있다
    *
    * 하루 사용량(quota)과 따로 센다. 그쪽은 자정에 리셋되고 이쪽은 계속 쌓인다.
    * 답이 **다 만들어진 뒤**에 센다. 요청1만 온 화면에서 권하면 아직 답을 못 본 사람에게
@@ -129,24 +146,17 @@ export function AnswerRoute() {
     if (answer == null || answer.pass2.status !== 'done') return;
     if (milestoned.current === answer.answerId) return;
     milestoned.current = answer.answerId;
-    if (shouldOfferAppShare(countAnswer())) setAppShareOpen(true);
-  }, [answer]);
 
-  // 내일 홈에서 물어볼 한 줄. 남기는 것은 행동 제목뿐이고 고민 원문은 담지 않는다
-  const recalled = useRef('');
-  useEffect(() => {
-    if (answer == null || answer.pass2.status !== 'done') return;
-    if (recalled.current === answer.answerId) return;
-    const first = answer.pass2.actions[0];
-    if (first == null) return;
-    recalled.current = answer.answerId;
-    void writeRecall(bridge.storage, {
-      answerId: answer.answerId,
-      date: dayKey(),
-      tags: answer.emotionTags,
-      firstActionTitle: first.title,
-    });
-  }, [answer, bridge]);
+    const total = countAnswer();
+    setAnswersTotal(total);
+    // 첫 사용 무료의 본전을 재는 자리. 분모가 1, 분자가 2 다
+    analytics.log('answer_milestone', { answers_total: total, is_first: total === 1 });
+
+    const next = nudgeFor(total);
+    // 알림을 못 켜는 판에서 알림을 권하면 눌러도 아무 일이 없다. 그 한 번을 죽은 버튼에 쓰지 않는다
+    if (next === 'notify' && !notifyUsable(bridge.supports('notification'))) return;
+    setNudge(next);
+  }, [analytics, answer, bridge]);
 
   useEffect(() => {
     if (toast == null) return;
@@ -163,7 +173,7 @@ export function AnswerRoute() {
    * 광고를 보고 받은 「다른 관점」도 같이 담는다. 이것만 빠지면 광고를 끝까지 본 대가가 사라진다.
    */
   const store = useCallback(
-    (gate: 'ad' | 'pass' | 'free'): StoreOutcome => {
+    (gate: 'ad' | 'pass' | 'free' | 'first_use'): StoreOutcome => {
       if (answer == null) return 'failed';
       const pass2 = answer.pass2;
       const before = countSaved();
@@ -209,14 +219,32 @@ export function AnswerRoute() {
   );
 
   /**
+   * 담긴 결과를 화면에 옮긴다. 담겼으면 시트, 못 담았으면 토스트다.
+   *
+   * 예전에는 셋 다 토스트 한 줄이었다. 2.4초 뒤에 사라지고 끝이라 **담은 것을 보러 갈 길이
+   * 없었다.** 담긴 경우에만 시트를 열어 두 갈래를 둔다.
+   */
+  const afterStore = useCallback((outcome: StoreOutcome) => {
+    if (outcome === 'failed') {
+      setToast(SAVE_FAIL_TOAST);
+      return;
+    }
+    setDone(outcome);
+  }, []);
+
+  /**
    * 간직하기를 눌렀다.
    *
    * 문지기는 짧은 광고 하나다. 셋까지 공짜로 담기던 개수 제한은 없앴다.
-   * 아래 셋은 광고를 거치지 않는다. 광고가 **간직 자체를 막으면 안 되기** 때문이다.
+   * 아래 넷은 광고를 거치지 않는다. 광고가 **간직 자체를 막으면 안 되기** 때문이다.
    *
-   *   이미 담긴 답변   담을 것이 없다. 광고를 보여 줄 이유가 없다
-   *   이용권을 산 사람  그 사람이 산 것이 지금은 이것이다
+   *   이미 담긴 답변    담을 것이 없다. 광고를 보여 줄 이유가 없다
+   *   첫 답변          아직 이 앱이 무엇인지 본 것이 하나뿐이다. 그 하나에 값을 매기지 않는다
+   *   이용권을 산 사람   그 사람이 산 것이 지금은 이것이다
    *   광고를 못 띄우는 판 구버전·광고 끄기·그룹 id 가 없는 번들. 그냥 담는다
+   *
+   * 넷 다 화면에서는 똑같이 「광고 없이 담겼다」로 보인다. 왜 없었는지를 `ad_skipped` 로
+   * 남겨야 나중에 0건을 보고 원인을 가를 수 있다.
    */
   const save = useCallback(() => {
     if (answer == null) return;
@@ -232,21 +260,30 @@ export function AnswerRoute() {
        *
        * 그래도 `store` 를 부른다. 간직한 **뒤에** 광고를 보고 「다른 관점」을 받는 순서가
        * 있어서, 그때 다시 간직하기를 누르면 그 조각을 마저 담아야 한다(archiveStore 의
-       * `fillDetail`). 여기서 토스트만 띄우고 돌아가면 광고를 끝까지 본 대가가 사라진다.
+       * `fillDetail`). 여기서 시트만 띄우고 돌아가면 광고를 끝까지 본 대가가 사라진다.
        */
-      setToast(SAVE_TOAST[store('free')]);
+      analytics.log('ad_skipped', { placement: 'save', reason: 'already_saved' });
+      afterStore(store('free'));
+      return;
+    }
+    // 아직 답을 하나밖에 못 받아 본 사람이다. 그 첫 답을 간직하는 데 값을 매기지 않는다
+    if (answersTotal <= 1) {
+      analytics.log('ad_skipped', { placement: 'save', reason: 'first_use' });
+      afterStore(store('first_use'));
       return;
     }
     if (archivePass === 'owned') {
-      setToast(SAVE_TOAST[store('pass')]);
+      analytics.log('ad_skipped', { placement: 'save', reason: 'pass' });
+      afterStore(store('pass'));
       return;
     }
     if (!saveAd.ready || !saveAd.supported) {
-      setToast(SAVE_TOAST[store('free')]);
+      analytics.log('ad_skipped', { placement: 'save', reason: 'unsupported' });
+      afterStore(store('free'));
       return;
     }
     setGateOpen(true);
-  }, [analytics, answer, archivePass, saveAd.ready, saveAd.supported, store]);
+  }, [afterStore, analytics, answer, answersTotal, archivePass, saveAd.ready, saveAd.supported, store]);
 
   /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
   const watchAndSave = useCallback(async () => {
@@ -264,11 +301,11 @@ export function AnswerRoute() {
     // 스스로 닫은 사람에게는 아무 말도 하지 않는다. 실패라고 말할 일이 아니다.
     // 다만 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
     if (watched) {
-      setToast(SAVE_TOAST[store('ad')]);
+      afterStore(store('ad'));
       return;
     }
-    if (!saveAd.supported) setToast(SAVE_TOAST[store('free')]);
-  }, [analytics, answer, gateBusy, saveAd, store]);
+    if (!saveAd.supported) afterStore(store('free'));
+  }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
   const watchAd = useCallback(() => ad.show(answer?.answerId), [ad, answer]);
 
@@ -332,6 +369,17 @@ export function AnswerRoute() {
     [bridge],
   );
 
+  /** 알림 동의를 묻는다. 결과 셋을 그대로 돌려준다 */
+  const askNotify = useCallback(async () => {
+    if (!bridge.supports('notification')) return 'unsupported' as const;
+    try {
+      const result = await bridge.requestNotificationAgreement(notifyTemplateCode());
+      return result === 'agreementRejected' ? ('denied' as const) : ('granted' as const);
+    } catch {
+      return 'unsupported' as const;
+    }
+  }, [bridge]);
+
   return (
     <>
       <AnswerScreen
@@ -340,16 +388,23 @@ export function AnswerRoute() {
         onWatchAd={watchAd}
         adReady={ad.ready}
         adSupported={ad.ready && ad.supported}
-        footer={
-          appShareOpen ? (
-            <AppShareCard
-              url={appShareUrl()}
-              onSendMessage={sendMessage}
-              onDone={() => setAppShareOpen(false)}
-            />
-          ) : null
-        }
       />
+
+      {/*
+        답변 위로 올라오는 권유 한 장. 한 번에 하나이고 덮개를 쓰지 않는다.
+        간직 시트나 공유 시트가 열려 있는 동안에는 물러난다. 시트 둘이 겹치면
+        사람이 무엇을 누르고 있는지 잃는다.
+      */}
+      {nudge != null && !gateOpen && !shareOpen && done == null && paywallOpen === false && (
+        <NudgeOverlay
+          nudge={nudge}
+          answersTotal={answersTotal}
+          appUrl={appShareUrl()}
+          onSendMessage={sendMessage}
+          onAskNotify={askNotify}
+          onDone={() => setNudge(null)}
+        />
+      )}
 
       {answer != null && (
         <ShareSheet
@@ -381,12 +436,29 @@ export function AnswerRoute() {
         />
       )}
 
+      {answer != null && (
+        <SaveDone
+          open={done != null}
+          kind={done ?? 'saved'}
+          answerId={answer.answerId}
+          onGoArchive={() => {
+            analytics.log('save_done_action', { action: 'archive' }, { kind: 'click' });
+            setDone(null);
+            void navigate(ROUTES.archive);
+          }}
+          onStay={() => {
+            analytics.log('save_done_action', { action: 'stay' }, { kind: 'click' });
+            setDone(null);
+          }}
+        />
+      )}
+
       <Paywall
         open={paywallOpen}
         trigger="save_ad"
         onClose={() => setPaywallOpen(false)}
         // 사려던 이유는 이 답변을 간직하는 것이었다. 사고 나면 그 일을 마저 한다
-        onPurchased={() => setToast(SAVE_TOAST[store('pass')])}
+        onPurchased={() => afterStore(store('pass'))}
       />
 
       {toast != null && (

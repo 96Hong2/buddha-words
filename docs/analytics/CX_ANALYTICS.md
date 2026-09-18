@@ -162,13 +162,20 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | 이름 | 언제 | 왜 |
 | --- | --- | --- |
 | `action_view` | 행동 블록이 화면에 들어올 때 | Action 까지 읽는 비율 |
-| `action_commit` | 「오늘 이것만 해볼게요」 | 읽고 끝나는가, 가져가는가. **체크리스트는 만들지 않았다** |
+| `tomorrow_ask_view` | 「내일 했는지 물어봐 주세요」가 보일 때 | 제안 노출 |
+| `tomorrow_ask_accept` | 그 버튼을 누를 때 (`notify`) | 행동을 가져갈 마음이 있었나 |
+
+**「오늘 이것만 해볼게요」를 「내일 했는지 물어봐 주세요」로 바꿨다(2026-09-18).** 예전 버튼은
+누르면 화면이 「좋아요」 하고 끝나서 **그 뒤로 아무 일도 일어나지 않았다.** 실제로 해 봤는지는
+아무도 묻지 않았고, 회고 카드는 반대로 누르지도 않은 사람에게 매일 홈에서 물었다.
+지금은 둘을 이어 붙였다. 누른 사람에게만 다음 날 한 번 묻는다(`recall_card_*`).
 
 ### 광고
 
 | 이름 | 언제 | 왜 |
 | --- | --- | --- |
 | `ad_eligible` | 띄울 수 있는 상태가 됐을 때 | 「자격은 됐는데 제안이 안 보였다」와 「보고도 안 눌렀다」를 가른다 |
+| `ad_skipped` | 띄울 자리인데 **안 띄우고 지나갔을 때** (`reason`) | 0건의 원인을 가른다. 아래를 본다 |
 | `deep_extension_view` | Extension 제안이 보일 때 | 자리별 제안 노출 |
 | `second_question_start` | 이어가기 시트가 열릴 때 | 자리별 제안 노출 |
 | `rewarded_ad_start` | 광고를 누를 때 | opt-in 비율 |
@@ -189,6 +196,26 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 
 읽는 도중·쓰는 도중에는 여전히 광고가 없다.
 
+**첫 답까지는 어느 자리에서도 안 띄운다(2026-09-18).** 답을 한 번도 못 받아 본 사람은 이 앱이
+무엇을 해 주는지 아직 모른다. 그 사람의 첫 화면을 전면 광고로 덮으면 본 것이 광고 하나뿐이고
+답은 보기 전에 나간다. 두 번째 이야기부터 돈다.
+
+#### 광고가 0건일 때 원인을 가르는 법
+
+화면에서는 넷이 전부 똑같이 「광고가 없었다」로 보인다. `ad_skipped` 의 `reason` 이 그것을 가른다.
+
+| `reason` | 뜻 | 할 일 |
+| --- | --- | --- |
+| `no_group` | **콘솔이 광고 그룹 id 를 아직 안 줬다.** 번들에 값이 없다 | 콘솔에서 그룹을 만들고 `VITE_AD_GROUP_DEFAULT` 로 다시 빌드한다 |
+| `first_use` | 첫 답이라 일부러 건너뛰었다 | 정상이다 |
+| `flag_off` | `VITE_FLAG_GENERATION_AD=off` 로 껐다 | 정상이다 |
+| `unsupported` | 기기·앱 버전이 낮다 | 어쩔 수 없다 |
+| `opt_out` | 사람이 이 기기에서 광고를 껐다 | 정상이다 |
+| `pass` / `already_saved` | 이용권이 있거나 이미 담긴 답이다 | 정상이다 |
+
+**이 구분이 없어서 광고가 한 건도 안 도는 번들을 올려 놓고 실기기에서야 알았다(2026-09-18).**
+코드는 멀쩡했고 빌드에 광고 그룹 환경변수를 안 준 것이 원인이었다.
+
 ⚠ `generation` 은 **가드레일을 같이 봐야 하는 자리다.** 기다리다 나가는 사람
 (`friction_generation_abandon`)이 켜기 전보다 늘면 그 광고는 대기 시간을 채운 것이 아니라
 길을 막은 것이다. KPI `gen_ad_cost` 가 그 비교다.
@@ -204,8 +231,13 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | `save_gate_view` | 「짧은 광고를 보면」 시트가 뜰 때 | 광고를 제안받은 사람 |
 | `save_gate_accept` | 「보고 간직하기」를 누를 때 | 광고 수락률(`save_gate_conv`) |
 | `save_complete` | 실제로 **담겼을** 때 (`gate`) | 누른 것과 담긴 것 사이의 이탈 |
+| `save_done_view` | 담고 나서 완료 시트가 뜰 때 (`kind`) | 담긴 것을 실제로 알렸나 |
+| `save_done_action` | 「보관함 보러 가기 / 계속 보기」 (`action`) | 담고 나서 보러 가나 |
 | `archive_view` | 보관함을 열 때 | 안 쓰는 기능인지 본다 |
 | `archive_item_open` | 간직한 것을 다시 열 때 (`days_since`) | 쌓아 두는 자리인가 다시 읽는 자리인가 |
+| `archive_favorite` | 즐겨찾기 별을 켜고 끌 때 (`on`) | 간직과 즐겨찾기가 갈리나 |
+| `archive_filter` | 「전체 / 즐겨찾기」를 고를 때 | 목록이 길어졌을 때 무엇을 찾나 |
+| `archive_more` | 「N개 더 보기」 (`page`) | 몇 쪽까지 내려가나 |
 | `paywall_view` / `paywall_close` | 이용권 화면 열고 닫을 때 | `within_bucket_s` 가 2초 미만이면 길을 막고 선 화면이다 |
 | `purchase_start` / `_complete` / `_fail` | 결제 흐름 | 전환율 |
 
@@ -213,7 +245,15 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 간직하기는 그 말을 다시 보고 싶어서 누르는 자리라 거기를 막으면 앱이 주려는 것 자체가
 막힌다. 지금 문지기는 짧은 광고 하나이고 `gate` 값이 어느 길로 담겼는지 적는다.
 
-`gate` 값: `ad`(광고를 봤다) · `pass`(이용권) · `free`(광고를 못 띄우는 판)
+`gate` 값: `ad`(광고를 봤다) · `pass`(이용권) · `free`(광고를 못 띄우는 판) ·
+`first_use`(첫 답이라 면제)
+
+**담고 나서 토스트 한 줄로 끝나던 자리에 시트를 세웠다(2026-09-18).** 2.4초 뒤에 사라지고
+끝이라 담은 사람이 **담긴 것을 보러 갈 길이 없었다.** 보관함 탭이 답변 화면에는 없어서
+뒤로 가서 홈을 거쳐 다시 찾아 들어가야 했다.
+
+**보관함에 페이징과 즐겨찾기가 생겼다(2026-09-18).** 개수 제한을 없애면서 목록에 끝이
+없어졌고, 처음 담은 것이 아래로 밀려 사실상 사라졌다. 한 쪽은 열 장이고 즐겨찾기가 먼저 온다.
 
 `save_click` 과 `save_complete` 를 가른 이유: 광고가 중간에 서면서 **누른 사람과 담긴 사람이
 달라졌다.** 하나로 두면 광고가 얼마나 떨구는지 영영 못 본다(KPI `save_conv`).
@@ -225,8 +265,9 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | `share_start` / `share_complete` / `share_cancel` | 공유가 어디서 끊기나 |
 | `share_scope_select` | 무엇을 보낼지 고른 순간 (`scope`) | 경전만인가 답 전체인가 |
 | `share_landing_open` / `share_landing_cta` | 받은 사람이 들어와 쓰기 시작하나 (K-factor) |
-| `app_share_view` / `app_share_complete` | 세 번째 답 뒤의 앱 권하기 | 답이 아니라 앱 자체를 권한 결과 |
-| `home_add_view` / `home_add_dismiss` | 홈에 추가 안내 | 권해서 실제로 닫는지 |
+| `app_share_view` / `app_share_complete` | **두 번째** 답 뒤의 앱 권하기 | 답이 아니라 앱 자체를 권한 결과 |
+| `home_add_view` / `home_add_dismiss` | 홈에 추가 안내 (`from`) | 권해서 실제로 닫는지 |
+| `draft_confirm_view` / `_choice` | 답을 받고 돌아왔더니 쓰던 글이 남아 있었다 | 지우나 이어 쓰나 |
 | `text_size_change` | 글자 크기를 바꿀 때 (`size`) | 큰 글씨를 쓰는 사람이 얼마나 되나 |
 
 `share_complete` 의 `method` 값: `system`(네이티브 공유 시트) · `copy`(주소 복사) ·
@@ -252,9 +293,80 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 
 ### 알림
 
-기본은 꺼져 있다. 첫 실행에 묻지 않고 **답을 받아 본 뒤** 답변 맨 아래에서 한 줄로 묻는다.
+첫 실행에 묻지 않는다. **세 번째 답을 받은 뒤** 한 번 권하고, 그 뒤로는 설정에만 한 줄 둔다.
 
 `notification_prompt_view` · `_accept` · `_decline` · `notification_permission`
+
+`surface` 값: `nudge_card`(세 번째 답 뒤) · `settings`
+
+⚠ 콘솔 스마트발송 템플릿 코드(`VITE_NOTIFICATION_TEMPLATE_CODE`)가 없으면 실기기에서 동의
+화면 자체가 안 뜬다. 그래서 `notifyUsable()` 이 코드와 기기 지원을 둘 다 보고, 하나라도
+없으면 **권유를 아예 띄우지 않는다.** 권유는 한 사람에게 한 번뿐이라 그 한 번을 눌러도 아무
+일이 없는 버튼에 쓰면 다시 물을 자리가 없다.
+
+### 권유 시간표
+
+홈 추가 · 앱 알리기 · 알림은 셋 다 사람이 부탁하지 않은 말이다. **한 번에 하나만** 뜬다.
+겹치면 답변이 아니라 부탁이 화면의 주인이 된다. 자리는 `shared/prefs/milestones` 한 곳이 정한다.
+
+| 몇 번째 답 | 무엇 |
+| --- | --- |
+| 1 | 홈에 추가 |
+| 2 | 친구에게 앱 알려주기 |
+| 3 | 알림 |
+| 4 | 홈에 추가 (다시 오는 사람에게는 그 말이 쓸모가 있다) |
+
+`answer_milestone` 이 몇 번째인지를 남긴다. **첫 사용 무료의 본전을 재는 유일한 자리다**
+(KPI `second_use_conv`).
+
+---
+
+## 3.5 첫 사용을 공짜로 준 값은 언제 돌아오나
+
+첫 답에는 광고가 없다. 그 한 건의 LLM 값은 통째로 손실이고, **두 번째 사용에서 도는 광고가
+그것까지 갚는다.** 얼마나 돌아와야 본전인지는 식 하나로 나온다.
+
+```
+p = C / (R − C)
+
+p  두 번째 사용 전환율 (answer_milestone 2건 ÷ 1건)
+C  LLM 한 건 원가
+R  보상형 광고 한 편 수익 (eCPM ÷ 1000)
+```
+
+`C` 는 실측이 있다(`backend/app/integrations/llm/MODELS.md`).
+
+| 갈래 | 한 건 값 |
+| --- | --- |
+| NORMAL | $0.001756 |
+| DEEP | $0.002358 |
+
+`R` 은 아직 실측이 없다. 콘솔이 광고 그룹을 주고 광고가 실제로 돌기 전에는 알 수 없다.
+
+| eCPM | 광고 한 편 | 필요한 전환율 |
+| --- | --- | --- |
+| $4 (약 5,600원) | $0.004 | **100%** |
+| $5 | $0.005 | 67% |
+| $8 | $0.008 | **33%** |
+| $10 | $0.010 | 25% |
+| $15 | $0.015 | 15% |
+
+**여기서 나오는 선 하나: `R ≥ 2C` 가 아니면 전환율 100% 여도 적자다.** `C ≈ $0.002` 이므로
+**eCPM 이 $4 아래면 첫 사용 무료 정책 자체가 성립하지 않는다.** 그 아래로 나오면 정책을
+바꾸는 쪽이지 전환율을 올리는 쪽이 아니다.
+
+간직 광고가 더해지면 완화된다. 두 번째 사용에서 간직률이 `s` 면 `R` 자리에 `R(1+s)` 가 온다.
+`s = 0.2`, eCPM $8 이면 33% → 26%.
+
+**이 계산은 KPI 셋이 있어야 실측으로 대체된다.** 셋 다 이번 판에서 만들었다.
+
+| KPI | 무엇 |
+| --- | --- |
+| `second_use_conv` | 위 식의 `p` |
+| `ads_per_paid_use` | 두 번째부터 실제로 광고가 몇 편 도나 |
+| `ad_skip_reason` | `no_group` 이 남아 있으면 아직 한 편도 안 돈 것이다 |
+
+`R` 은 우리 로그로 못 센다. 콘솔 광고 수익을 `rewarded_ad_complete` 수로 나눠 얻는다.
 
 ---
 

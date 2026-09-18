@@ -20,7 +20,7 @@
 1. 경전은 LLM 이 만들지 않는다. id 만 고르고 서버가 DB 에서 채운다.
 2. 고민 원문은 저장·로그·이벤트 어디에도 싣지 않는다.
 3. crisis 판정은 위로만 간다. crisis 면 LLM 본 답변을 부르지 않는다. 문구는 `domains/safety/copy.ts` 고정.
-4. 광고는 `AdPlacement` 두 자리(`extension` · `continue`)뿐. 보상은 `userEarnedReward` 에서만. 대기·입력·위기 화면에 광고 없음.
+4. 광고는 `AdPlacement` 네 자리(`generation` · `extension` · `continue` · `save`)뿐. 보상은 `userEarnedReward` 에서만. 입력·위기 화면에 광고 없음. **첫 답까지는 어느 자리에서도 안 띄운다**(`isFirstStory`). `generation` 은 심사 위험이 있어 `VITE_FLAG_GENERATION_AD=off` 로 끈다.
 5. 모델 id 와 프롬프트를 환경변수로 갈아 끼우는 코드를 만들지 않는다.
 6. 문구는 해요체. 「상담·치료·진단·처방·업보·죄」를 쓰지 않는다. 「오늘의 부처의 말」만 경구체.
 7. 진입 즉시 바텀시트 없음. 모든 시트는 닫기·바깥·뒤로가기 셋으로 닫힌다.
