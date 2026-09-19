@@ -11,6 +11,7 @@ import {
   type BridgeEnvironment,
   type BridgePlatform,
   type CaptureOptions,
+  type FullScreenAdHooks,
   type FullScreenAdResult,
   type Identity,
   type KeyValueStore,
@@ -56,10 +57,13 @@ export interface MockScenario {
    *
    * `ok` 면 잠깐 덮었다가 「봤다」 로 끝난다. `dismissed` 는 사람이 중간에 닫은 것이고
    * `noFill` 은 광고가 한 장도 안 온 것이다. 화면이 그 둘을 다르게 다뤄야 해서 갈라 둔다.
+   * 전면형 그룹(이어가기)은 보상이 없어서 `ok` 여도 닫힘으로 끝난다. 실제 SDK 와 같다.
    */
   fullScreenAd?: 'ok' | 'dismissed' | 'noFill' | 'unsupported';
-  /** 전면 광고가 화면을 덮고 있는 시간(ms). 5초 뒤에 답을 만들기 시작하는 길을 보려면 길게 준다 */
+  /** 전면 광고가 화면을 덮고 있는 시간(ms). 광고가 떠 있는 동안 답이 만들어지는지 보려면 길게 준다 */
   fullScreenAdMs?: number;
+  /** 전면 광고를 불러오는 데 걸리는 시간(ms). 실광고는 몇 초씩 걸리기도 한다 */
+  fullScreenAdLoadMs?: number;
   /**
    * 주문서에서 무슨 일이 벌어지나.
    * `cancel` 은 사고 나온 것이 아니라 그냥 닫은 것이라 아무 일도 일어나면 안 된다.
@@ -192,23 +196,29 @@ class MockAdsBridge implements AdsBridge {
     return { destroy: () => node.remove() };
   }
 
-  showFullScreen(): Promise<FullScreenAdResult> {
+  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult> {
     const mode = this.scenario.fullScreenAd ?? 'ok';
     // 광고가 한 장도 안 온 것은 뜨지도 않는다. 사람이 닫은 것은 잠깐 떴다가 닫힌다
     if (mode === 'noFill' || mode === 'unsupported') return Promise.resolve('noFill');
+    // 종류는 실제 SDK 처럼 광고 그룹 id 로 갈린다. 공식 테스트 id 이름에 종류가 들어 있다
+    const interstitial = adGroupId.includes('interstitial');
 
-    // 실광고처럼 화면을 통째로 덮는다. e2e 가 「광고가 떴다」 를 이 자리로 본다.
-    const node = document.createElement('div');
-    node.dataset.testid = 'mock-fullscreen-ad';
-    node.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;color:#fff';
-    node.textContent = '광고 (목)';
-    document.body.appendChild(node);
+    const loadMs = this.scenario.fullScreenAdLoadMs ?? 0;
     const shownMs = this.scenario.fullScreenAdMs ?? MOCK_FULL_SCREEN_MS;
     return new Promise((resolve) => {
       setTimeout(() => {
-        node.remove();
-        resolve(mode === 'dismissed' ? 'dismissed' : 'watched');
-      }, shownMs);
+        // 실광고처럼 화면을 통째로 덮는다. e2e 가 「광고가 떴다」 를 이 자리로 본다.
+        const node = document.createElement('div');
+        node.dataset.testid = 'mock-fullscreen-ad';
+        node.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;color:#fff';
+        node.textContent = '광고 (목)';
+        document.body.appendChild(node);
+        hooks?.onShown?.();
+        setTimeout(() => {
+          node.remove();
+          resolve(mode === 'dismissed' || interstitial ? 'dismissed' : 'watched');
+        }, shownMs);
+      }, loadMs);
     });
   }
 }

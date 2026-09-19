@@ -31,6 +31,7 @@ import {
   type BridgeEnvironment,
   type BridgePlatform,
   type CaptureOptions,
+  type FullScreenAdHooks,
   type FullScreenAdResult,
   type Identity,
   type KeyValueStore,
@@ -110,6 +111,12 @@ class TossAnalyticsBridge implements AnalyticsBridge {
  */
 const FULL_SCREEN_LOAD_TIMEOUT_MS = 8_000;
 
+/**
+ * 광고가 닫혀 화면이 다시 보인 뒤, 닫힘 신호를 이만큼 더 기다린다.
+ * 보상 이벤트가 화면 복귀보다 조금 늦게 오는 기기가 있어 바로 끊지 않는다.
+ */
+const DISMISS_FALLBACK_MS = 2_000;
+
 class TossAdsBridge implements AdsBridge {
   private initialized: Promise<void> | null = null;
 
@@ -157,7 +164,7 @@ class TossAdsBridge implements AdsBridge {
     });
   }
 
-  showFullScreen(adGroupId: string): Promise<FullScreenAdResult> {
+  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult> {
     if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
       return Promise.resolve('noFill');
     }
@@ -174,11 +181,15 @@ class TossAdsBridge implements AdsBridge {
         cancelLoad?.();
       };
 
+      /** 광고가 뜬 뒤 화면이 다시 보이는지 듣는 자리. 닫힘 신호가 안 오는 버전을 위한 것이다 */
+      let onVisible: (() => void) | undefined;
+
       const finish = (result: FullScreenAdResult) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         stopLoading();
+        if (onVisible) document.removeEventListener('visibilitychange', onVisible);
         resolve(result);
       };
       const timer = setTimeout(() => finish('noFill'), FULL_SCREEN_LOAD_TIMEOUT_MS);
@@ -193,6 +204,21 @@ class TossAdsBridge implements AdsBridge {
             // 보상은 `userEarnedReward` 하나에서만 나온다. 떴다·노출됐다·눌렸다는 보상이 아니다.
             // 닫힘은 언제나 취소다. 뜨자마자 닫은 사람에게 보상을 주면 무효 트래픽으로 잡혀
             // 광고 계정이 막힌다. 샌드박스 목이 보상 이벤트를 안 준다고 여기서 타협하지 않는다.
+            if (event.type === 'show') {
+              hooks?.onShown?.();
+              /*
+                Android 토스앱 5.255.0 은 `dismissed` 를 주지 않는다(공식 FAQ). 그러면 광고가
+                닫혀도 여기서 영영 기다린다. 광고가 뜬 뒤 화면이 다시 보이면 닫힌 것으로 본다.
+                정상 버전은 닫힘 신호가 먼저 와서 이 길을 타지 않는다.
+              */
+              if (onVisible == null) {
+                onVisible = () => {
+                  if (document.visibilityState !== 'visible') return;
+                  setTimeout(() => finish('dismissed'), DISMISS_FALLBACK_MS);
+                };
+                document.addEventListener('visibilitychange', onVisible);
+              }
+            }
             if (event.type === 'userEarnedReward') finish('watched');
             // 닫힘은 언제나 취소다. 못 띄운 것과는 갈라서 돌려준다
             if (event.type === 'dismissed') finish('dismissed');

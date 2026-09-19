@@ -1,5 +1,5 @@
 /**
- * 보상형 광고 한 번.
+ * 전면을 덮는 광고 한 번. 종류는 자리가 정한다(`AD_KIND`). 이어가기만 전면형이고 나머지는 보상형이다.
  *
  * 광고를 못 띄우는 기기(구버전 · SDK 없음 · 이 기기 광고 끄기)에서는 `supported` 가 false 다.
  * 그때 화면은 CTA 를 감추거나 시트 없이 그냥 진행한다. **광고 때문에 기능을 막지 않는다.**
@@ -12,10 +12,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useBridge } from '../../app/providers';
-import { immediateBucket, useAnalytics } from '../../shared/analytics';
+import { elapsedBucket, immediateBucket, useAnalytics } from '../../shared/analytics';
 import { readAdOptOut } from '../../shared/lib/adOptOut';
+import type { FullScreenAdHooks } from '../../shared/toss';
 
-import { adGroupId, type AdPlacement } from './placement';
+import { AD_KIND, adGroupId, type AdPlacement } from './placement';
 
 /**
  * 지금 전면 광고가 화면을 덮고 있나.
@@ -78,14 +79,17 @@ function listenForExit(log: (since: number, placement: AdPlacement, answerId?: s
 export type AdOutcome = 'watched' | 'dismissed' | 'noFill';
 
 export interface RewardedAd {
-  /** 이 기기에서 보상형 광고를 띄울 수 있나 */
+  /** 이 기기에서 이 자리 광고를 띄울 수 있나 */
   supported: boolean;
   /** 지원 여부 판정이 끝났나 */
   ready: boolean;
   /** 광고가 떠 있는 동안 true. 버튼을 두 번 누르는 것을 막는다 */
   showing: boolean;
-  /** 보상은 `watched` 하나뿐이다. 나머지 둘은 갈라서 돌려준다 */
-  show(answerId?: string): Promise<AdOutcome>;
+  /**
+   * 보상은 `watched` 하나뿐이다. 전면형은 보상이 없어 `dismissed` 로 끝난다.
+   * `onShown` 은 광고가 실제로 화면에 뜬 순간이다. 누른 순간과 다르다.
+   */
+  show(answerId?: string, hooks?: FullScreenAdHooks): Promise<AdOutcome>;
 }
 
 export function useRewardedAd(placement: AdPlacement): RewardedAd {
@@ -170,7 +174,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
   }, [analytics, placement, ready, supported]);
 
   const show = useCallback(
-    async (answerId?: string): Promise<AdOutcome> => {
+    async (answerId?: string, hooks?: FullScreenAdHooks): Promise<AdOutcome> => {
       if (!supported) {
         analytics.log('rewarded_ad_fail', { placement, reason: 'unsupported' });
         return 'noFill';
@@ -187,14 +191,41 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       setShowing(true);
       covering += 1;
       let outcome: AdOutcome = 'noFill';
+      let shownAt = 0;
       try {
-        outcome = await bridge.ads.showFullScreen(group);
+        outcome = await bridge.ads.showFullScreen(group, {
+          onShown: () => {
+            shownAt = Date.now();
+            hooks?.onShown?.();
+          },
+        });
       } catch {
         // 브릿지가 던져도 여기서 끝낸다. 부르는 쪽이 광고 하나 때문에 멈추면 안 된다
         outcome = 'noFill';
       } finally {
         covering -= 1;
         setShowing(false);
+      }
+
+      /*
+        광고가 실제로 몇 초 떠 있었나. 불러오는 시간은 빼고 뜬 순간부터 잰다.
+        보상형은 보상을 받은 순간까지(끝까지 본 길이), 전면형은 사람이 닫은 순간까지다.
+        전면형 쪽은 광고 길이가 아니라 사람이 얼마나 참았는지에 가깝다.
+      */
+      if (outcome !== 'noFill' && shownAt > 0) {
+        analytics.log('ad_close', {
+          placement,
+          shown_bucket_ms: elapsedBucket(Date.now() - shownAt),
+        });
+      }
+
+      /*
+        전면형은 보상이 없어서 언제나 닫힘으로 끝난다. 그것이 정상 종료다. 실패로 세면
+        이어가기 광고가 전부 실패로 읽힌다. 전면형 자리는 광고와 무관하게 하던 일을 잇는다.
+      */
+      if (AD_KIND[placement] === 'interstitial' && outcome === 'dismissed') {
+        markWatched(placement, answerId);
+        return 'dismissed';
       }
 
       if (outcome !== 'watched') {
