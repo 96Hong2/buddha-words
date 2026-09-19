@@ -141,17 +141,6 @@ export function countAnswer(answerId: string): number {
   return next.answers;
 }
 
-/**
- * 아직 답을 한 번도 못 받았나. **지금 만드는 것이 이 사람의 첫 답이다.**
- *
- * 대기 화면이 광고를 띄우기 전에 이 값을 본다. 앱이 무엇을 해 주는지 아직 못 본 사람에게
- * 첫 화면부터 전면 광고를 덮으면, 그 사람이 본 것은 광고 하나뿐이고 답은 보기 전에 나간다.
- * 값을 한 번 받아 본 사람에게만 값을 받으라고 한다.
- */
-export function isFirstStory(): boolean {
-  return read().answers === 0;
-}
-
 /** 홈 추가를 「이미 했다」고 말했다. 두 번째 자리에서도 다시 묻지 않는다 */
 export function markHomeAddDone(): void {
   write({ ...read(), homeAddDone: true });

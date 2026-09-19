@@ -239,7 +239,7 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
    * 「쓰시던 이야기가 남아 있어요」 안에도 이미 지우는 길이 있다. 그 둘이 서 있는 동안에는
    * 이 버튼을 감춘다. 카드가 사라지고 나면 다시 나타나, 쓴 글을 비울 길은 언제나 남는다.
    */
-  const showClear = text !== '' && !showDraftNotice && !(askClear && text !== '');
+  const showClear = text !== '' && !showDraftNotice && !askClear && !clearAsking;
 
   return (
     <div {...testId(TEST_IDS.home)} className="home-screen">
@@ -299,7 +299,7 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
           {topCard}
           {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
           <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />
-          {showDraftNotice && <DraftNotice onClear={clearDraft} />}
+          {showDraftNotice && <DraftNotice onClear={openClear} />}
 
           <ConcernField
             value={draft}

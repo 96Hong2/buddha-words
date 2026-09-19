@@ -100,9 +100,7 @@ export function SaveGate({
         <h2 className="pw-title" id="save-gate-title">
           보관함에 간직할까요?
         </h2>
-        <p className="pw-sub">
-          보관함에 담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.
-        </p>
+        <p className="pw-sub">담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.</p>
 
         <div className="pw-actions">
           {/*
@@ -136,7 +134,7 @@ export function SaveGate({
             onClick={onBuyPass}
             {...testId(TEST_IDS.saveGateBuy)}
           >
-            광고 없이 간직하기
+            이용권으로 광고 없이 간직하기
           </button>
         )}
       </div>

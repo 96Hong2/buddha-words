@@ -27,7 +27,7 @@ import { useOverlayBackClose } from '../../app/providers';
 import { immediateBucket, useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { BottomSheet } from '../../shared/ui';
-import { useRewardedAd } from '../ads/useRewardedAd';
+import { useRewardedAd, type AdOutcome } from '../ads/useRewardedAd';
 
 import './quota.css';
 
@@ -86,7 +86,6 @@ export function ContinueSheet({
   const watch = useCallback(async (): Promise<void> => {
     setFailed(false);
     const startedAt = Date.now();
-    const showing = ad.show();
 
     let started = false;
     const startAnswer = () => {
@@ -97,23 +96,39 @@ export function ContinueSheet({
     };
 
     const timer = window.setTimeout(startAnswer, COMMIT_AFTER_MS);
-    const earned = await showing;
-    window.clearTimeout(timer);
+    let outcome: AdOutcome = 'noFill';
+    try {
+      outcome = await ad.show();
+    } finally {
+      window.clearTimeout(timer);
+    }
     if (started) return;
 
     /*
-      타이머가 안 돌았는데 여기까지 왔다. 두 경우다.
+      타이머가 안 돌았는데 여기까지 왔다.
 
       전면 광고가 WebView 를 덮는 동안 타이머가 눌리는 기기가 있어서, 광고가 끝나고 나서야
       이 줄에 닿기도 한다. 그때는 실제로 지난 시간을 보고 판단한다. 시계는 눌리지 않는다.
     */
     const elapsed = Date.now() - startedAt;
-    if (earned || elapsed >= COMMIT_AFTER_MS) {
+    if (outcome === 'watched' || elapsed >= COMMIT_AFTER_MS) {
       startAnswer();
       return;
     }
 
-    // 5초를 못 채우고 닫혔다. 모델을 돌리지 않는다
+    /*
+      광고가 한 장도 안 왔다. **우리 쪽 사정으로 사람을 막지 않는다.**
+
+      여기서 멈추면 광고를 못 받는 기기에서는 같은 버튼을 몇 번 눌러도 답을 못 받고, 시트
+      바깥을 누를 줄 아는 사람만 빠져나간다. 막다른 구조다. 그냥 이어가고 이유를 남긴다.
+    */
+    if (outcome === 'noFill') {
+      analytics.log('ad_skipped', { placement: 'continue', reason: 'no_fill' });
+      onContinue();
+      return;
+    }
+
+    // 사람이 5초를 못 채우고 닫았다. 보기 싫다는 뜻이라 모델을 돌리지 않는다
     analytics.log('ad_bail_early', {
       placement: 'continue',
       within_bucket_s: immediateBucket(elapsed),
@@ -126,7 +141,7 @@ export function ContinueSheet({
       <div {...testId(TEST_IDS.continueSheet)}>
         <h2 className="continue-sheet__title">{TITLE}</h2>
         <p className="continue-sheet__sub">
-          광고가 나오는 동안 답변을 만들어 둘게요 (오늘 {continuesLeft}번 남았어요)
+          광고가 나오는 동안 답변을 만들어 둘게요 (오늘 {continuesLeft}번 더 이어갈 수 있어요)
         </p>
 
         <div className="continue-sheet__actions">
@@ -168,12 +183,12 @@ export function ContinueSheet({
           </button>
           <p className="continue-sheet__note" role={failed ? 'status' : undefined}>
             {/*
-              광고가 안 떴는지 사람이 곧바로 닫았는지 SDK 는 가르지 못한다(`watched` 아니면
-              `failed` 둘뿐이다). 그래서 둘 중 어느 쪽이어도 맞는 말만 적는다.
+              여기 오는 사람은 광고를 스스로 닫은 사람뿐이다(광고가 안 온 쪽은 그냥 이어간다).
+              나갈 길도 함께 적는다. 닫기 버튼은 없앴고, 바깥을 눌러 닫는 것을 모르는 사람이 있다.
             */}
             {failed
-              ? '아직 답변을 만들지 않았어요. 다시 눌러 주세요'
-              : '광고가 끝나면 바로 답변을 보여드려요'}
+              ? '아직 답변을 만들지 않았어요. 다시 누르거나, 빈 곳을 눌러 닫으세요'
+              : '광고가 끝나면 답변을 보여드려요'}
           </p>
         </div>
       </div>

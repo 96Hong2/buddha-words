@@ -304,7 +304,7 @@ export function AnswerRoute() {
     setGateBusy(true);
     let watched = false;
     try {
-      watched = await saveAd.show(answer.answerId);
+      watched = (await saveAd.show(answer.answerId)) === 'watched';
     } catch {
       watched = false;
     }
@@ -319,7 +319,10 @@ export function AnswerRoute() {
     if (!saveAd.supported) afterStore(store('free'));
   }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
-  const watchAd = useCallback(() => ad.show(answer?.answerId), [ad, answer]);
+  const watchAd = useCallback(
+    async () => (await ad.show(answer?.answerId)) === 'watched',
+    [ad, answer],
+  );
 
   /**
    * 링크가 가리킬 카드를 먼저 만들어 둔다. 링크만 있고 내용이 없으면 받은 사람은 만료 화면을 본다.

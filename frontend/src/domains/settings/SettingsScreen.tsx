@@ -42,7 +42,7 @@ const CONTACT_EMAIL = 'help@buddhawords.kr';
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
   owned: { value: '있음', desc: '광고 없이 바로 간직할 수 있어요' },
-  none: { value: '없음', desc: '지금은 짧은 광고를 보면 간직할 수 있어요' },
+  none: { value: '없음', desc: '지금은 30초 광고를 보면 간직할 수 있어요' },
   unknown: { value: '확인 중', desc: '토스에 남은 구매 내역을 읽고 있어요' },
 };
 
@@ -244,7 +244,17 @@ export function SettingsScreen() {
    * 물을 수 없는 판에서는 사람이 무엇을 골랐든 「준비 중」이다. 저장된 값이 `unset` 이라고
    * 「받기」라고 적어 두면 눌러도 아무 일이 없는 버튼을 권하는 셈이 된다.
    */
-  const rowState: NotifyState = canAsk ? notify : notify === 'on' ? 'on' : 'pending';
+  const rowState: NotifyState = canAsk
+    ? notify
+    : // 낡은 토스 앱은 업데이트하면 되는 일이고, 템플릿이 없는 것은 우리가 할 일이다.
+      // 둘을 같은 말로 덮으면 업데이트하면 될 사람이 우리를 기다린다.
+      !bridge.supports('notification')
+      ? 'unsupported'
+      : // 이미 받기로 했거나 됐다고 한 사람의 답은 그대로 둔다. 그 위를 「준비 중」으로 덮으면
+        // 거절한 사람에게 「곧 시작해요」라고 말하게 된다
+        notify === 'unset'
+        ? 'pending'
+        : notify;
 
   // 팔지 않는 판에서는 이용권 자리를 그리지 않는다. 이미 가진 사람에게는 그대로 보여 준다
   const showPass = isArchivePassEnabled() || archivePass === 'owned';
@@ -391,7 +401,7 @@ export function SettingsScreen() {
             </span>
             <span className="set-text">
               <span className="set-item-title">받고 싶은 시간</span>
-              <span className="set-item-desc">매일 이 시각에 알려드려요</span>
+              <span className="set-item-desc">알림이 시작되면 이 시각에 보내드려요</span>
             </span>
             <span className="set-value">{notifyHourLabel(hour)}</span>
           </button>

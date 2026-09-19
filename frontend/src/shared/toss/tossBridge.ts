@@ -159,7 +159,7 @@ class TossAdsBridge implements AdsBridge {
 
   showFullScreen(adGroupId: string): Promise<FullScreenAdResult> {
     if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
-      return Promise.resolve('failed');
+      return Promise.resolve('noFill');
     }
     return new Promise<FullScreenAdResult>((resolve) => {
       let settled = false;
@@ -181,7 +181,7 @@ class TossAdsBridge implements AdsBridge {
         stopLoading();
         resolve(result);
       };
-      const timer = setTimeout(() => finish('failed'), FULL_SCREEN_LOAD_TIMEOUT_MS);
+      const timer = setTimeout(() => finish('noFill'), FULL_SCREEN_LOAD_TIMEOUT_MS);
 
       const show = () => {
         // 시간 제한은 불러오는 데까지만이다. 광고가 떴는데 8초가 지났다고 실패로 접으면,
@@ -194,9 +194,11 @@ class TossAdsBridge implements AdsBridge {
             // 닫힘은 언제나 취소다. 뜨자마자 닫은 사람에게 보상을 주면 무효 트래픽으로 잡혀
             // 광고 계정이 막힌다. 샌드박스 목이 보상 이벤트를 안 준다고 여기서 타협하지 않는다.
             if (event.type === 'userEarnedReward') finish('watched');
-            if (event.type === 'dismissed' || event.type === 'failedToShow') finish('failed');
+            // 닫힘은 언제나 취소다. 못 띄운 것과는 갈라서 돌려준다
+            if (event.type === 'dismissed') finish('dismissed');
+            if (event.type === 'failedToShow') finish('noFill');
           },
-          onError: () => finish('failed'),
+          onError: () => finish('noFill'),
         });
       };
 
@@ -208,7 +210,7 @@ class TossAdsBridge implements AdsBridge {
           if (loadCancelled) return;
           if (event.type === 'loaded') show();
         },
-        onError: () => finish('failed'),
+        onError: () => finish('noFill'),
       });
       // 콜백이 먼저 끝났으면 위 구독 값이 아직 없었다. 여기서 한 번 더 끊는다.
       if (loadCancelled) cancelLoad();
