@@ -300,7 +300,9 @@ def put(card: ShareCardData, full: ShareFullData | None = None) -> str:
     return token
 
 
-def _decode(share_id: str, fields: dict[str, Any]) -> tuple[ShareCardData, ShareFullData | None] | None:
+def _decode(
+    share_id: str, fields: dict[str, Any]
+) -> tuple[ShareCardData, ShareFullData | None] | None:
     """적혀 있던 글자로 카드와 전체 본문을 되살린다.
 
     카드의 칸이 바뀐 뒤에 배포하면 그 전에 저장된 줄이 안 맞을 수 있다. 그때 터지면 링크
