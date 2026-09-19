@@ -82,7 +82,7 @@ test('광고를 끝까지 보면 다른 경전과 다른 관점이 붙는다', a
 
 test('광고를 중간에 닫으면 아무 일도 일어나지 않는다', async ({ page }) => {
   // 광고가 뜨다 말았다. 사용자가 스스로 닫은 것과 같은 자리다
-  await withBridge(page, { fullScreenAd: 'failed' });
+  await withBridge(page, { fullScreenAd: 'dismissed' });
   await page.goto('/');
   await askOnce(page);
 

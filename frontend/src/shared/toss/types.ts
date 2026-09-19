@@ -119,12 +119,19 @@ export interface AttachBannerOptions {
 }
 
 /**
- * 전면 광고를 끝까지 본 결과.
+ * 전면 광고가 어떻게 끝났나.
  *
- * `watched` 는 보상 이벤트(`userEarnedReward`)를 받은 것 하나뿐이다. 뜨기만 했거나 중간에
- * 닫은 것은 `failed` 다. 못 불러왔거나 못 띄운 것도 같은 값이라 부르는 쪽은 둘을 가르지 않는다.
+ * `watched` 는 보상 이벤트(`userEarnedReward`)를 받은 것 하나뿐이다. 뜨기만 했거나 눌린 것은
+ * 보상이 아니다.
+ *
+ * ── `dismissed` 와 `noFill` 을 왜 가르나 ─────────────────────────────
+ *
+ * 둘을 `failed` 하나로 묶었더니 **사람이 닫은 것과 광고가 아예 안 뜬 것을 화면이 구분하지
+ * 못했다.** 앞엣것은 「보기 싫다」는 뜻이라 하던 일을 멈추는 것이 맞고, 뒤엣것은 우리 쪽
+ * 사정이라 광고 없이 그냥 보내 주어야 한다. 묶어 두면 광고를 한 장도 못 받는 기기에서
+ * 사람이 시트 앞에 갇힌다.
  */
-export type FullScreenAdResult = 'watched' | 'failed';
+export type FullScreenAdResult = 'watched' | 'dismissed' | 'noFill';
 
 export interface AdsBridge {
   /** 배너를 붙이기 전에 한 번 호출한다. 멱등이다. */

@@ -6,7 +6,7 @@
  * 자리가 차면 지울 길이 없었다. 이 스펙은 그 셋을 실제 화면으로 본다.
  */
 
-import { DEEP_CONCERN, askOnce, revealBottomBar, saveAnswerFromScreen} from '../support/flow';
+import { DEEP_CONCERN, askOnce, revealBottomBar, saveAnswerFromScreen } from '../support/flow';
 import { expect, test, type Page } from '../support/fixtures';
 import { shot } from '../support/shots';
 
@@ -214,7 +214,9 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
 
   const gate = page.getByTestId('save-gate');
   await expect(gate).toBeVisible();
-  await expect(gate).toContainText('짧은 광고를 보면 간직할 수 있어요');
+  // 몇 초짜리인지 적는다. 모르면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다
+  await expect(gate).toContainText('보관함에 간직할까요?');
+  await expect(page.getByTestId('save-gate-watch')).toContainText('30초 광고 보고 간직하기');
   // 광고를 강조하지 않는다. 개수 제한이 없다는 말이 함께 있어야 무엇을 잃는지가 분명하다
   await expect(gate).toContainText('개수 제한은 없어요');
   await shot(page, '28-5 간직 - 광고를 보면 간직할 수 있어요');

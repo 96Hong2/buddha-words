@@ -8,9 +8,7 @@ import { useSession } from '../../shared/session';
 import { sceneForScreen } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { ROUTES } from '../../app/router';
-import { useRewardedAd } from '../ads/useRewardedAd';
-import { FLAGS } from '../../shared/flags';
-import { isFirstStory } from '../../shared/prefs/milestones';
+import { adIsCovering } from '../ads/useRewardedAd';
 
 import './answer.css';
 
@@ -101,20 +99,14 @@ function LotusMark() {
  * 여기서 요청1을 부르고, 종류에 따라 갈라 보낸다. 요청2는 답변 화면으로 넘어간 뒤에
  * 이어서 부른다.
  *
- * ── 광고는 요청과 **나란히** 돈다 ───────────────────────────────────
+ * ── **이 화면은 광고를 띄우지 않는다** ────────────────────────────────
  *
- * 광고를 띄우고 나서 요청을 보내면 기다리는 시간이 광고만큼 길어진다. 그래서 제출은
- * 화면이 뜨는 즉시 나가고, 광고는 그 위를 덮는다. 사람이 광고를 보는 20초가 원래
- * 비어 있던 대기 시간이라 **답이 늦어지지 않는다.**
+ * 예전에는 여기서 전면 광고를 저절로 덮었다. 사람이 「이야기 보내기」만 눌렀는데 광고가
+ * 튀어나왔고, 그 광고를 다 본 사람에게 이어가기 시트가 광고를 한 번 더 청했다.
+ * 누르지 않은 광고라 심사에서도 걸리고 사람도 잃는 자리였다.
  *
- * 광고를 닫았을 때 답이 아직이면 이 화면이 그대로 이어진다. 답이 이미 왔으면 그 사이
- * 화면이 넘어가 있어 광고를 닫는 순간 답변이 보인다. 둘 다 따로 처리할 것이 없다.
- *
- * 답이 먼저 도착했으면 광고를 띄우지 않는다. 다 만든 답을 광고로 막는 것은 기다리는
- * 시간을 채우는 일이 아니라 길을 막는 일이다.
- *
- * ⚠ **이 자리는 네 광고 자리 중 사람이 누르지 않는 유일한 곳이라 심사 위험이 있다.**
- * `VITE_FLAG_GENERATION_AD=off` 로 이 자리만 끈다. 근거는 `shared/flags/flags.ts`.
+ * 광고는 이제 이어가기 시트가 **사람이 누른 뒤에** 틀고, 그 광고가 도는 동안 이 화면이
+ * 답을 만든다. 광고가 끝나면 답이 이미 와 있다.
  */
 export function LoadingScreen() {
   const client = useApiClient();
@@ -130,14 +122,6 @@ export function LoadingScreen() {
   const submittedKey = useRef<string | null>(null);
   const scene = sceneForScreen('loading');
 
-  const ad = useRewardedAd('generation');
-  /** 답이 왔거나 실패로 끝났나. 광고를 띄우기 전에 이 값을 본다 */
-  const settledAnswer = useRef(false);
-  /** 광고를 이미 한 번 띄웠나. 한 번 기다리는 동안 한 번이다 */
-  const adShown = useRef(false);
-  /** 광고가 화면을 덮고 있나. 앱을 떠난 것으로 잘못 세지 않으려고 본다 */
-  const adCovering = useRef(false);
-
   const submit = useCallback(async () => {
     const startedAt = Date.now();
     // 이 제출의 키. 아래에서 답이 올 때마다 아직 이 이야기가 화면의 주인인지 이 값으로 본다
@@ -148,8 +132,6 @@ export function LoadingScreen() {
         text: sent,
         idempotencyKey: myKey,
       });
-      // 답이 왔다. 아직 안 띄운 광고는 이제 띄우지 않는다
-      settledAnswer.current = true;
       if (response.responseType === 'light') {
         analytics.log('answer_generated', {
           answer_id: response.answerId,
@@ -239,7 +221,6 @@ export function LoadingScreen() {
         });
       }
     } catch (error) {
-      settledAnswer.current = true;
       const failed =
         error instanceof ApiFailure ? error : new ApiFailure('provider', '보내지 못했어요.');
       analytics.log('answer_failed', { pass: 1, reason: failed.reason });
@@ -268,8 +249,9 @@ export function LoadingScreen() {
     waitingFrom.current = Date.now();
     function onHide() {
       if (document.visibilityState !== 'hidden' || settled.current) return;
-      // 전면 광고가 덮으면 WebView 도 숨겨진다. 그것을 나간 것으로 세면 이 지표가 통째로 망가진다
-      if (adCovering.current) return;
+      // 전면 광고가 덮으면 WebView 도 숨겨진다. 그것을 나간 것으로 세면 이 지표가 통째로 망가진다.
+      // 이어가기 시트가 광고를 틀어 놓고 이 화면으로 보내는 길이 있어서, 화면 밖 신호를 본다
+      if (adIsCovering()) return;
       settled.current = true;
       analytics.log('friction_generation_abandon', {
         route: 'unknown',
@@ -293,51 +275,6 @@ export function LoadingScreen() {
     submittedKey.current = idempotencyKey;
     void submit();
   }, [idempotencyKey, navigate, sent, submit]);
-
-  /**
-   * 기다리는 동안 광고를 한 번 덮는다.
-   *
-   * 제출은 위 효과에서 이미 나갔다. 여기서 기다리게 만드는 것은 아무것도 없고, 답이
-   * 오는 길과 광고가 도는 길이 서로를 막지 않는다.
-   *
-   * ── 첫 이야기에는 띄우지 않는다 ─────────────────────────────────────
-   *
-   * 답을 한 번도 못 받아 본 사람은 이 앱이 무엇을 해 주는지 아직 모른다. 그 사람의 첫
-   * 화면을 전면 광고로 덮으면 **본 것이 광고 하나뿐이고 답은 보기 전에 나간다.**
-   * 값을 한 번 받아 본 사람에게만 값을 받으라고 한다.
-   *
-   * 못 띄우는 기기·광고 그룹 id 가 없는 번들에서는 `supported` 가 false 라 이 효과가
-   * 통째로 지나간다. 셋 다 화면에서는 똑같이 「광고가 없었다」로 보이므로, 왜 없었는지를
-   * `ad_skipped` 로 남긴다. 그게 없으면 0건을 보고도 원인을 못 가른다.
-   */
-  useEffect(() => {
-    if (adShown.current || !ad.ready) return;
-    if (settledAnswer.current || failure != null) return;
-
-    // 심사에서 걸릴 수 있는 자리라 한 줄로 끌 수 있다. 꺼도 나머지 세 자리는 그대로 돈다
-    if (!FLAGS.generationAd) {
-      adShown.current = true;
-      analytics.log('ad_skipped', { placement: 'generation', reason: 'flag_off' });
-      return;
-    }
-    if (isFirstStory()) {
-      adShown.current = true;
-      analytics.log('ad_skipped', { placement: 'generation', reason: 'first_use' });
-      return;
-    }
-    if (!ad.supported) {
-      adShown.current = true;
-      // 그룹 id 가 없는 것과 기기가 못 띄우는 것을 화면은 가르지 못한다. 둘을 함께 적는다
-      analytics.log('ad_skipped', { placement: 'generation', reason: 'unsupported' });
-      return;
-    }
-
-    adShown.current = true;
-    adCovering.current = true;
-    void ad.show().finally(() => {
-      adCovering.current = false;
-    });
-  }, [ad, analytics, failure]);
 
   useEffect(() => {
     if (failure != null) return;

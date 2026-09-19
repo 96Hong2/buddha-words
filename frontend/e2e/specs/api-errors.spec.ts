@@ -297,7 +297,7 @@ test('광고 문은 서버가 연다. 보고 나면 이어서 답이 온다', as
 
   const sheet = page.getByTestId('continue-sheet');
   await expect(sheet).toBeVisible({ timeout: 30_000 });
-  await expect(sheet).toContainText('오늘 4번 남았어요');
+  await expect(sheet).toContainText('오늘 4번 더 이어갈 수 있어요');
   // 천장이 아니다. 아직 이어갈 수 있는 사람에게 「오늘은 여기까지」를 보여 주면 나가 버린다
   await expect(page.getByTestId('exhausted')).toHaveCount(0);
 

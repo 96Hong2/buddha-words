@@ -4,7 +4,6 @@ import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
-
 type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
 
 /**
@@ -223,9 +222,11 @@ export function ExtensionCard({
             >
               {adReady ? (
                 <>
+                  {/* 세 자리 모두 같은 말투다: 몇 초짜리인지와 무엇을 얻는지를 한 줄에 */}
+                  30초{' '}
                   <span className="ad-tag" {...testId(TEST_IDS.adBadge)}>
                     광고
-                  </span>
+                  </span>{' '}
                   보고 다른 관점 하나 더 보기
                 </>
               ) : (

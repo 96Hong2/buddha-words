@@ -9,14 +9,20 @@
  */
 
 import { expect, test } from '../support/fixtures';
-import { DEEP_CONCERN, asNewcomer, askOnce, dismissEntry, revealBottomBar } from '../support/flow';
+import {
+  DEEP_CONCERN,
+  asNewcomer,
+  askOnce,
+  dismissDraftConfirm,
+  dismissEntry,
+  revealBottomBar,
+} from '../support/flow';
 import { shot } from '../support/shots';
+import type { MockScenario } from '../../src/shared/toss/mockBridge';
 
 /** 본문 글자 크기. 토큰 하나가 화면 전체를 끌고 간다 */
 async function bodyPx(page: import('@playwright/test').Page): Promise<number> {
-  return page.evaluate(() =>
-    parseFloat(getComputedStyle(document.body).fontSize),
-  );
+  return page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
 }
 
 /** 지금까지 보낸 로그 이름 전부 */
@@ -54,14 +60,14 @@ test('글자 크기를 키우면 화면 전체가 함께 커지고, 다시 열�
   expect(await bodyPx(page)).toBe(base);
 });
 
-test('첫 이야기에는 광고를 덮지 않고, 왜 안 띄웠는지를 남긴다', async ({ page, stub }) => {
+test('이야기를 보내도 광고가 저절로 뜨지 않는다', async ({ page, stub }) => {
   /*
-   * 답을 한 번도 못 받아 본 사람은 이 앱이 무엇을 해 주는지 아직 모른다. 그 사람의 첫
-   * 화면을 전면 광고로 덮으면 본 것이 광고 하나뿐이고 답은 보기 전에 나간다.
+   * 실기기에서 「이야기 보내기만 눌렀는데 광고가 떴다」는 말을 들었다. 답을 만드는 동안
+   * 저절로 화면을 덮는 광고가 있었기 때문이다. 버튼 라벨에 광고라는 글자가 없는데 광고가
+   * 뜨는 것이라 앱인토스 UX Red Rule 에도 닿았고, 그 광고를 다 본 사람에게 이어가기 시트가
+   * **광고를 한 번 더** 청했다.
    *
-   * 화면에서는 「광고가 안 떴다」가 전부 똑같이 보인다. 일부러 건너뛴 것인지 콘솔이 아직
-   * 그룹 id 를 안 준 것인지 가르려고 이유를 함께 남긴다. 실제로 그 구분이 없어서, 광고가
-   * 한 건도 안 도는 번들을 올려 놓고 실기기에서야 알았다.
+   * 그 자리를 없앴다. 남은 세 자리는 전부 사람이 버튼을 눌러야 뜬다.
    */
   await asNewcomer(page);
   await stub({ pass1Ms: 300, pass2Ms: 400 });
@@ -71,6 +77,8 @@ test('첫 이야기에는 광고를 덮지 않고, 왜 안 띄웠는지를 남�
 
   const startedAt = Date.now();
   await page.getByTestId('submit').click();
+  // 대기 화면에서 광고가 덮는 일이 없어야 한다
+  await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
   const elapsed = Date.now() - startedAt;
 
@@ -81,42 +89,157 @@ test('첫 이야기에는 광고를 덮지 않고, 왜 안 띄웠는지를 남�
 
   const names = await logNames(page);
   expect(names).toContain('answer_generated');
-  // 첫 이야기에는 광고를 부르지도 않는다
+  // 누르지 않았으니 광고를 부르지도 않는다
   expect(names).not.toContain('rewarded_ad_start');
-  expect(names).toContain('ad_skipped');
   // 광고가 화면을 덮은 것을 앱을 떠난 것으로 세지 않는다. 세면 이탈 지표가 통째로 망가진다
   expect(names).not.toContain('friction_generation_abandon');
 
-  const skipped = await page.evaluate(() =>
-    (window.__pocketLogs ?? [])
-      .filter((log) => log.name === 'ad_skipped')
-      .map((log) => log.params as Record<string, unknown>),
-  );
-  expect(skipped.some((p) => p.placement === 'generation' && p.reason === 'first_use')).toBe(true);
-
-  // 몇 번째 답인지도 남는다. 두 번째 사용 전환율의 분모다
+  // 몇 번째 답인지는 남는다. 두 번째 사용 전환율의 분모다
   const milestone = await page.evaluate(() =>
     (window.__pocketLogs ?? []).find((log) => log.name === 'answer_milestone'),
   );
   expect(milestone?.params).toMatchObject({ answers_total: 1, is_first: true });
 });
 
-test('두 번째 이야기부터는 광고가 돈다', async ({ page, stub }) => {
+test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동안 답을 만든다', async ({
+  page,
+  stub,
+}) => {
+  /*
+   * 예전에는 광고를 **끝까지 본 뒤에** 요청을 보냈다. 30초를 보고 답을 또 기다리는 셈이라
+   * 광고를 다 본 사람이 빈 화면 앞에 한 번 더 섰다. 지금은 광고를 틀어 놓고 답을 만든다.
+   */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   await asNewcomer(page);
 
   await page.goto('/');
   await askOnce(page, `${DEEP_CONCERN}\n(1번째 이야기예요)`);
+
   await page.goto('/');
-  await askOnce(page, `${DEEP_CONCERN}\n(2번째 이야기예요)`);
+  await dismissEntry(page);
+  await dismissDraftConfirm(page);
+  await page.getByTestId('concern-field').fill(`${DEEP_CONCERN}\n(2번째 이야기예요)`);
+  await page.getByTestId('submit').click();
+
+  // 시트가 서 있는 동안에는 아직 광고가 없다. 사람이 누르는 것이 먼저다
+  const sheet = page.getByTestId('continue-sheet');
+  await expect(sheet).toBeVisible({ timeout: 10_000 });
+  expect(await logNames(page)).not.toContain('rewarded_ad_start');
+  await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
+
+  // 몇 초짜리인지 라벨이 말한다. 모르면 사람은 중간에 닫는다
+  const cta = page.getByTestId('continue-watch');
+  await expect(cta).toContainText('30초');
+  await expect(cta).toContainText('광고');
+  // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
+  await expect(sheet).not.toContainText('오늘 답변 다시 보기');
+  await expect(sheet).not.toContainText('닫아도 적은 글은');
+
+  await cta.click();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
 
   const started = await page.evaluate(() =>
     (window.__pocketLogs ?? [])
       .filter((log) => log.name === 'rewarded_ad_start')
       .map((log) => (log.params as Record<string, unknown>).placement),
   );
-  expect(started, '두 번째 이야기인데 생성 중 광고가 안 돌았어요').toContain('generation');
+  expect(started, '눌렀는데 이어가기 광고가 안 돌았어요').toContain('continue');
+
+  // 광고가 도는 동안 답을 먼저 만들기 시작했다는 표
+  expect(await logNames(page)).toContain('ad_answer_early_start');
+});
+
+/** 목 브릿지에 시나리오를 심는다. 광고가 어떻게 끝나는지를 여기서 정한다 */
+async function withBridge(page: import('@playwright/test').Page, scenario: MockScenario) {
+  await page.addInitScript((value) => {
+    window.__buddhaBridge = value;
+  }, scenario);
+}
+
+/** 오늘 한 번 이야기한 사람으로 만들고, 두 번째 전송까지 눌러 이어가기 시트를 연다 */
+async function openContinueSheet(page: import('@playwright/test').Page) {
+  await page.goto('/');
+  await askOnce(page, `${DEEP_CONCERN}\n(1번째 이야기예요)`);
+  await page.goto('/');
+  await dismissEntry(page);
+  await dismissDraftConfirm(page);
+  await page.getByTestId('concern-field').fill(`${DEEP_CONCERN}\n(2번째 이야기예요)`);
+  await page.getByTestId('submit').click();
+  await expect(page.getByTestId('continue-sheet')).toBeVisible({ timeout: 10_000 });
+}
+
+test('광고가 끝나기 전에 답을 만들기 시작한다', async ({ page, stub }) => {
+  /*
+    이 브랜치의 핵심이다. 광고가 아직 화면을 덮고 있는 동안 답 생성이 시작돼야,
+    광고가 끝났을 때 기다릴 것이 없다. 목 광고를 9초짜리로 길게 틀어 그 사이를 본다.
+  */
+  test.setTimeout(150_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await asNewcomer(page);
+  await withBridge(page, { fullScreenAdMs: 9000 });
+
+  await openContinueSheet(page);
+  await page.getByTestId('continue-watch').click();
+
+  // 광고가 아직 떠 있는데 답 생성이 시작됐다
+  const ad = page.getByTestId('mock-fullscreen-ad');
+  await expect(ad).toBeVisible();
+  await expect
+    .poll(() => logNames(page).then((names) => names.includes('ad_answer_early_start')), {
+      timeout: 9000,
+    })
+    .toBe(true);
+  await expect(ad, '답을 만들기 시작했는데 광고가 벌써 사라졌어요').toBeVisible();
+
+  // 광고가 끝나면 답이 보인다
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+});
+
+test('광고를 5초 안에 닫으면 답을 만들지 않는다', async ({ page, stub }) => {
+  /*
+    「5초 이내로 나가면 진행하지 마라」가 이 테스트다. 보기 싫어 닫은 사람의 답을 만들어
+    두는 것은 비용만 쓰고 아무도 읽지 않는다.
+  */
+  test.setTimeout(150_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await asNewcomer(page);
+  await withBridge(page, { fullScreenAd: 'dismissed', fullScreenAdMs: 400 });
+
+  await openContinueSheet(page);
+  await page.getByTestId('continue-watch').click();
+
+  // 시트에 그대로 남고, 나갈 길을 함께 알려 준다
+  await expect(page.getByText('아직 답변을 만들지 않았어요')).toBeVisible();
+  await expect(page.getByText('빈 곳을 눌러 닫으세요')).toBeVisible();
+  await expect(page.getByTestId('answer')).toHaveCount(0);
+
+  const names = await logNames(page);
+  expect(names).toContain('ad_bail_early');
+  expect(names).not.toContain('ad_answer_early_start');
+});
+
+test('광고가 한 장도 안 오면 막지 않고 그냥 이어간다', async ({ page, stub }) => {
+  /*
+    광고가 안 오는 것은 **우리 쪽 사정**이다. 여기서 멈추면 광고를 못 받는 기기에서는
+    같은 버튼을 몇 번 눌러도 답을 못 받고 시트 앞에 갇힌다. 막다른 구조가 된다.
+  */
+  test.setTimeout(150_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await asNewcomer(page);
+  await withBridge(page, { fullScreenAd: 'noFill' });
+
+  await openContinueSheet(page);
+  await page.getByTestId('continue-watch').click();
+
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+
+  const skipped = await page.evaluate(() =>
+    (window.__pocketLogs ?? [])
+      .filter((log) => log.name === 'ad_skipped')
+      .map((log) => log.params as Record<string, unknown>),
+  );
+  expect(skipped.some((p) => p.placement === 'continue' && p.reason === 'no_fill')).toBe(true);
 });
 
 test('첫 답은 광고 없이 간직되고, 담고 나면 갈 곳 둘을 남긴다', async ({ page, stub }) => {
@@ -198,9 +321,7 @@ test('권유는 한 번에 하나씩, 정해진 차례에만 뜬다', async ({ p
   await expect(page.getByTestId('app-share')).toHaveCount(0);
   await shot(page, '46 답변 - 세 번째 뒤 알림 권유');
   await page.getByTestId('notify-nudge-accept').click();
-  await expect
-    .poll(() => logNames(page))
-    .toContain('notification_permission');
+  await expect.poll(() => logNames(page)).toContain('notification_permission');
 
   // ④ 네 번째에는 홈 추가가 한 번 더. 다시 오는 사람에게는 그 말이 쓸모가 있다
   await page.goto('/');
@@ -270,18 +391,25 @@ test('설정 맨 위가 토스 홈에 추가하기다', async ({ page }) => {
   await shot(page, '47-1 설정 - 홈 추가가 맨 위에 선다', { fullPage: true });
 });
 
-test('알림을 켜면 받고 싶은 시간을 고를 수 있다', async ({ page }) => {
+test('설정에 알림 자리가 늘 있고 받고 싶은 시간을 고를 수 있다', async ({ page }) => {
   /*
-   * 켜지도 않은 사람에게 「몇 시에 받을래요」를 먼저 물으면 순서가 뒤집힌다.
-   * 그래서 시각 줄은 받기로 한 뒤에만 나타난다.
+   * 예전에는 콘솔 템플릿 코드가 없으면 알림 줄을 통째로 감췄고, 시각 줄은 동의를 받은
+   * 뒤에만 그렸다. 실기기에서 그 둘이 겹쳐 **설정에 알림이 아예 없어** 보였다.
+   * 지금은 자리를 늘 두고, 아직 못 보낸다는 사실을 그 자리에 적는다.
    */
   await page.goto('/settings');
-  // 화면이 실제로 섰는지 먼저 본다. 이 줄이 없으면 빈 페이지에서도 「없다」가 통과한다
+  // 화면이 실제로 섰는지 먼저 본다. 이 줄이 없으면 빈 페이지에서도 「있다」가 흐려진다
   await expect(page.getByTestId('settings')).toBeVisible();
-  await expect(page.getByTestId('settings-notify-time')).toHaveCount(0);
 
-  await page.getByTestId('settings-notify').click();
+  const notifyRow = page.getByTestId('settings-notify');
+  await expect(notifyRow).toBeVisible();
+  await expect(notifyRow).toContainText('매일 마음을 기록해 보세요');
+
   const timeRow = page.getByTestId('settings-notify-time');
+  // 동의 전에도 시각을 고를 수 있다. 켜야만 보이면 못 켜는 판에서 영영 안 보인다
+  await expect(timeRow).toBeVisible();
+
+  await notifyRow.click();
   await expect(timeRow).toBeVisible();
   // 기본은 밤 9시다. 하루를 덮고 마음을 들여다보는 시간대다
   await expect(timeRow).toContainText('오후 9시');

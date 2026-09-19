@@ -166,11 +166,9 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
         {!enabled ? (
           <>
             <h2 className="pw-title" id="pw-title">
-              짧은 광고를 보면 간직할 수 있어요
+              30초 광고를 보면 간직할 수 있어요
             </h2>
-            <p className="pw-sub">
-              간직할 수 있는 개수에는 제한이 없어요.
-            </p>
+            <p className="pw-sub">간직할 수 있는 개수에는 제한이 없어요.</p>
           </>
         ) : owned ? (
           <>
@@ -185,7 +183,7 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
               광고 없이 간직할까요?
             </h2>
             <p className="pw-sub">
-              간직할 때마다 보는 짧은 광고가 없어져요. 개수 제한은 원래 없어요.
+              간직할 때마다 보는 30초 광고가 없어져요. 개수 제한은 원래 없어요.
             </p>
 
             {/*
@@ -213,8 +211,8 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
             */}
             <p className="pw-note">
               간직하지 않고 지나간 이야기는 다시 불러올 수 없어요. 적으신 글과 답변을 서버에 남기지
-              않거든요. 공유 링크를 만들었을 때만 그 링크에 담길 내용이 30일 동안 남고, 적으신
-              고민 글은 그때도 함께 가지 않아요.
+              않거든요. 공유 링크를 만들었을 때만 그 링크에 담길 내용이 30일 동안 남고, 적으신 고민
+              글은 그때도 함께 가지 않아요.
             </p>
 
             {unverified && (

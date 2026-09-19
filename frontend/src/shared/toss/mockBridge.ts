@@ -51,8 +51,15 @@ export interface MockScenario {
   /** 지원하지 않는다고 답할 기능들. */
   unsupported?: BridgeCapability[];
   ads?: 'ok' | 'noFill' | 'failed' | 'unsupported';
-  /** 전면 광고. `ok` 면 잠깐 덮었다가 「봤다」 로 끝난다. */
-  fullScreenAd?: 'ok' | 'failed' | 'unsupported';
+  /**
+   * 전면 광고가 어떻게 끝나나.
+   *
+   * `ok` 면 잠깐 덮었다가 「봤다」 로 끝난다. `dismissed` 는 사람이 중간에 닫은 것이고
+   * `noFill` 은 광고가 한 장도 안 온 것이다. 화면이 그 둘을 다르게 다뤄야 해서 갈라 둔다.
+   */
+  fullScreenAd?: 'ok' | 'dismissed' | 'noFill' | 'unsupported';
+  /** 전면 광고가 화면을 덮고 있는 시간(ms). 5초 뒤에 답을 만들기 시작하는 길을 보려면 길게 준다 */
+  fullScreenAdMs?: number;
   /**
    * 주문서에서 무슨 일이 벌어지나.
    * `cancel` 은 사고 나온 것이 아니라 그냥 닫은 것이라 아무 일도 일어나면 안 된다.
@@ -187,7 +194,8 @@ class MockAdsBridge implements AdsBridge {
 
   showFullScreen(): Promise<FullScreenAdResult> {
     const mode = this.scenario.fullScreenAd ?? 'ok';
-    if (mode !== 'ok') return Promise.resolve('failed');
+    // 광고가 한 장도 안 온 것은 뜨지도 않는다. 사람이 닫은 것은 잠깐 떴다가 닫힌다
+    if (mode === 'noFill' || mode === 'unsupported') return Promise.resolve('noFill');
 
     // 실광고처럼 화면을 통째로 덮는다. e2e 가 「광고가 떴다」 를 이 자리로 본다.
     const node = document.createElement('div');
@@ -195,11 +203,12 @@ class MockAdsBridge implements AdsBridge {
     node.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;color:#fff';
     node.textContent = '광고 (목)';
     document.body.appendChild(node);
+    const shownMs = this.scenario.fullScreenAdMs ?? MOCK_FULL_SCREEN_MS;
     return new Promise((resolve) => {
       setTimeout(() => {
         node.remove();
-        resolve('watched');
-      }, MOCK_FULL_SCREEN_MS);
+        resolve(mode === 'dismissed' ? 'dismissed' : 'watched');
+      }, shownMs);
     });
   }
 }

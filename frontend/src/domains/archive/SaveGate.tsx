@@ -7,6 +7,9 @@
  * **버튼을 누르자마자 광고를 띄우지 않는다.** 전면 광고는 화면을 통째로 덮어서, 예고 없이
  * 뜨면 사람은 자기가 무엇을 눌렀는지부터 잃는다. 한 장 물어보고 시작한다.
  *
+ * 문구는 이어가기 시트와 같은 말투로 맞춘다: **몇 초짜리인지와 무엇을 얻는지를 버튼 한 줄에
+ * 함께 적는다.** 앱 안에서 광고를 청하는 자리가 둘인데 말투가 다르면 같은 앱으로 안 읽힌다.
+ *
  * 광고를 못 띄우는 기기·광고 그룹 id 가 없는 번들에서는 이 시트가 아예 열리지 않는다.
  * 부르는 쪽이 그때는 곧바로 간직한다. 광고 때문에 간직이 막히면 안 된다.
  */
@@ -93,14 +96,17 @@ export function SaveGate({
       >
         <span className="pw-grabber" aria-hidden="true" />
 
+        {/* 「30초 광고」는 버튼 한 곳에서만 말한다. 제목까지 같은 말을 하면 광고 안내가 두 겹이다 */}
         <h2 className="pw-title" id="save-gate-title">
-          짧은 광고를 보면 간직할 수 있어요
+          보관함에 간직할까요?
         </h2>
-        <p className="pw-sub">
-          보관함에 담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.
-        </p>
+        <p className="pw-sub">담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.</p>
 
         <div className="pw-actions">
+          {/*
+            이어가기 시트와 같은 말투다. **초를 적는다.** 얼마나 참아야 하는지 모르는 채로
+            전면 광고를 만나면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다.
+          */}
           <button
             type="button"
             className="arch-btn arch-btn--primary arch-btn--lg"
@@ -108,7 +114,7 @@ export function SaveGate({
             onClick={onWatch}
             {...testId(TEST_IDS.saveGateWatch)}
           >
-            {pending ? '광고를 여는 중이에요' : '보고 간직하기'}
+            {pending ? '광고를 여는 중이에요' : '30초 광고 보고 간직하기'}
           </button>
           <button
             type="button"
@@ -128,7 +134,7 @@ export function SaveGate({
             onClick={onBuyPass}
             {...testId(TEST_IDS.saveGateBuy)}
           >
-            광고 없이 간직하기
+            이용권으로 광고 없이 간직하기
           </button>
         )}
       </div>
