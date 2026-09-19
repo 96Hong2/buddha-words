@@ -106,9 +106,26 @@ export const EVENTS = {
   archive_view:        { params: ['items_bucket'] as const },
   archive_item_open:   { params: ['days_since'] as const },
   // 보관함이 길어져서 생긴 셋. 「담기만 하고 안 읽는다」와 「찾아서 다시 읽는다」를 가른다
-  archive_favorite:    { params: ['on'] as const },                                       // 별을 켰나 껐나
-  archive_filter:      { params: ['filter'] as const },                                   // filter: all | favorite
+  /**
+   * 별을 켰나 껐나. **언제 켰는지도 함께 싣는다.**
+   *
+   * `days_since` 는 간직한 날로부터 며칠 뒤인가다. 0 이면 담자마자 별을 단 것이고, 크면
+   * 다시 찾아 들어와 단 것이다. 앞은 간직하기와 같은 뜻이라 즐겨찾기가 따로 할 일이 없고,
+   * 뒤는 보관함이 실제로 다시 읽는 자리라는 증거가 된다.
+   * `favorites_bucket` 은 누른 뒤 그 사람이 가진 즐겨찾기 수다. 몇 개까지 쌓는지 본다.
+   */
+  archive_favorite:    { params: ['on', 'days_since', 'favorites_bucket'] as const },
+  archive_filter:      { params: ['filter', 'how'] as const },                            // filter: all | favorite, how: tap | auto(별을 켜서 옮겨진 것)
   archive_more:        { params: ['page'] as const },                                     // 「더 보기」로 몇 쪽까지 내려갔나
+  // 간직한 말씀 내보내기. 답변 화면 공유와 **다른 길이다**(서버 링크 없이 기기에 있는 것으로 만든다)
+  archive_share_start: { params: ['has_scripture', 'days_since'] as const },              // 며칠 지난 것을 내보내는지가 핵심이다
+  archive_share_complete:{ params: ['method'] as const },                                 // method: system | copy
+  archive_share_cancel:{ params: [] as const },                                           // 공유 시트를 스스로 닫았다. 실패가 아니다
+  archive_share_fail:  { params: ['reason'] as const },                                   // reason: copy_blocked
+  // 첫 말씀을 간직한 직후 보관함 맨 앞에 서는 앱 알리기 카드. 답변 화면 권유와 자리가 다르다
+  archive_app_share_view:    { params: [] as const },
+  archive_app_share_complete:{ params: ['method'] as const },                             // method: system | copy
+  archive_app_share_dismiss: { params: ['how'] as const },                                // how: close
   // 결제
   paywall_view:        { params: ['trigger'] as const },                                  // trigger: save_ad | archive_locked
   paywall_close:       { params: ['trigger', 'within_bucket_s'] as const },               // 2초 안에 닫혔으면 잘못 열린 것이다
@@ -130,6 +147,15 @@ export const EVENTS = {
   // 답을 받고 돌아왔더니 쓰던 글이 남아 있다. 지울지 이어 쓸지 물어본 자리
   draft_confirm_view:  { params: ['chars_bucket'] as const },
   draft_confirm_choice:{ params: ['choice'] as const },                                    // choice: clear | keep
+  /**
+   * 쓰던 글을 통째로 지웠다. 물어본 카드 밖, **아무 때나 누를 수 있는 자리**다.
+   *
+   * `draft_confirm_choice(clear)` 와 가른다. 저쪽은 우리가 물어서 고른 것이고 이쪽은
+   * 사람이 스스로 치운 것이다. 둘을 한 이름으로 세면 「이어 쓰기와 새로 쓰기 중 무엇이
+   * 많은가」에 우리가 물어본 자리의 답만 들어온다.
+   */
+  draft_clear_open:    { params: ['chars_bucket'] as const },                              // 지우기를 눌러 확인을 띄웠다
+  draft_clear_confirm: { params: ['choice', 'chars_bucket'] as const },                    // choice: clear | cancel
   // 읽기 설정. 글자 크기는 한 번 정하면 계속 쓰므로 바꾼 사실만 남긴다
   text_size_change:    { params: ['size', 'from'] as const },                              // size: s | m | l | xl, from: settings | onboarding
   // 홈에 추가. 첫 답(1회)과 다시 오는 사람(4회)에게 한 번씩, 그리고 설정에 늘 한 줄
@@ -140,6 +166,19 @@ export const EVENTS = {
   notification_prompt_accept:{ params: ['surface'] as const },
   notification_prompt_decline:{ params: ['surface'] as const },
   notification_permission:   { params: ['result'] as const },                              // result: granted | denied | unsupported
+  /**
+   * 알림을 받고 싶은 시각. 사람이 고른 값이다.
+   *
+   * ⚠ **이 값은 아직 발송에 쓰이지 않는다.** 그 시각에 실제로 보내려면 콘솔 스마트발송
+   * 템플릿 코드와 서버 발송(`messenger/send-message`)이 필요하고 둘 다 아직 없다.
+   * 지금 이 로그가 하는 일은 **사람들이 몇 시를 고르는지 미리 재 두는 것**이다. 발송을
+   * 켤 때 기본값을 짐작이 아니라 이 분포로 정한다.
+   */
+  notify_time_open:    { params: [] as const },                                            // 시각 고르는 자리를 폈다
+  notify_time_set:     { params: ['hour', 'changed'] as const },                           // hour: 0~23, changed: 기본값에서 바꿨나
+  // 설정 화면. 어떤 줄을 실제로 누르는지 본다. 안 눌리는 줄은 다음 판에서 뺀다
+  settings_view:       { params: ['notify_state', 'text_size'] as const },                 // notify_state: unset | on | declined | unsupported
+  settings_row_click:  { params: ['row'] as const },                                       // row: privacy | terms | contact | app_info | pass_restore
   // 실패
   answer_failed:       { params: ['route', 'pass', 'reason'] as const },                  // reason: timeout | offline | budget | schema | provider
 } as const;

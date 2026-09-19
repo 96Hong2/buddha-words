@@ -105,6 +105,9 @@ export const TEST_IDS = {
   archiveFavorite: 'archive-favorite',
   archiveFilter: 'archive-filter',
   archiveMore: 'archive-more',
+  archiveShare: 'archive-share',
+  archiveAppShare: 'archive-app-share',
+  archiveAppShareSend: 'archive-app-share-send',
   paywall: 'paywall',
   paywallBuy: 'paywall-buy',
   saveGate: 'save-gate',
@@ -127,6 +130,8 @@ export const TEST_IDS = {
   textSizeOption: 'text-size-option',
   settingsHomeAdd: 'settings-home-add',
   settingsNotify: 'settings-notify',
+  settingsNotifyTime: 'settings-notify-time',
+  settingsNotifyTimeOption: 'settings-notify-time-option',
 
   // 공통
   sheetClose: 'sheet-close',
@@ -153,6 +158,11 @@ export const TEST_IDS = {
   draftConfirm: 'draft-confirm',
   draftConfirmClear: 'draft-confirm-clear',
   draftConfirmKeep: 'draft-confirm-keep',
+
+  // 쓰던 글을 아무 때나 통째로 지우는 자리
+  draftClear: 'draft-clear',
+  draftClearConfirm: 'draft-clear-confirm',
+  draftClearCancel: 'draft-clear-cancel',
 } as const;
 
 export type TestId = (typeof TEST_IDS)[keyof typeof TEST_IDS];
