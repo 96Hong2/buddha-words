@@ -492,14 +492,35 @@ test('보관함이 길어지면 한 쪽씩 보여 주고, 별을 켜면 즐겨�
   await page.getByTestId('archive-more').click();
   await expect(page.getByTestId('archive-item').last()).toContainText('23번째로 간직한 말이에요');
 
+  /*
+   * 로그는 여기서 본다. 아래 `reload` 가 창을 새로 띄우면 기록이 초기화된다.
+   * 별을 켜서 옮겨진 것과 탭을 눌러 간 것을 `how` 가 가른다.
+   */
+  const logs = await page.evaluate(() => window.__pocketLogs ?? []);
+  expect(logs.map((log) => log.name)).toContain('archive_view');
+  const autoMove = logs.find((log) => log.name === 'archive_filter' && log.params.how === 'auto');
+  expect(autoMove?.params.filter).toBe('favorite');
+  const fav = logs.find((log) => log.name === 'archive_favorite');
+  // 담은 날로부터 며칠 뒤에 별을 달았는지가 함께 실린다
+  expect(fav?.params).toHaveProperty('days_since');
+  expect(fav?.params).toHaveProperty('favorites_bucket');
+
   // 앱을 다시 열어도 별이 남는다. 다시 연 자리는 전체 탭이라 순서도 최신순 그대로다
   await page.reload();
   await expect(page.getByTestId('archive-item').first()).toContainText('1번째로 간직한 말이에요');
   await page.getByTestId('archive-filter').nth(1).click();
   await expect(page.getByTestId('archive-item')).toHaveCount(1);
   await expect(page.getByTestId('archive-item').first()).toContainText('23번째로 간직한 말이에요');
-  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
-  expect(names).toContain('archive_view');
+
+  /*
+   * 마지막 별을 끄면 칩이 사라진다. 그때 필터가 'favorite' 에 남아 있으면 빈 목록에
+   * 갇히고 「전체」로 돌아갈 버튼도 없다. 실제로 그렇게 됐던 자리다.
+   * 끌 때는 탭을 옮기지 않는다. 목록에서 하나를 빼려는 것이지 화면을 떠나려는 것이 아니다.
+   */
+  await page.getByTestId('archive-favorite').first().click();
+  await expect(page.getByTestId('archive-filter')).toHaveCount(0);
+  await expect(page.getByTestId('archive-item')).toHaveCount(10);
+  await expect(page.getByTestId('archive-item').first()).toContainText('1번째로 간직한 말이에요');
 });
 
 test('간직한 말씀은 언제든 내보낼 수 있고, 고민 원문은 따라가지 않는다', async ({ page }) => {
@@ -543,6 +564,7 @@ test('첫 말씀을 간직하면 앱 알리기 카드가 맨 앞에 서고, 둘�
    * 생긴 유일한 자리다. 그렇다고 매번 세우지는 않는다. 보관함은 다시 읽으러 온 자리다.
    */
   await page.addInitScript(() => {
+    if (localStorage.getItem('buddha.archive.v1') != null) return;
     localStorage.setItem(
       'buddha.archive.v1',
       JSON.stringify({
@@ -557,6 +579,11 @@ test('첫 말씀을 간직하면 앱 알리기 카드가 맨 앞에 서고, 둘�
           },
         ],
       }),
+    );
+    // 기본 시드는 「이미 다 권했다」 상태다. 아직 안 권한 사람으로 돌려놓는다
+    localStorage.setItem(
+      'buddha.milestones.v2',
+      JSON.stringify({ answers: 1, homeAddShown: 0, appShareDone: false, notifyDone: false }),
     );
   });
   await page.goto('/archive');
@@ -577,6 +604,128 @@ test('첫 말씀을 간직하면 앱 알리기 카드가 맨 앞에 서고, 둘�
   await expect(card).toHaveCount(0);
 
   // 다시 열어도 안 뜬다. 부탁하지 않은 말은 한 번이다
+  await page.reload();
+  await expect(page.getByTestId('archive-app-share')).toHaveCount(0);
+});
+
+test('경전이 없는 옛 말씀은 내보낼 수 없다. 한마디는 고민을 읽고 쓴 글이다', async ({ page }) => {
+  /*
+   * 앞선 판에서 담은 항목은 `line` 한 줄만 남아 있다. 그 한 줄은 이 사람의 고민을 읽고
+   * 모델이 쓴 문장이라, 메신저 대화방에 펼쳐지면 받는 사람이 무슨 일인지 짐작한다.
+   * 공유 랜딩 페이지가 같은 값을 빼는 것과 같은 이유다(backend/tests/test_share_landing.py).
+   *
+   * 경전 구절은 이 고민과 무관하게 원래 있던 글이라 아무나 받아도 사정이 안 드러난다.
+   * 그래서 경전이 있는 것만 내보낸다.
+   */
+  await seedThree(page);
+  await page.goto('/archive');
+  await page.getByTestId('archive-item').first().click();
+
+  const detail = page.getByTestId('archive-detail');
+  await expect(detail).toBeVisible();
+  await expect(detail).toContainText('한마디만 남아 있어요');
+  // 버튼 자체가 없다. 눌러 놓고 「안 돼요」라고 답하지 않는다
+  await expect(page.getByTestId('archive-share')).toHaveCount(0);
+  await expect(detail).toContainText('경전이 있는 말씀에서만');
+
+  // 아무것도 나가지 않았다
+  const sent = await page.evaluate(() => window.__buddhaShares ?? []);
+  expect(sent).toHaveLength(0);
+});
+
+test('공유 시트를 못 여는 기기는 복사하고 복사했다고 말한다', async ({ page, context }) => {
+  /*
+   * 토스 공유 시트가 없는 기기에서는 글을 클립보드에 넣는다. 그때 **말없이 복사하지 않는다.**
+   * 조용히 지나가면 사용자는 복사된 줄 알거나, 아무 일도 안 일어났다고 여긴다.
+   */
+  await page.addInitScript(() => {
+    window.__buddhaBridge = { ...window.__buddhaBridge, share: 'unsupported' };
+  });
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await seedWithOriginal(page);
+  await page.goto('/archive');
+  await page.getByTestId('archive-item').first().click();
+
+  await page.getByTestId('archive-share').click();
+  await expect(page.getByText('보낼 글을 복사했어요')).toBeVisible();
+
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toContain(KEPT_ORIGINAL.text);
+  // 풀이는 클립보드에도 안 들어간다
+  expect(copied).not.toContain('밖에서 얻은 지식보다');
+
+  const method = await page.evaluate(
+    () => (window.__pocketLogs ?? []).find((log) => log.name === 'archive_share_complete')?.params,
+  );
+  expect(method?.method).toBe('copy');
+});
+
+test('공유 시트를 스스로 닫으면 실패가 아니다. 아무 말도 하지 않는다', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__buddhaBridge = { ...window.__buddhaBridge, share: 'dismissed' };
+  });
+  await seedWithOriginal(page);
+  await page.goto('/archive');
+  await page.getByTestId('archive-item').first().click();
+
+  await page.getByTestId('archive-share').click();
+  // 실패 문구가 뜨지 않는다. 안내 자리는 「무엇이 나가는지」 그대로다
+  await expect(page.getByText('지금은 보내지 못했어요')).toHaveCount(0);
+  await expect(page.getByText('보낼 글을 복사했어요')).toHaveCount(0);
+  await expect(page.getByText('경전 구절과 앱 주소만 나가요')).toBeVisible();
+
+  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
+  expect(names).toContain('archive_share_cancel');
+  expect(names).not.toContain('archive_share_complete');
+});
+
+test('앱 알리기를 닫으면 답변 화면에서도 같은 부탁을 다시 하지 않는다', async ({ page }) => {
+  /*
+   * 같은 부탁이 두 자리에서 따로 세어지면 한 사람에게 두 번 간다. 보관함 카드와
+   * 답변 화면 권유(NudgeOverlay)가 열쇠 하나(`appShareDone`)를 함께 쓴다.
+   */
+  // 화면을 옮길 때마다 다시 심지 않는다. 덮어쓰면 방금 찍은 「부탁 끝」 표시가 지워져,
+  // 다시 뜨는 것이 버그인지 시드 탓인지 알 수 없게 된다
+  await page.addInitScript(() => {
+    if (localStorage.getItem('buddha.archive.v1') != null) return;
+    localStorage.setItem(
+      'buddha.archive.v1',
+      JSON.stringify({
+        version: 1,
+        items: [
+          {
+            answerId: 'only-one',
+            savedAt: Date.now() - 60_000,
+            line: '가까울수록 사이를 두어라',
+            tags: ['fatigue'],
+            visualTheme: 'rest',
+          },
+        ],
+      }),
+    );
+    // 기본 시드는 「이미 다 권했다」 상태라, 아직 안 권한 사람으로 돌려놓는다
+    localStorage.setItem(
+      'buddha.milestones.v2',
+      JSON.stringify({ answers: 1, homeAddShown: 0, appShareDone: false, notifyDone: false }),
+    );
+  });
+  await page.goto('/archive');
+
+  const card = page.getByTestId('archive-app-share');
+  await expect(card).toBeVisible();
+  await page.getByTestId('archive-app-share-close').click();
+  await expect(card).toHaveCount(0);
+
+  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
+  expect(names).toContain('archive_app_share_dismiss');
+
+  // 답변 화면 권유 쪽 열쇠도 함께 닫혔다
+  const done = await page.evaluate(() => {
+    const raw = localStorage.getItem('buddha.milestones.v2');
+    return raw == null ? null : (JSON.parse(raw) as { appShareDone?: boolean }).appShareDone;
+  });
+  expect(done).toBe(true);
+
   await page.reload();
   await expect(page.getByTestId('archive-app-share')).toHaveCount(0);
 });

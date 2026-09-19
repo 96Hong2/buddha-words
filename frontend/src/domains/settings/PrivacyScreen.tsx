@@ -93,6 +93,7 @@ export function PrivacyScreen() {
           <h2 className="set-doc-title">앱을 쓴 기록</h2>
           <ul className="set-doc-list">
             <li>어느 화면을 봤는지, 글이 얼마나 길었는지를 구간 값으로만 남겨요.</li>
+            <li>설정에서 고른 값(글자 크기·알림 시간)도 함께 남아요.</li>
             <li>고민 글·답변 본문·경전 본문·익명키·기기 번호는 어떤 기록에도 싣지 않아요.</li>
           </ul>
         </section>

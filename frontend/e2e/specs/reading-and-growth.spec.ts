@@ -276,6 +276,8 @@ test('알림을 켜면 받고 싶은 시간을 고를 수 있다', async ({ page
    * 그래서 시각 줄은 받기로 한 뒤에만 나타난다.
    */
   await page.goto('/settings');
+  // 화면이 실제로 섰는지 먼저 본다. 이 줄이 없으면 빈 페이지에서도 「없다」가 통과한다
+  await expect(page.getByTestId('settings')).toBeVisible();
   await expect(page.getByTestId('settings-notify-time')).toHaveCount(0);
 
   await page.getByTestId('settings-notify').click();
@@ -292,6 +294,8 @@ test('알림을 켜면 받고 싶은 시간을 고를 수 있다', async ({ page
 
   await page.getByRole('radio', { name: '오전 8시' }).click();
   await expect(timeRow).toContainText('오전 8시');
+  // 지킬 수 있는 말만 한다. 발송이 아직 없다는 것을 그 자리에서 밝힌다
+  await expect(page.getByText('아직은 보내드리지 않아요')).toBeVisible();
   await shot(page, '47-2 설정 - 알림 받을 시간 고르기', { fullPage: true });
 
   // 다시 열어도 고른 값이 남는다

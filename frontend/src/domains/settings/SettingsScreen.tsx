@@ -60,7 +60,7 @@ const RESTORE_NOTICE: Record<ArchivePassState, string> = {
  * 설정에서 끈 것은 알 수 없다. SDK 가 지금 상태를 되묻는 길을 주지 않는다.
  */
 const NOTIFY_ROW: Record<NotifyState, { value: string; desc: string }> = {
-  unset: { value: '받기', desc: '매일 마음을 기록해보세요' },
+  unset: { value: '받기', desc: '하루 한 번, 오늘 마음을 들여다볼 시간을 알려드려요' },
   on: { value: '받기로 함', desc: '토스 앱 알림 설정에서 끌 수 있어요' },
   declined: { value: '받기', desc: '다시 받고 싶으면 눌러 주세요' },
   unsupported: { value: '받기', desc: '지금 토스 앱 버전에서는 켤 수 없어요' },
@@ -238,7 +238,7 @@ export function SettingsScreen() {
     <div className="set-screen" {...testId(TEST_IDS.settings)}>
       <div className="set-pad">
         <h1 className="set-title">설정</h1>
-        <p className="set-sub">홈에 추가하고, 알림과 글자 크기를 맞출 수 있어요</p>
+        <p className="set-sub">홈에 추가하고, 알림과 글자 크기도 여기서 정할 수 있어요</p>
 
         {/*
           토스 홈에 추가하기.
@@ -336,7 +336,7 @@ export function SettingsScreen() {
                   </svg>
                 </span>
                 <span className="set-text">
-                  <span className="set-item-title">매일 마음 돌아보기 알림</span>
+                  <span className="set-item-title">마음 돌아보기 알림</span>
                   <span className="set-item-desc">{NOTIFY_ROW[notify].desc}</span>
                 </span>
                 <span className="set-value">{asking ? '여는 중' : NOTIFY_ROW[notify].value}</span>
@@ -374,26 +374,35 @@ export function SettingsScreen() {
                     </span>
                     <span className="set-text">
                       <span className="set-item-title">받고 싶은 시간</span>
-                      <span className="set-item-desc">하루를 덮으며 마음을 한 번 들여다보는 시간</span>
+                      <span className="set-item-desc">언제든 바꿀 수 있어요</span>
                     </span>
                     <span className="set-value">{notifyHourLabel(hour)}</span>
                   </button>
 
                   {hourOpen && (
-                    <div className="set-hours" role="radiogroup" aria-label="알림 받을 시간">
-                      {NOTIFY_HOURS.map((h) => (
-                        <button
-                          key={h}
-                          type="button"
-                          role="radio"
-                          aria-checked={hour === h}
-                          className={`set-hour${hour === h ? ' is-on' : ''}`}
-                          onClick={() => pickHour(h)}
-                          {...testId(TEST_IDS.settingsNotifyTimeOption)}
-                        >
-                          {notifyHourLabel(h)}
-                        </button>
-                      ))}
+                    <div className="set-hours-box">
+                      <div className="set-hours" role="radiogroup" aria-label="알림 받을 시간">
+                        {NOTIFY_HOURS.map((h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            role="radio"
+                            aria-checked={hour === h}
+                            className={`set-hour${hour === h ? ' is-on' : ''}`}
+                            onClick={() => pickHour(h)}
+                            {...testId(TEST_IDS.settingsNotifyTimeOption)}
+                          >
+                            {notifyHourLabel(h)}
+                          </button>
+                        ))}
+                      </div>
+                      {/*
+                        지킬 수 있는 말만 한다. 시각을 골라 놓고 알림이 안 오면 사람은
+                        고장으로 읽는다. 발송이 아직 없다는 것을 그 자리에서 밝힌다.
+                      */}
+                      <p className="set-hours-note">
+                        고르신 시간은 알림이 시작될 때 쓸게요. 아직은 보내드리지 않아요.
+                      </p>
                     </div>
                   )}
                 </>

@@ -1065,3 +1065,16 @@
   width: auto;
   min-height: 44px;
 }
+
+.arch-appshare__note {
+  margin: 10px 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+/* 되돌릴 수 없는 버튼은 주 동작에서 한 칸 더 떼어 둔다 */
+.arch-btn--far {
+  margin-top: var(--s-3);
+  color: var(--text-muted);
+}

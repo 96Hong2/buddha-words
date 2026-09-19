@@ -108,6 +108,7 @@ export const TEST_IDS = {
   archiveShare: 'archive-share',
   archiveAppShare: 'archive-app-share',
   archiveAppShareSend: 'archive-app-share-send',
+  archiveAppShareClose: 'archive-app-share-close',
   paywall: 'paywall',
   paywallBuy: 'paywall-buy',
   saveGate: 'save-gate',

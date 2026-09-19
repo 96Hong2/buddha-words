@@ -56,15 +56,6 @@ export function writeNotifyHour(hour: NotifyHour): void {
   }
 }
 
-/** 사람이 직접 고른 값인가. 기본값을 그대로 둔 것과 가른다 */
-export function notifyHourChosen(): boolean {
-  try {
-    return localStorage.getItem(KEY) != null;
-  } catch {
-    return false;
-  }
-}
-
 /** 「오후 9시」처럼. 24시간 표기는 한국어 화면에서 잘 안 읽힌다 */
 export function notifyHourLabel(hour: number): string {
   if (hour === 0) return '밤 12시';

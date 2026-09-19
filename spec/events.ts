@@ -121,11 +121,12 @@ export const EVENTS = {
   archive_share_start: { params: ['has_scripture', 'days_since'] as const },              // 며칠 지난 것을 내보내는지가 핵심이다
   archive_share_complete:{ params: ['method'] as const },                                 // method: system | copy
   archive_share_cancel:{ params: [] as const },                                           // 공유 시트를 스스로 닫았다. 실패가 아니다
-  archive_share_fail:  { params: ['reason'] as const },                                   // reason: copy_blocked
+  archive_share_fail:  { params: ['reason'] as const },                                   // reason: copy_blocked | no_scripture
   // 첫 말씀을 간직한 직후 보관함 맨 앞에 서는 앱 알리기 카드. 답변 화면 권유와 자리가 다르다
   archive_app_share_view:    { params: [] as const },
   archive_app_share_complete:{ params: ['method'] as const },                             // method: system | copy
   archive_app_share_dismiss: { params: ['how'] as const },                                // how: close
+  archive_app_share_fail:    { params: ['reason'] as const },                             // reason: copy_blocked. 시트도 복사도 막힌 기기
   // 결제
   paywall_view:        { params: ['trigger'] as const },                                  // trigger: save_ad | archive_locked
   paywall_close:       { params: ['trigger', 'within_bucket_s'] as const },               // 2초 안에 닫혔으면 잘못 열린 것이다

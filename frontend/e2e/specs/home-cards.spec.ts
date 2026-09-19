@@ -192,3 +192,32 @@ test('입력칸 위에 뜨는 카드가 제목에 달라붙지 않는다', async
   expect(gap).toBeGreaterThanOrEqual(12);
   await shot(page, '04-2 홈 - 카드와 제목 사이 여백', { fullPage: true });
 });
+
+test('전체 지우기로 비운 뒤 새로 쓰면 「남아 있어요」가 되살아나지 않는다', async ({
+  page,
+  stub,
+}) => {
+  /*
+   * 「쓰시던 이야기가 남아 있어요」는 글자 수만 보고 서 있었다. 그래서 「전체 지우기」로
+   * 비운 뒤 새 이야기를 쓰기 시작하면 그 카드가 다시 떴다. 방금 스스로 치운 사람에게
+   * 「남아 있어요」라고 되묻는 꼴이다. 비우는 순간 묻던 것도 함께 닫는다.
+   */
+  test.setTimeout(90_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await page.goto('/');
+  await askOnce(page);
+
+  await page.getByTestId('again-button').click();
+  await expect(page.getByTestId('draft-confirm')).toBeVisible();
+
+  // 물어보는 카드에는 손대지 않고 「전체 지우기」로만 비운다
+  await page.getByTestId('draft-clear').click();
+  await page.getByTestId('draft-clear-confirm').click();
+  await expect(page.getByTestId('concern-field')).toHaveValue('');
+  await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
+
+  await page.getByTestId('concern-field').fill('완전히 새로 쓰는 이야기입니다');
+  await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
+  // 지우기는 다시 나타난다. 쓴 글이 있으니 치울 것도 있다
+  await expect(page.getByTestId('draft-clear')).toBeVisible();
+});

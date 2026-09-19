@@ -134,9 +134,17 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
     [focusField, setDraft],
   );
 
+  /**
+   * 쓰던 글을 비운다.
+   *
+   * **묻던 것도 함께 닫는다.** 「쓰시던 이야기가 남아 있어요」는 글자 수만 보고 서 있어서,
+   * 「전체 지우기」로 비운 뒤 새 이야기를 쓰기 시작하면 그 카드가 되살아났다. 방금 스스로
+   * 치운 사람에게 「남아 있어요」라고 다시 묻는 꼴이다.
+   */
   const clearDraft = useCallback(() => {
     setDraft('');
     setRestored(false);
+    setAskClear(false);
     focusField();
   }, [focusField, setDraft]);
 

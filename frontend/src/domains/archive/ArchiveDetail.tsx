@@ -230,7 +230,8 @@ export function ArchiveDetail({
 
         {nothingMore && (
           <p className="ad-note">
-            이 말씀은 한마디만 남아 있어요. 경전과 풀이는 함께 간직되지 않았어요.
+            이 말씀은 한마디만 남아 있어요. 경전과 풀이는 함께 간직되지 않았어요. 내보내기는
+            경전이 있는 말씀에서만 할 수 있어요.
           </p>
         )}
 
@@ -261,8 +262,14 @@ export function ArchiveDetail({
                 나가는 것은 경전 구절과 앱 주소뿐이고, 적으신 이야기도 풀이도 따라가지 않는다.
                 답변 화면의 공유와 달리 서버 링크를 만들지 않는다. 그 링크는 방금 받은 답에만
                 살아 있어서, 지난달에 담은 것을 누르면 「찾을 수 없어요」가 돌아온다.
+
+                ⚠ **경전이 함께 담긴 것만 내보낸다.** 앞선 판에서 담아 한마디만 남은 항목은
+                그 한마디가 `modernBuddhaMessage` 다. 그 문장은 이 사람의 고민을 읽고 쓴 글이라
+                메신저에 펼쳐지면 받는 사람이 무슨 일인지 짐작한다. 같은 이유로 공유 랜딩
+                페이지도 그 값을 싣지 않는다(`backend/tests/test_share_landing.py`).
+                경전 구절은 이 고민과 무관하게 원래 있던 글이라 아무나 받아도 사정이 안 드러난다.
               */}
-              {onShare != null && (
+              {onShare != null && scripture != null && (
                 <button
                   type="button"
                   className="arch-btn arch-btn--share arch-btn--lg"
@@ -286,11 +293,10 @@ export function ArchiveDetail({
                   공유하기
                 </button>
               )}
-              {shareNote != null && (
-                <p className="ad-hint" role="status">
-                  {shareNote}
-                </p>
-              )}
+              {/* 무엇이 나가는지 버튼 옆에서 말한다. 누른 뒤에 알면 늦다 */}
+              <p className="ad-hint" role={shareNote != null ? 'status' : undefined}>
+                {shareNote ?? '경전 구절과 앱 주소만 나가요'}
+              </p>
               <button
                 type="button"
                 className="arch-btn arch-btn--primary arch-btn--lg"
@@ -299,15 +305,19 @@ export function ArchiveDetail({
               >
                 닫기
               </button>
+              <p className="ad-hint">뒤로가기, 바깥 어두운 곳, 닫기 버튼 모두로 나갈 수 있어요</p>
+              {/*
+                지우기는 맨 끝에 떼어 둔다. 닫기 안내 위에 두면 그 안내가 지우기의 설명처럼
+                읽히고, 되돌릴 수 없는 버튼이 주 동작 사이에 끼어든다
+              */}
               <button
                 type="button"
-                className="arch-btn arch-btn--plain"
+                className="arch-btn arch-btn--plain arch-btn--far"
                 onClick={() => setAsking(true)}
                 {...testId(TEST_IDS.archiveDelete)}
               >
                 보관함에서 지우기
               </button>
-              <p className="ad-hint">뒤로가기, 바깥 어두운 곳, 닫기 버튼 모두로 나갈 수 있어요</p>
             </>
           )}
         </div>

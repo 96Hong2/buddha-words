@@ -31,9 +31,6 @@ import { appShareMessage } from '../share/shareText';
 
 import './growth.css';
 
-// 앱 권유 문구는 보관함도 쓴다. 정본은 share 도메인 한 곳이다
-export { appShareMessage } from '../share/shareText';
-
 export interface NudgeOverlayProps {
   /** 무엇을 권할까. 고르는 일은 milestones 시간표가 한다 */
   nudge: Nudge;

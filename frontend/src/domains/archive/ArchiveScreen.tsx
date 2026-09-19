@@ -32,6 +32,11 @@ const PAGE = 10;
 /** 무엇만 볼까 */
 type Filter = 'all' | 'favorite';
 
+/** 간직한 날로부터 며칠 지났나. 로그 세 자리가 같은 셈을 쓴다 */
+function daysSince(savedAt: number): number {
+  return Math.max(0, Math.floor((Date.now() - savedAt) / 86_400_000));
+}
+
 /** 오늘 나눈 이야기. 이번에 받은 답변을 그대로 카드 한 장으로 보여 준다 */
 function todayCard(response: ApiResponse | null): SavedAnswer | null {
   if (response == null || response.responseType !== 'answer') return null;
@@ -131,8 +136,7 @@ export function ArchiveScreen() {
   function open(item: SavedAnswer) {
     setOpened(item);
     // 며칠 전에 간직한 것을 다시 여나. 보관함이 쌓아 두는 자리인지 다시 읽는 자리인지 가른다
-    const days = Math.max(0, Math.floor((Date.now() - item.savedAt) / 86_400_000));
-    analytics.log('archive_item_open', { days_since: days }, { kind: 'click' });
+    analytics.log('archive_item_open', { days_since: daysSince(item.savedAt) }, { kind: 'click' });
   }
 
   function remove(answerId: string) {
@@ -144,21 +148,26 @@ export function ArchiveScreen() {
   /**
    * 간직한 말씀을 내보낸다.
    *
-   * 경전 구절이 함께 저장된 것은 답변 화면과 같은 글로 나간다. 앞선 판에서 담아 한마디만
-   * 남은 것은 그 한마디로 나간다. 어느 쪽이든 **고민 원문도 풀이도 따라가지 않는다.**
+   * **경전 구절만 나간다.** 그 글은 이 고민과 무관하게 원래 있던 문장이라 아무나 받아도
+   * 사정이 드러나지 않는다. 한마디(`line`)는 안 싣는다. 그것은 이 사람의 고민을 읽고
+   * 모델이 쓴 문장이라, 메신저 대화방에 펼쳐지면 받는 사람이 무슨 일인지 짐작한다.
+   * 공유 랜딩 페이지가 같은 값을 빼는 것과 같은 이유다(`backend/tests/test_share_landing.py`).
+   *
+   * 경전이 없는 항목(앞선 판에서 담은 것)은 상세가 공유 버튼을 아예 그리지 않는다.
+   * 여기서 한 번 더 막는 것은 부르는 쪽이 바뀌어도 이 규칙이 남게 하기 위해서다.
    */
   const share = useCallback(
     async (item: SavedAnswer): Promise<'sent' | 'copied' | 'dismissed' | 'failed'> => {
-      const url = appShareUrl();
       const scripture = item.detail?.scripture;
-      const message =
-        scripture != null
-          ? shareMessage({ scripture, url })
-          : [`“${item.line.trim()}”`, '', `부처의 말에서 받았어요\n${url}`].join('\n');
+      if (scripture == null) {
+        analytics.log('archive_share_fail', { reason: 'no_scripture' });
+        return 'failed';
+      }
+      const message = shareMessage({ scripture, url: appShareUrl() });
 
       analytics.log(
         'archive_share_start',
-        { has_scripture: scripture != null, days_since: Math.max(0, Math.floor((Date.now() - item.savedAt) / 86_400_000)) },
+        { has_scripture: true, days_since: daysSince(item.savedAt) },
         { kind: 'click' },
       );
 
@@ -207,11 +216,14 @@ export function ArchiveScreen() {
     // 저장소가 정본이다. 화면 상태를 따로 세지 않고 다시 읽는다
     const next = listSaved();
     setSaved(next);
-    // 며칠 지난 것을 다시 꺼내 별을 다는지, 담자마자 다는지 가른다
-    const days = Math.max(0, Math.floor((Date.now() - item.savedAt) / 86_400_000));
     analytics.log(
       'archive_favorite',
-      { on, days_since: days, favorites_bucket: itemsBucket(next.filter((s) => s.favorite === true).length) },
+      {
+        on,
+        // 담자마자 다는지, 며칠 지나 다시 꺼내 다는지 가른다
+        days_since: daysSince(item.savedAt),
+        favorites_bucket: itemsBucket(next.filter((one) => one.favorite === true).length),
+      },
       { kind: 'click' },
     );
     if (!on) return;
@@ -298,7 +310,11 @@ export function ArchiveScreen() {
                   className={`arch-sec${todayOnly == null && !appShareOpen ? ' arch-sec--first' : ''}`}
                 >
                   <h2 className="arch-sec-title">간직한 말씀</h2>
-                  <span className="arch-sec-count">{saved.length}개</span>
+                  {/*
+                    필터 칩이 서면 숫자를 지운다. 칩이 「전체 23 · 즐겨찾기 1」을 이미 말하는데
+                    제목 옆에 23 이 남아 있으면, 한 장만 보이는 즐겨찾기 탭에서 23 개라고 적힌다
+                  */}
+                  {favorites.length === 0 && <span className="arch-sec-count">{saved.length}개</span>}
                 </div>
 
                 {/*
