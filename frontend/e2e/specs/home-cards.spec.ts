@@ -7,7 +7,7 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
-import { askOnce, todayISO } from '../support/flow';
+import { askOnce, dismissEntry, todayISO } from '../support/flow';
 import { shot } from '../support/shots';
 
 test('예시 칩을 누르면 그 문장이 입력칸에 들어가고 칩은 물러난다', async ({ page }) => {
@@ -144,12 +144,16 @@ test('쓰던 글을 언제든 통째로 지울 수 있고, 한 번 더 묻는다
   await expect(clear).toBeVisible();
 
   /*
-   * 전송 버튼과 멀리 떨어져 있다. 크고 가까우면 「이야기 보내기」를 누르려던 사람이
-   * 쓴 글을 날린다.
+   * 전송 버튼과 헷갈리지 않아야 한다. 크고 가까우면 「이야기 보내기」를 누르려던 사람이
+   * 쓴 글을 날린다. 셋으로 막는다: 훨씬 작게, 손가락이 겹치지 않을 만큼 띄워서,
+   * 그리고 눌러도 바로 지우지 않고 한 번 더 물어서.
    */
   const clearBox = await clear.boundingBox();
   const sendBox = await page.getByTestId('submit').boundingBox();
-  expect(sendBox!.y - clearBox!.y).toBeGreaterThan(200);
+  expect(clearBox!.width, '지우기가 전송 버튼만큼 커요').toBeLessThan(sendBox!.width / 3);
+  // 누를 자리(가상 요소로 44px 까지 넓힌 것)와 전송 버튼 사이가 손가락 하나만큼 떨어진다
+  const clearHitBottom = clearBox!.y + clearBox!.height / 2 + 22;
+  expect(sendBox!.y - clearHitBottom, '지우기와 전송 버튼이 너무 붙어 있어요').toBeGreaterThan(20);
 
   await clear.click();
   await expect(page.getByText('쓰신 글을 모두 지울까요?')).toBeVisible();
@@ -193,14 +197,17 @@ test('입력칸 위에 뜨는 카드가 제목에 달라붙지 않는다', async
   await shot(page, '04-2 홈 - 카드와 제목 사이 여백', { fullPage: true });
 });
 
-test('전체 지우기로 비운 뒤 새로 쓰면 「남아 있어요」가 되살아나지 않는다', async ({
+test('지우는 버튼이 한 화면에 둘 서지 않고, 비운 뒤 새로 써도 「남아 있어요」가 되살아나지 않는다', async ({
   page,
   stub,
 }) => {
   /*
-   * 「쓰시던 이야기가 남아 있어요」는 글자 수만 보고 서 있었다. 그래서 「전체 지우기」로
-   * 비운 뒤 새 이야기를 쓰기 시작하면 그 카드가 다시 떴다. 방금 스스로 치운 사람에게
-   * 「남아 있어요」라고 되묻는 꼴이다. 비우는 순간 묻던 것도 함께 닫는다.
+   * 두 가지를 함께 본다.
+   *
+   * ① 「쓰시던 이야기가 남아 있어요」 안에 이미 「지우고 새로 쓰기」가 있다. 그 옆에
+   *    「전체 지우기」까지 세우면 같은 일을 하는 버튼이 한 화면에 둘이다.
+   * ② 그 카드는 글자 수만 보고 서 있어서, 비운 뒤 새 이야기를 쓰기 시작하면 다시 떴다.
+   *    방금 스스로 치운 사람에게 「남아 있어요」라고 되묻는 꼴이다.
    */
   test.setTimeout(90_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -209,10 +216,10 @@ test('전체 지우기로 비운 뒤 새로 쓰면 「남아 있어요」가 되
 
   await page.getByTestId('again-button').click();
   await expect(page.getByTestId('draft-confirm')).toBeVisible();
+  // 묻는 카드가 서 있는 동안에는 전체 지우기를 감춘다
+  await expect(page.getByTestId('draft-clear')).toHaveCount(0);
 
-  // 물어보는 카드에는 손대지 않고 「전체 지우기」로만 비운다
-  await page.getByTestId('draft-clear').click();
-  await page.getByTestId('draft-clear-confirm').click();
+  await page.getByTestId('draft-confirm-clear').click();
   await expect(page.getByTestId('concern-field')).toHaveValue('');
   await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
 
@@ -220,4 +227,52 @@ test('전체 지우기로 비운 뒤 새로 쓰면 「남아 있어요」가 되
   await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
   // 지우기는 다시 나타난다. 쓴 글이 있으니 치울 것도 있다
   await expect(page.getByTestId('draft-clear')).toBeVisible();
+
+  // 눌러도 바로 지우지 않는다. 한 번 더 묻고, 그대로 두기를 고르면 글이 살아 있다
+  await page.getByTestId('draft-clear').click();
+  await page.getByTestId('draft-clear-cancel').click();
+  await expect(page.getByTestId('concern-field')).toHaveValue('완전히 새로 쓰는 이야기입니다');
+
+  await page.getByTestId('draft-clear').click();
+  await page.getByTestId('draft-clear-confirm').click();
+  await expect(page.getByTestId('concern-field')).toHaveValue('');
+  await expect(page.getByTestId('draft-clear')).toHaveCount(0);
+});
+
+test('전체 지우기가 제 줄을 차지하지 않고 깊이 표시 옆에 선다', async ({ page }) => {
+  /*
+   * 예전에는 입력칸 위에 줄 하나를 통째로 썼다. 오른쪽 끝에 작은 글씨 하나뿐이고 왼쪽이
+   * 다 비어서, 화면에 빈 띠가 하나 생긴 것처럼 보였다. 지금은 깊이 표시와 같은 줄이다.
+   */
+  await page.goto('/');
+  await dismissEntry(page);
+  await page
+    .getByTestId('concern-field')
+    .fill('요즘 마음이 자꾸 무너져 내려요. 어떻게 해야 할까요');
+
+  const clear = page.getByTestId('draft-clear');
+  await expect(clear).toBeVisible();
+
+  const clearBox = await clear.boundingBox();
+  const meterBox = await page.getByTestId('depth-label').boundingBox();
+  const fieldBox = await page.getByTestId('concern-field').boundingBox();
+
+  // 같은 줄이다. 두 상자의 세로 중심이 한 줄 높이 안에서 만난다
+  const clearMid = clearBox!.y + clearBox!.height / 2;
+  const meterMid = meterBox!.y + meterBox!.height / 2;
+  expect(Math.abs(clearMid - meterMid), '지우기가 깊이 표시와 다른 줄에 있어요').toBeLessThan(16);
+
+  // 입력칸 아래에 있고 오른쪽 끝에 붙는다
+  expect(clearBox!.y).toBeGreaterThan(fieldBox!.y + fieldBox!.height - 4);
+  expect(clearBox!.x).toBeGreaterThan(meterBox!.x + meterBox!.width);
+
+  // 보이는 글자는 작아도 누를 자리는 44px 를 채운다
+  const tap = await clear.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    const before = getComputedStyle(node, '::before');
+    return { height: rect.height, hit: parseFloat(before.height) };
+  });
+  expect(Math.max(tap.height, tap.hit)).toBeGreaterThanOrEqual(44);
+
+  await shot(page, '04-3 홈 - 깊이 표시와 전체 지우기');
 });

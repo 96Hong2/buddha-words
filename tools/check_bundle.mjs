@@ -82,7 +82,6 @@ if (apiUrls.length === 0) {
 // 빌드가 성공했다고 값이 들어간 것은 아니다. 환경변수 이름을 틀리면 조용히 빠진다.
 const AD_GROUP_VARS = [
   'VITE_AD_GROUP_DEFAULT',
-  'VITE_AD_GROUP_GENERATION',
   'VITE_AD_GROUP_EXTENSION',
   'VITE_AD_GROUP_CONTINUE',
   'VITE_AD_GROUP_SAVE',

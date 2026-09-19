@@ -13,7 +13,7 @@ import { ConcernField } from './ConcernField';
 import { DepthIndicator } from './DepthIndicator';
 import { EntryCard, entryCardPending, markEntryCardSeen, type EntryCardDismiss } from './EntryCard';
 import { ExampleChips } from './ExampleChips';
-import { DraftClear, DraftConfirm, DraftNotice } from './HomeCards';
+import { DraftClearAsk, DraftClearButton, DraftConfirm, DraftNotice } from './HomeCards';
 import { useInputFunnel } from './useInputFunnel';
 
 import './concern.css';
@@ -70,6 +70,8 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
   const fromAnswer = useRef(response != null);
   /** 쓰던 글을 지울지 묻는 시트. 답을 받고 돌아왔는데 글이 남아 있을 때만 연다 */
   const [askClear, setAskClear] = useState(() => response != null && draft.trim() !== '');
+  /** 「전체 지우기」를 눌러 확인 카드가 열렸나 */
+  const [clearAsking, setClearAsking] = useState(false);
 
   const [dateISO] = useState(todayISO);
   const [entryTurn] = useState(() => entryCardPending(dateISO));
@@ -145,8 +147,14 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
     setDraft('');
     setRestored(false);
     setAskClear(false);
+    setClearAsking(false);
     focusField();
   }, [focusField, setDraft]);
+
+  // 글이 사라지면 묻던 것도 함께 닫는다. 다시 쓰기 시작했을 때 되살아나면 안 된다
+  useEffect(() => {
+    if (text === '') setClearAsking(false);
+  }, [text]);
 
   // 시트가 뜬 사실을 한 번 남긴다. 「글이 남아 있는 채로 돌아오는 일」이 얼마나 잦은지 본다
   useEffect(() => {
@@ -177,11 +185,17 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
    * 「이어 쓰기와 새로 쓰기 중 무엇이 많은가」에 우리가 물어본 자리의 답만 들어온다.
    */
   const openClear = useCallback(() => {
-    analytics.log('draft_clear_open', { chars_bucket: charsBucket(draft.length) }, { kind: 'click' });
+    setClearAsking(true);
+    analytics.log(
+      'draft_clear_open',
+      { chars_bucket: charsBucket(draft.length) },
+      { kind: 'click' },
+    );
   }, [analytics, draft.length]);
 
   const answerClear = useCallback(
     (choice: 'clear' | 'cancel') => {
+      setClearAsking(false);
       analytics.log(
         'draft_clear_confirm',
         { choice, chars_bucket: charsBucket(draft.length) },
@@ -217,6 +231,15 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
    * 방금 보낸 글이다. 새 이야기를 쓰려는 사람 앞에 지난 글이 놓여 있는 것이라 한 번 묻는다.
    */
   const showDraftNotice = restored && text !== '' && !fromAnswer.current;
+
+  /**
+   * 「전체 지우기」를 보일까.
+   *
+   * **같은 일을 하는 버튼을 둘 세우지 않는다.** 「이어서 쓸 수 있게 남겨 뒀어요」 옆에도,
+   * 「쓰시던 이야기가 남아 있어요」 안에도 이미 지우는 길이 있다. 그 둘이 서 있는 동안에는
+   * 이 버튼을 감춘다. 카드가 사라지고 나면 다시 나타나, 쓴 글을 비울 길은 언제나 남는다.
+   */
+  const showClear = text !== '' && !showDraftNotice && !(askClear && text !== '');
 
   return (
     <div {...testId(TEST_IDS.home)} className="home-screen">
@@ -278,12 +301,6 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
           <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />
           {showDraftNotice && <DraftNotice onClear={clearDraft} />}
 
-          {/*
-            쓰던 글을 통째로 지우는 자리. 입력칸 **오른쪽 위**라 전송 버튼과 가장 멀다.
-            글이 있을 때만 나타나고, 눌러도 바로 지우지 않고 한 번 더 묻는다.
-          */}
-          <DraftClear chars={text.length} onOpen={openClear} onAnswer={answerClear} />
-
           <ConcernField
             value={draft}
             onChange={setDraft}
@@ -291,7 +308,15 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
             onFocusChange={setFocused}
           />
 
-          <DepthIndicator text={draft} />
+          {/*
+            입력칸 아래 한 줄에 둘이 함께 선다: 왼쪽에 깊이 표시, 오른쪽 끝에 전체 지우기.
+            지우기에 줄 하나를 따로 주면 왼쪽이 통째로 비어 화면에 빈 띠가 생긴다.
+          */}
+          <div className="field-foot">
+            <DepthIndicator text={draft} />
+            {showClear && <DraftClearButton onOpen={openClear} />}
+          </div>
+          {clearAsking && text !== '' && <DraftClearAsk onAnswer={answerClear} />}
 
           {text === '' && <ExampleChips onPick={pickExample} onKeepFocus={keepFocus} />}
 

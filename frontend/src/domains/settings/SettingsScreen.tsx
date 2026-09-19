@@ -60,10 +60,11 @@ const RESTORE_NOTICE: Record<ArchivePassState, string> = {
  * 설정에서 끈 것은 알 수 없다. SDK 가 지금 상태를 되묻는 길을 주지 않는다.
  */
 const NOTIFY_ROW: Record<NotifyState, { value: string; desc: string }> = {
-  unset: { value: '받기', desc: '하루 한 번, 오늘 마음을 들여다볼 시간을 알려드려요' },
+  unset: { value: '받기', desc: '매일 마음을 기록해 보세요' },
   on: { value: '받기로 함', desc: '토스 앱 알림 설정에서 끌 수 있어요' },
   declined: { value: '받기', desc: '다시 받고 싶으면 눌러 주세요' },
-  unsupported: { value: '받기', desc: '지금 토스 앱 버전에서는 켤 수 없어요' },
+  unsupported: { value: '준비 중', desc: '지금 토스 앱 버전에서는 켤 수 없어요' },
+  pending: { value: '준비 중', desc: '매일 마음을 기록해 보세요. 알림은 곧 시작해요' },
 };
 
 /** 동의를 묻고 나서 하는 말 */
@@ -72,6 +73,7 @@ const NOTIFY_NOTICE: Record<NotifyState, string> = {
   on: '알림을 받기로 했어요.',
   declined: '알림을 받지 않기로 했어요. 언제든 다시 켤 수 있어요.',
   unsupported: '지금은 알림을 켤 수 없어요. 토스 앱을 업데이트해 주세요.',
+  pending: '',
 };
 
 function Chevron() {
@@ -110,12 +112,16 @@ export function SettingsScreen() {
   const [hourOpen, setHourOpen] = useState(false);
 
   /**
-   * 알림 줄을 그릴까.
+   * 지금 토스에 동의를 물을 수 있나.
    *
-   * 못 켜는 판에서는 **줄 자체를 안 그린다.** 눌러야만 「안 돼요」라고 답하는 줄은,
-   * 사람을 한 번 헛되이 누르게 하고 그 원인(콘솔 템플릿 코드가 없음)도 못 알려 준다.
+   * ⚠ **알림 자리 자체는 이 값과 무관하게 늘 그린다.** 예전에는 못 물으면 줄을 통째로
+   * 감췄는데, 실기기에서 「설정에 알림이 없다」는 말을 들었다. 감추면 준비 중이라는 사실도
+   * 함께 사라져서, 사람은 이 앱에 알림이라는 것이 없다고 읽는다.
+   *
+   * 물을 수 없을 때 하는 일은 셋이다: 줄을 「준비 중」으로 적고, 누를 수 없게 하고,
+   * **받고 싶은 시각은 그대로 받아 둔다.** 발송을 켤 때 기본 시각을 짐작으로 정하지 않는다.
    */
-  const canNotify = notifyUsable(bridge.supports('notification'));
+  const canAsk = notifyUsable(bridge.supports('notification'));
 
   useEffect(() => {
     if (!homeAddOpen) return;
@@ -174,7 +180,9 @@ export function SettingsScreen() {
     analytics.log('notification_prompt_accept', { surface: 'settings' }, { kind: 'click' });
     void bridge
       .requestNotificationAgreement(notifyTemplateCode())
-      .then((result): 'granted' | 'denied' => (result === 'agreementRejected' ? 'denied' : 'granted'))
+      .then((result): 'granted' | 'denied' =>
+        result === 'agreementRejected' ? 'denied' : 'granted',
+      )
       .catch((): 'unsupported' => 'unsupported')
       .then((result) => {
         analytics.log('notification_permission', { result });
@@ -229,6 +237,14 @@ export function SettingsScreen() {
       .catch(() => setNotice(RESTORE_NOTICE.unknown))
       .finally(() => setChecking(false));
   }, [analytics, checking, refreshArchivePass]);
+
+  /**
+   * 알림 줄에 지금 무엇이라고 적나.
+   *
+   * 물을 수 없는 판에서는 사람이 무엇을 골랐든 「준비 중」이다. 저장된 값이 `unset` 이라고
+   * 「받기」라고 적어 두면 눌러도 아무 일이 없는 버튼을 권하는 셈이 된다.
+   */
+  const rowState: NotifyState = canAsk ? notify : notify === 'on' ? 'on' : 'pending';
 
   // 팔지 않는 판에서는 이용권 자리를 그리지 않는다. 이미 가진 사람에게는 그대로 보여 준다
   const showPass = isArchivePassEnabled() || archivePass === 'owned';
@@ -303,118 +319,115 @@ export function SettingsScreen() {
         {/*
           알림. 홈 추가 바로 아래에 둔다. 둘 다 「다시 오는 길」이라 같이 읽히는 것이 맞다.
 
-          못 켜는 판에서는 **줄 자체를 안 그린다.** 눌러야만 「안 돼요」라고 답하는 줄은
-          사람을 한 번 헛되이 누르게 하고 그 원인(콘솔 템플릿 코드가 없음)도 못 알려 준다.
+          **늘 그린다.** 못 켜는 판에서는 줄을 감추는 대신 「준비 중」이라고 적는다.
+          감추면 준비 중이라는 사실까지 사라져서 사람은 알림이 없는 앱으로 읽는다.
         */}
-        {canNotify && (
-          <>
-            <p className="set-group">알림</p>
-            <div className="set-list">
-              <button
-                type="button"
-                className="set-item"
-                onClick={askNotify}
-                /*
+        <p className="set-group">알림</p>
+        <div className="set-list">
+          <button
+            type="button"
+            className="set-item"
+            onClick={askNotify}
+            /*
                   켠 사람도 다시 누를 수 있다. SDK 는 지금 상태를 되묻는 길을 안 준다.
                   토스 설정에서 끈 사람에게 「받기로 함」이라 말하면서 버튼까지 막으면,
                   앱 안에서 다시 켤 길이 아예 없어진다. 다시 불러도 해롭지 않다.
-                */
-                disabled={asking}
-                {...testId(TEST_IDS.settingsNotify)}
-              >
-                <span className="set-icon" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 9.6a6 6 0 1 0-12 0c0 4.2-1.4 5.6-1.4 5.6h14.8S18 13.8 18 9.6z" />
-                    <path d="M10.3 18.6a2 2 0 0 0 3.4 0" />
-                  </svg>
-                </span>
-                <span className="set-text">
-                  <span className="set-item-title">마음 돌아보기 알림</span>
-                  <span className="set-item-desc">{NOTIFY_ROW[notify].desc}</span>
-                </span>
-                <span className="set-value">{asking ? '여는 중' : NOTIFY_ROW[notify].value}</span>
-              </button>
 
-              {/*
-                받기로 한 사람에게만 시각을 묻는다. 켜지도 않은 사람에게 「몇 시에 받을래요」를
-                먼저 물으면 순서가 뒤집힌다.
+                  물을 수 없는 판에서만 막는다. 눌러도 아무 일이 없는 버튼보다 낫다.
+                */
+            disabled={asking || !canAsk}
+            {...testId(TEST_IDS.settingsNotify)}
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 9.6a6 6 0 1 0-12 0c0 4.2-1.4 5.6-1.4 5.6h14.8S18 13.8 18 9.6z" />
+                <path d="M10.3 18.6a2 2 0 0 0 3.4 0" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">매일 마음 돌아보기</span>
+              <span className="set-item-desc">{NOTIFY_ROW[rowState].desc}</span>
+            </span>
+            <span className="set-value">{asking ? '여는 중' : NOTIFY_ROW[rowState].value}</span>
+          </button>
+
+          {/*
+                받고 싶은 시각. **동의를 받았든 아직 못 받았든 늘 연다.**
+
+                예전에는 `notify === 'on'` 일 때만 그렸는데, 템플릿 코드가 없어 동의를 못 묻는
+                판에서는 시각 자리가 영영 안 보였다. 실기기에서 「설정에 알림이 없다」로 읽힌
+                것이 이 조합이다.
 
                 ⚠ 고른 시각은 **아직 발송을 움직이지 않는다.** 그 시각에 보내려면 콘솔 템플릿
                 코드와 서버 발송·스케줄러가 있어야 한다. 그래서 문구가 「보내드릴게요」라고
                 단정하지 않고 「받고 싶은 시간」이라고만 적는다. 지킬 수 있는 말만 한다.
               */}
-              {notify === 'on' && (
-                <>
-                  <button
-                    type="button"
-                    className="set-item"
-                    onClick={toggleHour}
-                    aria-expanded={hourOpen}
-                    {...testId(TEST_IDS.settingsNotifyTime)}
-                  >
-                    <span className="set-icon" aria-hidden="true">
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="8.2" />
-                        <path d="M12 7.4V12l3 1.8" />
-                      </svg>
-                    </span>
-                    <span className="set-text">
-                      <span className="set-item-title">받고 싶은 시간</span>
-                      <span className="set-item-desc">언제든 바꿀 수 있어요</span>
-                    </span>
-                    <span className="set-value">{notifyHourLabel(hour)}</span>
-                  </button>
+          <button
+            type="button"
+            className="set-item"
+            onClick={toggleHour}
+            aria-expanded={hourOpen}
+            {...testId(TEST_IDS.settingsNotifyTime)}
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="8.2" />
+                <path d="M12 7.4V12l3 1.8" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">받고 싶은 시간</span>
+              <span className="set-item-desc">매일 이 시각에 알려드려요</span>
+            </span>
+            <span className="set-value">{notifyHourLabel(hour)}</span>
+          </button>
 
-                  {hourOpen && (
-                    <div className="set-hours-box">
-                      <div className="set-hours" role="radiogroup" aria-label="알림 받을 시간">
-                        {NOTIFY_HOURS.map((h) => (
-                          <button
-                            key={h}
-                            type="button"
-                            role="radio"
-                            aria-checked={hour === h}
-                            className={`set-hour${hour === h ? ' is-on' : ''}`}
-                            onClick={() => pickHour(h)}
-                            {...testId(TEST_IDS.settingsNotifyTimeOption)}
-                          >
-                            {notifyHourLabel(h)}
-                          </button>
-                        ))}
-                      </div>
-                      {/*
+          {hourOpen && (
+            <div className="set-hours-box">
+              <div className="set-hours" role="radiogroup" aria-label="알림 받을 시간">
+                {NOTIFY_HOURS.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    role="radio"
+                    aria-checked={hour === h}
+                    className={`set-hour${hour === h ? ' is-on' : ''}`}
+                    onClick={() => pickHour(h)}
+                    {...testId(TEST_IDS.settingsNotifyTimeOption)}
+                  >
+                    {notifyHourLabel(h)}
+                  </button>
+                ))}
+              </div>
+              {/*
                         지킬 수 있는 말만 한다. 시각을 골라 놓고 알림이 안 오면 사람은
                         고장으로 읽는다. 발송이 아직 없다는 것을 그 자리에서 밝힌다.
                       */}
-                      <p className="set-hours-note">
-                        고르신 시간은 알림이 시작될 때 쓸게요. 아직은 보내드리지 않아요.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {notifyNotice != null && (
-              <p className="set-hint" role="status">
-                {notifyNotice}
+              <p className="set-hours-note">
+                고르신 시간은 알림이 시작될 때 쓸게요. 아직은 보내드리지 않아요.
               </p>
-            )}
-          </>
+            </div>
+          )}
+        </div>
+
+        {notifyNotice != null && notifyNotice !== '' && (
+          <p className="set-hint" role="status">
+            {notifyNotice}
+          </p>
         )}
 
         {/*
@@ -511,7 +524,11 @@ export function SettingsScreen() {
 
         <p className="set-group">안내</p>
         <div className="set-list">
-          <button type="button" className="set-item" onClick={() => openRow('privacy', ROUTES.privacy)}>
+          <button
+            type="button"
+            className="set-item"
+            onClick={() => openRow('privacy', ROUTES.privacy)}
+          >
             <span className="set-icon" aria-hidden="true">
               <svg
                 viewBox="0 0 24 24"
@@ -531,7 +548,11 @@ export function SettingsScreen() {
             <Chevron />
           </button>
 
-          <button type="button" className="set-item" onClick={() => openRow('terms', ROUTES.privacy)}>
+          <button
+            type="button"
+            className="set-item"
+            onClick={() => openRow('terms', ROUTES.privacy)}
+          >
             <span className="set-icon" aria-hidden="true">
               <svg
                 viewBox="0 0 24 24"
@@ -557,7 +578,9 @@ export function SettingsScreen() {
           <a
             className="set-item"
             href={`mailto:${CONTACT_EMAIL}`}
-            onClick={() => analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })}
+            onClick={() =>
+              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })
+            }
           >
             <span className="set-icon" aria-hidden="true">
               <svg
@@ -578,7 +601,11 @@ export function SettingsScreen() {
             <Chevron />
           </a>
 
-          <button type="button" className="set-item" onClick={() => openRow('app_info', ROUTES.appInfo)}>
+          <button
+            type="button"
+            className="set-item"
+            onClick={() => openRow('app_info', ROUTES.appInfo)}
+          >
             <span className="set-icon" aria-hidden="true">
               <svg
                 viewBox="0 0 24 24"

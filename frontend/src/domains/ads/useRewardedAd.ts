@@ -17,6 +17,19 @@ import { readAdOptOut } from '../../shared/lib/adOptOut';
 
 import { adGroupId, type AdPlacement } from './placement';
 
+/**
+ * 지금 전면 광고가 화면을 덮고 있나.
+ *
+ * 훅 하나에 매인 값이 아니라 앱 전체에 하나다. 광고를 **다른 화면에서 틀어 놓고** 넘어오는
+ * 길이 있기 때문이다(이어가기 시트가 광고를 틀고 대기 화면으로 보낸다). 전면 광고가 뜨면
+ * WebView 가 숨겨지는데, 그것을 「앱을 떠났다」로 세면 이탈 지표가 통째로 망가진다.
+ */
+let covering = 0;
+
+export function adIsCovering(): boolean {
+  return covering > 0;
+}
+
 export interface RewardedAd {
   /** 이 기기에서 보상형 광고를 띄울 수 있나 */
   supported: boolean;
@@ -91,7 +104,11 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
    */
   useEffect(() => {
     if (!ready || !supported) return;
-    analytics.log('ad_eligible', { placement, answer_id: undefined }, { once: `ad_eligible:${placement}` });
+    analytics.log(
+      'ad_eligible',
+      { placement, answer_id: undefined },
+      { once: `ad_eligible:${placement}` },
+    );
   }, [analytics, placement, ready, supported]);
 
   /**
@@ -138,10 +155,12 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
 
       analytics.log('rewarded_ad_start', { placement, answer_id: answerId }, { kind: 'click' });
       setShowing(true);
+      covering += 1;
       let watched = false;
       try {
         watched = (await bridge.ads.showFullScreen(group)) === 'watched';
       } finally {
+        covering -= 1;
         setShowing(false);
       }
 

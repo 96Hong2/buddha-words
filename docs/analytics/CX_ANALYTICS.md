@@ -184,17 +184,21 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | `post_ad_continue` | 보상을 받고 이어갔을 때 | 광고가 흐름을 끊지 않았나 |
 | `post_ad_exit` | 광고 뒤 곧바로 앱을 떠났을 때 | **수익이 높아도 사람이 나가는 자리를 찾는다** |
 
-`placement` 값: `generation` · `extension` · `continue` · `save`
+`placement` 값: `extension` · `continue` · `save`
 
-**자리가 둘에서 넷으로 늘었다(2026-09-17).** 새로 생긴 둘은 사람이 이미 기다리거나 멈춰
-서는 자리다.
+**자리가 넷에서 셋으로 줄었다(2026-09-19).** 없앤 것은 `generation`, 답을 만드는 동안 저절로
+화면을 덮던 광고다. 실기기에서 「이야기 보내기만 눌렀는데 광고가 떴다」는 말을 들었고, 그
+광고를 다 본 사람에게 이어가기 시트가 광고를 한 번 더 청했다. **남은 셋은 모두 사람이 버튼을
+눌러야 뜬다.**
 
 | 자리 | 언제 | 무엇을 덮나 |
 | --- | --- | --- |
-| `generation` | 답을 만드는 동안 | 원래 비어 있던 20초. **요청과 나란히 돈다. 답이 늦어지지 않는다** |
+| `extension` | 답변 끝 「다른 관점 하나 더」 | 다 읽고 나서 더 볼지 고르는 자리 |
+| `continue` | 같은 날 두 번째 이야기 | **광고가 도는 동안 답을 만든다.** 끝나면 답이 와 있다 |
 | `save` | 간직하기를 누를 때 | 누른 뒤 곧바로 끝나 다음 화면이 없던 자리 |
 
-읽는 도중·쓰는 도중에는 여전히 광고가 없다.
+버튼 라벨에는 **「30초」와 「광고」가 함께** 들어간다. 몇 초짜리인지 모르면 사람은 중간에 닫는다.
+읽는 도중·쓰는 도중·답을 만드는 도중에는 광고가 없다.
 
 **첫 답까지는 어느 자리에서도 안 띄운다(2026-09-18).** 답을 한 번도 못 받아 본 사람은 이 앱이
 무엇을 해 주는지 아직 모른다. 그 사람의 첫 화면을 전면 광고로 덮으면 본 것이 광고 하나뿐이고
@@ -208,7 +212,6 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 | --- | --- | --- |
 | `no_group` | **콘솔이 광고 그룹 id 를 아직 안 줬다.** 번들에 값이 없다 | 콘솔에서 그룹을 만들고 `VITE_AD_GROUP_DEFAULT` 로 다시 빌드한다 |
 | `first_use` | 첫 답이라 일부러 건너뛰었다 | 정상이다 |
-| `flag_off` | `VITE_FLAG_GENERATION_AD=off` 로 껐다 | 정상이다 |
 | `unsupported` | 기기·앱 버전이 낮다 | 어쩔 수 없다 |
 | `opt_out` | 사람이 이 기기에서 광고를 껐다 | 정상이다 |
 | `pass` / `already_saved` | 이용권이 있거나 이미 담긴 답이다 | 정상이다 |
@@ -216,12 +219,14 @@ event=llm_spend  stage=pass1|pass2|light  route=normal|deep  cost_usd=0.000412
 **이 구분이 없어서 광고가 한 건도 안 도는 번들을 올려 놓고 실기기에서야 알았다(2026-09-18).**
 코드는 멀쩡했고 빌드에 광고 그룹 환경변수를 안 준 것이 원인이었다.
 
-⚠ `generation` 은 **가드레일을 같이 봐야 하는 자리다.** 기다리다 나가는 사람
-(`friction_generation_abandon`)이 켜기 전보다 늘면 그 광고는 대기 시간을 채운 것이 아니라
-길을 막은 것이다. KPI `gen_ad_cost` 가 그 비교다.
+⚠ `continue` 는 **가드레일을 같이 봐야 하는 자리다.** 광고를 틀자마자 닫는 사람
+(`ad_bail_early`)이 많으면 문구가 무엇을 얻는지 못 말하고 있는 것이다. 광고가 도는 동안 답을
+먼저 만들기 시작한 것은 `ad_answer_early_start` 로 남는다. 5초를 못 채우고 닫은 사람에게는
+모델을 돌리지 않는다.
 
 광고가 화면을 덮으면 WebView 도 숨겨진다. 그것을 앱을 떠난 것으로 세지 않는다
-(`LoadingScreen` 의 `adCovering`). 세면 이 지표가 통째로 망가진다.
+(`useRewardedAd` 의 `adIsCovering`). 세면 이 지표가 통째로 망가진다. 광고를 이어가기 시트에서
+틀어 놓고 대기 화면으로 넘어가는 길이 있어서, 이 신호는 훅 하나가 아니라 앱 전체에 하나다.
 
 ### 보관 · 결제
 
@@ -479,10 +484,9 @@ rewarded_ad_complete → post_ad_continue` 와 그 옆에 `post_ad_exit`
 | `VITE_FLAG_ANSWER_FEEDBACK` | on | 답변 끝 👍👎 |
 | `VITE_NEGATIVE_REASON_SAMPLING` | `0.2` | 아쉽다고 한 사람 중 이유를 물을 비율 |
 | `VITE_FLAG_ACTION_COMMIT` | on | 「내일 했는지 물어봐 주세요」 |
-| `VITE_FLAG_NOTIFICATION_PROMPT` | on | 세 번째 답 뒤 알림 권유와 설정의 알림 줄. **`VITE_NOTIFICATION_TEMPLATE_CODE` 가 없으면 켜져 있어도 안 그린다**(`notifyUsable`) |
-| `VITE_FLAG_GENERATION_AD` | on | 답을 만드는 동안 덮는 광고. ⚠ 네 자리 중 사람이 누르지 않는 유일한 곳이라 심사 위험이 있다. 끄려면 `=off` |
-| `VITE_AD_GROUP_DEFAULT` | 없음 | 콘솔이 발급한 보상형 광고 그룹 id. **없으면 네 자리 모두 광고 없이 지나간다**(`ad_skipped(reason=no_group)`) |
-| `VITE_NOTIFICATION_TEMPLATE_CODE` | 없음 | 콘솔 스마트발송 템플릿 코드. 없으면 실기기에서 동의 화면이 안 뜬다 |
+| `VITE_FLAG_NOTIFICATION_PROMPT` | on | 세 번째 답 뒤 알림 권유. 코드가 없으면 권유는 안 뜨지만 **설정의 알림 자리는 늘 있다**(`notifyUsable`) |
+| `VITE_AD_GROUP_DEFAULT` | 없음 | 콘솔이 발급한 보상형 광고 그룹 id. **없으면 세 자리 모두 광고 없이 지나간다**(`ad_skipped(reason=no_group)`) |
+| `VITE_NOTIFICATION_TEMPLATE_CODE` | 없음 | 콘솔 스마트발송 템플릿 코드. 없으면 실기기에서 동의 화면이 안 뜨고, 설정 알림 줄이 「준비 중」으로 잠긴다 |
 
 ### 온보딩 A/B
 

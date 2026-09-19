@@ -65,7 +65,7 @@ export const EVENTS = {
   action_view:         { params: ['answer_id', 'action_index'] as const },
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
-  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: generation | extension | continue | save
+  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다
   rewarded_ad_complete:{ params: ['placement', 'answer_id', 'reward_granted'] as const },
   rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
@@ -78,11 +78,21 @@ export const EVENTS = {
    * 사람이 광고를 꺼 둔 것인지가 전부 「0건」으로 똑같이 보인다. 실제로 그 상태로
    * 번들을 올려 놓고 광고가 안 뜬다는 것을 실기기에서야 알았다.
    *
-   * reason: first_use | no_group | unsupported | opt_out | pass | already_saved | answer_ready | flag_off
+   * reason: first_use | no_group | unsupported | opt_out | pass | already_saved | answer_ready
    */
   ad_skipped:          { params: ['placement', 'reason'] as const },
   post_ad_continue:    { params: ['placement', 'answer_id'] as const },                   // 광고를 보고 하던 일을 이어갔다
   post_ad_exit:        { params: ['placement', 'answer_id', 'within_bucket_s'] as const },// 광고 뒤 곧바로 나갔다. 수익이 높아도 여기가 크면 그 자리는 나쁘다
+  /**
+   * 광고가 도는 동안 답을 **먼저 만들기 시작했다.**
+   *
+   * 광고를 끝까지 보고 나서 요청을 보내면 30초를 보고 20초를 더 기다린다. 그래서 광고를
+   * 틀고 5초가 지나면 답을 만들기 시작한다. 이 값과 `rewarded_ad_complete` 의 차이가
+   * 「광고는 다 봤는데 답이 늦었다」를 재는 자리다.
+   */
+  ad_answer_early_start:{ params: ['placement'] as const },
+  /** 광고를 틀자마자(5초 안에) 닫았다. 모델을 돌리지 않았다는 뜻이기도 하다 */
+  ad_bail_early:       { params: ['placement', 'within_bucket_s'] as const },
   // 같은 날 두 번째 고민
   second_question_start:{ params: ['continues_used', 'gate'] as const },                  // gate: free | ad_continue | exhausted
   // 공유
@@ -218,7 +228,8 @@ export const KPI = {
   save_conv:        { name: '누른 뒤 실제로 담김',        num: 'save_complete', den: 'save_click', target: '광고가 중간에서 얼마나 떨구는지 본다' },
   save_done_conv:   { name: '담고 나서 보러 감',          num: 'save_done_action(action=archive)', den: 'save_done_view', target: '낮으면 보관함이 다시 안 읽히는 자리다' },
   favorite_rate:    { name: '즐겨찾기 비율',             num: 'archive_favorite(on=true)', den: 'save_complete', target: '간직과 즐겨찾기가 갈리는지 본다' },
-  gen_ad_cost:      { name: '생성 중 광고의 대가',        num: 'friction_generation_abandon', den: 'concern_submit', target: 'placement=generation 을 켜기 전후로 비교한다' },
+  gen_wait_drop:    { name: '답을 기다리다 나감',         num: 'friction_generation_abandon', den: 'concern_submit', target: '답 만드는 자리에 광고를 두지 않는 지금이 기준선이다' },
+  ad_early_bail:    { name: '광고 틀자마자 닫음',         num: 'ad_bail_early', den: 'rewarded_ad_start(placement=continue)', target: '높으면 광고 문구가 무엇을 얻는지 못 말하고 있다' },
   // ── 첫 사용 무료의 본전. 이 셋이 없으면 「광고를 언제부터 띄울까」를 숫자로 못 정한다 ──
   /**
    * 첫 답을 받은 사람 중 몇 %가 두 번째 답까지 오는가.

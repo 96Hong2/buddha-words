@@ -22,14 +22,21 @@
   gap: var(--s-2);
 }
 
-/* 광고 버튼. 배지 말고는 어디에도 광고라는 글자를 두지 않는다 */
+/*
+   광고 버튼.
+
+   라벨이 두 줄까지 늘어난다(「답변 만드는 동안 30초 광고 보고 답변 받기」). 높이를 고정하지
+   않고 글이 늘어나는 만큼 버튼이 자라게 둔다. 좁은 화면에서 글자가 잘리면 몇 초짜리인지가
+   먼저 사라지고, 그러면 이 문구를 길게 쓴 이유가 없어진다.
+*/
 .continue-sheet__ad {
   width: 100%;
-  min-height: 48px;
-  display: inline-flex;
+  min-height: 56px;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--s-2);
+  padding: 12px var(--s-4);
   border: 0;
   border-radius: var(--r-button);
   background: var(--btn);
@@ -38,6 +45,7 @@
   font-size: var(--t-label);
   line-height: var(--lh-label);
   font-weight: var(--w-bold);
+  text-align: left;
 }
 
 .continue-sheet__ad[disabled] {
@@ -45,8 +53,14 @@
   cursor: default;
 }
 
-.continue-sheet__ad svg {
+.continue-sheet__play {
   flex: none;
+  display: inline-flex;
+}
+
+.continue-sheet__ad-label {
+  /* 두 줄로 나뉠 때 끝 낱말 하나만 떨어지지 않게 한다 */
+  text-wrap: balance;
 }
 
 .continue-sheet__badge {
@@ -54,7 +68,6 @@
   align-items: center;
   height: 18px;
   padding: 0 6px;
-  margin-right: var(--s-1);
   border-radius: var(--r-xs);
   background: var(--ad-tag-bg);
   color: var(--ad-tag-text);
@@ -62,50 +75,16 @@
   line-height: var(--lh-micro);
   font-weight: var(--w-bold);
   letter-spacing: 0.04em;
+  /* 줄이 바뀌는 자리에서 배지만 혼자 떨어지지 않게 한다 */
+  white-space: nowrap;
 }
 
 .continue-sheet__note {
-  margin: var(--s-2) 0 var(--s-3);
+  margin: var(--s-2) 0 var(--s-2);
   text-align: center;
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   color: var(--text-muted);
-}
-
-.continue-sheet__ghost,
-.continue-sheet__plain {
-  min-height: var(--tap-min);
-  height: 52px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s-1);
-  border-radius: var(--r-button);
-  font-family: inherit;
-  font-size: var(--t-body);
-  line-height: var(--lh-label);
-  letter-spacing: var(--ls-label);
-  font-weight: var(--w-semibold);
-}
-
-.continue-sheet__ghost {
-  background: var(--surface);
-  border: 1px solid var(--btn-ghost-line);
-  color: var(--text);
-}
-
-.continue-sheet__plain {
-  background: transparent;
-  border: 0;
-  color: var(--text-muted);
-}
-
-.continue-sheet__hint {
-  margin: var(--s-3) 0 0;
-  text-align: center;
-  font-size: var(--t-caption);
-  line-height: var(--lh-caption);
-  color: var(--text-weak);
 }
 
 /* ── 천장 카드 ───────────────────────────────────────────────────────────
