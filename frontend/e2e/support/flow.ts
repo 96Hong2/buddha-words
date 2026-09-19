@@ -78,12 +78,24 @@ export async function askOnce(
   if (waitPass2) await expect(page.getByTestId('analysis')).toBeVisible({ timeout: 20_000 });
 }
 
-/** 오늘(사용자 시간대) 날짜를 YYYY-MM-DD 로. 기기가 보는 날짜와 같아야 한다 */
+/**
+ * 오늘(사용자 시간대) 날짜를 YYYY-MM-DD 로. 기기가 보는 날짜와 같아야 한다.
+ *
+ * 브라우저는 서울 시간으로 돈다(`playwright.config.ts` 의 timezoneId). 이 함수는 테스트
+ * 프로세스에서 돌아서, 그 시간대를 따르면 CI(UTC)에서는 한국 자정부터 오전 9시까지 하루가
+ * 어긋난다. 그래서 서울 날짜를 먼저 구하고, 날짜만 가지고 더하고 뺀다.
+ */
 export function todayISO(offsetDays = 0): string {
-  const now = new Date();
-  now.setDate(now.getDate() + offsetDays);
+  const seoul = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const [y, m, d] = seoul.split('-').map(Number);
+  const day = new Date(Date.UTC(y, m - 1, d + offsetDays));
   const pad = (n: number) => `${n}`.padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return `${day.getUTCFullYear()}-${pad(day.getUTCMonth() + 1)}-${pad(day.getUTCDate())}`;
 }
 
 /**
