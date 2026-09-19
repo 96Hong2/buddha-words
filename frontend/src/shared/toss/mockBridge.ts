@@ -11,6 +11,7 @@ import {
   type BridgeEnvironment,
   type BridgePlatform,
   type CaptureOptions,
+  type FullScreenAdHooks,
   type FullScreenAdResult,
   type Identity,
   type KeyValueStore,
@@ -56,6 +57,7 @@ export interface MockScenario {
    *
    * `ok` 면 잠깐 덮었다가 「봤다」 로 끝난다. `dismissed` 는 사람이 중간에 닫은 것이고
    * `noFill` 은 광고가 한 장도 안 온 것이다. 화면이 그 둘을 다르게 다뤄야 해서 갈라 둔다.
+   * 전면형 그룹(이어가기)은 보상이 없어서 `ok` 여도 닫힘으로 끝난다. 실제 SDK 와 같다.
    */
   fullScreenAd?: 'ok' | 'dismissed' | 'noFill' | 'unsupported';
   /** 전면 광고가 화면을 덮고 있는 시간(ms). 5초 뒤에 답을 만들기 시작하는 길을 보려면 길게 준다 */
@@ -120,8 +122,16 @@ function readScenarioDial(): MockScenario {
   return window.__buddhaBridge ?? {};
 }
 
-/** 목 전면 광고가 화면을 덮고 있는 시간. 실광고처럼 몇 초를 끌지 않는다. */
+/** 목 보상형 광고가 화면을 덮고 있는 시간. 실광고처럼 몇 초를 끌지 않는다. */
 const MOCK_FULL_SCREEN_MS = 300;
+
+/**
+ * 목 전면형 광고가 떠 있는 시간. 사람이 광고를 보다가 5초를 넘겨 닫은 경우다.
+ *
+ * 전면형은 보상이 없어서 언제나 닫힘으로 끝난다. 이어가기는 5초를 못 채우고 닫으면 답을
+ * 만들지 않으니, 목도 그 선을 넘겨야 실기기와 같은 길을 탄다.
+ */
+const MOCK_INTERSTITIAL_MS = 5500;
 
 /** 1x1 투명 PNG. 실제 이미지 없이 파이프라인을 태우기 위한 자리표시자다. */
 const BLANK_PNG =
@@ -192,10 +202,12 @@ class MockAdsBridge implements AdsBridge {
     return { destroy: () => node.remove() };
   }
 
-  showFullScreen(): Promise<FullScreenAdResult> {
+  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult> {
     const mode = this.scenario.fullScreenAd ?? 'ok';
     // 광고가 한 장도 안 온 것은 뜨지도 않는다. 사람이 닫은 것은 잠깐 떴다가 닫힌다
     if (mode === 'noFill' || mode === 'unsupported') return Promise.resolve('noFill');
+    // 종류는 실제 SDK 처럼 광고 그룹 id 로 갈린다. 공식 테스트 id 이름에 종류가 들어 있다
+    const interstitial = adGroupId.includes('interstitial');
 
     // 실광고처럼 화면을 통째로 덮는다. e2e 가 「광고가 떴다」 를 이 자리로 본다.
     const node = document.createElement('div');
@@ -203,11 +215,13 @@ class MockAdsBridge implements AdsBridge {
     node.style.cssText = 'position:fixed;inset:0;z-index:9999;background:#111;color:#fff';
     node.textContent = '광고 (목)';
     document.body.appendChild(node);
-    const shownMs = this.scenario.fullScreenAdMs ?? MOCK_FULL_SCREEN_MS;
+    hooks?.onShown?.();
+    const shownMs =
+      this.scenario.fullScreenAdMs ?? (interstitial ? MOCK_INTERSTITIAL_MS : MOCK_FULL_SCREEN_MS);
     return new Promise((resolve) => {
       setTimeout(() => {
         node.remove();
-        resolve(mode === 'dismissed' ? 'dismissed' : 'watched');
+        resolve(mode === 'dismissed' || interstitial ? 'dismissed' : 'watched');
       }, shownMs);
     });
   }

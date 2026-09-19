@@ -133,6 +133,10 @@ export interface AttachBannerOptions {
  */
 export type FullScreenAdResult = 'watched' | 'dismissed' | 'noFill';
 
+export interface FullScreenAdHooks {
+  onShown?: () => void;
+}
+
 export interface AdsBridge {
   /** 배너를 붙이기 전에 한 번 호출한다. 멱등이다. */
   initialize(): Promise<void>;
@@ -140,10 +144,13 @@ export interface AdsBridge {
   /**
    * 전면 광고를 불러와서 띄우고, 닫힐 때까지 기다린다.
    *
-   * 던지지 않는다. 못 띄운 것은 `failed` 로 돌려주고 부르는 쪽이 갈래를 정한다.
+   * 던지지 않는다. 못 띄운 것은 `noFill` 로 돌려주고 부르는 쪽이 갈래를 정한다.
    * 광고가 안 떴다고 기능을 막으면 광고 서버 사정으로 사람이 돌아간다.
+   *
+   * `onShown` 은 광고가 실제로 화면에 뜬 순간이다. 누른 순간과 다르다. 불러오는 데만
+   * 몇 초가 걸리기도 해서, 광고가 몇 초 떠 있었는지는 이 순간부터 재야 맞다.
    */
-  showFullScreen(adGroupId: string): Promise<FullScreenAdResult>;
+  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult>;
 }
 
 /**

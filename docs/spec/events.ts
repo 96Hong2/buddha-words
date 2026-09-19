@@ -65,7 +65,7 @@ export const EVENTS = {
   action_view:         { params: ['answer_id', 'action_index'] as const },
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
-  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다
+  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다. continue 는 전면형이라 complete 가 오지 않는다
   rewarded_ad_complete:{ params: ['placement', 'answer_id', 'reward_granted'] as const },
   rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
@@ -93,6 +93,13 @@ export const EVENTS = {
   ad_answer_early_start:{ params: ['placement'] as const },
   /** 광고를 틀자마자(5초 안에) 닫았다. 모델을 돌리지 않았다는 뜻이기도 하다 */
   ad_bail_early:       { params: ['placement', 'within_bucket_s'] as const },
+  /**
+   * 전면을 덮던 광고가 닫혔다. 광고가 **화면에 뜬 순간부터** 닫힐 때까지 몇 초였나.
+   *
+   * 광고 길이는 네트워크가 정하고 문서에도 없다. 버튼에 「30초」처럼 초를 적으려면 이 값으로
+   * 재야 한다. 이어가기(전면형)는 보상 이벤트가 없어서 이것이 유일한 노출 완료 신호다.
+   */
+  ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
   // 같은 날 두 번째 고민
   second_question_start:{ params: ['continues_used', 'gate'] as const },                  // gate: free | ad_continue | exhausted
   // 공유
@@ -244,9 +251,10 @@ export const KPI = {
    */
   second_use_conv:  { name: '두 번째 사용 전환율',        num: 'answer_milestone(answers_total=2)', den: 'answer_milestone(answers_total=1)', target: 'p = C / (R − C). eCPM $8 기준 33%' },
   ad_skip_reason:   { name: '광고를 건너뛴 이유',         num: 'ad_skipped(reason=X)', den: 'ad_skipped', target: 'no_group 이 남아 있으면 콘솔에서 그룹을 아직 안 준 것이다' },
-  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
-  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start', target: '' },
-  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete', den: 'answer_generated(pass=2|light)', target: '' },
+  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
+  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start(placement≠continue)', target: '이어가기는 전면형이라 완료가 없다. ad_early_bail 로 본다' },
+  continue_ad_length:{ name: '이어가기 광고가 떠 있던 시간', num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '가장 많은 구간을 버튼 문구의 초로 적는다' },
+  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_generated(pass=2|light)', target: '' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
   llm_cost_per_dau: { name: 'LLM cost / DAU',          num: 'Σ model_cost_estimate', den: 'DAU', target: '광고매출 / LLM비용 ≥ 1.5' },
   paywall_conv:     { name: 'Paywall 전환',            num: 'purchase_complete', den: 'paywall_view', target: '' },
@@ -273,7 +281,7 @@ export const KPI = {
   action_reach:     { name: 'Action 도달률',           num: 'action_view', den: 'answer_generated(pass=2)', target: '' },
   feedback_pos:     { name: '도움됐다 비율',            num: 'answer_feedback(value=positive)', den: 'answer_feedback', target: 'route·model_tier 별로 본다' },
   // ── 광고 CX 가드레일. 수익만 보지 않는다 ──
-  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'rewarded_ad_complete', target: 'placement 별로 본다. 높은 자리는 옮긴다' },
+  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'rewarded_ad_complete + ad_close(placement=continue)', target: 'placement 별로 본다. 높은 자리는 옮긴다' },
   ad_post_continue: { name: '광고 뒤 이어감',           num: 'post_ad_continue', den: 'rewarded_ad_complete', target: '' },
   ad_next_day:      { name: '광고 본 사람의 D1',        num: 'app_open(days_since_last_open=1) ∩ 전날 rewarded_ad_complete', den: '전날 rewarded_ad_complete unique users', target: '안 본 사람과 비교한다' },
   // ── Carrying Capacity. 새 사용자를 계속 받아도 유지되는가 ──

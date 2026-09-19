@@ -31,6 +31,7 @@ import {
   type BridgeEnvironment,
   type BridgePlatform,
   type CaptureOptions,
+  type FullScreenAdHooks,
   type FullScreenAdResult,
   type Identity,
   type KeyValueStore,
@@ -157,7 +158,7 @@ class TossAdsBridge implements AdsBridge {
     });
   }
 
-  showFullScreen(adGroupId: string): Promise<FullScreenAdResult> {
+  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult> {
     if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
       return Promise.resolve('noFill');
     }
@@ -193,6 +194,7 @@ class TossAdsBridge implements AdsBridge {
             // 보상은 `userEarnedReward` 하나에서만 나온다. 떴다·노출됐다·눌렸다는 보상이 아니다.
             // 닫힘은 언제나 취소다. 뜨자마자 닫은 사람에게 보상을 주면 무효 트래픽으로 잡혀
             // 광고 계정이 막힌다. 샌드박스 목이 보상 이벤트를 안 준다고 여기서 타협하지 않는다.
+            if (event.type === 'show') hooks?.onShown?.();
             if (event.type === 'userEarnedReward') finish('watched');
             // 닫힘은 언제나 취소다. 못 띄운 것과는 갈라서 돌려준다
             if (event.type === 'dismissed') finish('dismissed');

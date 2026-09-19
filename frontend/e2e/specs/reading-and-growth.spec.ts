@@ -128,10 +128,10 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
   expect(await logNames(page)).not.toContain('rewarded_ad_start');
   await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
 
-  // 몇 초짜리인지 라벨이 말한다. 모르면 사람은 중간에 닫는다
+  // 광고라는 말은 버튼 안에 있다. 초는 전면형 길이를 재기 전이라 적지 않는다
   const cta = page.getByTestId('continue-watch');
-  await expect(cta).toContainText('30초');
   await expect(cta).toContainText('광고');
+  await expect(cta, '재 보지 않은 초를 적었어요').not.toContainText('30초');
   // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
   await expect(sheet).not.toContainText('오늘 답변 다시 보기');
   await expect(sheet).not.toContainText('닫아도 적은 글은');
@@ -148,6 +148,30 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
 
   // 광고가 도는 동안 답을 먼저 만들기 시작했다는 표
   expect(await logNames(page)).toContain('ad_answer_early_start');
+
+  /*
+    이어가기는 전면형이다. 보상 없이 닫힘으로 끝나는 것이 정상이라 실패로 세지 않고,
+    떠 있던 시간을 남긴다. 목은 실제 SDK 처럼 광고 그룹 id 로 종류를 가른다.
+  */
+  // 답은 광고가 닫히기 전에 와 있을 수 있다. 닫힘 기록은 광고가 닫힌 뒤에 남는다
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window.__pocketLogs ?? [])
+          .filter((log) => log.name === 'ad_close')
+          .map((log) => {
+            const p = log.params as Record<string, unknown>;
+            return { placement: p.placement, shown_bucket_ms: p.shown_bucket_ms };
+          }),
+      ),
+    )
+    .toContainEqual({ placement: 'continue', shown_bucket_ms: '5-10s' });
+  const adLogs = await page.evaluate(() =>
+    (window.__pocketLogs ?? [])
+      .filter((log) => log.name === 'rewarded_ad_fail' || log.name === 'rewarded_ad_complete')
+      .map((log) => (log.params as Record<string, unknown>).placement),
+  );
+  expect(adLogs, '이어가기가 보상형으로 돌았어요').not.toContain('continue');
 });
 
 /** 목 브릿지에 시나리오를 심는다. 광고가 어떻게 끝나는지를 여기서 정한다 */
