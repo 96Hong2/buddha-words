@@ -142,6 +142,18 @@
   padding-bottom: var(--s-3);
 }
 
+/*
+ * 입력 묶음 맨 위에 무엇이 오든 제목과 한 칸 띄운다.
+ *
+ * 카드가 없을 때는 입력칸이 첫째라 스스로 `margin-top` 을 갖고 있었다. 그런데 「쓰시던
+ * 이야기가 남아 있어요」나 되짚기 카드가 그 앞에 서면 그 여백이 카드에게 넘어가지 않아서,
+ * 카드가 「무슨 일이 있었나요?」에 그대로 달라붙었다. 알림 성격의 카드는 앞으로도 늘
+ * 여기 서므로 자리에 규칙을 건다. 카드마다 여백을 따로 붙이면 새 카드가 또 붙어 나온다.
+ */
+.home-screen .cluster > *:first-child {
+  margin-top: var(--s-4);
+}
+
 .home-screen .draft {
   display: flex;
   align-items: center;
@@ -550,4 +562,83 @@
   border-color: transparent;
   background: var(--text);
   color: var(--surface);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   쓰던 글을 통째로 지우는 자리
+
+   전송 버튼과 반대쪽 끝(입력칸 오른쪽 위)에 작게 둔다. 크고 또렷하면 「이야기 보내기」를
+   누르려던 손가락이 쓴 글을 날린다. 눌러도 바로 지우지 않고 같은 자리에서 한 번 더 묻는다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.home-screen .draft-clear {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -8px;
+}
+
+.home-screen .draft-clear__btn {
+  border: 0;
+  background: none;
+  /* 글자는 작지만 누를 자리는 작지 않다. 오른쪽도 8px 는 둬 화면 끝에 붙지 않게 한다 */
+  min-height: var(--tap-min);
+  padding: 10px 8px 10px 14px;
+  font-family: inherit;
+  font-size: var(--t-caption);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.home-screen .draft-clear-ask {
+  margin-bottom: var(--s-2);
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.home-screen .draft-clear-ask__title {
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+.home-screen .draft-clear-ask__desc {
+  margin: 2px 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.home-screen .draft-clear-ask__buttons {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: 10px;
+}
+
+.home-screen .draft-clear-ask__btn {
+  flex: 1 1 0;
+  min-height: var(--tap-min);
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-label);
+  font-weight: var(--w-bold);
+  color: var(--text);
+}
+
+/* 그대로 두는 쪽이 기본이다. 되돌릴 수 없는 쪽에 힘을 주지 않는다 */
+.home-screen .draft-clear-ask__btn--keep {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}
+
+.home-screen .draft-clear-ask__btn--clear {
+  color: var(--danger);
 }

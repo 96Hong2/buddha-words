@@ -27,6 +27,8 @@
  */
 
 import { attributionLine, type Scripture } from '../../shared/api';
+import { resolveApiBaseUrl } from '../../shared/api/baseUrl';
+import { resolveApiMode } from '../../shared/api/client';
 
 /** 링크 앞에 서는 한 줄. 받는 사람에게 이게 무엇인지 알린다 */
 const FROM_SCRIPTURE = '부처의 말에서 받았어요';
@@ -57,4 +59,29 @@ export function shareMessage({ scripture, url, full = false }: ShareTextInput): 
   const from = full ? FROM_FULL : FROM_SCRIPTURE;
   blocks.push(url ? `${from}\n${url}` : from);
   return blocks.join('\n\n');
+}
+
+/**
+ * 앱 자체로 가는 주소.
+ *
+ * 답변 공유와 달리 특정 답으로 가지 않는다. 받는 사람이 열면 자기 이야기를 쓰는 첫 화면이다.
+ * 토스 딥링크(`intoss://`)는 토스가 깔린 기기에서만 열려서, 카톡으로 받은 사람 중 토스가
+ * 없는 쪽이 막다른 곳에 선다.
+ *
+ * 답변 화면과 보관함이 같은 주소를 써야 해서 여기 둔다. 두 자리가 각자 조립하면 한쪽만 고쳐진다.
+ */
+export function appShareUrl(): string {
+  const api = resolveApiMode() === 'http' ? resolveApiBaseUrl() : null;
+  if (api != null) return api;
+  return typeof window === 'undefined' ? '' : window.location.origin;
+}
+
+/**
+ * 앱을 권할 때 나가는 글.
+ *
+ * 앱 이름과 무엇을 해 주는지, 그리고 주소. 고민도 답도 여기에 없다. 이건 그 사람의
+ * 이야기를 나누는 자리가 아니라 앱을 알리는 자리다.
+ */
+export function appShareMessage(url: string): string {
+  return ['마음에 걸리는 일을 적으면 경전에서 답을 찾아 줘요', '', '부처의 말', url].join('\n');
 }

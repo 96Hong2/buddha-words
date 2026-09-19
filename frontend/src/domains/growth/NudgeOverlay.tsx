@@ -27,17 +27,9 @@ import { markHomeAddDone, type Nudge } from '../../shared/prefs/milestones';
 import { readNotify, writeNotify } from '../../shared/prefs/notify';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
-import './growth.css';
+import { appShareMessage } from '../share/shareText';
 
-/**
- * 앱을 권할 때 나가는 글.
- *
- * 앱 이름과 무엇을 해 주는지, 그리고 주소. 고민도 답도 여기에 없다. 이건 그 사람의
- * 이야기를 나누는 자리가 아니라 앱을 알리는 자리다.
- */
-export function appShareMessage(url: string): string {
-  return ['마음에 걸리는 일을 적으면 경전에서 답을 찾아 줘요', '', '부처의 말', url].join('\n');
-}
+import './growth.css';
 
 export interface NudgeOverlayProps {
   /** 무엇을 권할까. 고르는 일은 milestones 시간표가 한다 */

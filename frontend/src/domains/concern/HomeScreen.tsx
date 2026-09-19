@@ -13,7 +13,7 @@ import { ConcernField } from './ConcernField';
 import { DepthIndicator } from './DepthIndicator';
 import { EntryCard, entryCardPending, markEntryCardSeen, type EntryCardDismiss } from './EntryCard';
 import { ExampleChips } from './ExampleChips';
-import { DraftConfirm, DraftNotice } from './HomeCards';
+import { DraftClear, DraftConfirm, DraftNotice } from './HomeCards';
 import { useInputFunnel } from './useInputFunnel';
 
 import './concern.css';
@@ -134,9 +134,17 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
     [focusField, setDraft],
   );
 
+  /**
+   * 쓰던 글을 비운다.
+   *
+   * **묻던 것도 함께 닫는다.** 「쓰시던 이야기가 남아 있어요」는 글자 수만 보고 서 있어서,
+   * 「전체 지우기」로 비운 뒤 새 이야기를 쓰기 시작하면 그 카드가 되살아났다. 방금 스스로
+   * 치운 사람에게 「남아 있어요」라고 다시 묻는 꼴이다.
+   */
   const clearDraft = useCallback(() => {
     setDraft('');
     setRestored(false);
+    setAskClear(false);
     focusField();
   }, [focusField, setDraft]);
 
@@ -160,6 +168,29 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
       else focusField();
     },
     [analytics, clearDraft, focusField],
+  );
+
+  /**
+   * 「전체 지우기」를 눌렀다.
+   *
+   * 우리가 물어서 고른 `draft_confirm_choice` 와 **다른 이름으로 센다.** 한 이름으로 묶으면
+   * 「이어 쓰기와 새로 쓰기 중 무엇이 많은가」에 우리가 물어본 자리의 답만 들어온다.
+   */
+  const openClear = useCallback(() => {
+    analytics.log('draft_clear_open', { chars_bucket: charsBucket(draft.length) }, { kind: 'click' });
+  }, [analytics, draft.length]);
+
+  const answerClear = useCallback(
+    (choice: 'clear' | 'cancel') => {
+      analytics.log(
+        'draft_clear_confirm',
+        { choice, chars_bucket: charsBucket(draft.length) },
+        { kind: 'click' },
+      );
+      if (choice === 'clear') clearDraft();
+      else focusField();
+    },
+    [analytics, clearDraft, draft.length, focusField],
   );
 
   // 실제 호출은 대기 화면이 한다. 여기서는 보낼 글과 멱등키만 세션에 남긴다
@@ -246,6 +277,12 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
           {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
           <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />
           {showDraftNotice && <DraftNotice onClear={clearDraft} />}
+
+          {/*
+            쓰던 글을 통째로 지우는 자리. 입력칸 **오른쪽 위**라 전송 버튼과 가장 멀다.
+            글이 있을 때만 나타나고, 눌러도 바로 지우지 않고 한 번 더 묻는다.
+          */}
+          <DraftClear chars={text.length} onOpen={openClear} onAnswer={answerClear} />
 
           <ConcernField
             value={draft}

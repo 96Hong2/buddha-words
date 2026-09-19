@@ -528,3 +528,84 @@
 .set-item:disabled .set-value {
   color: var(--accent-text);
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   토스 홈에 추가하기 (맨 위 강조 줄)
+
+   다시 오는 길을 만드는 유일한 항목이라 설정에서 가장 값이 크다. 그런데 다른 줄과
+   같은 모양이면 찾는 사람만 찾는다.
+
+   강조는 새 색을 들이지 않고 한다. 앱이 이미 쓰는 금색 선 한 겹과 은은한 바탕, 제목은
+   명조로. 파란 버튼이나 빨간 점을 붙이면 이 화면만 튀고 톤이 깨진다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.set-list--hero {
+  border: 1px solid var(--accent-rule);
+  background: var(--surface-illust);
+}
+
+.set-item--hero {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.set-item-title--hero {
+  font-family: var(--font-serif);
+  font-weight: var(--w-bold);
+}
+
+.set-icon--hero svg {
+  width: 23px;
+  height: 23px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   알림 받을 시간
+
+   받기로 한 사람에게만 열린다. 칩을 두 줄로 흘려 담아 한눈에 훑게 한다.
+   시계 입력칸(<input type="time">)을 쓰지 않는 이유: WebView 마다 피커 모양이 달라
+   이 화면에서만 다른 앱처럼 보이고, 우리가 보낼 수 있는 것은 정시뿐이라 분 단위를
+   고르게 하면 지킬 수 없는 정밀도를 약속하게 된다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/*
+ * 네 칸 격자. 흘려 담으면 칩 글자 길이(「오전 6시」와 「오전 10시」)만큼 칸이 들쭉날쭉하고
+ * 마지막 줄에 하나만 남아 목록이 깨져 보인다. 열 수를 고정하면 줄 끝이 가지런하다.
+ */
+.set-hours-box {
+  border-top: 1px solid var(--line);
+  padding: 12px 16px 16px;
+}
+
+.set-hours-note {
+  margin: 10px 2px 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-weak);
+}
+
+.set-hours {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+}
+
+.set-hour {
+  /* 손가락이 닿는 최소 넓이. 칩이라고 작게 두면 옆 시각을 누른다 */
+  min-height: var(--tap-min);
+  padding: 0 4px;
+  white-space: nowrap;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font-family: inherit;
+  font-size: var(--t-caption);
+  font-weight: var(--w-semibold);
+  color: var(--text-muted);
+}
+
+.set-hour.is-on {
+  border-color: transparent;
+  background: var(--text);
+  color: var(--surface);
+}

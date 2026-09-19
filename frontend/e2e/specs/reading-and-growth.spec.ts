@@ -243,6 +243,69 @@ test('설정에서도 알림과 홈 추가를 찾을 수 있다', async ({ page 
   await shot(page, '47 설정 - 알림과 홈 추가');
 });
 
+test('설정 맨 위가 토스 홈에 추가하기다', async ({ page }) => {
+  /*
+   * 이 앱은 토스 안에 있어서, 홈에 두지 않으면 다시 오려면 미니앱 목록을 뒤져야 한다.
+   * 다시 오는 길을 만드는 유일한 줄이라 가장 먼저 보여야 하고, 다른 줄과 같은 모양이면
+   * 찾는 사람만 찾는다. 예전에는 글자 크기와 이용권 아래에 파묻혀 있었다.
+   */
+  await page.goto('/settings');
+  await expect(page.getByTestId('settings')).toBeVisible();
+
+  const groups = page.locator('.set-group');
+  await expect(groups.first()).toHaveText('바로 열기');
+
+  // 홈 추가가 글자 크기보다 위에 있다. 화면 좌표로 확인한다
+  const homeAdd = await page.getByTestId('settings-home-add').boundingBox();
+  const textSize = await page.getByTestId('text-size').boundingBox();
+  expect(homeAdd).not.toBeNull();
+  expect(textSize).not.toBeNull();
+  expect(homeAdd!.y).toBeLessThan(textSize!.y);
+
+  // 알림은 홈 추가 바로 아래다. 둘 다 「다시 오는 길」이라 같이 읽힌다
+  const notify = await page.getByTestId('settings-notify').boundingBox();
+  expect(notify!.y).toBeGreaterThan(homeAdd!.y);
+  expect(notify!.y).toBeLessThan(textSize!.y);
+
+  await shot(page, '47-1 설정 - 홈 추가가 맨 위에 선다', { fullPage: true });
+});
+
+test('알림을 켜면 받고 싶은 시간을 고를 수 있다', async ({ page }) => {
+  /*
+   * 켜지도 않은 사람에게 「몇 시에 받을래요」를 먼저 물으면 순서가 뒤집힌다.
+   * 그래서 시각 줄은 받기로 한 뒤에만 나타난다.
+   */
+  await page.goto('/settings');
+  // 화면이 실제로 섰는지 먼저 본다. 이 줄이 없으면 빈 페이지에서도 「없다」가 통과한다
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await expect(page.getByTestId('settings-notify-time')).toHaveCount(0);
+
+  await page.getByTestId('settings-notify').click();
+  const timeRow = page.getByTestId('settings-notify-time');
+  await expect(timeRow).toBeVisible();
+  // 기본은 밤 9시다. 하루를 덮고 마음을 들여다보는 시간대다
+  await expect(timeRow).toContainText('오후 9시');
+
+  await timeRow.click();
+  const options = page.getByTestId('settings-notify-time-option');
+  await expect(options.first()).toBeVisible();
+  // 새벽은 없다. 그 시각에 오는 알림은 도움이 아니라 방해다
+  await expect(page.getByRole('radio', { name: '오전 3시' })).toHaveCount(0);
+
+  await page.getByRole('radio', { name: '오전 8시' }).click();
+  await expect(timeRow).toContainText('오전 8시');
+  // 지킬 수 있는 말만 한다. 발송이 아직 없다는 것을 그 자리에서 밝힌다
+  await expect(page.getByText('아직은 보내드리지 않아요')).toBeVisible();
+  await shot(page, '47-2 설정 - 알림 받을 시간 고르기', { fullPage: true });
+
+  // 다시 열어도 고른 값이 남는다
+  await page.reload();
+  await expect(page.getByTestId('settings-notify-time')).toContainText('오전 8시');
+
+  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
+  expect(names).toContain('settings_view');
+});
+
 test('같은 답으로 왕복해도 답 수가 늘지 않는다', async ({ page, stub }) => {
   /*
    * 답을 몇 번 받았나는 광고 면제와 권유 시간표를 **둘 다** 쥔다. 그런데 세는 자리가

@@ -262,16 +262,15 @@ function write(items: SavedAnswer[]): boolean {
 /**
  * 간직한 순서대로. 새로 간직한 것이 앞에 온다.
  *
- * **즐겨찾기가 먼저 온다.** 목록이 길어지면 페이지를 넘겨야 하는데, 자주 꺼내 보는 것이
- * 두 번째 페이지에 있으면 즐겨찾기가 아무 일도 안 한 것이 된다. 묶음 안에서는 최신순이다.
+ * **전체 목록은 최신순 하나로만 줄을 세운다.** 예전에는 즐겨찾기를 맨 위로 끌어올렸는데,
+ * 별 하나를 켜는 순간 목록 전체가 다시 섞여서 방금 담은 것이 어디로 갔는지 알 수 없었다.
+ * 시간순이 무너지면 「언제 간직했나」로 찾던 사람이 길을 잃는다.
+ *
+ * 즐겨찾기는 순서를 바꾸는 대신 **자기 탭**을 갖는다. 별을 켜면 그 탭으로 데려가고,
+ * 거기서도 최신순이다. 줄 세우는 규칙이 한 개면 어느 탭에서도 같은 자리를 예상할 수 있다.
  */
 export function listSaved(): SavedAnswer[] {
-  return read().sort((a, b) => {
-    const fa = a.favorite === true ? 1 : 0;
-    const fb = b.favorite === true ? 1 : 0;
-    if (fa !== fb) return fb - fa;
-    return b.savedAt - a.savedAt;
-  });
+  return read().sort((a, b) => b.savedAt - a.savedAt);
 }
 
 /** 즐겨찾기를 켜고 끈다. 지금 값이 무엇인지 돌려준다. 없는 답변이면 false */

@@ -31,6 +31,7 @@ import {
 import { notifyUsable, notifyTemplateCode } from '../../shared/prefs/notify';
 import { recordAndSave, saveFromServer } from '../../domains/quota/quota';
 import { ShareSheet, type ShareLinkState } from '../../domains/share/ShareSheet';
+import { appShareUrl } from '../../domains/share/shareText';
 import type { ShareScope } from '../../shared/api';
 import { useAnalytics } from '../../shared/analytics';
 import type { ApiAnswer } from '../../shared/api';
@@ -58,19 +59,6 @@ function shareUrlFor(token: string): string {
   if (api != null) return `${api}/s/${token}`;
   const origin = typeof window === 'undefined' ? '' : window.location.origin;
   return `${origin}/s/${token}`;
-}
-
-/**
- * 앱 자체를 권할 때 보내는 주소.
- *
- * 답변 공유와 달리 특정 답으로 가지 않는다. 받는 사람이 열면 자기 이야기를 쓰는 첫 화면이다.
- * 백엔드가 서 있으면 그쪽 주소를 쓴다. 토스 딥링크(`intoss://`)는 토스가 깔린 기기에서만
- * 열려서, 카톡으로 받은 사람 중 토스가 없는 쪽이 막다른 곳에 선다.
- */
-function appShareUrl(): string {
-  const api = resolveApiMode() === 'http' ? resolveApiBaseUrl() : null;
-  if (api != null) return api;
-  return typeof window === 'undefined' ? '' : window.location.origin;
 }
 
 /** 카드에 올릴 해설. 첫 문장만 쓰는 일은 공유 카드가 한다 */

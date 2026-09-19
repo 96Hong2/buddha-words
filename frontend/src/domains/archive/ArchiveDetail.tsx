@@ -21,6 +21,29 @@ export interface ArchiveDetailProps {
   today?: boolean;
   onClose: () => void;
   onDelete: (answerId: string) => void;
+  /**
+   * 간직한 말씀을 내보낸다. 보내지 못하면 복사한 것으로 답한다.
+   * 주지 않으면 공유 버튼을 그리지 않는다.
+   */
+  onShare?: (item: SavedAnswer) => Promise<'sent' | 'copied' | 'dismissed' | 'failed'>;
+}
+
+/** 공유 아이콘. 답변 화면 것과 같은 모양을 쓴다 */
+function ShareIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 15.5V4.2M8.4 7.6 12 4l3.6 3.6" />
+      <path d="M5.5 12.8v5.6a1.4 1.4 0 0 0 1.4 1.4h10.2a1.4 1.4 0 0 0 1.4-1.4v-5.6" />
+    </svg>
+  );
 }
 
 function paragraphs(text: string): string[] {
@@ -33,10 +56,19 @@ function paragraphs(text: string): string[] {
  * 간직할 때 함께 남긴 답변 본문을 그대로 펼친다. 없는 조각은 자리를 만들지 않는다.
  * 닫는 길은 셋이다: 닫기 버튼 · 시트 바깥 · 시스템 뒤로가기.
  */
-export function ArchiveDetail({ item, today = false, onClose, onDelete }: ArchiveDetailProps) {
+export function ArchiveDetail({
+  item,
+  today = false,
+  onClose,
+  onDelete,
+  onShare,
+}: ArchiveDetailProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   /** 지우기는 되돌릴 수 없다. 한 번 더 묻고 지운다 */
   const [asking, setAsking] = useState(false);
+  /** 공유를 누른 뒤 한마디. 시트를 못 여는 기기에서는 복사했다고 말한다 */
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
 
   const open = item != null;
 
@@ -45,6 +77,7 @@ export function ArchiveDetail({ item, today = false, onClose, onDelete }: Archiv
   useEffect(() => {
     if (!open) return;
     setAsking(false);
+    setShareNote(null);
     sheetRef.current?.focus();
 
     const { overflow } = document.body.style;
@@ -197,7 +230,8 @@ export function ArchiveDetail({ item, today = false, onClose, onDelete }: Archiv
 
         {nothingMore && (
           <p className="ad-note">
-            이 말씀은 한마디만 남아 있어요. 경전과 풀이는 함께 간직되지 않았어요.
+            이 말씀은 한마디만 남아 있어요. 경전과 풀이는 함께 간직되지 않았어요. 내보내기는
+            경전이 있는 말씀에서만 할 수 있어요.
           </p>
         )}
 
@@ -223,14 +257,46 @@ export function ArchiveDetail({ item, today = false, onClose, onDelete }: Archiv
             </>
           ) : (
             <>
-              <button
-                type="button"
-                className="arch-btn arch-btn--plain"
-                onClick={() => setAsking(true)}
-                {...testId(TEST_IDS.archiveDelete)}
-              >
-                보관함에서 지우기
-              </button>
+              {/*
+                간직한 말씀은 **언제든** 내보낼 수 있다. 며칠 전에 담은 것도 마찬가지다.
+                나가는 것은 경전 구절과 앱 주소뿐이고, 적으신 이야기도 풀이도 따라가지 않는다.
+                답변 화면의 공유와 달리 서버 링크를 만들지 않는다. 그 링크는 방금 받은 답에만
+                살아 있어서, 지난달에 담은 것을 누르면 「찾을 수 없어요」가 돌아온다.
+
+                ⚠ **경전이 함께 담긴 것만 내보낸다.** 앞선 판에서 담아 한마디만 남은 항목은
+                그 한마디가 `modernBuddhaMessage` 다. 그 문장은 이 사람의 고민을 읽고 쓴 글이라
+                메신저에 펼쳐지면 받는 사람이 무슨 일인지 짐작한다. 같은 이유로 공유 랜딩
+                페이지도 그 값을 싣지 않는다(`backend/tests/test_share_landing.py`).
+                경전 구절은 이 고민과 무관하게 원래 있던 글이라 아무나 받아도 사정이 안 드러난다.
+              */}
+              {onShare != null && scripture != null && (
+                <button
+                  type="button"
+                  className="arch-btn arch-btn--share arch-btn--lg"
+                  disabled={sharing}
+                  onClick={() => {
+                    if (sharing) return;
+                    setSharing(true);
+                    setShareNote(null);
+                    void onShare(item)
+                      .then((result) => {
+                        if (result === 'copied') setShareNote('보낼 글을 복사했어요');
+                        else if (result === 'failed') setShareNote('지금은 보내지 못했어요');
+                      })
+                      .finally(() => setSharing(false));
+                  }}
+                  {...testId(TEST_IDS.archiveShare)}
+                >
+                  <span className="arch-btn__icon" aria-hidden="true">
+                    <ShareIcon />
+                  </span>
+                  공유하기
+                </button>
+              )}
+              {/* 무엇이 나가는지 버튼 옆에서 말한다. 누른 뒤에 알면 늦다 */}
+              <p className="ad-hint" role={shareNote != null ? 'status' : undefined}>
+                {shareNote ?? '경전 구절과 앱 주소만 나가요'}
+              </p>
               <button
                 type="button"
                 className="arch-btn arch-btn--primary arch-btn--lg"
@@ -240,6 +306,18 @@ export function ArchiveDetail({ item, today = false, onClose, onDelete }: Archiv
                 닫기
               </button>
               <p className="ad-hint">뒤로가기, 바깥 어두운 곳, 닫기 버튼 모두로 나갈 수 있어요</p>
+              {/*
+                지우기는 맨 끝에 떼어 둔다. 닫기 안내 위에 두면 그 안내가 지우기의 설명처럼
+                읽히고, 되돌릴 수 없는 버튼이 주 동작 사이에 끼어든다
+              */}
+              <button
+                type="button"
+                className="arch-btn arch-btn--plain arch-btn--far"
+                onClick={() => setAsking(true)}
+                {...testId(TEST_IDS.archiveDelete)}
+              >
+                보관함에서 지우기
+              </button>
             </>
           )}
         </div>

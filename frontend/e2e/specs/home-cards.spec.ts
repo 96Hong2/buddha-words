@@ -7,7 +7,7 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
-import { todayISO } from '../support/flow';
+import { askOnce, todayISO } from '../support/flow';
 import { shot } from '../support/shots';
 
 test('예시 칩을 누르면 그 문장이 입력칸에 들어가고 칩은 물러난다', async ({ page }) => {
@@ -122,4 +122,102 @@ test('보관함은 아무것도 없을 때 무엇을 하면 되는지 알려 준
 
   await page.getByRole('button', { name: '이야기하러 가기' }).click();
   await expect(page.getByTestId('concern-field')).toBeVisible();
+});
+
+test('쓰던 글을 언제든 통째로 지울 수 있고, 한 번 더 묻는다', async ({ page }) => {
+  /*
+   * 「지우고 새로 쓰기」는 답을 받고 돌아온 자리에서만 물어봐서, 그 순간을 놓치면 쓴 글을
+   * 손으로 지우는 수밖에 없었다. 이 자리는 **언제나** 있다.
+   *
+   * 대신 쉽게 눌리면 안 된다. 되돌릴 수 없는데 손가락은 전송 버튼 근처를 오간다.
+   * 눌러도 바로 지우지 않고 같은 자리에서 한 번 더 묻는다.
+   */
+  await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
+
+  const field = page.getByTestId('concern-field');
+  // 빈 칸에는 지우기가 없다. 지울 것이 없는 버튼을 두지 않는다
+  await expect(page.getByTestId('draft-clear')).toHaveCount(0);
+
+  await field.fill('요즘 팀장님과 부딪히는 일이 잦아서 계속 마음이 무겁습니다');
+  const clear = page.getByTestId('draft-clear');
+  await expect(clear).toBeVisible();
+
+  /*
+   * 전송 버튼과 멀리 떨어져 있다. 크고 가까우면 「이야기 보내기」를 누르려던 사람이
+   * 쓴 글을 날린다.
+   */
+  const clearBox = await clear.boundingBox();
+  const sendBox = await page.getByTestId('submit').boundingBox();
+  expect(sendBox!.y - clearBox!.y).toBeGreaterThan(200);
+
+  await clear.click();
+  await expect(page.getByText('쓰신 글을 모두 지울까요?')).toBeVisible();
+  await shot(page, '04-1 홈 - 쓰던 글을 지울지 한 번 더 묻는다', { fullPage: true });
+
+  // 그대로 두기를 누르면 글이 남는다. 기본은 남기는 쪽이다
+  await page.getByTestId('draft-clear-cancel').click();
+  await expect(field).toHaveValue(/팀장님/);
+
+  await page.getByTestId('draft-clear').click();
+  await page.getByTestId('draft-clear-confirm').click();
+  await expect(field).toHaveValue('');
+  await expect(page.getByTestId('draft-clear')).toHaveCount(0);
+
+  const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
+  expect(names).toContain('draft_clear_open');
+  expect(names).toContain('draft_clear_confirm');
+});
+
+test('입력칸 위에 뜨는 카드가 제목에 달라붙지 않는다', async ({ page, stub }) => {
+  /*
+   * 「쓰시던 이야기가 남아 있어요」가 「무슨 일이 있었나요?」에 그대로 붙어 있었다.
+   * 카드가 없을 때는 입력칸이 첫째라 스스로 여백을 갖고 있었는데, 그 여백이 카드에게
+   * 넘어가지 않았다. 여기 서는 카드는 앞으로도 늘 있으므로 자리에 규칙을 걸었다.
+   */
+  test.setTimeout(90_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await page.goto('/');
+  await askOnce(page);
+
+  // 답을 받고 홈으로 돌아오면 보낸 글이 입력칸에 남아 있어 카드가 선다
+  await page.getByTestId('again-button').click();
+  const card = page.getByTestId('draft-confirm');
+  await expect(card).toBeVisible();
+
+  const hero = await page.getByRole('heading', { name: /무슨 일이 있었나요/ }).boundingBox();
+  const cardBox = await card.boundingBox();
+  const gap = cardBox!.y - (hero!.y + hero!.height);
+  // 16px 한 칸. 0 이면 제목과 한 덩어리로 읽힌다
+  expect(gap).toBeGreaterThanOrEqual(12);
+  await shot(page, '04-2 홈 - 카드와 제목 사이 여백', { fullPage: true });
+});
+
+test('전체 지우기로 비운 뒤 새로 쓰면 「남아 있어요」가 되살아나지 않는다', async ({
+  page,
+  stub,
+}) => {
+  /*
+   * 「쓰시던 이야기가 남아 있어요」는 글자 수만 보고 서 있었다. 그래서 「전체 지우기」로
+   * 비운 뒤 새 이야기를 쓰기 시작하면 그 카드가 다시 떴다. 방금 스스로 치운 사람에게
+   * 「남아 있어요」라고 되묻는 꼴이다. 비우는 순간 묻던 것도 함께 닫는다.
+   */
+  test.setTimeout(90_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await page.goto('/');
+  await askOnce(page);
+
+  await page.getByTestId('again-button').click();
+  await expect(page.getByTestId('draft-confirm')).toBeVisible();
+
+  // 물어보는 카드에는 손대지 않고 「전체 지우기」로만 비운다
+  await page.getByTestId('draft-clear').click();
+  await page.getByTestId('draft-clear-confirm').click();
+  await expect(page.getByTestId('concern-field')).toHaveValue('');
+  await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
+
+  await page.getByTestId('concern-field').fill('완전히 새로 쓰는 이야기입니다');
+  await expect(page.getByTestId('draft-confirm')).toHaveCount(0);
+  // 지우기는 다시 나타난다. 쓴 글이 있으니 치울 것도 있다
+  await expect(page.getByTestId('draft-clear')).toBeVisible();
 });
