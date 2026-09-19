@@ -11,7 +11,7 @@
  * **광고를 한 번 더** 청했다. 누르지 않은 광고는 심사에서도 걸리고 사람도 잃는다.
  *
  * 답을 만드는 시간은 여전히 비어 있지만, 그 자리는 이제 이어가기 시트가 덮는다.
- * 사람이 「광고 보고 답변 받기」를 누르면 광고가 도는 동안 답이 만들어진다.
+ * 사람이 「답변 받기(광고)」를 누르면 광고가 떠 있는 동안 답이 만들어진다.
  */
 
 export const AD_PLACEMENT = {
@@ -28,12 +28,13 @@ export type AdPlacement = (typeof AD_PLACEMENT)[keyof typeof AD_PLACEMENT];
 /**
  * 자리마다 광고 종류. **이어가기만 전면형이다.**
  *
- * 보상형은 끝까지 본 사람(`userEarnedReward`)에게만 보상을 주라는 것이 앱인토스 규칙이다.
- * 이어가기는 광고를 틀고 5초가 지나면 답을 만들기 시작하고, 그 뒤에 닫아도 답을 준다.
- * 보상형으로 두면 그 답이 끝까지 안 본 사람에게 준 보상이 되어 부당 수익으로 잡힌다.
- * 전면형에는 보상 조건이 없다. 실기기에서 보상형 30초가 너무 길다는 말도 함께 있었다.
+ * 실기기에서 보상형 30초가 너무 길었다. 그래서 짧은 전면형으로 바꾸고 **답을 광고와 떼었다.**
+ * 광고를 곧바로 닫아도 답은 나온다. 앱인토스 정책은 「광고 소비를 보상과 직접 연결하는 구조」를
+ * 금지하고, 광고를 봐야 무언가를 주는 구조는 보상형(`userEarnedReward` 때만 지급)에만 허용된다.
+ * 전면형을 쓰면서 답을 광고 시청에 묶으면 그 규칙을 피해 간 것으로 읽힌다.
  *
  * 간직하기 · 다른 관점은 끝까지 본 사람에게만 주므로 보상형 그대로 둔다.
+ * 이어가기 그룹이 공용(보상형)으로 떨어지지 않는 것도 같은 이유다.
  */
 export const AD_KIND: Record<AdPlacement, 'rewarded' | 'interstitial'> = {
   extension: 'rewarded',
@@ -86,7 +87,7 @@ export function adGroupId(placement: AdPlacement): string | null {
   /*
     이어가기는 공용 그룹으로 떨어지지 않는다. 공용 그룹은 보상형이라, 거기로 떨어지면
     끝까지 안 본 사람에게 답을 주는 보상형 광고가 된다. 값이 없으면 광고 없이 지나가고
-    `ad_skipped(reason='no_group')` 으로 남는다.
+    `ad_skipped(reason='no_group')` 으로 남는다. 번들 검사가 그 빌드를 막는다.
   */
   if (placement === 'continue') {
     return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE) ?? TEST_INTERSTITIAL;

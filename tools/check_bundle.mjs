@@ -100,6 +100,15 @@ for (const name of AD_GROUP_VARS) {
 
 const adsGiven = AD_GROUP_VARS.filter((name) => process.env[name]?.trim());
 
+// 광고를 붙여 빌드하면서 이어가기(전면형) 그룹만 빠뜨리면, 두 번째 이야기부터 광고 없이
+// 조용히 지나간다. 이어가기는 공용 보상형 그룹으로 떨어지지 않으니 여기서 막는다.
+if (adsGiven.length > 0 && !process.env.VITE_AD_GROUP_CONTINUE?.trim()) {
+  problems.push(
+    '광고 그룹을 줬는데 VITE_AD_GROUP_CONTINUE(이어가기 전면형)가 없다.\n' +
+      '    이어가기는 공용 보상형 그룹으로 떨어지지 않는다. 전면형 그룹 id 를 함께 준다.',
+  );
+}
+
 if (problems.length > 0) {
   console.error(`✗ 번들 검사 실패 (${root})\n`);
   for (const p of problems) console.error(`  - ${p}\n`);
@@ -113,7 +122,6 @@ console.log(
     ? `  광고 그룹 id: 들어 있다 (${adsGiven.join(', ')})`
     : '  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다',
 );
-// 이어가기는 전면형 전용 값만 쓴다. 공용(보상형) 그룹으로 떨어지지 않으니 따로 알린다
 console.log(
   process.env.VITE_AD_GROUP_CONTINUE?.trim()
     ? '  이어가기(전면형) 광고 그룹 id: 들어 있다'

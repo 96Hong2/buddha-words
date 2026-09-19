@@ -197,7 +197,8 @@ export function HomeRoute() {
     const text = held.current;
     held.current = '';
     if (text === '') return;
-    // 광고를 끝까지 봤다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다
+    // 이어가기 광고 자리를 지났다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다.
+    // 광고를 끝까지 봤다는 뜻은 아니다. 이 자리 광고는 답과 따로 간다
     markAdWatched();
     send(text);
   }, [send]);

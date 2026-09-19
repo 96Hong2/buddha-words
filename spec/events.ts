@@ -65,7 +65,7 @@ export const EVENTS = {
   action_view:         { params: ['answer_id', 'action_index'] as const },
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
-  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다. continue 는 전면형이라 complete 가 오지 않는다
+  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다. continue 는 전면형이라 complete 가 오지 않고 답과도 무관하다
   rewarded_ad_complete:{ params: ['placement', 'answer_id', 'reward_granted'] as const },
   rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
@@ -84,20 +84,11 @@ export const EVENTS = {
   post_ad_continue:    { params: ['placement', 'answer_id'] as const },                   // 광고를 보고 하던 일을 이어갔다
   post_ad_exit:        { params: ['placement', 'answer_id', 'within_bucket_s'] as const },// 광고 뒤 곧바로 나갔다. 수익이 높아도 여기가 크면 그 자리는 나쁘다
   /**
-   * 광고가 도는 동안 답을 **먼저 만들기 시작했다.**
+   * 전면을 덮던 광고가 닫혔다. 광고가 **화면에 뜬 순간부터** 몇 초였나(불러오는 시간 제외).
    *
-   * 광고를 끝까지 보고 나서 요청을 보내면 30초를 보고 20초를 더 기다린다. 그래서 광고를
-   * 틀고 5초가 지나면 답을 만들기 시작한다. 이 값과 `rewarded_ad_complete` 의 차이가
-   * 「광고는 다 봤는데 답이 늦었다」를 재는 자리다.
-   */
-  ad_answer_early_start:{ params: ['placement'] as const },
-  /** 광고를 틀자마자(5초 안에) 닫았다. 모델을 돌리지 않았다는 뜻이기도 하다 */
-  ad_bail_early:       { params: ['placement', 'within_bucket_s'] as const },
-  /**
-   * 전면을 덮던 광고가 닫혔다. 광고가 **화면에 뜬 순간부터** 닫힐 때까지 몇 초였나.
-   *
-   * 광고 길이는 네트워크가 정하고 문서에도 없다. 버튼에 「30초」처럼 초를 적으려면 이 값으로
-   * 재야 한다. 이어가기(전면형)는 보상 이벤트가 없어서 이것이 유일한 노출 완료 신호다.
+   * 보상형은 보상을 받은 순간까지라 광고 길이에 가깝고, 버튼에 적는 「30초」의 근거다.
+   * 이어가기(전면형)는 사람이 닫은 순간까지라 **광고 길이가 아니라 사람이 얼마나 두고 봤는지**다.
+   * 전면형은 보상 이벤트가 없어서 이것이 유일한 노출 완료 신호다.
    */
   ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
   // 같은 날 두 번째 고민
@@ -230,13 +221,13 @@ export const KPI = {
   activation:       { name: '첫 입력 → 첫 답변 도달',   num: 'answer_generated(pass=1|light, first)', den: 'input_type_* (first)', target: '≥ 90%' },
   quality:          { name: '답변 70% 완독률',         num: 'answer_read_70', den: 'answer_generated(pass=2|light)', target: 'normal·deep 따로 본다' },
   deep_engagement:  { name: 'Deep Extension 클릭률',   num: 'rewarded_ad_start(placement=extension)', den: 'deep_extension_view', target: '실측 후 정한다' },
-  ad_optin:         { name: '보상형 opt-in',           num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
+  ad_optin:         { name: '광고 opt-in',             num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
   save_gate_conv:   { name: '간직 광고 수락률',          num: 'save_gate_accept', den: 'save_gate_view', target: '낮으면 간직을 막고 선 것이다' },
   save_conv:        { name: '누른 뒤 실제로 담김',        num: 'save_complete', den: 'save_click', target: '광고가 중간에서 얼마나 떨구는지 본다' },
   save_done_conv:   { name: '담고 나서 보러 감',          num: 'save_done_action(action=archive)', den: 'save_done_view', target: '낮으면 보관함이 다시 안 읽히는 자리다' },
   favorite_rate:    { name: '즐겨찾기 비율',             num: 'archive_favorite(on=true)', den: 'save_complete', target: '간직과 즐겨찾기가 갈리는지 본다' },
   gen_wait_drop:    { name: '답을 기다리다 나감',         num: 'friction_generation_abandon', den: 'concern_submit', target: '답 만드는 자리에 광고를 두지 않는 지금이 기준선이다' },
-  ad_early_bail:    { name: '광고 틀자마자 닫음',         num: 'ad_bail_early', den: 'rewarded_ad_start(placement=continue)', target: '높으면 광고 문구가 무엇을 얻는지 못 말하고 있다' },
+  ad_early_bail:    { name: '이어가기 광고를 곧바로 닫음',   num: 'ad_close(placement=continue, shown_bucket_ms=<2s)', den: 'ad_close(placement=continue)', target: '닫아도 답은 나온다. 높으면 광고가 거슬린다는 뜻이다' },
   // ── 첫 사용 무료의 본전. 이 셋이 없으면 「광고를 언제부터 띄울까」를 숫자로 못 정한다 ──
   /**
    * 첫 답을 받은 사람 중 몇 %가 두 번째 답까지 오는가.
@@ -253,7 +244,7 @@ export const KPI = {
   ad_skip_reason:   { name: '광고를 건너뛴 이유',         num: 'ad_skipped(reason=X)', den: 'ad_skipped', target: 'no_group 이 남아 있으면 콘솔에서 그룹을 아직 안 준 것이다' },
   ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
   ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start(placement≠continue)', target: '이어가기는 전면형이라 완료가 없다. ad_early_bail 로 본다' },
-  continue_ad_length:{ name: '이어가기 광고가 떠 있던 시간', num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '가장 많은 구간을 버튼 문구의 초로 적는다' },
+  continue_ad_length:{ name: '이어가기 광고를 두고 본 시간', num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '광고 길이가 아니다. 사람이 닫은 시각이다. 버튼 문구의 초로 쓰지 않는다' },
   ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_generated(pass=2|light)', target: '' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
   llm_cost_per_dau: { name: 'LLM cost / DAU',          num: 'Σ model_cost_estimate', den: 'DAU', target: '광고매출 / LLM비용 ≥ 1.5' },

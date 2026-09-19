@@ -146,7 +146,9 @@ export class Analytics {
   private send(name: EventName, params: AnalyticsParams, options: LogOptions): void {
 
     if (name === 'answer_generated') this.sessionAnswers += 1;
+    // 이어가기는 전면형이라 보상 완료가 없다. 닫힌 것이 곧 한 편 본 것이다
     if (name === 'rewarded_ad_complete') this.sessionAds += 1;
+    if (name === 'ad_close' && params.placement === 'continue') this.sessionAds += 1;
 
     this.provider.send(options.kind ?? 'event', name, {
       event_id: newId(),

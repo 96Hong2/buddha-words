@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useBridge } from '../../app/providers';
 import { elapsedBucket, immediateBucket, useAnalytics } from '../../shared/analytics';
 import { readAdOptOut } from '../../shared/lib/adOptOut';
+import type { FullScreenAdHooks } from '../../shared/toss';
 
 import { AD_KIND, adGroupId, type AdPlacement } from './placement';
 
@@ -84,8 +85,11 @@ export interface RewardedAd {
   ready: boolean;
   /** 광고가 떠 있는 동안 true. 버튼을 두 번 누르는 것을 막는다 */
   showing: boolean;
-  /** 보상은 `watched` 하나뿐이다. 전면형은 보상이 없어 `dismissed` 로 끝난다 */
-  show(answerId?: string): Promise<AdOutcome>;
+  /**
+   * 보상은 `watched` 하나뿐이다. 전면형은 보상이 없어 `dismissed` 로 끝난다.
+   * `onShown` 은 광고가 실제로 화면에 뜬 순간이다. 누른 순간과 다르다.
+   */
+  show(answerId?: string, hooks?: FullScreenAdHooks): Promise<AdOutcome>;
 }
 
 export function useRewardedAd(placement: AdPlacement): RewardedAd {
@@ -170,7 +174,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
   }, [analytics, placement, ready, supported]);
 
   const show = useCallback(
-    async (answerId?: string): Promise<AdOutcome> => {
+    async (answerId?: string, hooks?: FullScreenAdHooks): Promise<AdOutcome> => {
       if (!supported) {
         analytics.log('rewarded_ad_fail', { placement, reason: 'unsupported' });
         return 'noFill';
@@ -192,6 +196,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
         outcome = await bridge.ads.showFullScreen(group, {
           onShown: () => {
             shownAt = Date.now();
+            hooks?.onShown?.();
           },
         });
       } catch {
@@ -203,9 +208,9 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       }
 
       /*
-        광고가 실제로 몇 초 떠 있었나. 버튼 문구에 적을 초를 여기서 정한다.
-        광고 길이는 네트워크가 정해서 문서에도 없다. 재 보지 않고 적으면 화면이 지킬 수 없는
-        약속을 한다. 불러오는 시간은 빼고 뜬 순간부터 잰다.
+        광고가 실제로 몇 초 떠 있었나. 불러오는 시간은 빼고 뜬 순간부터 잰다.
+        보상형은 보상을 받은 순간까지(끝까지 본 길이), 전면형은 사람이 닫은 순간까지다.
+        전면형 쪽은 광고 길이가 아니라 사람이 얼마나 참았는지에 가깝다.
       */
       if (outcome !== 'noFill' && shownAt > 0) {
         analytics.log('ad_close', {
@@ -216,7 +221,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
 
       /*
         전면형은 보상이 없어서 언제나 닫힘으로 끝난다. 그것이 정상 종료다. 실패로 세면
-        이어가기 광고가 전부 실패로 읽힌다. 답을 줄지는 부르는 쪽이 5초 규칙으로 정한다.
+        이어가기 광고가 전부 실패로 읽힌다. 전면형 자리는 광고와 무관하게 하던 일을 잇는다.
       */
       if (AD_KIND[placement] === 'interstitial' && outcome === 'dismissed') {
         markWatched(placement, answerId);

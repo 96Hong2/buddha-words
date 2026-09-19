@@ -106,8 +106,8 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
   stub,
 }) => {
   /*
-   * 예전에는 광고를 **끝까지 본 뒤에** 요청을 보냈다. 30초를 보고 답을 또 기다리는 셈이라
-   * 광고를 다 본 사람이 빈 화면 앞에 한 번 더 섰다. 지금은 광고를 틀어 놓고 답을 만든다.
+   * 예전에는 보상형 30초를 **끝까지 본 뒤에** 요청을 보냈다. 지금은 짧은 전면형이고,
+   * 광고가 뜬 순간 답을 만들기 시작한다. 광고와 답은 따로 간다.
    */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -128,9 +128,11 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
   expect(await logNames(page)).not.toContain('rewarded_ad_start');
   await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
 
-  // 광고라는 말은 버튼 안에 있다. 초는 전면형 길이를 재기 전이라 적지 않는다
+  // 누르면 광고가 뜬다는 것을 버튼이 말한다. 다만 광고를 봐야 답을 준다고는 말하지 않는다
   const cta = page.getByTestId('continue-watch');
+  await expect(cta).toContainText('답변 받기');
   await expect(cta).toContainText('광고');
+  await expect(cta, '광고와 답을 맞바꾸는 말이에요').not.toContainText('광고 보고');
   await expect(cta, '재 보지 않은 초를 적었어요').not.toContainText('30초');
   // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
   await expect(sheet).not.toContainText('오늘 답변 다시 보기');
@@ -145,9 +147,6 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
       .map((log) => (log.params as Record<string, unknown>).placement),
   );
   expect(started, '눌렀는데 이어가기 광고가 안 돌았어요').toContain('continue');
-
-  // 광고가 도는 동안 답을 먼저 만들기 시작했다는 표
-  expect(await logNames(page)).toContain('ad_answer_early_start');
 
   /*
     이어가기는 전면형이다. 보상 없이 닫힘으로 끝나는 것이 정상이라 실패로 세지 않고,
@@ -165,7 +164,7 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 광고가 도는 동�
           }),
       ),
     )
-    .toContainEqual({ placement: 'continue', shown_bucket_ms: '5-10s' });
+    .toContainEqual({ placement: 'continue', shown_bucket_ms: '<2s' });
   const adLogs = await page.evaluate(() =>
     (window.__pocketLogs ?? [])
       .filter((log) => log.name === 'rewarded_ad_fail' || log.name === 'rewarded_ad_complete')
@@ -195,8 +194,8 @@ async function openContinueSheet(page: import('@playwright/test').Page) {
 
 test('광고가 끝나기 전에 답을 만들기 시작한다', async ({ page, stub }) => {
   /*
-    이 브랜치의 핵심이다. 광고가 아직 화면을 덮고 있는 동안 답 생성이 시작돼야,
-    광고가 끝났을 때 기다릴 것이 없다. 목 광고를 9초짜리로 길게 틀어 그 사이를 본다.
+    광고가 아직 화면을 덮고 있는 동안 답 생성이 시작돼야, 광고가 끝났을 때 기다릴 것이
+    없다. 목 광고를 9초짜리로 길게 틀어 그 사이를 본다.
   */
   test.setTimeout(150_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -210,7 +209,7 @@ test('광고가 끝나기 전에 답을 만들기 시작한다', async ({ page, 
   const ad = page.getByTestId('mock-fullscreen-ad');
   await expect(ad).toBeVisible();
   await expect
-    .poll(() => logNames(page).then((names) => names.includes('ad_answer_early_start')), {
+    .poll(() => logNames(page).then((names) => names.includes('answer_generated')), {
       timeout: 9000,
     })
     .toBe(true);
@@ -220,10 +219,11 @@ test('광고가 끝나기 전에 답을 만들기 시작한다', async ({ page, 
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
 });
 
-test('광고를 5초 안에 닫으면 답을 만들지 않는다', async ({ page, stub }) => {
+test('광고를 곧바로 닫아도 답은 나온다', async ({ page, stub }) => {
   /*
-    「5초 이내로 나가면 진행하지 마라」가 이 테스트다. 보기 싫어 닫은 사람의 답을 만들어
-    두는 것은 비용만 쓰고 아무도 읽지 않는다.
+    이 자리 광고는 전면형이고 답과 떼어 놓았다. 광고를 봐야 답을 주는 구조는 보상형에만
+    허용된다(앱인토스 「광고 소비를 보상과 직접 연결하는 구조 금지」). 그래서 광고를 뜨자마자
+    닫은 사람도 답을 받는다. 여기서 답을 막으면 그 정책을 피해 간 구조가 된다.
   */
   test.setTimeout(150_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -233,14 +233,34 @@ test('광고를 5초 안에 닫으면 답을 만들지 않는다', async ({ page
   await openContinueSheet(page);
   await page.getByTestId('continue-watch').click();
 
-  // 시트에 그대로 남고, 나갈 길을 함께 알려 준다
-  await expect(page.getByText('아직 답변을 만들지 않았어요')).toBeVisible();
-  await expect(page.getByText('빈 곳을 눌러 닫으세요')).toBeVisible();
-  await expect(page.getByTestId('answer')).toHaveCount(0);
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText('아직 답변을 만들지 않았어요')).toHaveCount(0);
+});
 
-  const names = await logNames(page);
-  expect(names).toContain('ad_bail_early');
-  expect(names).not.toContain('ad_answer_early_start');
+test('광고를 불러오는 동안은 시트에 머물고, 광고가 뜬 뒤에 넘어간다', async ({ page, stub }) => {
+  /*
+    먼저 넘어가면 광고가 뒤늦게 떠서 **읽고 있던 답을 덮는다.** 사람이 예상하지 못한 순간의
+    광고가 된다(앱인토스 UX Red Rule). 광고가 뜬 순간에 답을 만들기 시작하고 화면을 넘긴다.
+  */
+  test.setTimeout(150_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await asNewcomer(page);
+  await withBridge(page, { fullScreenAdLoadMs: 3000, fullScreenAdMs: 2000 });
+
+  await openContinueSheet(page);
+  await page.getByTestId('continue-watch').click();
+
+  // 불러오는 동안: 시트에 그대로 있고, 무엇을 기다리는지 말한다. 답은 아직 만들지 않는다
+  const sheet = page.getByTestId('continue-sheet');
+  await expect(sheet).toContainText('광고를 불러오고 있어요');
+  await page.waitForTimeout(1500);
+  await expect(sheet).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/');
+
+  // 광고가 뜬 뒤에야 넘어가고, 광고가 닫히면 답이 보인다
+  await expect(page.getByTestId('mock-fullscreen-ad')).toBeVisible({ timeout: 5000 });
+  await expect(page).toHaveURL(/\/(loading|answer)/);
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
 });
 
 test('광고가 한 장도 안 오면 막지 않고 그냥 이어간다', async ({ page, stub }) => {
