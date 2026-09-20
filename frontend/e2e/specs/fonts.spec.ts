@@ -11,7 +11,7 @@
  * 둘째 검사는 반대쪽이다. 한때 본문 글꼴을 cdn.jsdelivr.net 에서 **렌더를 막는 방식으로**
  * 받고 마루 부리 세 굵기를 네이버 주소에서 받았다. 홈 화면 한 장에 외부 글꼴만 671KB 가
  * 내려왔고, 미니앱 최초 접속이 20초를 넘어 심사에서 반려됐다. 지금은 본문이 기기 글꼴로 가고
- * 마루 부리만 번들 안에 있다. 누가 편하다고 CDN 링크를 다시 넣으면 여기서 걸린다.
+ * 부리 글꼴(BuddhaSerif)만 번들 안에 있다. 누가 편하다고 CDN 링크를 다시 넣으면 여기서 걸린다.
  */
 
 import { test, expect } from '../support/fixtures';
@@ -30,7 +30,7 @@ async function renderedFonts(page: import('@playwright/test').Page, selector: st
   return fonts.map((f) => f.familyName);
 }
 
-test('경전 글은 마루 부리로 그려진다', async ({ page }) => {
+test('경전 글은 부리 글꼴로 그려진다', async ({ page }) => {
   await page.goto('/');
   await askOnce(page);
 
@@ -40,16 +40,16 @@ test('경전 글은 마루 부리로 그려진다', async ({ page }) => {
   // font-display: swap 이라 처음 한 번은 폴백으로 그려졌다가 바뀐다. 바뀔 때까지만 기다린다
   await expect
     .poll(() => renderedFonts(page, '[data-testid="scripture-text"]'), { timeout: 10_000 })
-    .toContain('MaruBuri');
+    .toContain('BuddhaSerif');
 });
 
-test('첫 화면은 바깥 주소에서 아무것도 받지 않는다', async ({ page }) => {
+test('첫 화면은 바깥 주소에서 아무것도 받지 않는다', async ({ page, baseURL }) => {
+  // 우리 서버가 어디인지는 **설정에서** 받는다. `page.url()` 로 견주면 첫 문서 요청 때
+  // 그 값이 아직 about:blank 라 비교가 통째로 무의미해진다.
+  const ours = new URL(baseURL ?? 'http://localhost').host;
   const outside: string[] = [];
   page.on('request', (req) => {
-    const host = new URL(req.url()).host;
-    if (host !== new URL(page.url() || 'http://localhost').host && !host.startsWith('localhost')) {
-      outside.push(req.url());
-    }
+    if (new URL(req.url()).host !== ours) outside.push(req.url());
   });
 
   await page.goto('/');

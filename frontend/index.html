@@ -56,23 +56,28 @@
            · 본문(sans)은 기기 글꼴로 간다. 아래 --font-sans 스택의 Apple SD Gothic Neo(iOS)
              와 Noto Sans KR(안드로이드)이 Pretendard 와 자획 폭이 거의 같아 티가 안 난다.
            · 제목·경전(serif)만 마루 부리를 쓰되, 상용 한글 2,350자로 줄여 번들에 넣는다
-             (굵기당 441KB → 약 165KB). 만드는 법은 tools/build_fonts.py.
+             (굵기당 441KB → 약 170KB). 서브셋은 OFL 이 말하는 수정본이라 원래 이름을
+             쓸 수 없어 BuddhaSerif 로 새로 붙였다. 만드는 법은 tools/build_fonts.py.
 
          font-display: swap 은 그대로 둔다. 글꼴을 읽는 동안 글자를 숨기지 않는다. -->
     <style>
+      /* 굵기를 범위로 적는다. 전에는 SemiBold(600) face 를 따로 받아 600 자리가 반굵게였는데,
+         그 한 벌이 441KB 라 뺐다. 범위를 안 적으면 600 이 어느 face 로 갈지 브라우저 규칙에
+         맡기게 되므로, 400~500 은 Regular · 600 이상은 Bold 로 **여기서 정해 둔다.**
+         경전 인용과 오늘의 한마디가 반굵게에서 굵게로 한 단 올라간다. */
       @font-face {
-        font-family: MaruBuri;
-        font-weight: 400;
+        font-family: BuddhaSerif;
+        font-weight: 400 500;
         font-style: normal;
         font-display: swap;
-        src: url(/fonts/MaruBuri-Regular.subset.woff2) format('woff2');
+        src: url(/fonts/BuddhaSerif-Regular.woff2) format('woff2');
       }
       @font-face {
-        font-family: MaruBuri;
-        font-weight: 700;
+        font-family: BuddhaSerif;
+        font-weight: 600 900;
         font-style: normal;
         font-display: swap;
-        src: url(/fonts/MaruBuri-Bold.subset.woff2) format('woff2');
+        src: url(/fonts/BuddhaSerif-Bold.woff2) format('woff2');
       }
     </style>
   </head>

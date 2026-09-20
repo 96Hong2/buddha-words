@@ -1,11 +1,20 @@
-마루 부리 (MaruBuri)
+BuddhaSerif — 마루 부리(MaruBuri)를 줄여 만든 글꼴
 
-저작권       NAVER Corp.
-받은 곳      https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/
-안내         https://hangeul.naver.com/font
+원본       마루 부리, NAVER Corp. · NAVER Cultural Foundation Corp.
+라이선스    SIL Open Font License 1.1 (전문은 이 폴더의 OFL.txt)
+받은 곳     https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/
+안내        https://hangeul.naver.com/font
 
-이 폴더의 woff2 는 원본을 그대로 둔 것이 아니라, KS X 1001 상용 한글 2,350자와
-라틴·문장부호만 남겨 다시 만든 것이다. 만드는 법은 tools/build_fonts.py 에 있다.
-글자 모양은 손대지 않았다. 빠진 글자는 CSS 폴백(Noto Serif KR · AppleMyungjo)이 받는다.
+무엇을 바꿨나
+  · 글자를 KS X 1001 상용 한글 2,350자와 라틴·문장부호만 남겼다(굵기당 441KB → 약 170KB).
+  · Regular 와 Bold 를 한 집안 이름으로 묶었다. 원본은 굵기마다 집안 이름이 달라
+    CSS 의 font-weight 가 가짜 굵기를 만든다.
+  · 글자 모양은 손대지 않았다. 빠진 글자는 CSS 폴백(Noto Serif KR · AppleMyungjo)이 받는다.
 
-네이버 글꼴 라이선스에 따라 무료로 쓰고 다시 배포할 수 있다. 글꼴 자체를 팔지 않는다.
+왜 이름을 바꿨나
+  OFL 3항은 수정본이 예약 글꼴 이름(Reserved Font Name)을 쓰는 것을 금지한다.
+  네이버 라이선스 전문의 예약 이름 목록에 MaruBuri 가 들어 있고, OFL FAQ 2.6 은
+  서브셋을 수정으로 본다. 그래서 원래 이름 대신 BuddhaSerif 를 쓴다.
+  만드는 법은 tools/build_fonts.py 에 있다.
+
+글꼴 자체를 팔지 않는다.

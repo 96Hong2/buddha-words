@@ -164,7 +164,10 @@
 
   --font-sans: 'Pretendard Variable', 'Pretendard', 'SUIT', 'Apple SD Gothic Neo',
                -apple-system, BlinkMacSystemFont, system-ui, 'Noto Sans KR', sans-serif;
-  --font-serif: 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
+  /* BuddhaSerif 는 마루 부리를 상용 한글만 남겨 다시 만든 것이다. 서브셋은 OFL 이 말하는
+     수정본이라 원래 이름(MaruBuri)을 쓸 수 없어 새 이름을 붙였다.
+     근거와 만드는 법은 frontend/public/fonts/LICENSE.txt · tools/build_fonts.py */
+  --font-serif: 'BuddhaSerif', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
   /* 굵기는 한 이름 안에 묶여 있다(400 · 700). 이름을 따로 부르지 않는다 */
   --font-serif-bold: var(--font-serif);
   --font-serif-semibold: var(--font-serif);
@@ -349,7 +352,7 @@
   --t-verse: 24px;  --lh-verse: 1.5;
 }
 
-/* 고해상 자세 이미지(1254², 불투명 아이보리 매트). contain 으로 놓고 매트는 multiply 로 배경에 녹인다. */
+/* 자세 이미지(640², 불투명 아이보리 매트). contain 으로 놓고 매트는 multiply 로 배경에 녹인다. */
 .buddha-v2 {
   object-fit: contain;
   mix-blend-mode: multiply;

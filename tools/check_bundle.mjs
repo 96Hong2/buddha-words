@@ -170,20 +170,29 @@ if (weightKb > BUNDLE_BUDGET_KB) {
       '    번들은 앱을 켤 때 통째로 내려받는다. 화면이 안 쓰는 파일도 최초 접속을 늦춘다.\n' +
       '    2026-09-20 에 최초 접속 20초 초과로 심사 반려됐다. 큰 것부터 본다:\n' +
       '      · 화면이 안 부르는 그림은 번들이 아니라 백엔드에 둔다(OG 그림이 그랬다)\n' +
-      '      · 그림은 표시 크기에 맞춰 줄인다(1000px 짜리를 200px 띠에 쓰고 있었다)\n' +
+      '      · 그림은 표시 크기에 맞춰 줄인다(가로 폭 × 화면 배율이 기준이다)\n' +
       '      · 글꼴은 상용 한글만 남긴다(tools/build_fonts.py)',
   );
 }
 
 // ── 6. 바깥에서 받아 오는 것 ──────────────────────────────────────────────
 // 글꼴·스크립트를 CDN 에서 받으면 번들은 가벼워 보여도 최초 접속은 그만큼 늦어진다.
-// 그중 렌더를 막는 <link rel=stylesheet> 는 첫 그림 자체를 세운다. 주석은 세지 않는다.
+// 그중 렌더를 막는 <link rel=stylesheet> 와 CSS 의 @import 는 첫 그림 자체를 세운다.
+//
+// 표기를 여러 갈래로 본다. 번들된 JSX 는 `href="..."` 가 아니라 `href:"..."` 로 나오고,
+// 10초 가계부를 30초 세웠던 사고는 `@import` 였다. 한 갈래만 보면 그대로 지나간다.
+// 주소가 아닌 자리(주석·og:image content)는 세지 않는다. 그건 받아 오는 요청이 아니다.
+const OUTSIDE_SHAPES = [
+  /(?:href|src|from)\s*[=:]\s*["']https?:\/\/[^"']+/g, //  href="..." · href:"..." · src = "..."
+  /url\(["']?https?:\/\/[^)"']+/g, //                      CSS url(...)
+  /@import\s+(?:url\()?["']https?:\/\/[^)"']+/g, //        CSS @import
+  /\bfetch\(\s*["']https?:\/\/[^"']+/g, //                 코드가 직접 부르는 자리
+];
 const outside = [
   ...new Set(
-    (blob.match(/(?:href|src)=["']https?:\/\/[^"']+/g) ?? [])
-      .concat(blob.match(/url\(["']?https?:\/\/[^)"']+/g) ?? [])
-      .map((hit) => hit.replace(/^[^h]*/, ''))
-      .filter((url) => !/localhost|127\.0\.0\.1/.test(url)),
+    OUTSIDE_SHAPES.flatMap((shape) => blob.match(shape) ?? [])
+      .map((hit) => hit.slice(hit.search(/https?:\/\//)))
+      .filter((url) => !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(url)),
   ),
 ];
 if (outside.length > 0) {
