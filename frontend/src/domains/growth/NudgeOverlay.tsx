@@ -126,10 +126,14 @@ export function NudgeOverlay({
 
   async function share(): Promise<void> {
     if (busy) return;
+    /*
+      주소를 만드는 것도 브릿지를 한 번 다녀오는 일이다. 그 사이에 버튼이 멀쩡해 보이면
+      사람이 한 번 더 누르고, 공유 시트가 두 번 열린다. 누른 순간부터 잠근다.
+    */
+    setBusy(true);
     const message = appShareMessage(await appShareUrl(bridge));
 
     if (onSendMessage != null) {
-      setBusy(true);
       let result: 'sent' | 'dismissed' | 'unsupported';
       try {
         result = await onSendMessage(message);
@@ -146,6 +150,7 @@ export function NudgeOverlay({
       if (result === 'dismissed') return;
     }
 
+    setBusy(false);
     try {
       await navigator.clipboard.writeText(message);
       analytics.log('app_share_complete', { method: 'copy' });

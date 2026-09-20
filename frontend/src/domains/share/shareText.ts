@@ -75,7 +75,11 @@ export function shareMessage({ scripture, url, full = false }: ShareTextInput): 
  * 답변 화면과 보관함이 같은 주소를 써야 해서 여기 둔다. 두 자리가 각자 조립하면 한쪽만 고쳐진다.
  */
 export async function appShareUrl(bridge: MiniAppBridge): Promise<string | null> {
-  if (!bridge.supports('share')) return null;
+  /*
+    `supports('share')` 로 먼저 거르지 않는다. 그 값은 **네이티브 공유 시트**를 열 수 있나를
+    말하고, 주소를 만드는 일과 별개다. 시트를 못 여는 기기는 글을 복사해 건네는데, 거기서
+    주소를 빼면 복사한 글에 갈 곳이 없다.
+  */
   try {
     return await bridge.share.appLink();
   } catch {

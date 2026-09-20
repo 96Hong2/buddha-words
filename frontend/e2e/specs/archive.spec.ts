@@ -724,7 +724,11 @@ test('공유 시트를 못 여는 기기는 복사하고 복사했다고 말한�
    * 조용히 지나가면 사용자는 복사된 줄 알거나, 아무 일도 안 일어났다고 여긴다.
    */
   await page.addInitScript(() => {
-    window.__buddhaBridge = { ...window.__buddhaBridge, share: 'unsupported' };
+    window.__buddhaBridge = {
+      ...window.__buddhaBridge,
+      share: 'unsupported',
+      appLink: 'https://toss.im/_m/stub-app-link',
+    };
   });
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await seedWithOriginal(page);
@@ -738,6 +742,11 @@ test('공유 시트를 못 여는 기기는 복사하고 복사했다고 말한�
   expect(copied).toContain(KEPT_ORIGINAL.text);
   // 풀이는 클립보드에도 안 들어간다
   expect(copied).not.toContain('밖에서 얻은 지식보다');
+  /*
+    시트를 못 여는 기기라고 주소까지 빼지 않는다. 복사한 글이 갈 곳 없는 글이 된다.
+    「시트를 열 수 있나」와 「주소를 만들 수 있나」는 다른 질문이다.
+  */
+  expect(copied).toContain('https://toss.im/_m/stub-app-link');
 
   const method = await page.evaluate(
     () => (window.__pocketLogs ?? []).find((log) => log.name === 'archive_share_complete')?.params,
