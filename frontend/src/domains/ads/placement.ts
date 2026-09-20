@@ -78,6 +78,15 @@ export const AD_GROUP_ENV: Record<AdPlacement, string> = {
   save: 'VITE_AD_GROUP_SAVE',
 };
 
+/**
+ * 전면형으로 돌릴 때만 쓰는 이어가기 그룹. **이름을 따로 둔다.**
+ *
+ * 한 이름에 두 종류를 담으면, 보상형 판에서 그 값을 주고도 아무 데도 안 쓰이는 일이 생긴다.
+ * 실제로 그럴 뻔했다: 보상형 판에서 `VITE_AD_GROUP_CONTINUE` 만 주고 공용 그룹을 빠뜨리면
+ * 이어가기가 광고 없이 지나가는데 번들 검사는 통과했다.
+ */
+export const AD_GROUP_CONTINUE_INTERSTITIAL_ENV = 'VITE_AD_GROUP_CONTINUE_INTERSTITIAL';
+
 /** 자리마다 따로 안 줬을 때 보상형 자리가 함께 쓰는 그룹. 전면형 판의 이어가기만 예외다 */
 export const AD_GROUP_FALLBACK_ENV = 'VITE_AD_GROUP_DEFAULT';
 
@@ -101,21 +110,20 @@ function trimmed(raw: unknown): string | null {
  */
 export function adGroupId(placement: AdPlacement): string | null {
   /*
-    이어가기를 전면형으로 돌리는 판에서만 전용 그룹을 쓴다. 공용 그룹은 보상형이라
-    거기로 떨어지면 종류가 어긋난다. 값이 없으면 광고 없이 지나가고
-    `ad_skipped(reason='no_group')` 으로 남는다. 번들 검사가 그 빌드를 막는다.
-
-    보상형으로 돌리는 판에서는 다른 보상형 자리와 똑같이 전용 값이 없으면 공용으로 간다.
+    전면형으로 돌리는 판만 전용 그룹을 쓴다. 공용 그룹은 보상형이라 거기로 떨어지면 종류가
+    어긋난다. 값이 없으면 광고 없이 지나가고 `ad_skipped(reason='no_group')` 으로 남는다.
+    번들 검사가 그 빌드를 막는다.
   */
-  if (placement === 'continue') {
-    if (AD_KIND.continue === 'interstitial') {
-      return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE) ?? TEST_INTERSTITIAL;
-    }
-    return trimmed(import.meta.env.VITE_AD_GROUP_DEFAULT) ?? TEST_REWARDED;
+  if (placement === 'continue' && AD_KIND.continue === 'interstitial') {
+    return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL) ?? TEST_INTERSTITIAL;
   }
+
+  // 보상형 세 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
   const own =
     placement === 'extension'
       ? trimmed(import.meta.env.VITE_AD_GROUP_EXTENSION)
-      : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
+      : placement === 'continue'
+        ? trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE)
+        : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
   return own ?? trimmed(import.meta.env.VITE_AD_GROUP_DEFAULT) ?? TEST_REWARDED;
 }

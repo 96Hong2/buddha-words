@@ -11,11 +11,15 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
+import uuid
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.domains.reminder import service, store
+from app.main import app
 
 
 @pytest.fixture(autouse=True)
@@ -72,6 +76,82 @@ def test_cancelled_reservation_is_not_due():
     service.cancel("anon-1")
 
     assert service.due(now + 3600) == []
+
+
+def test_rejects_a_dueat_that_is_not_a_number():
+    """NaN 은 어떤 비교에도 False 라 범위 검사를 그냥 빠져나간다.
+
+    그렇게 들어간 줄은 보낼 때도 안 걸리고 치울 때도 안 걸려서 영영 남는다.
+    """
+    now = time.time()
+    with pytest.raises(service.InvalidReminderError):
+        service.reserve("anon-1", due_at=float("nan"), action_title="산책", now=now)
+
+
+@pytest.mark.anyio
+async def test_overlapping_jobs_do_not_send_twice():
+    """1분 잡이 1분을 넘기면 다음 회차와 겹친다. 그때 같은 사람에게 두 통이 가면 안 된다."""
+    now = time.time()
+    service.reserve("anon-1", due_at=now + 3600, action_title="산책", now=now)
+    later = now + 3600
+
+    sent: list[str] = []
+    started = asyncio.Event()
+
+    async def send(reminder: store.Reminder) -> bool:
+        # 한 회차가 보내는 중에 다음 회차가 같은 줄을 집어 가는 순간을 만든다
+        started.set()
+        await asyncio.sleep(0.05)
+        sent.append(reminder.anon_key)
+        return True
+
+    await asyncio.gather(service.send_due(send, later), service.send_due(send, later + 1))
+    assert sent == ["anon-1"]
+
+
+@pytest.mark.anyio
+async def test_stub_run_does_not_burn_the_reservation():
+    """아무것도 안 보내는 스텁이 예약을 마감하면, 발송을 켜도 그 기간 사람들은 못 받는다."""
+    now = time.time()
+    service.reserve("anon-1", due_at=now + 3600, action_title="산책", now=now)
+    later = now + 3600
+
+    async def never_sends(reminder: store.Reminder) -> bool:
+        return False
+
+    assert await service.send_due(never_sends, later, record=False) == 0
+    # 예약이 그대로 남아 있어야 발송을 켠 뒤에 나간다
+    assert [r.anon_key for r in service.due(later)] == ["anon-1"]
+
+
+@pytest.mark.anyio
+async def test_a_setup_failure_stops_the_whole_run():
+    """한 사람 실패가 아니라 설정이 틀린 것이다. 삼키면 잡이 초록으로 끝나고 아무도 모른다."""
+    now = time.time()
+    service.reserve("anon-1", due_at=now + 3600, action_title="산책", now=now)
+
+    async def send(reminder: store.Reminder) -> bool:
+        raise service.ReminderSendFatalError("템플릿이 검수 승인 전이에요.")
+
+    with pytest.raises(service.ReminderSendFatalError):
+        await service.send_due(send, now + 3600)
+
+
+@pytest.mark.anyio
+async def test_re_reserving_during_a_run_is_not_marked_as_sent():
+    """잡이 보내는 사이에 다시 누르면, 그 새 예약을 보낸 것으로 덮으면 안 된다."""
+    now = time.time()
+    service.reserve("anon-1", due_at=now + 3600, action_title="산책", now=now)
+    later = now + 3600
+
+    async def send(reminder: store.Reminder) -> bool:
+        # 보내는 동안 사람이 버튼을 다시 눌러 내일로 재예약했다
+        service.reserve("anon-1", due_at=later + 86_400, action_title="전화 한 통", now=later)
+        return True
+
+    await service.send_due(send, later)
+    rows = store.table().due(later + 86_401)
+    assert [r.action_title for r in rows] == ["전화 한 통"]
 
 
 @pytest.mark.anyio
@@ -134,3 +214,59 @@ def test_stored_row_has_no_room_for_the_concern_text():
         "action_title",
         "sent_at",
     }
+
+
+# ── 라우트를 실제로 두드린다 ────────────────────────────────────────────
+#
+# 계층 시험만으로는 안 잡히는 것이 둘 있다. 예비요청(CORS)에서 막히는 메서드와,
+# 화면이 보낸 이상한 값이 라우트를 어떻게 빠져나가는가다.
+
+
+@pytest.fixture
+def client() -> TestClient:
+    return TestClient(app)
+
+
+@pytest.fixture
+def headers() -> dict[str, str]:
+    return {"X-Anon-Key": f"anon-{uuid.uuid4().hex}", "X-Timezone": "Asia/Seoul"}
+
+
+def test_reserve_and_cancel_through_the_api(client: TestClient, headers: dict[str, str]):
+    due_at = time.time() + 86_400
+    res = client.post("/reminder", json={"dueAt": due_at, "actionTitle": "산책"}, headers=headers)
+    assert res.status_code == 200, res.text
+    assert service.due(due_at + 1)
+
+    res = client.request("DELETE", "/reminder", headers=headers)
+    assert res.status_code == 200, res.text
+    assert service.due(due_at + 1) == []
+
+
+def test_api_rejects_a_dueat_that_is_not_a_number(client: TestClient, headers: dict[str, str]):
+    """NaN 이 들어가면 SQLite 에서는 500, PostgreSQL 에서는 영영 안 나가는 행이 남았다."""
+    res = client.post(
+        "/reminder",
+        # json 모듈이 NaN 리터럴을 그대로 쓴다. 화면이 계산을 틀리면 이 모양으로 온다
+        content=b'{"dueAt": NaN, "actionTitle": "\xec\x82\xb0\xec\xb1\x85"}',
+        headers={**headers, "Content-Type": "application/json"},
+    )
+    assert res.status_code == 400, res.text
+
+
+def test_cancel_is_allowed_through_cors(client: TestClient):
+    """DELETE 가 허용 메서드에 없으면 WebView 에서 취소가 통째로 실패한다.
+
+    예비요청이 막히면 본 요청은 아예 나가지 않아서, 화면에는 아무 일도 없는 것처럼 보이고
+    답한 사람에게 알림이 한 번 더 간다.
+    """
+    res = client.options(
+        "/reminder",
+        headers={
+            "Origin": "https://buddha-words.apps.tossmini.com",
+            "Access-Control-Request-Method": "DELETE",
+            "Access-Control-Request-Headers": "X-Anon-Key",
+        },
+    )
+    assert res.status_code == 200, res.text
+    assert "DELETE" in res.headers.get("access-control-allow-methods", "")

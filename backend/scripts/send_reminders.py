@@ -77,7 +77,9 @@ async def run(dry_run: bool) -> int:
 
         sender, client = build_sender(settings)
         try:
-            sent = await service.send_due(sender.send, now)
+            # 스텁은 아무것도 안 보낸다. 보낸 것으로 적으면 검수를 기다리는 동안 쌓인
+            # 예약이 매분 조용히 마감되고, 발송을 켜도 그 기간 사람들은 영영 못 받는다
+            sent = await service.send_due(sender.send, now, record=not sender.is_stub)
         finally:
             if client is not None:
                 await client.aclose()
@@ -105,6 +107,10 @@ def main(argv: list[str] | None = None) -> int:
     except ReminderSenderMisconfiguredError:
         logger.exception("발송기를 만들지 못했다")
         return 2
+    except service.ReminderSendFatalError:
+        # 한 사람이 아니라 설정이 틀렸다. 잡을 빨갛게 두어 사람이 보게 한다
+        logger.exception("설정 때문에 아무에게도 보낼 수 없다")
+        return 3
 
 
 if __name__ == "__main__":

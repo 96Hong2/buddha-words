@@ -85,6 +85,7 @@ const AD_GROUP_VARS = [
   'VITE_AD_GROUP_EXTENSION',
   'VITE_AD_GROUP_CONTINUE',
   'VITE_AD_GROUP_SAVE',
+  'VITE_AD_GROUP_CONTINUE_INTERSTITIAL',
 ];
 
 for (const name of AD_GROUP_VARS) {
@@ -106,11 +107,26 @@ const continueKind = process.env.VITE_AD_CONTINUE_KIND?.trim() === 'interstitial
   ? 'interstitial'
   : 'rewarded';
 
-if (continueKind === 'interstitial' && !process.env.VITE_AD_GROUP_CONTINUE?.trim()) {
+if (continueKind === 'interstitial' && !process.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL?.trim()) {
   problems.push(
-    'VITE_AD_CONTINUE_KIND=interstitial 인데 VITE_AD_GROUP_CONTINUE 가 없다.\n' +
+    'VITE_AD_CONTINUE_KIND=interstitial 인데 VITE_AD_GROUP_CONTINUE_INTERSTITIAL 이 없다.\n' +
       '    전면형으로 돌리려면 전면형 그룹 id 가 있어야 한다. 공용 그룹은 보상형이라 못 쓴다.',
   );
+}
+
+// 보상형 자리는 전용 값이 없으면 공용 그룹으로 떨어진다. 둘 다 없으면 그 자리는 조용히
+// 광고 없이 지나가는데, 화면에도 로그에도 이유가 안 보인다. 그 빌드를 여기서 막는다.
+if (continueKind === 'rewarded' && adsGiven.length > 0) {
+  const missing = ['extension', 'continue', 'save'].filter((slot) => {
+    const own = process.env[`VITE_AD_GROUP_${slot.toUpperCase()}`]?.trim();
+    return !own && !process.env.VITE_AD_GROUP_DEFAULT?.trim();
+  });
+  if (missing.length > 0) {
+    problems.push(
+      `광고 그룹을 줬는데 ${missing.join(' · ')} 자리가 쓸 그룹이 없다.\n` +
+        '    자리마다 값을 주거나 VITE_AD_GROUP_DEFAULT 를 함께 준다.',
+    );
+  }
 }
 
 if (problems.length > 0) {
@@ -129,5 +145,7 @@ console.log(
 console.log(
   continueKind === 'interstitial'
     ? '  이어가기: 전면형. 전용 그룹 id 가 들어 있다'
-    : '  이어가기: 보상형(30초, 끝까지 봐야 이어감). 공용 그룹을 쓴다',
+    : `  이어가기: 보상형(30초, 끝까지 봐야 이어감). 그룹 ${
+        process.env.VITE_AD_GROUP_CONTINUE?.trim() ? '전용' : '공용'
+      }`,
 );

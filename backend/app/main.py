@@ -47,7 +47,9 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST"],
+        # DELETE 는 되짚기 알림 예약을 거둘 때 쓴다. 빠뜨리면 예비요청이 막혀
+        # WebView 에서 취소가 통째로 실패하고, 답한 사람에게 알림이 한 번 더 간다
+        allow_methods=["GET", "POST", "DELETE"],
         # 목록에 없는 헤더는 preflight 에서 막힌다. 기기가 보내도 서버에 닿지 않는다.
         # X-Timezone 은 사용량의 자정 기준이라 빠지면 모두가 서울 자정으로 묶인다
         allow_headers=["Content-Type", "X-Anon-Key", "X-Idempotency-Key", "X-Timezone"],

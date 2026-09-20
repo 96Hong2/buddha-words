@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Protocol
 
+from app.domains.reminder.service import ReminderSendFatalError
 from app.domains.reminder.store import Reminder
 from app.integrations.apps_in_toss.client import TossApiClient, TossBusinessError
 from app.integrations.apps_in_toss.smart_message import (
@@ -71,12 +72,15 @@ class TossSmartMessageSender:
             )
         except TossBusinessError as error:
             if error.error_code == ERROR_CODE_TEMPLATE_NOT_APPROVED:
-                # 설정 문제라 다음 사람도 똑같이 실패한다. 한 줄로 끝내지 말고 올린다
+                # 설정 문제라 다음 사람도 똑같이 실패한다. 한 사람 실패로 삼켜지지 않게
+                # 전용 예외로 바꿔 올린다. 발송 잡이 그걸 보고 멈춘다
                 logger.error(
                     "reminder_template_unapproved",
                     extra={"event": "reminder_template_unapproved"},
                 )
-                raise
+                raise ReminderSendFatalError(
+                    "메시지 템플릿이 검수 승인 전이에요. 콘솔에서 승인을 받아야 보낼 수 있어요."
+                ) from error
             logger.warning(
                 "reminder_send_failed",
                 extra={

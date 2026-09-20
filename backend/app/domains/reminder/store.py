@@ -22,6 +22,11 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 
 from app.core.config import get_settings
+
+# 같은 SQLite 연결을 `persist.Table` 과 나눠 쓴다. 그래서 **잠금도 같은 것을 쓴다.**
+# 공유 카드 저장은 스레드풀에서(`def` 라우트), 예약은 이벤트 루프에서(`async def` 라우트)
+# 돌아서, 각자 다른 잠금을 쓰면 두 스레드가 같은 연결을 동시에 만진다.
+from app.core.persist import _LOCK as _SQLITE_LOCK
 from app.core.persist import _connection as _sqlite_connection
 from app.core.persist import close as _sqlite_close
 
@@ -30,8 +35,12 @@ TABLE_NAME = "reminders"
 # 테이블 이름은 SQL 문자열에 그대로 박힌다. 상수로만 쓰지만 한 번 걸러 둔다
 _NAME = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
 
-# 알림 문구에 실리는 유일한 사용자 글이다. 길면 잘라서 담는다
-ACTION_TITLE_MAX = 80
+# 알림 문구에 실리는 유일한 사용자 글이다. 길면 잘라서 담는다.
+#
+# 30자로 잡은 근거: 공식 문구 가이드가 **내용 25자 이내**(띄어쓰기 포함, 변수는 2글자로
+# 계산)를 요구한다. 템플릿의 고정 문구를 빼면 변수에 쓸 수 있는 자리가 그만큼 좁다.
+# 80자를 그대로 담으면 등록은 통과해도 실제 푸시에서 문장이 잘려 나온다.
+ACTION_TITLE_MAX = 30
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,7 +61,7 @@ class ReminderTable(Protocol):
 
     def due(self, now: float) -> list[Reminder]: ...
 
-    def mark_sent(self, anon_key: str, sent_at: float) -> None: ...
+    def claim(self, reminder: Reminder, now: float) -> bool: ...
 
     def delete(self, anon_key: str) -> None: ...
 
@@ -86,62 +95,71 @@ def _row(values: Any) -> Reminder:
 
 
 class SqliteReminders:
-    """파일 자리. 개발과 테스트가 쓴다."""
+    """파일 자리. 개발과 테스트가 쓴다.
 
-    def __init__(self) -> None:
-        self._ready = False
+    **테이블이 있나를 캐시하지 않는다.** 연결은 `persist` 가 모듈 하나로 들고 있고 설정이
+    가리키는 파일이 바뀌면 조용히 새 파일로 갈아탄다. 이쪽에 「만들어 뒀다」를 기억해 두면
+    새 파일에서 CREATE 를 건너뛰어 `no such table` 이 난다. `IF NOT EXISTS` 는 싸다.
+    """
 
     def _conn(self) -> Any:
         conn = _sqlite_connection()
-        if not self._ready:
-            conn.execute(_CREATE_SQLITE)
-            conn.commit()
-            self._ready = True
+        conn.execute(_CREATE_SQLITE)
         return conn
 
     def upsert(self, reminder: Reminder) -> None:
-        conn = self._conn()
-        conn.execute(
-            f"INSERT OR REPLACE INTO {TABLE_NAME} "
-            "(anon_key, due_at, action_title, sent_at) VALUES (?, ?, ?, ?)",
-            (reminder.anon_key, reminder.due_at, reminder.action_title, reminder.sent_at),
-        )
-        conn.commit()
+        with _SQLITE_LOCK:
+            conn = self._conn()
+            conn.execute(
+                f"INSERT OR REPLACE INTO {TABLE_NAME} "
+                "(anon_key, due_at, action_title, sent_at) VALUES (?, ?, ?, ?)",
+                (reminder.anon_key, reminder.due_at, reminder.action_title, reminder.sent_at),
+            )
+            conn.commit()
 
     def due(self, now: float) -> list[Reminder]:
-        rows = (
-            self._conn()
-            .execute(
-                f"SELECT anon_key, due_at, action_title, sent_at FROM {TABLE_NAME} "
-                "WHERE sent_at IS NULL AND due_at <= ? ORDER BY due_at",
-                (now,),
+        with _SQLITE_LOCK:
+            rows = (
+                self._conn()
+                .execute(
+                    f"SELECT anon_key, due_at, action_title, sent_at FROM {TABLE_NAME} "
+                    "WHERE sent_at IS NULL AND due_at <= ? ORDER BY due_at",
+                    (now,),
+                )
+                .fetchall()
             )
-            .fetchall()
-        )
         return [_row(r) for r in rows]
 
-    def mark_sent(self, anon_key: str, sent_at: float) -> None:
-        conn = self._conn()
-        conn.execute(f"UPDATE {TABLE_NAME} SET sent_at = ? WHERE anon_key = ?", (sent_at, anon_key))
-        conn.commit()
+    def claim(self, reminder: Reminder, now: float) -> bool:
+        with _SQLITE_LOCK:
+            conn = self._conn()
+            cur = conn.execute(
+                f"UPDATE {TABLE_NAME} SET sent_at = ? "
+                "WHERE anon_key = ? AND due_at = ? AND sent_at IS NULL",
+                (now, reminder.anon_key, reminder.due_at),
+            )
+            conn.commit()
+            return cur.rowcount > 0
 
     def delete(self, anon_key: str) -> None:
-        conn = self._conn()
-        conn.execute(f"DELETE FROM {TABLE_NAME} WHERE anon_key = ?", (anon_key,))
-        conn.commit()
+        with _SQLITE_LOCK:
+            conn = self._conn()
+            conn.execute(f"DELETE FROM {TABLE_NAME} WHERE anon_key = ?", (anon_key,))
+            conn.commit()
 
     def sweep(self, now: float, ttl: float) -> None:
-        conn = self._conn()
-        conn.execute(f"DELETE FROM {TABLE_NAME} WHERE due_at <= ?", (now - ttl,))
-        conn.commit()
+        with _SQLITE_LOCK:
+            conn = self._conn()
+            conn.execute(f"DELETE FROM {TABLE_NAME} WHERE due_at <= ?", (now - ttl,))
+            conn.commit()
 
     def clear(self) -> None:
-        conn = self._conn()
-        conn.execute(f"DELETE FROM {TABLE_NAME}")
-        conn.commit()
+        with _SQLITE_LOCK:
+            conn = self._conn()
+            conn.execute(f"DELETE FROM {TABLE_NAME}")
+            conn.commit()
 
     def close(self) -> None:
-        self._ready = False
         _sqlite_close()
 
 
@@ -213,8 +231,14 @@ class PostgresReminders:
         )
         return [_row(r) for r in rows or []]
 
-    def mark_sent(self, anon_key: str, sent_at: float) -> None:
-        self._run(f"UPDATE {TABLE_NAME} SET sent_at = %s WHERE anon_key = %s", (sent_at, anon_key))
+    def claim(self, reminder: Reminder, now: float) -> bool:
+        rows = self._run(
+            f"UPDATE {TABLE_NAME} SET sent_at = %s "
+            "WHERE anon_key = %s AND due_at = %s AND sent_at IS NULL RETURNING anon_key",
+            (now, reminder.anon_key, reminder.due_at),
+            fetch=True,
+        )
+        return bool(rows)
 
     def delete(self, anon_key: str) -> None:
         self._run(f"DELETE FROM {TABLE_NAME} WHERE anon_key = %s", (anon_key,))

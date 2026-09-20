@@ -118,11 +118,17 @@ export function TomorrowReminder({
     });
 
     /*
-      서버 예약. 거절한 사람에게는 보낼 수 없으니 올리지 않는다.
-      올리지 못해도 기기 쪽 한 줄은 남아 있어서 다음에 열면 묻는 길이 산다.
+      서버 예약은 **동의를 받은 사람만** 한다.
+
+      공식 문서: 「기능성 메시지를 발송하려면, 사용자에게 미리 그 목적으로 발송하겠다는
+      알림 동의를 받아야 해요.」 거절(`denied`)은 물론이고 **못 물은 경우(`unsupported`)도
+      동의가 아니다.** 동의 화면이 뜨지 않는 기기(구버전 토스 · 템플릿 코드 없음)에서
+      예약을 올리면, 한 번도 동의한 적 없는 사람에게 알림이 나간다.
+
+      올리지 않아도 기기 쪽 한 줄은 남아 있어서 다음에 열면 묻는 길이 산다.
     */
     let reserved = false;
-    if (notify !== 'denied') {
+    if (notify === 'granted') {
       try {
         await api.reserveReminder({ dueAt: tomorrowAt(hour), actionTitle });
         reserved = true;

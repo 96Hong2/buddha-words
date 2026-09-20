@@ -40,12 +40,16 @@ import './quota.css';
 const TITLE = '이야기를 이어가 볼까요?';
 
 /**
- * 버튼에 몇 초라고 적나.
+ * 버튼에 뭐라고 적나. **종류마다 다르다.**
  *
- * 보상형은 30초다. 전면형은 길이가 문서에 없어 **아무 초도 적지 않는다.**
- * 근거 없는 수치를 화면이 말하게 두지 않는다.
+ * 보상형은 끝까지 봐야 답이 나오므로 「광고 보고 답변 받기」가 사실이고, 얼마나 참아야
+ * 하는지도 적는다(실기기 실측 30초).
+ *
+ * 전면형은 닫아도 답이 나온다. 그 판에서 「광고 보고 답변 받기」라고 적으면 **광고를 봐야
+ * 답을 준다는 거짓말**이 되고, 광고 시청과 보상을 묶은 구조로도 읽힌다. 길이도 문서에 없어
+ * 초를 적지 않는다. 근거 없는 수치를 화면이 말하게 두지 않는다.
  */
-const ADS_SECONDS_LABEL = AD_KIND.continue === 'rewarded' ? '30초 ' : '';
+const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 광고 보고 답변 받기' : '답변 받기';
 
 export interface ContinueSheetProps {
   open: boolean;
@@ -152,12 +156,11 @@ export function ContinueSheet({
               「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지 라벨이
               말하지 않으면 앱인토스 심사 규칙에 닿는다.
 
-              보상형이라 「광고 보고 답변 받기」가 맞는 말이다. 공식 문서가 보상형을 그렇게
-              설명한다. 초를 적는 것은 사용자 요구였다. 얼마나 참아야 하는지 모르는 채
-              전면 광고를 만나면 중간에 닫는다.
+              무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
+              「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 그 말이 거짓이 된다.
             */}
             <span className="continue-sheet__ad-label">
-              {ADS_SECONDS_LABEL}광고 보고 답변 받기{' '}
+              {AD_BUTTON_LABEL}{' '}
               <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
                 광고
               </span>
@@ -168,7 +171,9 @@ export function ContinueSheet({
               ? '광고를 불러오고 있어요'
               : bailed
                 ? '광고를 끝까지 봐야 이어갈 수 있어요'
-                : '광고가 끝나면 답변을 만들어 드려요'}
+                : AD_KIND.continue === 'rewarded'
+                  ? '광고가 끝나면 답변을 만들어 드려요'
+                  : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
           </p>
         </div>
       </div>

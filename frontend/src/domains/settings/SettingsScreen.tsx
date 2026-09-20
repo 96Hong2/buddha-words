@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
 import { useBridge } from '../../app/providers';
+import { useApiClient } from '../../shared/api';
 import {
   notifyTemplateCode,
   notifyUsable,
@@ -96,6 +97,7 @@ function Chevron() {
 export function SettingsScreen() {
   const navigate = useNavigate();
   const bridge = useBridge();
+  const api = useApiClient();
   const analytics = useAnalytics();
   const { archivePass, refreshArchivePass } = useSession();
   const [checking, setChecking] = useState(false);
@@ -193,9 +195,19 @@ export function SettingsScreen() {
         setNotifyNotice(NOTIFY_NOTICE[next]);
         // 여기서 켠 사람에게 세 번째 답에서 같은 것을 또 묻지 않는다
         if (next === 'on') markNotifyDone();
+        /*
+          받지 않기로 했으면 남아 있던 되짚기 예약을 거둔다.
+          거절한 사람에게 예약된 알림이 한 번 더 가면, 여기서 누른 「받지 않음」이
+          아무 일도 하지 않은 것이 된다.
+        */
+        if (next === 'declined') {
+          void api.cancelReminder().catch(() => {
+            // 못 거뒀으면 알림이 한 번 더 간다. 그것 때문에 설정 화면을 멈추지 않는다
+          });
+        }
       })
       .finally(() => setAsking(false));
-  }, [analytics, asking, bridge]);
+  }, [analytics, api, asking, bridge]);
 
   /**
    * 안내·문의 줄로 넘어간다. 어떤 줄이 실제로 눌리는지 남긴다.
