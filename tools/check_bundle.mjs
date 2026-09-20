@@ -14,6 +14,7 @@
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 const root = resolve(process.argv[2] ?? 'frontend/dist');
 
@@ -70,7 +71,14 @@ if (/__buddhaStub/.test(blob)) {
 
 // ── 3. 백엔드 주소 ────────────────────────────────────────────────────────
 // 주소가 없으면 실기기에서 모든 호출이 설정 오류로 죽는다(운영 번들은 https 만 받는다).
-const apiUrls = [...new Set(blob.match(/https:\/\/[a-z0-9.-]*run\.app/g) ?? [])];
+//
+// **코드에서만 찾는다.** index.html 의 og:image 도 같은 백엔드를 가리키므로, HTML 까지
+// 세면 VITE_API_BASE_URL 을 빠뜨린 빌드도 이 검사를 통과해 버린다.
+const code = files
+  .filter((f) => /\.(js|mjs|css)$/.test(f))
+  .map((f) => readFileSync(f, 'utf8'))
+  .join('\n');
+const apiUrls = [...new Set(code.match(/https:\/\/[a-z0-9.-]*run\.app/g) ?? [])];
 if (apiUrls.length === 0) {
   problems.push(
     '백엔드 주소가 번들에 없다.\n' +
@@ -129,6 +137,71 @@ if (continueKind === 'rewarded' && adsGiven.length > 0) {
   }
 }
 
+// ── 5. 번들 무게 ──────────────────────────────────────────────────────────
+// 미니앱 번들(.ait)은 앱을 켤 때 **통째로 내려받는 zip** 이다. 화면이 한 번도 안 쓰는
+// 파일도 최초 접속 시간에 그대로 얹힌다. 2026-09-20 에 이걸로 반려당했다: 쓰지 않는
+// OG 그림 402KB 와 큰 장면 그림들이 실려 번들이 1,357KB 였고, 거기에 외부 CDN 글꼴
+// 671KB 가 더 붙어 최초 접속이 20초를 넘었다.
+//
+// 텍스트는 zip 이 줄이므로 gzip 크기로, 이미 압축된 그림·글꼴은 원래 크기로 센다.
+// 그래야 .ait 실제 무게에 가깝다.
+const BUNDLE_BUDGET_KB = 1100;
+
+function weigh(dir) {
+  let total = 0;
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) {
+      total += weigh(path);
+      continue;
+    }
+    const raw = readFileSync(path);
+    total += /\.(js|mjs|css|html|json|map|svg|txt)$/.test(name)
+      ? gzipSync(raw).length
+      : raw.length;
+  }
+  return total;
+}
+
+const weightKb = Math.round(weigh(root) / 1024);
+if (weightKb > BUNDLE_BUDGET_KB) {
+  problems.push(
+    `번들이 ${weightKb}KB 다. 상한은 ${BUNDLE_BUDGET_KB}KB.\n` +
+      '    번들은 앱을 켤 때 통째로 내려받는다. 화면이 안 쓰는 파일도 최초 접속을 늦춘다.\n' +
+      '    2026-09-20 에 최초 접속 20초 초과로 심사 반려됐다. 큰 것부터 본다:\n' +
+      '      · 화면이 안 부르는 그림은 번들이 아니라 백엔드에 둔다(OG 그림이 그랬다)\n' +
+      '      · 그림은 표시 크기에 맞춰 줄인다(가로 폭 × 화면 배율이 기준이다)\n' +
+      '      · 글꼴은 상용 한글만 남긴다(tools/build_fonts.py)',
+  );
+}
+
+// ── 6. 바깥에서 받아 오는 것 ──────────────────────────────────────────────
+// 글꼴·스크립트를 CDN 에서 받으면 번들은 가벼워 보여도 최초 접속은 그만큼 늦어진다.
+// 그중 렌더를 막는 <link rel=stylesheet> 와 CSS 의 @import 는 첫 그림 자체를 세운다.
+//
+// 표기를 여러 갈래로 본다. 번들된 JSX 는 `href="..."` 가 아니라 `href:"..."` 로 나오고,
+// 10초 가계부를 30초 세웠던 사고는 `@import` 였다. 한 갈래만 보면 그대로 지나간다.
+// 주소가 아닌 자리(주석·og:image content)는 세지 않는다. 그건 받아 오는 요청이 아니다.
+const OUTSIDE_SHAPES = [
+  /(?:href|src|from)\s*[=:]\s*["']https?:\/\/[^"']+/g, //  href="..." · href:"..." · src = "..."
+  /url\(["']?https?:\/\/[^)"']+/g, //                      CSS url(...)
+  /@import\s+(?:url\()?["']https?:\/\/[^)"']+/g, //        CSS @import
+  /\bfetch\(\s*["']https?:\/\/[^"']+/g, //                 코드가 직접 부르는 자리
+];
+const outside = [
+  ...new Set(
+    OUTSIDE_SHAPES.flatMap((shape) => blob.match(shape) ?? [])
+      .map((hit) => hit.slice(hit.search(/https?:\/\//)))
+      .filter((url) => !/^https?:\/\/(localhost|127\.0\.0\.1)/.test(url)),
+  ),
+];
+if (outside.length > 0) {
+  problems.push(
+    `번들이 바깥 주소에서 받아 온다:\n      ${outside.join('\n      ')}\n` +
+      '    글꼴·스크립트는 번들 안에 둔다. 최초 접속 시간에 그대로 더해진다.',
+  );
+}
+
 if (problems.length > 0) {
   console.error(`✗ 번들 검사 실패 (${root})\n`);
   for (const p of problems) console.error(`  - ${p}\n`);
@@ -136,6 +209,7 @@ if (problems.length > 0) {
 }
 
 console.log(`✓ 번들 검사 통과 (${files.length}개 파일, ${root})`);
+console.log(`  번들 무게: 약 ${weightKb}KB (상한 ${BUNDLE_BUDGET_KB}KB)`);
 console.log(`  백엔드 주소: ${apiUrls.join(', ')}`);
 console.log(
   adsGiven.length > 0

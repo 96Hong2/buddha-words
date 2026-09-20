@@ -12,7 +12,7 @@
 
 import { test as base, expect, type Page } from '@playwright/test';
 
-import { DEV_STACK_URLS, FONT_CDN } from './env';
+import { DEV_STACK_URLS } from './env';
 import type { StubDial } from '../../src/shared/api/stubData';
 
 import { MILESTONES_KEY, ONBOARDING_KEY, SEEDED_MILESTONES } from './storage';
@@ -50,11 +50,9 @@ export const test = base.extend<Fixtures>({
 
     page.on('console', (msg) => {
       if (msg.type() !== 'error') return;
-      const text = msg.text();
-      // 글꼴 CDN 실패는 배치를 바꾸지 않는다.
-      // WebKit 은 문구에 주소를 담지 않고 location 에만 남긴다. 둘 다 본다
-      if (FONT_CDN.test(text) || FONT_CDN.test(msg.location().url)) return;
-      errors.push(text);
+      // 글꼴 CDN 실패를 눈감아 주던 자리가 여기 있었다. 이제 바깥에서 받는 글꼴이 없고,
+      // 누가 되살리면 specs/fonts.spec.ts 가 잡는다. 눈감는 규칙을 남겨 두면 그 404 를 또 놓친다
+      errors.push(msg.text());
     });
     page.on('pageerror', (error) => errors.push(`${error.name}: ${error.message}`));
 

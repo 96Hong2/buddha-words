@@ -30,11 +30,3 @@ export const E2E_HTTP_API_URL = 'http://localhost:5187';
  * 결정론에 기대는 단언들이 영문 모를 곳에서 깨진다. 여기서 먼저 잡아 어디로 샜는지 보이게 한다.
  */
 export const DEV_STACK_URLS = ['http://localhost:5173', 'http://localhost:8000'] as const;
-
-/**
- * 글꼴 CDN 은 못 받아도 배치가 그대로다. 이 실패만 눈감는다.
- *
- * 눈감는 것은 콘솔 오류뿐이다. 글꼴이 실제로 걸렸는지는 specs/fonts.spec.ts 가 따로 본다.
- * 그 단언이 없던 동안 경전 글꼴이 통째로 빠진 채 e2e 가 전부 초록이었다.
- */
-export const FONT_CDN = /cdn\.jsdelivr\.net|fonts\.googleapis\.com|hangeul\.pstatic\.net/;

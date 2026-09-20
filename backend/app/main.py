@@ -5,10 +5,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.api.body_limit import BodySizeLimitMiddleware
 from app.api.routes import router
@@ -75,6 +77,24 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(router)
+
+    @app.get("/og/default.jpg", include_in_schema=False)
+    async def og_image() -> FileResponse:
+        """링크 미리보기 그림.
+
+        미니앱 번들에 두면 안 된다. 번들은 앱을 켤 때 통째로 내려받는 zip 이라, 화면이
+        한 번도 쓰지 않는 402KB 짜리 그림이 첫 접속 시간을 그만큼 늘린다. 그리고 번들
+        주소(`*.apps.tossmini.com`)는 토스 밖에서 400 이라 크롤러가 애초에 못 읽었다.
+
+        여기로 옮기면 두 가지가 같이 풀린다: 번들이 가벼워지고, 카톡·트위터가 실제로
+        열 수 있는 주소가 생긴다.
+        """
+        return FileResponse(
+            Path(__file__).parent / "static" / "og_default.jpg",
+            media_type="image/jpeg",
+            # 바뀌는 그림이 아니다. 크롤러가 매번 받아 가지 않게 길게 준다
+            headers={"Cache-Control": "public, max-age=604800, immutable"},
+        )
 
     @app.get("/health")
     async def health() -> dict[str, object]:
