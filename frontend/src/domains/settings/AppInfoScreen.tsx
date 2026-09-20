@@ -44,7 +44,6 @@ export function AppInfoScreen() {
   /** 익명키는 앞 6자만 보여 준다. 전부 적으면 화면 캡쳐가 곧 식별자가 된다 */
   const anonKey = state.status === 'ready' ? `${state.identity.key.slice(0, 6)}…` : '-';
   const quota = response != null && 'quota' in response ? response.quota : undefined;
-  const exhausted = quota?.exhausted === true;
 
   return (
     <div className="set-screen" {...testId(TEST_IDS.appInfo)}>
@@ -81,8 +80,8 @@ export function AppInfoScreen() {
           <div className="set-kv">
             <span className="set-kv-k">오늘 답변</span>
             <span className="set-kv-v">
-              <span className={`set-badge-open${exhausted ? ' set-badge-open--closed' : ''}`}>
-                {exhausted ? '오늘은 다 썼어요' : '열려 있어요'}
+              <span className="set-badge-open">
+                {quota == null ? '확인 전' : quota.firstUsed ? '광고를 보면 이어져요' : '열려 있어요'}
               </span>
             </span>
           </div>

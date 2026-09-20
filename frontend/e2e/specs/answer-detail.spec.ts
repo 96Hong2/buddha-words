@@ -172,7 +172,7 @@ test('뒷부분만 못 받으면 받은 것을 도로 뺏지 않고, 다시 시�
   await expect(page.getByTestId('scripture-text')).toBeVisible();
 
   await expect(page.getByText('나머지를 못 불러왔어요')).toBeVisible();
-  await expect(page.getByText('다시 시도해도 오늘 남은 횟수는 줄지 않아요')).toBeVisible();
+  await expect(page.getByText('다시 시도해도 오늘 쓴 횟수는 늘지 않아요')).toBeVisible();
   await expect(page.getByTestId('analysis')).toHaveCount(0);
   await shot(page, '15 답변 - 뒷부분을 못 불러왔을 때', { fullPage: true });
 

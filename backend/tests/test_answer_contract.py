@@ -212,10 +212,22 @@ def test_response_never_echoes_the_concern(client: TestClient, headers: dict[str
 # ────────────────────────────────────────────────────────────────────────────
 
 
-def test_quota_ceiling_is_five_a_day(client: TestClient, headers: dict[str, str]) -> None:
-    gates = [ask(client, headers, NORMAL_CONCERN)["quota"] for _ in range(5)]
+def test_no_daily_ceiling(client: TestClient, headers: dict[str, str]) -> None:
+    """하루 천장이 없다. 광고를 본 만큼 이어간다 (2026-09-20 폐지).
+
+    막는 일은 분당 제한과 전역 예산 문이 한다. 둘 다 정상 사용자를 안 막는다.
+    """
+    gates = [ask(client, headers, NORMAL_CONCERN)["quota"] for _ in range(usage.MAX_PER_MINUTE)]
     assert gates[0]["freeUsed"] == 1 and gates[0]["adContinuesUsed"] == 0
-    assert gates[-1]["adContinuesUsed"] == 4
+    assert gates[-1]["adContinuesUsed"] == usage.MAX_PER_MINUTE - 1
+    # 상한이 없다는 것을 화면에 그대로 알린다. 숫자를 지어내 보내지 않는다
+    assert gates[-1]["adContinuesMax"] is None
+
+
+def test_too_fast_is_the_only_door(client: TestClient, headers: dict[str, str]) -> None:
+    """천장 대신 서는 문. 여기 닿는 것은 광고를 건너뛰고 몰아 보내는 쪽이다."""
+    for _ in range(usage.MAX_PER_MINUTE):
+        ask(client, headers, NORMAL_CONCERN)
 
     res = client.post(
         "/concern",
@@ -223,7 +235,7 @@ def test_quota_ceiling_is_five_a_day(client: TestClient, headers: dict[str, str]
         headers=headers,
     )
     assert res.status_code == 429
-    assert res.json()["detail"]["reason"] == "quota_exhausted"
+    assert res.json()["detail"]["reason"] == "too_fast"
 
 
 def test_second_story_stops_at_the_ad_gate(client: TestClient, headers: dict[str, str]) -> None:
@@ -382,16 +394,15 @@ def test_timezone_header_cannot_open_a_second_day() -> None:
     """시간대만 바꿔도 하루 칸은 하나다. 지구상 날짜가 셋이라 안 막으면 하루 15회가 된다."""
     anon = f"anon-{uuid.uuid4().hex}"
     seoul = usage.resolve_zone("Asia/Seoul")
-    for _ in range(usage.DAILY_CEILING):
+    for _ in range(5):
         usage.reserve(anon, "normal", seoul)
-    assert usage.reserve(anon, "normal", seoul).gate == "exhausted"
 
+    # 천장은 없앴지만 **칸은 하나여야 한다.** 시간대를 갈아 끼워도 쓴 횟수가 0 으로 돌아가지 않는다
     for name in ("Pacific/Kiritimati", "Etc/GMT+12"):
         out = usage.reserve(anon, "normal", usage.resolve_zone(name))
-        assert out.allowed is False, name
-        assert out.gate == "exhausted", name
+        assert out.allowed is True, name
         assert out.quota["freeUsed"] == 1, name
-        assert out.quota["adContinuesUsed"] == usage.AD_CONTINUES_MAX, name
+        assert out.quota["adContinuesUsed"] > 0, name
 
 
 def test_same_idempotency_key_is_counted_once(client: TestClient, headers: dict[str, str]) -> None:

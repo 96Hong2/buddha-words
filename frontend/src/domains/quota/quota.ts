@@ -1,9 +1,13 @@
 /**
  * 하루에 나눌 수 있는 이야기를 세는 자리.
  *
- * 하루 첫 NORMAL·DEEP 은 그냥 되고, 그다음부터는 이어가기(광고) 4회, 천장이 5회다.
+ * 하루 첫 NORMAL·DEEP 은 그냥 되고, **그다음부터는 광고를 본 만큼 계속 이어간다.**
  * LIGHT 는 하루 10회 소프트 상한이고, INVALID·CRISIS·SOLACE 는 세지 않는다.
  * 하루의 경계는 사용자 시간대 자정이다.
+ *
+ * ⚠ **하루 천장이 있었다(이어가기 4회, 합쳐 5회). 2026-09-20 에 없앴다.**
+ * 광고를 보는 사람을 막고 있었다. 막는 일은 이제 서버만 한다(분당 제한 · 전역 예산 문).
+ * 그래서 이 파일에는 상한 상수가 없다. 화면이 스스로 문을 닫지 않는다.
  *
  * 이 값은 기기에 남는 사본이다. 돈과 이어지는 판정은 서버가 하고, 서버가 `Quota` 를 주면
  * `fromServer` 로 그 값이 이긴다. 성공한 생성만 센다.
@@ -15,15 +19,11 @@ const KEY = 'buddha.quota.v1';
 
 /** 하루 첫 NORMAL·DEEP */
 export const FIRST_FREE = 1;
-/** 광고를 보고 이어갈 수 있는 횟수 */
-export const CONTINUE_LIMIT = 4;
-/** 하루 천장. 첫 이야기 1 + 이어가기 4 */
-export const DAILY_CEILING = 5;
 /** LIGHT 소프트 상한 */
 export const LIGHT_SOFT_CAP = 10;
 
-/** 다음 이야기가 지나야 할 문 */
-export type Gate = 'free' | 'ad_continue' | 'exhausted';
+/** 다음 이야기가 지나야 할 문. 천장을 없애 둘뿐이다 */
+export type Gate = 'free' | 'ad_continue';
 
 /** 사용량을 세는 갈래. invalid·crisis·solace 는 세지 않는다 */
 export type QuotaRoute = 'light' | 'normal' | 'deep' | 'invalid' | 'crisis' | 'solace';
@@ -100,24 +100,14 @@ export function usedToday(state: QuotaState): number {
   return (state.firstUsed ? FIRST_FREE : 0) + state.continuesUsed;
 }
 
-export function continuesLeft(state: QuotaState): number {
-  return Math.max(0, CONTINUE_LIMIT - state.continuesUsed);
-}
-
-export function isExhausted(state: QuotaState): boolean {
-  return continuesLeft(state) === 0 || usedToday(state) >= DAILY_CEILING;
-}
-
 /** LIGHT 가 소프트 상한에 닿았나. 막지는 않고 화면이 참고한다 */
 export function isLightCapped(state: QuotaState): boolean {
   return state.lightUsed >= LIGHT_SOFT_CAP;
 }
 
-/** 지금 NORMAL·DEEP 을 보내면 무엇을 지나야 하나 */
+/** 지금 NORMAL·DEEP 을 보내면 무엇을 지나야 하나. 첫 이야기 뒤는 늘 광고다 */
 export function gateFor(state: QuotaState): Gate {
-  if (!state.firstUsed) return 'free';
-  if (isExhausted(state)) return 'exhausted';
-  return 'ad_continue';
+  return state.firstUsed ? 'ad_continue' : 'free';
 }
 
 /** 성공한 생성 뒤에 센다. 세지 않는 갈래는 그대로 돌려준다 */
@@ -152,10 +142,10 @@ export function fromServer(state: QuotaState, quota: Quota): QuotaState {
 }
 
 /**
- * 서버가 준 사용량을 기기 사본에 덮어쓴다. 답이 온 자리와 천장에 막힌 자리에서 부른다.
+ * 서버가 준 사용량을 기기 사본에 덮어쓴다. 답이 온 자리와 광고 문에 막힌 자리에서 부른다.
  *
  * 기기 값만 믿으면 저장소를 지우거나 앱을 다시 깐 사람에게는 오늘 횟수가 처음으로 돌아간다.
- * 그 상태로 보내면 서버는 같은 익명키의 오늘 횟수를 그대로 기억하고 있어 천장에서 막고,
+ * 그 상태로 보내면 서버는 같은 익명키의 오늘 횟수를 그대로 기억하고 있어 광고 문을 세우고,
  * 화면은 왜 막혔는지 모른 채 오류만 그린다.
  */
 export function saveFromServer(quota: Quota, now: Date = new Date()): QuotaState {
@@ -165,10 +155,5 @@ export function saveFromServer(quota: Quota, now: Date = new Date()): QuotaState
 }
 
 export function toQuota(state: QuotaState): Quota {
-  return {
-    continuesLeft: continuesLeft(state),
-    continuesUsed: state.continuesUsed,
-    firstUsed: state.firstUsed,
-    exhausted: isExhausted(state),
-  };
+  return { continuesUsed: state.continuesUsed, firstUsed: state.firstUsed };
 }

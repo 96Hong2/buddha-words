@@ -104,10 +104,16 @@ async function expectOverlaysInsideColumn(page: Page) {
       // 아이콘이나 그립 같은 작은 조각은 부모를 따라간다. 판 크기만 본다
       if (box.width < 60 || box.height < 24) continue;
 
-      const name = el.getAttribute('class') ?? el.tagName.toLowerCase();
-      // 딤과 그것을 담는 껍데기만 화면 전체를 덮어도 된다. 바깥을 눌러 닫는 동작이 거기에 달려 있다.
-      // 넓이로 봐주면 정작 화면 끝까지 늘어난 시트를 눈감게 되므로 이름으로 가른다
-      if (/dim|scrim|root/.test(name) && box.width >= viewport - slack) continue;
+      // 이름이 없으면 무엇이 걸렸는지 알 수 없다. 클래스 → 테스트 id → 태그 순으로 부른다
+      const name =
+        el.getAttribute('class') ?? el.getAttribute('data-testid') ?? el.tagName.toLowerCase();
+      /*
+        화면 전체를 덮어도 되는 것 둘.
+        ① 딤과 그것을 담는 껍데기. 바깥을 눌러 닫는 동작이 거기에 달려 있다
+        ② 전면 광고. 그것은 SDK 가 우리 기둥 위에 통째로 그리는 판이라 우리가 눕힐 수 없다
+        넓이로 봐주면 정작 화면 끝까지 늘어난 시트를 눈감게 되므로 이름으로 가른다
+      */
+      if (/dim|scrim|root|fullscreen-ad/.test(name) && box.width >= viewport - slack) continue;
       if (box.left >= app.left - slack && box.right <= app.right + slack) continue;
 
       found.push(`${name} (${Math.round(box.left)}~${Math.round(box.right)})`);
@@ -293,7 +299,7 @@ test('위기와 위로 화면도 기둥 안에 든다', async ({ page }) => {
   await expectWideOk(page);
 });
 
-test('가벼운 입력·잘못 적은 입력·소진 화면도 기둥 안에 든다', async ({ page, stub }) => {
+test('가벼운 입력·잘못 적은 입력·이어가기 시트도 기둥 안에 든다', async ({ page, stub }) => {
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   await page.setViewportSize({ width: 1920, height: 900 });
 
@@ -307,7 +313,7 @@ test('가벼운 입력·잘못 적은 입력·소진 화면도 기둥 안에 든
   await expect(page.getByTestId('invalid')).toBeVisible({ timeout: 20_000 });
   await expectWideOk(page);
 
-  // 오늘 몫을 다 쓴 자리. 토스트가 기둥 가운데에 뜬다
+  // 오늘 이미 여러 번 이어간 자리. 천장이 없어 광고 시트가 뜬다(2026-09-20 천장 폐지)
   await page.evaluate(() => {
     const now = new Date();
     const month = `${now.getMonth() + 1}`.padStart(2, '0');
@@ -324,7 +330,7 @@ test('가벼운 입력·잘못 적은 입력·소진 화면도 기둥 안에 든
   });
   await page.goto('/');
   await send(page, CONCERN);
-  await expect(page.getByTestId('exhausted')).toBeVisible();
+  await expect(page.getByTestId('continue-sheet')).toBeVisible();
   await expectWideOk(page);
 });
 

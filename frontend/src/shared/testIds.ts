@@ -75,7 +75,6 @@ export const TEST_IDS = {
   adBadge: 'ad-badge',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
-  exhausted: 'exhausted',
 
   // 공유 · 보관
   shareSheet: 'share-sheet',

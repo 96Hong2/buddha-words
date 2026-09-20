@@ -4,7 +4,7 @@
  * 세 갈래(오래 걸림 · 인터넷 끊김 · 오늘 자리가 닫힘)가 같은 화면을 쓰되 문구만 갈린다.
  * 어느 갈래든 지켜야 하는 것은 같다.
  *   1. 사용자를 탓하지 않고, 무엇이 일어났는지 사람 말로 적는다
- *   2. 쓴 글이 남아 있고 오늘 남은 횟수가 줄지 않았다고 **버튼보다 먼저** 알린다
+ *   2. 쓴 글이 남아 있고 오늘 쓴 횟수가 늘지 않았다고 **버튼보다 먼저** 알린다
  *   3. 나가는 길이 둘(다시 해보기 · 닫기) 있고, 닫으면 쓴 글이 그대로 있다
  */
 
@@ -12,7 +12,7 @@ import { test, expect } from '../support/fixtures';
 import { dismissEntry, NORMAL_CONCERN } from '../support/flow';
 import { shot } from '../support/shots';
 
-const KEPT_NOTE = '쓰신 이야기는 그대로 있어요. 다시 보내도 오늘 남은 횟수는 줄지 않아요';
+const KEPT_NOTE = '쓰신 이야기는 그대로 있어요. 다시 보내도 오늘 쓴 횟수는 늘지 않아요';
 
 const CASES = [
   {
