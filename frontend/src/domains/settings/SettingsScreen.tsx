@@ -37,6 +37,17 @@ import {
 
 import './settings.css';
 
+/**
+ * 문의를 받는 곳. 앱 안에서 바로 메일 앱으로 넘긴다.
+ *
+ * 1호 제품(10초 가계부)이 쓰는 발신 계정을 함께 쓴다. **주인이 실제로 읽는 자리라야 한다.**
+ * 한때 `help@buddhawords.kr` 을 적어 뒀는데 만든 적이 없는 주소였고, 출시 직전까지 남아 있었다.
+ * 앱마다 주소를 새로 만들면 또 그렇게 된다. 읽는 사람이 하나이므로 받는 자리도 하나로 둔다.
+ *
+ * 문의 자체는 토스도 받아 콘솔 「문의 내역」으로 넘겨 준다. 이 줄은 그 길을 모르는 사람을 위한 것이다.
+ */
+const CONTACT_EMAIL = 'pocket.app.official@gmail.com';
+
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
   owned: { value: '있음', desc: '광고 없이 바로 간직할 수 있어요' },
@@ -590,6 +601,32 @@ export function SettingsScreen() {
             </span>
             <Chevron />
           </button>
+
+          <a
+            className="set-item"
+            href={`mailto:${CONTACT_EMAIL}`}
+            onClick={() =>
+              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })
+            }
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              >
+                <rect x="3.4" y="5.6" width="17.2" height="12.8" rx="2.4" />
+                <path d="M4.2 7.2L12 12.6l7.8-5.4" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">문의 이메일</span>
+              <span className="set-item-desc">{CONTACT_EMAIL} 로 보낼 수 있어요</span>
+            </span>
+            <Chevron />
+          </a>
 
           <button
             type="button"

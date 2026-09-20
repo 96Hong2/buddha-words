@@ -146,9 +146,18 @@ export class Analytics {
   private send(name: EventName, params: AnalyticsParams, options: LogOptions): void {
 
     if (name === 'answer_generated') this.sessionAnswers += 1;
-    // 이어가기는 전면형이라 보상 완료가 없다. 닫힌 것이 곧 한 편 본 것이다
-    if (name === 'rewarded_ad_complete') this.sessionAds += 1;
-    if (name === 'ad_close' && params.placement === 'continue') this.sessionAds += 1;
+    /*
+      이 세션에서 광고가 몇 편 떴나. **`ad_close` 하나로만 센다.**
+
+      그 이벤트는 자리도 종류도 가리지 않고 광고가 실제로 화면을 덮었을 때 한 번씩 찍힌다.
+      완주 여부는 `rewarded_ad_complete` 와 `rewarded_ad_fail` 이 따로 지므로 여기서 또 묻지 않는다.
+
+      ⚠ 한때 이 자리가 이어가기를 **두 번 셌다.** 「이어가기는 전면형이라 보상 완료가 없다」는
+      전제로 `rewarded_ad_complete` 와 `ad_close(continue)` 를 나란히 세고 있었는데,
+      이어가기가 보상형으로 돌아온 뒤에도 그대로 남아 완주 한 편이 양쪽에 걸렸다.
+      **세는 자리를 둘로 나누면 어느 한쪽이 바뀔 때 조용히 어긋난다.**
+    */
+    if (name === 'ad_close') this.sessionAds += 1;
 
     this.provider.send(options.kind ?? 'event', name, {
       event_id: newId(),
