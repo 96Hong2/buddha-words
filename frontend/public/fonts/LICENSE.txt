@@ -1,0 +1,11 @@
+마루 부리 (MaruBuri)
+
+저작권       NAVER Corp.
+받은 곳      https://hangeul.pstatic.net/hangeul_static/webfont/MaruBuri/
+안내         https://hangeul.naver.com/font
+
+이 폴더의 woff2 는 원본을 그대로 둔 것이 아니라, KS X 1001 상용 한글 2,350자와
+라틴·문장부호만 남겨 다시 만든 것이다. 만드는 법은 tools/build_fonts.py 에 있다.
+글자 모양은 손대지 않았다. 빠진 글자는 CSS 폴백(Noto Serif KR · AppleMyungjo)이 받는다.
+
+네이버 글꼴 라이선스에 따라 무료로 쓰고 다시 배포할 수 있다. 글꼴 자체를 팔지 않는다.

@@ -152,15 +152,22 @@
 
 
   /* ── 타이포 · 스택 ────────────────────────────────────────────────────
-     웹폰트는 _fonts.html 이 비차단으로 받는다. CSS 안의 @import 는 금지다.
-     10초 가계부에서 index.css 의 @import 가 첫 그림을 30초 막은 사고가 있었다.
-     못 받아도 폴백 스택으로 읽혀야 한다. */
+     CSS 안의 @import 는 금지다. 10초 가계부에서 index.css 의 @import 가 첫 그림을
+     30초 막은 사고가 있었다. 못 받아도 폴백 스택으로 읽혀야 한다.
+
+     본문(sans)에는 웹폰트를 쓰지 않는다. Pretendard 를 CDN 에서 받던 것이 첫 접속을
+     늦춘 원인 중 하나였다(CSS 52KB + 서브셋 178KB, 그것도 렌더를 막으면서). 기기에
+     Pretendard 가 깔려 있으면 그것을 쓰고, 없으면 Apple SD Gothic Neo(iOS)나
+     Noto Sans KR(안드로이드)로 간다. 둘 다 자획 폭이 Pretendard 와 거의 같다.
+
+     제목·경전(serif)만 마루 부리를 쓴다. 상용 한글만 남겨 번들에 넣었다(index.html). */
 
   --font-sans: 'Pretendard Variable', 'Pretendard', 'SUIT', 'Apple SD Gothic Neo',
                -apple-system, BlinkMacSystemFont, system-ui, 'Noto Sans KR', sans-serif;
   --font-serif: 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', 'Apple SD Gothic Neo', serif;
-  --font-serif-bold: 'MaruBuriBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
-  --font-serif-semibold: 'MaruBuriSemiBold', 'MaruBuri', 'Noto Serif KR', 'AppleMyungjo', serif;
+  /* 굵기는 한 이름 안에 묶여 있다(400 · 700). 이름을 따로 부르지 않는다 */
+  --font-serif-bold: var(--font-serif);
+  --font-serif-semibold: var(--font-serif);
 
   /* ── 타이포 · 8단 ─────────────────────────────────────────────────────
      기준 화면 390px. 좌우 gutter 20 + 카드 padding 20 을 빼면 본문 폭 310px.
