@@ -13,6 +13,9 @@ const TRANSFER = [
   { k: '얼마나 두나요', v: '답변을 만드는 동안만요' },
 ];
 
+/** 설정의 문의 줄과 같은 주소다. 두 곳이 갈리면 한쪽이 낡는다 */
+const CONTACT_EMAIL = 'pocket.app.official@gmail.com';
+
 /**
  * 개인정보 안내와 이용약관이 **한 문서**다.
  *
@@ -141,6 +144,8 @@ export function PrivacyScreen() {
             <li>다른 사람에게 해가 되는 쓰임이 확인되면 이용이 제한될 수 있어요.</li>
           </ul>
         </section>
+
+        <p className="set-hint">궁금한 것이 있으면 {CONTACT_EMAIL} 로 보내 주세요</p>
       </div>
     </div>
   );

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router';
 
 import { ApiFailure, messageFor, type ErrorCode } from '../../shared/api';
 import { useApiClient } from '../../shared/api';
-import { elapsedBucket, useAnalytics } from '../../shared/analytics';
+import { charsBucket, elapsedBucket, linesBucket, useAnalytics } from '../../shared/analytics';
+import type { EventName } from '../../shared/analytics';
 import { useSession } from '../../shared/session';
 import { sceneForScreen } from '../../shared/visual/scene';
 import { TEST_IDS, testId } from '../../shared/testIds';
@@ -108,6 +109,18 @@ function LotusMark() {
  * 광고는 이제 이어가기 시트가 **사람이 누른 뒤에** 틀고, 그 광고가 도는 동안 이 화면이
  * 답을 만든다. 광고가 끝나면 답이 이미 와 있다.
  */
+/**
+ * 이 응답이 어느 입력 갈래였나. 로그 이름으로 바꾼다.
+ *
+ * 위기와 잘못 적은 입력은 각자 이벤트(`crisis_detected` · `invalid_input`)가 따로 있어
+ * 여기서 세지 않는다. 그래서 셋만 돌려주고 나머지는 null 이다.
+ */
+function routeEvent(response: { responseType: string; route?: string }): EventName | null {
+  if (response.responseType === 'light') return 'input_type_light';
+  if (response.responseType !== 'answer') return null;
+  return response.route === 'deep' ? 'input_type_deep' : 'input_type_normal';
+}
+
 export function LoadingScreen() {
   const client = useApiClient();
   const analytics = useAnalytics();
@@ -132,6 +145,25 @@ export function LoadingScreen() {
         text: sent,
         idempotencyKey: myKey,
       });
+      /**
+       * 이 이야기가 어느 갈래로 읽혔나. **`model_route` 와 `answer_generated` 보다 먼저 찍는다.**
+       *
+       * 갈래는 서버가 정하므로 보낼 때가 아니라 답이 온 이 자리에서야 안다.
+       * 활성화 지표(`activation`)의 분모이고, 공유 링크로 들어온 사람이 실제로 이야기를
+       * 적었는지(`viral_landing`)도 이 값으로 잇는다.
+       *
+       * ⚠ `stage`(규칙이 잡았나 분류기가 잡았나)는 **서버만 안다.** 응답 스키마에 없어서
+       * 비워 둔다. 지어내지 않는다. 비운 값은 SDK 가 알아서 뺀다.
+       */
+      const typed = routeEvent(response);
+      if (typed != null) {
+        analytics.log(typed, {
+          chars_bucket: charsBucket(sent.length),
+          lines_bucket: linesBucket(sent.split('\n').length),
+          stage: undefined,
+        });
+      }
+
       if (response.responseType === 'light') {
         analytics.log('answer_generated', {
           answer_id: response.answerId,
@@ -140,13 +172,6 @@ export function LoadingScreen() {
           regenerated: false,
         });
       } else if (response.responseType === 'answer') {
-        analytics.log('answer_generated', {
-          answer_id: response.answerId,
-          route: response.route,
-          pass: 1,
-          elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
-          regenerated: false,
-        });
         /**
          * 어느 갈래로 어떤 등급의 모델이 돌았나.
          *
@@ -157,6 +182,9 @@ export function LoadingScreen() {
          * 등급은 갈래가 정한다(DEEP=premium, 나머지=cheap). 예산이 몰려 내려간 판은
          * 서버가 `routeNote` 로 밝히므로 그때는 내려간 값으로 적는다. 지어내지 않는다.
          * 값 자체(토큰·달러)는 기기가 모른다. 그쪽은 서버의 `llm_spend` 로그가 남긴다.
+         *
+         * **`answer_generated` 보다 먼저 찍는다.** 통합 개발 계획의 확인 항목이 정한 순서가
+         * `input_type_*` → `model_route` → `answer_generated(1)` → `answer_generated(2)` 다.
          */
         const downgraded = response.routeNote === 'downgraded_budget';
         analytics.log('model_route', {
@@ -165,6 +193,13 @@ export function LoadingScreen() {
           use_rag: true,
           confidence_bucket: undefined,
           floor_applied: downgraded,
+        });
+        analytics.log('answer_generated', {
+          answer_id: response.answerId,
+          route: response.route,
+          pass: 1,
+          elapsed_bucket_ms: elapsedBucket(Date.now() - startedAt),
+          regenerated: false,
         });
       }
 

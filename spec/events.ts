@@ -15,7 +15,7 @@ export const EVENTS = {
   // 진입
   app_open:            { params: ['is_first_open', 'open_bucket', 'entry', 'days_since_first_open', 'days_since_last_open'] as const },   // entry: home | share_link | archive | other. 어느 화면으로 들어왔든 한 번 찍힌다
   session_start:       { params: ['reason', 'is_first_open', 'days_since_last_open'] as const },   // reason: open | resume. 마지막 활동에서 30분 지나면 새 세션이다
-  session_end:         { params: ['reason', 'duration_bucket_s', 'answers', 'ads'] as const },     // reason: background | timeout
+  session_end:         { params: ['reason', 'duration_bucket_s', 'answers', 'ads'] as const },     // reason: background | timeout. ads 는 이 세션에서 화면을 덮은 광고 편수(`ad_close` 로 센다). 완주 여부는 rewarded_ad_complete 가 따로 진다
   // 온보딩 (두 장. variant=none 이면 안 띄우고 바로 입력으로 간다)
   onboarding_view:     { params: ['step', 'total_steps', 'variant'] as const },
   onboarding_next:     { params: ['step', 'elapsed_bucket_ms'] as const },
@@ -26,7 +26,16 @@ export const EVENTS = {
   concern_input_milestone:{ params: ['chars_bucket', 'lines_bucket'] as const },             // 구간이 올라갈 때 한 번씩
   deep_hint_shown:      { params: ['chars_bucket'] as const },                               // 점 셋이 다 차 「깊게 볼 수 있어요」가 떴다
   concern_submit:       { params: ['chars_bucket', 'lines_bucket', 'typing_bucket_ms', 'deep_hint_seen', 'restored'] as const },
-  // 입력·라우팅
+  /*
+    입력·라우팅. 셋은 **답이 와서 갈래가 정해진 순간** `model_route` 바로 앞에 찍힌다.
+
+    ⚠ 이 셋은 v0.3 부터 여기 적혀 있었는데 **2026-09-20 까지 코드 어디에서도 보내지 않았다.**
+    그동안 `activation` 과 `viral_landing` 은 분모가 비어 계산 자체가 안 됐고, 통합 개발 계획의
+    확인 항목(로그 순서 10번)도 지킬 수 없는 상태였다. 아무도 로그를 안 봐서 몰랐다.
+
+    `stage`(rules · classifier · fallback)는 **아직 못 싣는다.** 그 값을 아는 곳은 서버이고
+    응답 스키마에 없다. 없는 값을 지어내지 않고 비워 둔다. 서버가 내보내면 그때 채운다.
+  */
   input_type_light:    { params: ['chars_bucket', 'lines_bucket'] as const },
   input_type_normal:   { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
   input_type_deep:     { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
@@ -85,10 +94,11 @@ export const EVENTS = {
   post_ad_exit:        { params: ['placement', 'answer_id', 'within_bucket_s'] as const },// 광고 뒤 곧바로 나갔다. 수익이 높아도 여기가 크면 그 자리는 나쁘다
   /**
    * 전면을 덮던 광고가 닫혔다. 광고가 **화면에 뜬 순간부터** 몇 초였나(불러오는 시간 제외).
+   * 자리를 가리지 않고 찍힌다.
    *
-   * 보상형은 보상을 받은 순간까지라 광고 길이에 가깝고, 버튼에 적는 「30초」의 근거다.
-   * 이어가기(전면형)는 사람이 닫은 순간까지라 **광고 길이가 아니라 사람이 얼마나 두고 봤는지**다.
-   * 전면형은 보상 이벤트가 없어서 이것이 유일한 노출 완료 신호다.
+   * 세 자리가 모두 보상형인 지금은 **보상을 받은 순간까지**라 광고 길이에 가깝고,
+   * 버튼에 적는 「30초」의 근거다. 중간에 닫은 사람은 닫은 순간까지다.
+   * 이어가기를 전면형으로 돌리는 빌드에서만 보상 이벤트가 없어 이것이 유일한 완료 신호가 된다.
    */
   ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
   // 같은 날 두 번째 고민
@@ -227,7 +237,7 @@ export const KPI = {
   save_done_conv:   { name: '담고 나서 보러 감',          num: 'save_done_action(action=archive)', den: 'save_done_view', target: '낮으면 보관함이 다시 안 읽히는 자리다' },
   favorite_rate:    { name: '즐겨찾기 비율',             num: 'archive_favorite(on=true)', den: 'save_complete', target: '간직과 즐겨찾기가 갈리는지 본다' },
   gen_wait_drop:    { name: '답을 기다리다 나감',         num: 'friction_generation_abandon', den: 'concern_submit', target: '답 만드는 자리에 광고를 두지 않는 지금이 기준선이다' },
-  ad_early_bail:    { name: '이어가기 광고를 곧바로 닫음',   num: 'ad_close(placement=continue, shown_bucket_ms=<2s)', den: 'ad_close(placement=continue)', target: '닫아도 답은 나온다. 높으면 광고가 거슬린다는 뜻이다' },
+  ad_early_bail:    { name: '이어가기 광고를 끝까지 못 봄', num: 'rewarded_ad_fail(placement=continue, reason=dismissed)', den: 'rewarded_ad_start(placement=continue)', target: '**30초가 긴지 재는 자리다.** 이어가기는 완주해야 답이 나오므로 여기 걸린 사람은 빈손으로 돌아간다. 높으면 전면형 스위치를 켜 볼 근거가 된다' },
   // ── 첫 사용 무료의 본전. 이 셋이 없으면 「광고를 언제부터 띄울까」를 숫자로 못 정한다 ──
   /**
    * 첫 답을 받은 사람 중 몇 %가 두 번째 답까지 오는가.
@@ -242,10 +252,10 @@ export const KPI = {
    */
   second_use_conv:  { name: '두 번째 사용 전환율',        num: 'answer_milestone(answers_total=2)', den: 'answer_milestone(answers_total=1)', target: 'p = C / (R − C). eCPM $8 기준 33%' },
   ad_skip_reason:   { name: '광고를 건너뛴 이유',         num: 'ad_skipped(reason=X)', den: 'ad_skipped', target: 'no_group 이 남아 있으면 콘솔에서 그룹을 아직 안 준 것이다' },
-  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
-  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start(placement≠continue)', target: '이어가기는 전면형이라 완료가 없다. ad_early_bail 로 본다' },
-  continue_ad_length:{ name: '이어가기 광고를 두고 본 시간', num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '광고 길이가 아니다. 사람이 닫은 시각이다. 버튼 문구의 초로 쓰지 않는다' },
-  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete + ad_close(placement=continue)', den: 'answer_generated(pass=2|light)', target: '' },
+  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
+  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start', target: 'placement 별로 본다. 세 자리가 다 보상형이라 이어가기도 여기 든다' },
+  continue_ad_length:{ name: '이어가기 광고 길이',        num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '완주분은 실제 광고 길이다. 버튼에 적은 「30초」의 근거이고, 중앙값이 그것과 멀어지면 문구를 고친다' },
+  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete', den: 'answer_generated(pass=2|light)', target: '' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
   llm_cost_per_dau: { name: 'LLM cost / DAU',          num: 'Σ model_cost_estimate', den: 'DAU', target: '광고매출 / LLM비용 ≥ 1.5' },
   paywall_conv:     { name: 'Paywall 전환',            num: 'purchase_complete', den: 'paywall_view', target: '' },
@@ -272,7 +282,7 @@ export const KPI = {
   action_reach:     { name: 'Action 도달률',           num: 'action_view', den: 'answer_generated(pass=2)', target: '' },
   feedback_pos:     { name: '도움됐다 비율',            num: 'answer_feedback(value=positive)', den: 'answer_feedback', target: 'route·model_tier 별로 본다' },
   // ── 광고 CX 가드레일. 수익만 보지 않는다 ──
-  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'rewarded_ad_complete + ad_close(placement=continue)', target: 'placement 별로 본다. 높은 자리는 옮긴다' },
+  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'rewarded_ad_complete', target: 'placement 별로 본다. 높은 자리는 옮긴다' },
   ad_post_continue: { name: '광고 뒤 이어감',           num: 'post_ad_continue', den: 'rewarded_ad_complete', target: '' },
   ad_next_day:      { name: '광고 본 사람의 D1',        num: 'app_open(days_since_last_open=1) ∩ 전날 rewarded_ad_complete', den: '전날 rewarded_ad_complete unique users', target: '안 본 사람과 비교한다' },
   // ── Carrying Capacity. 새 사용자를 계속 받아도 유지되는가 ──

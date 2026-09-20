@@ -418,12 +418,14 @@ test('설정: 홈에서 앱 정보·처리방침까지 간다', async ({ page })
   // 설정은 앱을 쓰는 데 필요한 안내만 담는다. 도움받을 곳은 여기 없다
   await expect(page.getByTestId('settings')).not.toContainText('도움받을 곳');
   /*
-    ⚠ **앱 안에 문의 주소를 적지 않는다.** 문의는 토스가 받아 콘솔 「문의 내역」으로 넘겨
-    주고, 콘솔 「앱 정보」에 등록한 주소가 사람에게 공개된다. 여기에 또 적어 두었다가
-    없는 주소(`help@buddhawords.kr`)가 출시 직전까지 남아 있었다.
+    ⚠ **문의 주소는 주인이 실제로 읽는 자리여야 한다.** 없는 주소(`help@buddhawords.kr`)가
+    출시 직전까지 남아 있었다. 1호 제품과 같은 계정을 쓰고, 여기와 개인정보 안내 두 곳이
+    같은 주소를 가리키는지 함께 본다. 갈리면 한쪽이 낡는다.
   */
-  await expect(page.getByTestId('settings')).not.toContainText('문의 이메일');
-  await expect(page.getByTestId('settings').locator('a[href^="mailto:"]')).toHaveCount(0);
+  const mail = page.getByTestId('settings').locator('a[href^="mailto:"]');
+  await expect(mail).toHaveCount(1);
+  await expect(mail).toHaveAttribute('href', 'mailto:pocket.app.official@gmail.com');
+  await expect(mail).not.toContainText('buddhawords.kr');
   await shot(page, '41 설정', { fullPage: true });
 
   await page.goto('/settings/app');
@@ -432,7 +434,7 @@ test('설정: 홈에서 앱 정보·처리방침까지 간다', async ({ page })
 
   await page.goto('/settings/privacy');
   await expect(page.getByTestId('privacy')).toBeVisible();
-  await expect(page.getByTestId('privacy')).not.toContainText('@');
+  await expect(page.getByTestId('privacy')).toContainText('pocket.app.official@gmail.com');
   await shot(page, '43 처리방침', { fullPage: true });
 });
 
