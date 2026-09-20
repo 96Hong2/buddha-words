@@ -20,6 +20,7 @@ const FAILURE_CODE: Record<FailureReason, ErrorCode> = {
   timeout: 'TIMEOUT',
   offline: 'OFFLINE',
   budget: 'BUDGET',
+  too_fast: 'TOO_FAST',
   schema: 'SERVER',
   provider: 'SERVER',
 };

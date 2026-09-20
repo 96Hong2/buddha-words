@@ -231,22 +231,6 @@
   margin-left: var(--s-2);
 }
 
-.set-badge-open {
-  display: inline-block;
-  font-size: var(--t-caption);
-  line-height: var(--lh-caption);
-  font-weight: var(--w-semibold);
-  color: var(--success);
-  background: var(--sage-soft);
-  border-radius: var(--r-pill);
-  padding: 3px 10px;
-}
-
-.set-badge-open--closed {
-  color: var(--text-muted);
-  background: var(--surface-chip);
-}
-
 /* ── 스위치 ───────────────────────────────────────────────────────────── */
 
 .set-switch-row {

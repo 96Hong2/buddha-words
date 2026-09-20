@@ -53,8 +53,6 @@ const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 광고 보고 �
 
 export interface ContinueSheetProps {
   open: boolean;
-  /** 오늘 남은 이어가기 횟수 */
-  continuesLeft: number;
   /** 오늘 이미 이어간 횟수. 로그에만 쓴다 */
   continuesUsed: number;
   onClose: () => void;
@@ -64,7 +62,6 @@ export interface ContinueSheetProps {
 
 export function ContinueSheet({
   open,
-  continuesLeft,
   continuesUsed,
   onClose,
   onContinue,
@@ -126,7 +123,11 @@ export function ContinueSheet({
     <BottomSheet open={open} onClose={onClose} ariaLabel={TITLE} className="continue-sheet">
       <div {...testId(TEST_IDS.continueSheet)}>
         <h2 className="continue-sheet__title">{TITLE}</h2>
-        <p className="continue-sheet__sub">오늘 {continuesLeft}번 더 이어갈 수 있어요</p>
+        {/*
+          횟수를 적지 않는다. 하루 천장을 없앴으므로 「오늘 N번 더」는 거짓이 됐다.
+          그 문구는 광고를 보고도 막히는 줄 알게 만들었다(2026-09-20 사용자 지적).
+        */}
+        <p className="continue-sheet__sub">광고를 보면 오늘도 계속 이어갈 수 있어요</p>
 
         <div className="continue-sheet__actions">
           <button

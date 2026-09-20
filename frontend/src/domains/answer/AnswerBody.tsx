@@ -260,7 +260,7 @@ export function AnswerBody({
     setRetrying(true);
     const startedAt = Date.now();
     try {
-      // 같은 멱등키로 요청2만 다시 부른다. 오늘 남은 횟수가 다시 줄지 않는다.
+      // 같은 멱등키로 요청2만 다시 부른다. 오늘 쓴 횟수가 다시 늘지 않는다.
       const next = await client.fetchPass2({
         answerId: answer.answerId,
         idempotencyKey,
@@ -381,7 +381,7 @@ export function AnswerBody({
               </svg>
               나머지를 못 불러왔어요
             </p>
-            <p className="sub-line">다시 시도해도 오늘 남은 횟수는 줄지 않아요</p>
+            <p className="sub-line">다시 시도해도 오늘 쓴 횟수는 늘지 않아요</p>
             <button
               type="button"
               className="btn btn--solid btn--wide"

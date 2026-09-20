@@ -134,19 +134,15 @@ export interface ServerQuota {
 /**
  * 화면이 읽는 사용량.
  *
- * 서버는 **쓴 횟수**를 세고 화면은 **남은 횟수**를 읽는다. 두 모양을 하나로 합치지 않고
+ * 서버는 **쓴 횟수**만 센다. 남은 횟수라는 것은 없다(하루 천장 폐지). 두 모양을 하나로 합치지 않고
  * 뒤집는 자리를 `http.ts` 의 `toQuota` **한 곳**에만 둔다. 화면 쪽을 spec 모양으로 갈아 끼우면
  * 이미 이 이름들로 그리고 있는 앱 정보 화면과 이어가기 시트가 함께 깨진다.
  * 정본은 `ServerQuota` 이고 이 타입은 그것을 옮긴 결과다. 천장 값을 여기서 새로 정하지 않는다.
  */
 export interface Quota {
-  /** 오늘 남은 이어가기 횟수 */
-  continuesLeft: number;
   continuesUsed: number;
   /** 오늘 첫 고민을 이미 썼나 */
   firstUsed: boolean;
-  /** 천장에 닿았나 */
-  exhausted: boolean;
   /** 서버가 준 다음 자정. 아직 그리는 화면은 없지만 받은 값을 버리지 않는다 */
   resetsAt?: string;
 }

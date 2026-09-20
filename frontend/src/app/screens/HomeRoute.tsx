@@ -14,9 +14,7 @@ import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
 import { RecallAsk } from '../../domains/daily/RecallAsk';
 import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
-import { ExhaustedNotice } from '../../domains/quota/ExhaustedNotice';
 import {
-  continuesLeft,
   gateFor,
   readQuota,
   saveFromServer,
@@ -65,9 +63,9 @@ function serverOpensTheGate(): boolean {
   return resolveApiMode() === 'http';
 }
 
-/** 대기 화면이 사용량에 막혀 돌려보낼 때 들려 보내는 것 */
+/** 대기 화면이 광고 문에 막혀 돌려보낼 때 들려 보내는 것 */
 interface HomeNavState {
-  exhaustedQuota?: Quota;
+  gatedQuota?: Quota;
 }
 
 export function HomeRoute() {
@@ -89,7 +87,6 @@ export function HomeRoute() {
 
   const [quota, setQuota] = useState<QuotaState>(readQuota);
   const [continueOpen, setContinueOpen] = useState(false);
-  const [exhausted, setExhausted] = useState(false);
   const [dailyOpen, setDailyOpen] = useState(false);
   /**
    * 「어제 적어 드린 그거 해 보셨나요?」로 물어볼 것.
@@ -115,17 +112,12 @@ export function HomeRoute() {
    * 그 낡은 값이 다시 살아나, 이미 쓴 횟수를 안 쓴 것으로 되돌리고 광고 시트를 또 연다.
    */
   useEffect(() => {
-    const capped = (state as HomeNavState | null)?.exhaustedQuota;
+    const capped = (state as HomeNavState | null)?.gatedQuota;
     // 같은 자리에서 온 값은 한 번만 연다. 글을 고쳐 다시 보낼 때 옛 값이 시트를 또 열면 안 된다
     if (capped == null || handledCap.current === capped) return;
     handledCap.current = capped;
     void navigate(ROUTES.home, { replace: true, state: null });
-    const next = saveFromServer(capped);
-    setQuota(next);
-    if (gateFor(next) === 'exhausted') {
-      setExhausted(true);
-      return;
-    }
+    setQuota(saveFromServer(capped));
     // 보낸 글은 세션이 그대로 쥐고 있다. 광고를 다 보면 이 글을 그대로 잇는다
     held.current = sent;
     setContinueOpen(true);
@@ -180,11 +172,6 @@ export function HomeRoute() {
         send(text);
         return;
       }
-      if (gate === 'exhausted') {
-        setExhausted(true);
-        return;
-      }
-
       held.current = text;
       setContinueOpen(true);
     },
@@ -203,20 +190,6 @@ export function HomeRoute() {
     markAdWatched();
     send(text);
   }, [send]);
-
-  /**
-   * 천장 카드. 오늘의 한마디가 왔을 때만 그 길을 준다.
-   * 시트는 아래 카드 자리가 들고 있어서, 구절이 없으면 눌러도 아무 일이 안 일어난다.
-   */
-  const renderNotice = useCallback(
-    ({ quote }: HomeCardSlot): ReactNode => (
-      <ExhaustedNotice
-        continuesUsed={quota.continuesUsed}
-        onOpenDailyQuote={quote != null ? () => setDailyOpen(true) : undefined}
-      />
-    ),
-    [quota.continuesUsed],
-  );
 
   const renderCards = useCallback(
     ({ quote, focusField }: HomeCardSlot): ReactNode =>
@@ -277,7 +250,6 @@ export function HomeRoute() {
     <>
       <HomeScreen
         onSubmit={submit}
-        notice={exhausted ? renderNotice : undefined}
         renderCards={renderCards}
         /* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 입력칸 바로 위에 한 번 */
         topCard={<RecallAsk entry={recall} onRespond={respondRecall} onClose={hushRecall} />}
@@ -285,7 +257,6 @@ export function HomeRoute() {
 
       <ContinueSheet
         open={continueOpen}
-        continuesLeft={continuesLeft(quota)}
         continuesUsed={quota.continuesUsed}
         onClose={closeContinue}
         onContinue={goOn}

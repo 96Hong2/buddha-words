@@ -680,8 +680,8 @@
           "minimum": 0
         },
         "adContinuesMax": {
-          "type": "integer",
-          "const": 4
+          "description": "이어가기 상한. null 이면 상한이 없다(2026-09-20 하루 천장 폐지). 광고를 본 만큼 이어간다",
+          "type": ["integer", "null"]
         },
         "resetsAt": {
           "type": "string",

@@ -229,6 +229,15 @@ async def concern(body: ConcernRequest, anon_key: AnonKey, zone: UserZone) -> di
             {"reason": "budget_blocked", "quota": usage.snapshot(anon_key, zone)},
         )
 
+    # 하루 천장을 없앤 자리에 서는 문이다. **위기·잘못 적은 입력을 지나서 선다.**
+    # 앞에 세우면 급히 여러 번 보낸 사람의 위기 글이 여기서 막힌다.
+    if usage.too_fast(anon_key):
+        log.warning("too_fast", extra={"event": "too_fast", "max_per_minute": usage.MAX_PER_MINUTE})
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            {"reason": "too_fast", "quota": usage.snapshot(anon_key, zone)},
+        )
+
     route = decision.route if decision.route in ("normal", "deep") else "light"
     outcome = usage.reserve(anon_key, route, zone, body.idempotency_key)
     if outcome.replay is not None:
@@ -239,11 +248,6 @@ async def concern(body: ConcernRequest, anon_key: AnonKey, zone: UserZone) -> di
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             {"reason": "in_progress", "quota": outcome.quota},
-        )
-    if not outcome.allowed:
-        raise HTTPException(
-            status.HTTP_429_TOO_MANY_REQUESTS,
-            {"reason": "quota_exhausted", "quota": outcome.quota},
         )
     if outcome.gate == "ad_continue" and not body.ad_watched and not _rules_saw_crisis(body.text):
         # 오늘 무료분을 다 썼다. 광고를 보기 전이라 여기서 멈춘다.

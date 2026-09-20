@@ -82,16 +82,20 @@ const DAILY = {
   scripture: SCRIPTURE,
 };
 
-/** 오늘 몫을 다 쓴 자리. 서버가 답과 429 에 이 모양 그대로 실어 보낸다 */
-const EXHAUSTED_QUOTA = {
+/**
+ * 오늘 많이 이어간 자리. 서버가 답과 429 에 이 모양 그대로 실어 보낸다.
+ *
+ * `adContinuesMax` 는 null 이다. **하루 천장을 없앴다**(2026-09-20). 광고를 본 만큼 이어간다.
+ */
+const HEAVY_QUOTA = {
   freeUsed: 1,
   adContinuesUsed: 4,
-  adContinuesMax: 4,
+  adContinuesMax: null,
   resetsAt: '2026-09-16T00:00:00+09:00',
 };
 
-/** 무료 한 번을 썼고 이어가기는 네 번 다 남은 자리. 광고 문이 서는 곳이다 */
-const AD_GATE_QUOTA = { ...EXHAUSTED_QUOTA, adContinuesUsed: 0 };
+/** 무료 한 번만 쓴 자리. 광고 문이 서는 곳이다 */
+const AD_GATE_QUOTA = { ...HEAVY_QUOTA, adContinuesUsed: 0 };
 
 /** 위기 응답. 경전도 광고도 없고 창구만 있다 */
 const CRISIS = {
@@ -257,7 +261,7 @@ test('오늘 몫을 다 썼어도 위기 글은 광고가 아니라 창구로 �
     },
   );
 
-  // 오늘 다섯 번을 다 쓴 사람이다. 이 결함이 사는 자리가 바로 여기였다
+  // 오늘 이미 여러 번 이어간 사람이다. 이 결함이 사는 자리가 바로 여기였다
   await seedQuota(page, true, 4);
   await page.goto('/');
   await send(page, VEILED_CRISIS);
@@ -265,7 +269,6 @@ test('오늘 몫을 다 썼어도 위기 글은 광고가 아니라 창구로 �
   await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId('crisis-channel').first()).toContainText('109');
   await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
-  await expect(page.getByTestId('exhausted')).toHaveCount(0);
   // 화면이 기기 사본을 보고 먼저 막았다면 요청 자체가 나가지 않는다
   expect(asked).toEqual([VEILED_CRISIS]);
 
@@ -297,9 +300,9 @@ test('광고 문은 서버가 연다. 보고 나면 이어서 답이 온다', as
 
   const sheet = page.getByTestId('continue-sheet');
   await expect(sheet).toBeVisible({ timeout: 30_000 });
-  await expect(sheet).toContainText('오늘 4번 더 이어갈 수 있어요');
-  // 천장이 아니다. 아직 이어갈 수 있는 사람에게 「오늘은 여기까지」를 보여 주면 나가 버린다
-  await expect(page.getByTestId('exhausted')).toHaveCount(0);
+  await expect(sheet).toContainText('계속 이어갈 수 있어요');
+  // 남은 횟수를 세어 보여 주지 않는다. 천장이 없어 셀 것이 없다
+  await expect(sheet).not.toContainText('번 더');
 
   await page.getByTestId('continue-watch').click();
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
@@ -307,7 +310,7 @@ test('광고 문은 서버가 연다. 보고 나면 이어서 답이 온다', as
   expect(watched).toEqual([false, true]);
 });
 
-test('기기 사본이 천장이라고 해도 답을 줄지는 서버가 정한다', async ({ page }) => {
+test('기기 사본이 많이 썼다고 해도 답을 줄지는 서버가 정한다', async ({ page }) => {
   await page.route(
     (url) => url.pathname === '/daily',
     (route) => route.fulfill(json(DAILY)),
@@ -321,19 +324,21 @@ test('기기 사본이 천장이라고 해도 답을 줄지는 서버가 정한�
     (route) => route.fulfill(json({ ...ANSWER, pass2: { status: 'failed' } })),
   );
 
-  // 기기 값은 다 썼다고 한다. 서버는 아직 남았다고 한다. 세는 것은 서버다
+  // 기기 값은 많이 썼다고 한다. 답을 줄지는 서버가 정한다
   await seedQuota(page, true, 4);
   await page.goto('/');
   await send(page);
 
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId('exhausted')).toHaveCount(0);
   await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
 });
 
-test('기기 저장소가 비어 있어도 천장에 닿으면 오류 화면이 아니라 천장 안내로 간다', async ({
-  page,
-}) => {
+test('너무 빨리 보내면 오류 화면이 아니라 잠시 뒤에 오라고 한다', async ({ page }) => {
+  /*
+   * 하루 천장을 없앤 자리에 서는 문이다(2026-09-20). 사람은 30초 광고를 봐야 이어가므로
+   * 여기 닿지 않는다. 닿는 것은 광고를 건너뛰고 몰아 보내는 쪽이다.
+   * 그래도 **눌러도 소용없는 「다시 해보기」 앞에 세우지 않는다.**
+   */
   await page.route(
     (url) => url.pathname === '/daily',
     (route) => route.fulfill(json(DAILY)),
@@ -344,20 +349,20 @@ test('기기 저장소가 비어 있어도 천장에 닿으면 오류 화면이 
       route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: { reason: 'quota_exhausted', quota: EXHAUSTED_QUOTA } }),
+        body: JSON.stringify({ detail: { reason: 'too_fast', quota: HEAVY_QUOTA } }),
       }),
   );
 
   await page.goto('/');
   await send(page);
 
-  const wall = page.getByTestId('exhausted');
-  await expect(wall).toBeVisible({ timeout: 30_000 });
-  await expect(wall).toContainText('오늘은 여기까지예요');
-  // 눌러도 같은 자리에 남는 「다시 해보기」를 주지 않는다
-  await expect(page.getByTestId('error-state')).toHaveCount(0);
-  // 쓴 글은 그대로 있다
-  await expect(page.getByTestId('concern-field')).toHaveValue(CONCERN);
+  const state = page.getByTestId('error-state');
+  await expect(state).toBeVisible({ timeout: 30_000 });
+  // 「이야기가 몰려 있어요」가 아니다. 남 탓으로 읽히면 이 사람은 영문을 모른다
+  await expect(state).toContainText('조금 빠르게 보내셨어요');
+  await expect(state).not.toContainText('많이 몰려 있어요');
+  // 쓴 글은 그대로 있다고 말해 준다
+  await expect(state).toContainText('쓰신 이야기는 그대로 있어요');
 });
 
 test('전역 예산으로 닫힌 429 는 잠시 뒤에 다시 보내라고 한다', async ({ page }) => {
@@ -371,7 +376,7 @@ test('전역 예산으로 닫힌 429 는 잠시 뒤에 다시 보내라고 한�
       route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ detail: { reason: 'budget_blocked', quota: EXHAUSTED_QUOTA } }),
+        body: JSON.stringify({ detail: { reason: 'budget_blocked', quota: HEAVY_QUOTA } }),
       }),
   );
 

@@ -14,7 +14,7 @@ import type { Quota } from './types';
  */
 export class ApiFailure extends Error {
   constructor(
-    readonly reason: 'timeout' | 'offline' | 'budget' | 'schema' | 'provider',
+    readonly reason: 'timeout' | 'offline' | 'budget' | 'too_fast' | 'schema' | 'provider',
     message: string,
     /**
      * 서버가 막으면서 같이 보낸 오늘 사용량. 하루 천장에 닿았을 때만 온다.
@@ -29,7 +29,14 @@ export class ApiFailure extends Error {
   }
 }
 
-export type ErrorCode = 'OFFLINE' | 'TIMEOUT' | 'BUDGET' | 'SERVER' | 'CLIENT_CONFIG' | 'UNKNOWN';
+export type ErrorCode =
+  | 'OFFLINE'
+  | 'TIMEOUT'
+  | 'BUDGET'
+  | 'TOO_FAST'
+  | 'SERVER'
+  | 'CLIENT_CONFIG'
+  | 'UNKNOWN';
 
 export class ApiError extends Error {
   constructor(
@@ -51,6 +58,8 @@ const MESSAGES: Record<ErrorCode, string> = {
   OFFLINE: '지금 인터넷이 닿지 않아요. 연결을 확인하고 다시 보내 주세요.',
   TIMEOUT: '답을 만드는 데 너무 오래 걸렸어요. 다시 보내 주세요.',
   BUDGET: '지금은 이야기가 많이 몰려 있어요. 잠시 뒤에 다시 보내 주세요.',
+  // 몰려서가 아니라 이 사람이 빠르게 보낸 것이다. 남 탓으로 읽히지 않게 가른다
+  TOO_FAST: '조금 빠르게 보내셨어요. 잠시 뒤에 다시 보내 주세요.',
   SERVER: '잠시 문제가 있었어요. 다시 보내 주세요.',
   CLIENT_CONFIG: '앱 설정에 문제가 있어요. 토스 앱을 업데이트해 주세요.',
   UNKNOWN: '잠시 문제가 있었어요. 다시 보내 주세요.',

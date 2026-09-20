@@ -299,117 +299,29 @@ async function fillUpToday(page: Page) {
   });
 }
 
-test('천장: 이어가기를 다 쓰면 다시 열리는 시각과 갈 곳을 알려 준다', async ({ page }) => {
+test('오늘 많이 이어간 사람도 광고를 보면 계속 이어간다', async ({ page }) => {
+  /*
+   * **하루 천장을 없앴다** (2026-09-20). 광고를 보는 사람을 막고 있었기 때문이다.
+   * 예전에는 이어가기 4회를 쓰면 「오늘은 여기까지예요」가 떴다. 그 화면은 이제 없다.
+   * 막는 일은 서버만 한다(분당 제한 · 전역 예산 문).
+   */
   await fillUpToday(page);
   await page.goto('/');
   await dismissEntry(page);
   await page.getByTestId('concern-field').fill(CONCERN);
   await page.getByTestId('submit').click();
 
-  const wall = page.getByTestId('exhausted');
-  await expect(wall).toBeVisible();
-  await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
+  // 천장 안내가 아니라 이어가기 시트다
+  const sheet = page.getByTestId('continue-sheet');
+  await expect(sheet).toBeVisible();
+  // 남은 횟수를 세어 보여 주지 않는다. 셀 것이 없다
+  await expect(sheet).not.toContainText('번 더');
+  await expect(sheet).toContainText('계속 이어갈 수 있어요');
+  await shot(page, '26 이어가기 - 오늘 많이 쓴 뒤에도 열린다');
 
-  // 다시 열리는 시각을 사용자 시간대 자정으로 알려 준다
-  await expect(wall).toContainText('내일 0시에 다시 열려요');
-  await expect(wall).toContainText(/약 \d+시간 뒤/);
-
-  // 광고 자리는 둘뿐이다. 막혔다고 여기에 한 자리를 더 만들지 않는다
-  await expect(wall).not.toContainText('광고');
-  await expect(page.getByTestId('ad-badge')).toHaveCount(0);
-
-  // 이용권이 푸는 것은 간직 자리 제한이다. 오늘 횟수가 풀리는 것처럼 읽히면 거짓말이 된다
-  await expect(wall).toContainText('마음 보관함 이용권(₩4,900)');
-  await expect(wall).toContainText('오늘 나눌 수 있는 이야기 수가 늘어나지는 않아요');
-
-  // 이용권이 푸는 것은 간직 자리 제한 하나다. 지나간 이야기를 되살려 준다고 적지 않는다
-  await expect(wall).toContainText('간직할 수 있는 개수에 제한이 없어요');
-  await expect(wall).not.toContainText('쌓여요');
-  await expect(wall).not.toContainText('지난 이야기');
-
-  await shot(page, '26 천장 - 내일 다시 오기');
-
-  // 오늘의 한마디로 가는 길
-  await wall.getByRole('button', { name: '오늘의 한마디 보기' }).click();
-  await expect(page.getByTestId('daily-sheet')).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.getByTestId('daily-sheet')).toBeHidden();
-
-  // 보관함으로 가는 길
-  await wall.getByRole('button', { name: '보관함 열어보기' }).click();
-  await expect(page.getByTestId('archive')).toBeVisible();
-});
-
-test('천장: 오늘 받은 답변으로 다시 갈 수 있다', async ({ page }) => {
-  await page.goto('/');
-  await askOnce(page);
-
-  // 답변을 받은 뒤에 오늘 몫이 찼다. 새로 고치면 세션의 답이 사라져 그 길이 없어진다
-  await page.evaluate(() => {
-    const now = new Date();
-    const day = `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}-${`${now.getDate()}`.padStart(2, '0')}`;
-    localStorage.setItem(
-      'buddha.quota.v1',
-      JSON.stringify({ day, firstUsed: true, continuesUsed: 4, lightUsed: 0 }),
-    );
-  });
-
-  await revealBottomBar(page);
-  await page.getByTestId('again-button').click();
-  await expect(page.getByTestId('home')).toBeVisible();
-
-  await page.getByTestId('concern-field').fill(CONCERN);
-  await page.getByTestId('submit').click();
-
-  const wall = page.getByTestId('exhausted');
-  await expect(wall).toBeVisible();
-  await shot(page, '26-1 천장 - 오늘 받은 답변이 있을 때');
-
-  await wall.getByRole('button', { name: '오늘 받은 답변 다시 보기' }).click();
+  // 광고를 끝까지 보면 답이 온다
+  await sheet.getByTestId('continue-watch').click();
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
-});
-
-test('천장: 이용권 판매를 꺼 두면 이용권 이야기를 꺼내지 않는다', async ({ page }) => {
-  await fillUpToday(page);
-  await page.addInitScript(() => {
-    (window as unknown as { __buddhaFlags: unknown }).__buddhaFlags = {
-      iap: { archivePass: false },
-    };
-  });
-  await page.goto('/');
-  await dismissEntry(page);
-  await page.getByTestId('concern-field').fill(CONCERN);
-  await page.getByTestId('submit').click();
-
-  const wall = page.getByTestId('exhausted');
-  await expect(wall).toBeVisible();
-  await expect(wall).not.toContainText('이용권');
-  await expect(wall).toContainText('내일 0시에 다시 열려요');
-  await expect(wall.getByRole('button', { name: '보관함 열어보기' })).toBeVisible();
-});
-
-test('천장: 이용권을 이미 가진 사람에게는 이용권 이야기를 꺼내지 않는다', async ({ page }) => {
-  await fillUpToday(page);
-  // 토스에 산 기록이 남아 있는 사람이다. 기기를 바꿔도 이 이력이 이용권을 되살린다
-  await page.addInitScript(() => {
-    window.__buddhaBridge = { purchaseOwned: ['archive_pass'] };
-  });
-  await page.goto('/');
-  await dismissEntry(page);
-  await page.getByTestId('concern-field').fill(CONCERN);
-  await page.getByTestId('submit').click();
-
-  const wall = page.getByTestId('exhausted');
-  await expect(wall).toBeVisible();
-
-  // 이미 산 사람에게 같은 것을 다시 팔지 않는다
-  await expect(wall).not.toContainText('이용권');
-  await expect(wall).not.toContainText('₩4,900');
-
-  // 팔 말이 없어도 갈 곳은 그대로 남는다
-  await expect(wall).toContainText('내일 0시에 다시 열려요');
-  await expect(wall.getByRole('button', { name: '보관함 열어보기' })).toBeVisible();
-  await shot(page, '26-2 천장 - 이용권을 이미 가졌을 때');
 });
 
 test('설정: 홈에서 앱 정보·처리방침까지 간다', async ({ page }) => {

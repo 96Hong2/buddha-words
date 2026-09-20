@@ -18,7 +18,7 @@ import type { ApiExtension, ApiResponse, DailyQuote, Pass2, Quota, Scripture } f
 
 /** 브릿지가 준 익명 식별키. 서버 인증은 이 헤더 하나다 */
 const HEADER_ANON_KEY = 'X-Anon-Key';
-/** 같은 키로 다시 불러도 오늘 남은 횟수가 줄지 않는다. 서버가 지난번 판정을 그대로 돌려준다 */
+/** 같은 키로 다시 불러도 오늘 쓴 횟수가 늘지 않는다. 서버가 지난번 판정을 그대로 돌려준다 */
 const HEADER_IDEMPOTENCY = 'X-Idempotency-Key';
 /** 기기 시간대. 서버가 하루 사용량의 자정 기준을 여기에 맞춘다 */
 const HEADER_TIMEZONE = 'X-Timezone';
@@ -162,7 +162,7 @@ function asScripture(value: unknown): Scripture {
 /**
  * 서버 Quota(`ServerQuota`)를 화면이 읽는 모양(`Quota`)으로 옮긴다.
  *
- * 서버는 **쓴 횟수**를 세고(`freeUsed` · `adContinuesUsed`) 화면은 **남은 횟수**를 읽는다.
+ * 서버는 **쓴 횟수**를 센다(`freeUsed` · `adContinuesUsed`). 남은 횟수라는 것은 없다. 천장을 없앴다.
  * 뒤집는 자리는 앱 전체에서 여기 하나다. 천장은 서버가 같이 보낸 `adContinuesMax` 로 세고,
  * 문턱값을 이 파일에서 새로 정하지 않는다.
  *
@@ -172,14 +172,13 @@ function asScripture(value: unknown): Scripture {
 function toQuota(value: unknown): Quota {
   const row = asRecord(value);
   const freeUsed = asCount(row.freeUsed);
-  const continuesUsed = asCount(row.adContinuesUsed);
-  const continuesMax = asCount(row.adContinuesMax);
-  const continuesLeft = Math.max(0, continuesMax - continuesUsed);
+  /*
+    `adContinuesMax` 는 이제 null 이다(하루 천장 폐지, 2026-09-20). 값을 읽지 않는다.
+    서버가 언젠가 다시 숫자를 보내더라도 화면이 그것으로 문을 닫지 않는다. 닫는 것은 서버다.
+  */
   const quota: Quota = {
-    continuesLeft,
-    continuesUsed,
+    continuesUsed: asCount(row.adContinuesUsed),
     firstUsed: freeUsed > 0,
-    exhausted: continuesLeft === 0,
   };
   if (typeof row.resetsAt === 'string' && row.resetsAt !== '') quota.resetsAt = row.resetsAt;
   return quota;
@@ -310,24 +309,26 @@ function failureForStatus(status: number): ApiFailure {
   if (status === 408 || status === 504) {
     return new ApiFailure('timeout', '서버가 제때 답하지 못했어요.');
   }
-  // 오늘 자리가 닫혔다. 전역 예산 문도 사용량 천장도 여기로 온다
+  // 오늘 자리가 닫혔다. 전역 예산 문도 분당 제한도 여기로 온다
   if (status === 429) return new ApiFailure('budget', '지금은 더 받을 수 없어요.');
   return new ApiFailure('provider', `서버가 ${status} 로 답했어요.`);
 }
 
 /**
- * 429 는 셋이다. 전역 예산이 몰려 잠시 닫힌 것, 광고를 봐야 이어가는 것, 하루 천장에 닿은 것.
+ * 429 는 셋이다. 전역 예산이 몰려 잠시 닫힌 것, 광고를 봐야 이어가는 것, **너무 빨리 보낸 것**.
  *
- * 뒤의 둘은 서버가 오늘 사용량을 같이 보낸다(`routes.py` 의 `ad_required` · `quota_exhausted`).
- * 그 값을 들고 가야 화면이 「잠시 뒤에 다시 보내 주세요」가 아니라 이어가기 시트나
- * 「오늘은 여기까지예요」를 그릴 수 있다. 어느 쪽인지는 사용량 숫자가 말해 준다.
+ * 뒤의 둘은 서버가 오늘 사용량을 같이 보낸다(`routes.py` 의 `ad_required` · `too_fast`).
+ * 그 값을 들고 가야 화면이 「잠시 뒤에 다시 보내 주세요」가 아니라 이어가기 시트를 그릴 수 있다.
  * 셋을 가르지 않으면 막힌 사람은 눌러도 소용없는 「다시 해보기」 앞에 남는다.
+ *
+ * ⚠ **하루 천장은 없앴다**(2026-09-20). `quota_exhausted` 는 서버가 더 이상 내지 않는다.
+ * 광고를 본 만큼 이어가고, 남용은 분당 제한과 전역 예산 문이 막는다.
  *
  * 본문 모양이 어긋나면 사용량 없이 그냥 429 로 둔다. 숫자를 지어내 문을 닫지 않는다.
  */
 const QUOTA_MESSAGE: Record<string, string> = {
   ad_required: '이어서 들으려면 짧은 영상을 하나만 봐 주세요.',
-  quota_exhausted: '오늘 나눌 수 있는 이야기를 다 나눴어요.',
+  too_fast: '조금 빠르게 보내셨어요. 잠시 뒤에 다시 보내 주세요.',
 };
 
 async function failureForResponse(response: Response): Promise<ApiFailure> {
@@ -335,8 +336,16 @@ async function failureForResponse(response: Response): Promise<ApiFailure> {
   try {
     // FastAPI 는 HTTPException 의 본문을 detail 에 담아 낸다
     const detail = asRecord(asRecord(await response.json()).detail);
-    const message = typeof detail.reason === 'string' ? QUOTA_MESSAGE[detail.reason] : undefined;
+    const reason = typeof detail.reason === 'string' ? detail.reason : '';
+    const message = QUOTA_MESSAGE[reason];
     if (message === undefined) return failureForStatus(429);
+    /*
+      사용량을 들려 보내는 것은 **광고 문 하나뿐이다.** 그 값을 받은 화면은 홈으로 돌아가
+      이어가기 시트를 연다. 분당 제한에 그 값을 실으면 「잠시 뒤에 오세요」라고 말해야 할
+      자리에서 광고 시트가 열린다. 두 번 눌러 봐야 소용없는 자리다.
+    */
+    if (reason === 'too_fast') return new ApiFailure('too_fast', message);
+    if (reason !== 'ad_required') return new ApiFailure('budget', message);
     return new ApiFailure('budget', message, toQuota(detail.quota));
   } catch {
     return failureForStatus(429);

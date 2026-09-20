@@ -1,8 +1,14 @@
 """사용량.
 
-하루 첫 NORMAL·DEEP 은 그냥 나간다. 그다음부터는 이어가기 4회, 천장은 5회다.
+하루 첫 NORMAL·DEEP 은 그냥 나간다. **그다음부터는 광고를 본 만큼 계속 이어간다.**
 LIGHT 는 하루 10회 소프트 상한이라 막지 않고 표시만 한다.
 INVALID·CRISIS·SOLACE 는 세지 않는다.
+
+⚠ **하루 천장이 있었다(이어가기 4회, 합쳐 5회). 2026-09-20 에 없앴다.**
+광고를 보는 사람을 막고 있었기 때문이다. 한 편이 벌어 오는 값이 답 한 건 원가보다 크므로
+천장은 수익을 깎는 쪽이었고, 사람에게는 「광고를 봤는데도 안 된다」로 읽혔다.
+남용은 두 가지로 막는다: 사람마다 **분당 요청 수**(아래 `MAX_PER_MINUTE`)와
+**전역 일일 예산 문**(`integrations/llm/budget.py`). 둘 다 천장과 달리 정상 사용자를 안 막는다.
 
 기준 시각은 **사용자 시간대 자정**이다. 서버 시간대가 아니다.
 그 시간대는 익명키마다 처음 본 것으로 고정한다. 요청 헤더를 매번 그대로 믿지 않는다.
@@ -16,20 +22,27 @@ INVALID·CRISIS·SOLACE 는 세지 않는다.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 FREE_PER_DAY = 1
-AD_CONTINUES_MAX = 4
-DAILY_CEILING = FREE_PER_DAY + AD_CONTINUES_MAX  # 5
+# 하루 천장은 없다. 스키마의 `adContinuesMax` 가 이 값을 그대로 내보내고, null 이 「상한 없음」이다
+AD_CONTINUES_MAX: int | None = None
 LIGHT_SOFT_CAP = 10
+
+# 사람 한 명이 1분에 보낼 수 있는 생성 요청 수.
+#
+# 이어가기는 30초 광고를 끝까지 봐야 열리므로 사람은 분당 두 번을 넘기 어렵다. 여유를 둬서
+# 재시도·멱등 재전송이 걸리지 않게 하고, 그 위를 넘는 것만 막는다. 광고를 건너뛰는 자동화가
+# 노리는 자리라 **천장을 없앤 대신 여기가 선다.**
+MAX_PER_MINUTE = 6
 DEFAULT_TIMEZONE = "Asia/Seoul"
 
 # 세는 갈래. 나머지(invalid · crisis · solace)는 사용량을 건드리지 않는다
 COUNTED_ROUTES = frozenset({"normal", "deep"})
 
-Gate = Literal["free", "ad_continue", "exhausted", "light", "light_soft_cap", "uncounted"]
+Gate = Literal["free", "ad_continue", "light", "light_soft_cap", "uncounted"]
 
 
 @dataclass
@@ -66,6 +79,9 @@ _USAGE: dict[tuple[str, str], DayUsage] = {}
 
 # 익명키 → 하루 칸을 세는 시간대 이름. DB 가 붙으면 users.timezone 컬럼이 이 자리다.
 _ZONES: dict[str, str] = {}
+
+# 사람마다 최근 1분의 요청 시각. 날짜 칸과 따로 둔다. 자정이 걸쳐도 창이 끊기면 안 된다
+_RECENT: dict[str, list[datetime]] = {}
 
 
 def resolve_zone(name: str | None) -> ZoneInfo:
@@ -105,6 +121,25 @@ def _day(anon_key: str, zone: ZoneInfo, now: datetime | None = None) -> DayUsage
     return _USAGE.setdefault(key, DayUsage())
 
 
+def too_fast(anon_key: str, now: datetime | None = None) -> bool:
+    """이 사람이 1분에 보낼 수 있는 수를 넘었나. **넘었으면 그 요청은 세지 않는다.**
+
+    하루 천장을 없앤 자리에 서는 문이다. 사람은 30초 광고를 봐야 이어갈 수 있어 여기 닿지
+    않는다. 닿는 것은 광고를 건너뛰고 몰아 보내는 쪽이다.
+
+    되돌아보는 창이 1분이라 자정이 걸쳐도 끊기지 않는다(날짜 칸과 따로 둔 이유다).
+    프로세스 메모리에 있으므로 서버가 여럿이면 각자 센다. 그래도 전역 예산 문이 뒤에 있다.
+    """
+    at = now or datetime.now(tz=UTC)
+    window = _RECENT.setdefault(anon_key, [])
+    cutoff = at - timedelta(minutes=1)
+    window[:] = [t for t in window if t > cutoff]
+    if len(window) >= MAX_PER_MINUTE:
+        return True
+    window.append(at)
+    return False
+
+
 def snapshot(anon_key: str, zone: ZoneInfo, now: datetime | None = None) -> dict[str, Any]:
     """spec/answer.schema.json 의 Quota. camelCase 그대로 낸다.
 
@@ -130,8 +165,8 @@ def reserve(
     """생성 전에 자리를 잡는다. 확인이 아니라 예약이다.
 
     같은 멱등키로 다시 오면 다시 세지 않는다. 그 대신 만들어 둔 답을 replay 로 돌려주거나,
-    아직 만드는 중이면 in_progress 로 막는다. 둘 다 아닌 채로 통과시키면 그 키로 몇 번이든
-    새 답을 만들 수 있어 하루 천장이 없는 것과 같아진다.
+    아직 만드는 중이면 in_progress 로 막는다. 둘 다 아닌 채로 통과시키면 그 키 하나로 몇 번이든
+    새 답을 만들 수 있다.
     """
     day = _day(anon_key, zone, now)
 
@@ -141,8 +176,6 @@ def reserve(
     if idempotency_key and idempotency_key in day.seen:
         seen = day.seen[idempotency_key]
         quota = snapshot(anon_key, zone, now)
-        if seen.gate == "exhausted":
-            return Outcome(False, seen.gate, quota)
         if seen.answer is None:
             return Outcome(False, seen.gate, quota, in_progress=True)
         replay = dict(seen.answer)
@@ -160,14 +193,12 @@ def reserve(
         day.free_used += 1
         gate = "free"
         allowed = True
-    elif day.ad_continues_used < AD_CONTINUES_MAX:
-        # 보상형 광고를 본 뒤에만 열리는 자리다. 보상 토큰 검증은 광고 연동이 붙을 때 여기 앞에 선다
+    else:
+        # 보상형 광고를 본 뒤에만 열리는 자리다. **횟수 제한이 없다.**
+        # 보상 토큰 검증은 광고 연동이 붙을 때 여기 앞에 선다
         day.ad_continues_used += 1
         gate = "ad_continue"
         allowed = True
-    else:
-        gate = "exhausted"
-        allowed = False
 
     if idempotency_key:
         # 답은 아직 없다. 이 키가 또 들어오면 만드는 중으로 막힌다
@@ -218,3 +249,4 @@ def reset_all() -> None:
     """테스트가 격리하려고 부른다."""
     _USAGE.clear()
     _ZONES.clear()
+    _RECENT.clear()

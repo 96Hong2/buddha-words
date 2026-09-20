@@ -43,6 +43,7 @@ function codeOf(reason: ApiFailure['reason']): ErrorCode {
   if (reason === 'timeout') return 'TIMEOUT';
   if (reason === 'offline') return 'OFFLINE';
   if (reason === 'budget') return 'BUDGET';
+  if (reason === 'too_fast') return 'TOO_FAST';
   return 'SERVER';
 }
 
@@ -260,10 +261,10 @@ export function LoadingScreen() {
         error instanceof ApiFailure ? error : new ApiFailure('provider', '보내지 못했어요.');
       analytics.log('answer_failed', { pass: 1, reason: failed.reason });
       if (failed.quota != null) {
-        // 오늘 천장에 닿았다. 여기에 오류 화면을 그리면 「다시 해보기」를 몇 번 눌러도 같은
+        // 광고 문이 섰다. 여기에 오류 화면을 그리면 「다시 해보기」를 몇 번 눌러도 같은
         // 자리에 남는다. 사용량을 읽고 쓰는 일은 quota 도메인 몫이라 app 층인 홈으로 넘겨
-        // 서버가 센 값을 적게 하고, 홈이 천장 안내를 그린다. 적은 글은 그대로 남는다
-        navigate(ROUTES.home, { replace: true, state: { exhaustedQuota: failed.quota } });
+        // 서버가 센 값을 적게 하고, 홈이 이어가기 시트를 연다. 적은 글은 그대로 남는다
+        navigate(ROUTES.home, { replace: true, state: { gatedQuota: failed.quota } });
         return;
       }
       setFailure(failed);
@@ -325,7 +326,7 @@ export function LoadingScreen() {
     setFailure(null);
     setStage(0);
     setQuote(0);
-    // 같은 멱등키로 다시 부른다. 오늘 남은 횟수가 다시 줄지 않는다.
+    // 같은 멱등키로 다시 부른다. 오늘 쓴 횟수가 다시 늘지 않는다.
     void submit();
   }
 
@@ -378,7 +379,7 @@ export function LoadingScreen() {
                   <path d="M20 6 9.5 17 4 11.6" />
                 </svg>
               </span>
-              쓰신 이야기는 그대로 있어요. 다시 보내도 오늘 남은 횟수는 줄지 않아요
+              쓰신 이야기는 그대로 있어요. 다시 보내도 오늘 쓴 횟수는 늘지 않아요
             </span>
           </div>
         </div>
