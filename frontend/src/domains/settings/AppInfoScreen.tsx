@@ -77,12 +77,15 @@ export function AppInfoScreen() {
             <span className="set-kv-k">익명키 앞 6자</span>
             <span className="set-kv-v set-kv-v--mono">{anonKey}</span>
           </div>
+          {/*
+            문제를 받을 때 쓰는 화면이라 **상태가 아니라 숫자**를 적는다.
+            천장을 없앤 뒤로 「열려 있어요 / 다 썼어요」는 늘 「열려 있어요」라 아무 말도 아니다.
+            몇 번 받았는지가 「광고가 안 떴다」·「답이 안 온다」를 가르는 값이다.
+          */}
           <div className="set-kv">
-            <span className="set-kv-k">오늘 답변</span>
+            <span className="set-kv-k">오늘 받은 답변</span>
             <span className="set-kv-v">
-              <span className="set-badge-open">
-                {quota == null ? '확인 전' : quota.firstUsed ? '광고를 보면 이어져요' : '열려 있어요'}
-              </span>
+              {quota == null ? '아직 없어요' : `${(quota.firstUsed ? 1 : 0) + quota.continuesUsed}번`}
             </span>
           </div>
 
