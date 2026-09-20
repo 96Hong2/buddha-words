@@ -83,6 +83,21 @@ class Settings(BaseSettings):
     # 익명키 검증. 운영에서 끄면 아무 문자열로 남의 데이터에 닿는다.
     allow_unverified_anon_key: bool = True
 
+    # ── 토스 서버 API (알림 발송) ────────────────────────────────────────
+    #
+    # 알림은 우리 서버가 보낸다. 앱이 꺼져 있을 때 가야 해서 기기가 보낼 수 없다.
+    # 부르는 자리는 `scripts/send_reminders.py` 이고 1분마다 돈다.
+    toss_api_base_url: str = "https://apps-in-toss-api.toss.im"
+
+    # mTLS 인증서는 **파일 경로로만** 받는다. 내용을 설정값에 담지 않는다.
+    # 인증서는 미니앱마다 다르다. CN 으로 미니앱을 식별하므로 다른 앱 것을 빌려 쓸 수 없다.
+    toss_mtls_cert_path: str | None = None
+    toss_mtls_key_path: str | None = None
+
+    # 콘솔 기능성 캠페인에서 발급받는 템플릿 코드. **문구 검수 승인 전에는 발송이 막힌다.**
+    # 비어 있으면 발송 잡이 로그 스텁으로 돌고 알림은 실제로 가지 않는다.
+    toss_reminder_template_set_code: str | None = None
+
     # LLM. 키 없이도 개발과 e2e 가 돌아야 한다.
     llm_provider: Literal["stub", "openai", "gemini"] = "stub"
     llm_api_key: str | None = None

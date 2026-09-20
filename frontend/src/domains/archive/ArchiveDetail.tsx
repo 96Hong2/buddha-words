@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useOverlayBackClose } from '../../app/providers';
 import { attributionLine } from '../../shared/api';
+import { FLAGS } from '../../shared/flags';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
 // 경전 카드와 그 안의 「원문 보기」 시트는 답변 화면 것을 그대로 쓴다. 같은 것을 두 벌 그리면
 // 한쪽만 고쳐진다. 그 CSS 는 화면 루트(.ans) 아래에 묶여 있어 파일도 함께 들여온다
 import { ScriptureCard } from '../answer/ScriptureCard';
+import { TomorrowReminder } from '../answer/TomorrowReminder';
 
 import { DATE_FORMAT, TagChips } from './ArchiveItem';
 import type { SavedAnswer } from './archiveStore';
@@ -182,6 +184,21 @@ export function ArchiveDetail({
                 </li>
               ))}
             </ol>
+
+            {/*
+              보관함에서 다시 펼쳐 본 사람에게도 같은 버튼을 준다.
+              간직해 둔 행동을 다시 읽는 순간이 「이번엔 해 보자」에 가장 가까운 자리다.
+              답변 화면에서 한 번 눌렀어도 여기서 다시 누르면 예약이 내일로 덮인다.
+            */}
+            {FLAGS.actionCommit && (
+              <div className="act-commit">
+                <TomorrowReminder
+                  answerId={item.answerId}
+                  actionTitle={actions[0].title}
+                  surface="archive"
+                />
+              </div>
+            )}
           </section>
         )}
 

@@ -146,8 +146,8 @@ export const EVENTS = {
   daily_quote_open:    { params: ['quote_id', 'surface'] as const },
   entry_card_dismiss:  { params: ['quote_id', 'how'] as const },                           // how: cta | close | backdrop | back
   // 내일 되짚기. **사람이 「내일 물어봐 주세요」를 누른 경우에만** 다음 날 한 번 묻는다
-  tomorrow_ask_view:   { params: ['answer_id'] as const },                                 // 행동 아래 그 버튼이 화면에 들어왔다
-  tomorrow_ask_accept: { params: ['answer_id', 'notify'] as const },                       // notify: granted | denied | unsupported
+  tomorrow_ask_view:   { params: ['answer_id', 'surface'] as const },                      // 행동 아래 그 버튼이 화면에 들어왔다. surface: answer | archive
+  tomorrow_ask_accept: { params: ['answer_id', 'notify', 'reserved', 'hour', 'surface'] as const }, // notify: granted|denied|unsupported · reserved: 서버 예약까지 남았나
   recall_card_impression:{ params: ['days_since'] as const },                              // 다음 날 물어보는 시트가 떴다
   recall_card_click:   { params: ['days_since', 'done'] as const },                        // done: true(해봤어요) | false(아직이요). 이 앱이 행동까지 갔는지 재는 유일한 답이다
   // 마찰. 사람이 막힌 자리를 화면 녹화 없이 알아내는 최소한의 신호다

@@ -151,6 +151,7 @@ export const TEST_IDS = {
 
   // 내일 물어보기. 「오늘 이것만 해볼게요」 자리를 이어받았다
   tomorrowAsk: 'tomorrow-ask',
+  tomorrowAskDone: 'tomorrow-ask-done',
   recallSheet: 'recall-sheet',
   recallYes: 'recall-yes',
   recallNo: 'recall-no',

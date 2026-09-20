@@ -1377,24 +1377,46 @@
   outline-offset: 2px;
 }
 
-/* ── 「오늘 이것만 해볼게요」. 체크리스트가 아니라 한 번의 탭이다 ─────────── */
-.ans .act-commit {
-  margin-top: var(--s-4);
+/* ── 「내일 알림으로 여쭤볼게요」. 체크리스트가 아니라 한 번의 탭이다 ────────
+   투명한 테두리 버튼이던 자리다. 눌리지 않아서 금색 약배경을 깔아 눈에 걸리게 했다.
+   아래 한 줄이 무엇이 좋아지는지 말한다. 버튼만으로는 왜 눌러야 하는지 모른다.
+
+   ⚠ `.ans` 를 앞에 붙이지 않는다. 이 묶음은 보관함 상세에서도 그대로 쓴다.
+   `.ans` 안으로 넣으면 그 규칙이 배경색(--bg)까지 끌고 와서, 크림색 시트 위에
+   회색 띠가 한 줄 깔린다. 실제로 그렇게 보였다. */
+.act-commit {
+  margin-top: var(--s-5);
   text-align: center;
 }
-.ans .act-commit-btn {
+.act-commit__ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.act-commit-btn {
   width: 100%;
-  min-height: 44px;
-  border: 1px solid var(--line-strong);
+  min-height: 48px;
+  border: 1px solid var(--accent);
   border-radius: var(--r-pill);
-  background: transparent;
-  font-size: var(--t-caption);
-  color: var(--text);
+  background: var(--accent-soft);
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--accent-text);
   cursor: pointer;
 }
-.ans .act-commit-btn:focus-visible {
+.act-commit-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.act-commit-btn:focus-visible {
   outline: var(--focus);
   outline-offset: 2px;
+}
+.act-commit__why {
+  margin: 0;
+  font-size: var(--t-caption);
+  line-height: 1.5;
+  color: var(--text-weak);
 }
 
 /* ── 답을 받아 본 뒤에만 묻는 알림 권유. 기본은 꺼져 있다 ─────────────── */

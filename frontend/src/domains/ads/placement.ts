@@ -10,14 +10,14 @@
  * 「이야기 보내기」만 눌렀는데 광고가 튀어나왔고, 그 광고를 다 본 사람에게 이어가기 시트가
  * **광고를 한 번 더** 청했다. 누르지 않은 광고는 심사에서도 걸리고 사람도 잃는다.
  *
- * 답을 만드는 시간은 여전히 비어 있지만, 그 자리는 이제 이어가기 시트가 덮는다.
- * 사람이 「답변 받기(광고)」를 누르면 광고가 떠 있는 동안 답이 만들어진다.
+ * 답을 만드는 시간은 여전히 비어 있다. 그 자리를 광고로 덮는 판을 만들었다가 되돌렸다:
+ * 광고를 안 본 사람에게도 답이 나가는 구조가 되어 보상형 규칙에 어긋났다.
  */
 
 export const AD_PLACEMENT = {
   /** 답변 7블록 아래. 다른 경전 하나 · 다른 관점 하나 · 행동 하나 */
   extension: 'extension',
-  /** 같은 날 두 번째 고민. 광고가 도는 동안 답을 만든다 */
+  /** 같은 날 두 번째 고민. 끝까지 본 사람만 이어간다 */
   continue: 'continue',
   /** 보관함에 간직하기 */
   save: 'save',
@@ -26,19 +26,35 @@ export const AD_PLACEMENT = {
 export type AdPlacement = (typeof AD_PLACEMENT)[keyof typeof AD_PLACEMENT];
 
 /**
- * 자리마다 광고 종류. **이어가기만 전면형이다.**
+ * 이어가기 자리를 어떤 광고로 돌리나. **기본은 보상형이다.**
  *
- * 실기기에서 보상형 30초가 너무 길었다. 그래서 짧은 전면형으로 바꾸고 **답을 광고와 떼었다.**
- * 광고를 곧바로 닫아도 답은 나온다. 앱인토스 정책은 「광고 소비를 보상과 직접 연결하는 구조」를
- * 금지하고, 광고를 봐야 무언가를 주는 구조는 보상형(`userEarnedReward` 때만 지급)에만 허용된다.
- * 전면형을 쓰면서 답을 광고 시청에 묶으면 그 규칙을 피해 간 것으로 읽힌다.
+ * 공식 문서가 보상형의 대표 쓰임으로 「이어하기」를 든다. 조건은 하나, `userEarnedReward`
+ * 가 왔을 때만 주는 것이다. 정책이 막는 「광고 소비를 보상과 직접 연결」은 **누르면 즉시
+ * 보상** 같은 부당한 연결이지, 끝까지 본 사람에게 주는 정식 보상형 구조가 아니다.
  *
- * 간직하기 · 다른 관점은 끝까지 본 사람에게만 주므로 보상형 그대로 둔다.
- * 이어가기 그룹이 공용(보상형)으로 떨어지지 않는 것도 같은 이유다.
+ * 한때 이 자리를 전면형으로 바꿨다. 30초가 길다는 실기기 반응 때문이었는데, 전면형에는
+ * 보상 이벤트가 없어 답을 광고와 떼어 놓아야 했고 그만큼 광고를 볼 이유도 사라졌다.
+ * 단가도 전면형이 「중간」, 보상형이 「가장 높음」이다. 그래서 보상형으로 되돌린다.
+ *
+ * **전면형은 버리지 않고 스위치로 남긴다.** 콘솔에 전면형 그룹을 등록해 두고, 이 값만
+ * 바꿔 빌드하면 자리 하나가 통째로 전면형으로 돈다. 어느 쪽이 나은지는 지표로 가른다.
  */
-export const AD_KIND: Record<AdPlacement, 'rewarded' | 'interstitial'> = {
+type AdKind = 'rewarded' | 'interstitial';
+
+function continueKind(): AdKind {
+  const raw = import.meta.env.VITE_AD_CONTINUE_KIND;
+  return typeof raw === 'string' && raw.trim() === 'interstitial' ? 'interstitial' : 'rewarded';
+}
+
+/**
+ * 자리마다 광고 종류.
+ *
+ * 간직하기 · 다른 관점은 끝까지 본 사람에게만 주므로 언제나 보상형이다.
+ * 이어가기만 빌드 환경변수로 갈린다.
+ */
+export const AD_KIND: Record<AdPlacement, AdKind> = {
   extension: 'rewarded',
-  continue: 'interstitial',
+  continue: continueKind(),
   save: 'rewarded',
 };
 
@@ -62,7 +78,16 @@ export const AD_GROUP_ENV: Record<AdPlacement, string> = {
   save: 'VITE_AD_GROUP_SAVE',
 };
 
-/** 자리마다 따로 안 줬을 때 보상형 자리가 함께 쓰는 그룹. 이어가기는 여기로 떨어지지 않는다 */
+/**
+ * 전면형으로 돌릴 때만 쓰는 이어가기 그룹. **이름을 따로 둔다.**
+ *
+ * 한 이름에 두 종류를 담으면, 보상형 판에서 그 값을 주고도 아무 데도 안 쓰이는 일이 생긴다.
+ * 실제로 그럴 뻔했다: 보상형 판에서 `VITE_AD_GROUP_CONTINUE` 만 주고 공용 그룹을 빠뜨리면
+ * 이어가기가 광고 없이 지나가는데 번들 검사는 통과했다.
+ */
+export const AD_GROUP_CONTINUE_INTERSTITIAL_ENV = 'VITE_AD_GROUP_CONTINUE_INTERSTITIAL';
+
+/** 자리마다 따로 안 줬을 때 보상형 자리가 함께 쓰는 그룹. 전면형 판의 이어가기만 예외다 */
 export const AD_GROUP_FALLBACK_ENV = 'VITE_AD_GROUP_DEFAULT';
 
 function trimmed(raw: unknown): string | null {
@@ -85,16 +110,20 @@ function trimmed(raw: unknown): string | null {
  */
 export function adGroupId(placement: AdPlacement): string | null {
   /*
-    이어가기는 공용 그룹으로 떨어지지 않는다. 공용 그룹은 보상형이라, 거기로 떨어지면
-    끝까지 안 본 사람에게 답을 주는 보상형 광고가 된다. 값이 없으면 광고 없이 지나가고
-    `ad_skipped(reason='no_group')` 으로 남는다. 번들 검사가 그 빌드를 막는다.
+    전면형으로 돌리는 판만 전용 그룹을 쓴다. 공용 그룹은 보상형이라 거기로 떨어지면 종류가
+    어긋난다. 값이 없으면 광고 없이 지나가고 `ad_skipped(reason='no_group')` 으로 남는다.
+    번들 검사가 그 빌드를 막는다.
   */
-  if (placement === 'continue') {
-    return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE) ?? TEST_INTERSTITIAL;
+  if (placement === 'continue' && AD_KIND.continue === 'interstitial') {
+    return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL) ?? TEST_INTERSTITIAL;
   }
+
+  // 보상형 세 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
   const own =
     placement === 'extension'
       ? trimmed(import.meta.env.VITE_AD_GROUP_EXTENSION)
-      : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
+      : placement === 'continue'
+        ? trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE)
+        : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
   return own ?? trimmed(import.meta.env.VITE_AD_GROUP_DEFAULT) ?? TEST_REWARDED;
 }
