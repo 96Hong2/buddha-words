@@ -163,7 +163,7 @@ export function ArchiveScreen() {
         analytics.log('archive_share_fail', { reason: 'no_scripture' });
         return 'failed';
       }
-      const message = shareMessage({ scripture, url: appShareUrl() });
+      const message = shareMessage({ scripture, url: await appShareUrl(bridge) });
 
       analytics.log(
         'archive_share_start',
@@ -198,7 +198,7 @@ export function ArchiveScreen() {
       analytics.log('archive_share_complete', { method: 'copy' });
       return 'copied';
     },
-    [analytics, sendMessage],
+    [analytics, bridge, sendMessage],
   );
 
   /**

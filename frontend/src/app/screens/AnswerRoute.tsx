@@ -31,7 +31,7 @@ import {
 import { notifyUsable, notifyTemplateCode } from '../../shared/prefs/notify';
 import { recordAndSave, saveFromServer } from '../../domains/quota/quota';
 import { ShareSheet, type ShareLinkState } from '../../domains/share/ShareSheet';
-import { appShareUrl } from '../../domains/share/shareText';
+
 import type { ShareScope } from '../../shared/api';
 import { useAnalytics } from '../../shared/analytics';
 import type { ApiAnswer } from '../../shared/api';
@@ -414,7 +414,6 @@ export function AnswerRoute() {
         <NudgeOverlay
           nudge={nudge}
           answersTotal={answersTotal}
-          appUrl={appShareUrl()}
           onSendMessage={sendMessage}
           onAskNotify={askNotify}
           onDone={() => setNudge(null)}

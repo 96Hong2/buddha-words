@@ -77,6 +77,13 @@ export interface MockScenario {
    */
   share?: 'sent' | 'dismissed' | 'unsupported';
   /**
+   * 토스가 만들어 주는 앱 공유 주소. 기본은 없음이다.
+   *
+   * 브라우저에는 이 앱을 여는 주소가 실제로 없어서, 기본값을 두면 그것이 화면에 뜬다.
+   * 주소가 붙는 판을 보려면 e2e 가 여기에 하나 밀어 넣는다.
+   */
+  appLink?: string | null;
+  /**
    * 주문서를 누를 때까지 붙들어 둔다.
    *
    * 기본은 잠깐 떴다가 스스로 닫히는 것이라 테스트가 빠르다. 주문서를 화면으로 남겨야
@@ -365,13 +372,26 @@ class MockAnalyticsBridge implements AnalyticsBridge {
  * 확인한다. 공유는 앱 밖으로 글이 나가는 유일한 길이라 그 검사를 여기에 붙여 둔다.
  */
 class MockShareBridge implements ShareBridge {
-  constructor(private readonly outcome: 'sent' | 'dismissed' | 'unsupported') {}
+  constructor(
+    private readonly outcome: 'sent' | 'dismissed' | 'unsupported',
+    private readonly link: string | null,
+  ) {}
 
   async sendMessage(message: string): Promise<ShareResult> {
     if (typeof window !== 'undefined') {
       (window.__buddhaShares ??= []).push(message);
     }
     return this.outcome;
+  }
+
+  /**
+   * 토스 밖에서는 이 앱을 여는 주소가 없다.
+   *
+   * 미니앱이 서는 주소(`*.tossmini.com`)는 토스 앱 안에서만 열리고, 백엔드 주소는
+   * 앱이 아니라 API 다. 지어내지 않고 null 을 준다. 그러면 메시지에 주소가 안 붙는다.
+   */
+  async appLink(): Promise<string | null> {
+    return this.link;
   }
 }
 
@@ -398,7 +418,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
     this.scenario = { ...readScenarioDial(), ...scenario };
     this.ads = new MockAdsBridge(this.scenario);
     this.purchase = new MockPurchaseBridge(this.scenario);
-    this.share = new MockShareBridge(this.scenario.share ?? 'sent');
+    this.share = new MockShareBridge(this.scenario.share ?? 'sent', this.scenario.appLink ?? null);
     // 브라우저에는 시스템 뒤로가기가 없다. e2e 가 이 인스턴스를 잡아 직접 누른다.
     if (typeof window !== 'undefined') window.__buddhaBridgeInstance = this;
   }

@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useBridge } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { markNudgeShown, readMilestones } from '../../shared/prefs/milestones';
 import { TEST_IDS, testId } from '../../shared/testIds';
@@ -34,6 +35,7 @@ export interface ArchiveAppShareProps {
 
 export function ArchiveAppShare({ onSendMessage, onDone }: ArchiveAppShareProps) {
   const analytics = useAnalytics();
+  const bridge = useBridge();
   const [busy, setBusy] = useState(false);
   /** 보내고 나서 하는 말. 버튼 라벨이 아니라 따로 둔다. 라벨 변화는 보조기기에 상태로 안 읽힌다 */
   const [note, setNote] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export function ArchiveAppShare({ onSendMessage, onDone }: ArchiveAppShareProps)
     if (busy) return;
     setBusy(true);
     setNote(null);
-    const message = appShareMessage(appShareUrl());
+    const message = appShareMessage(await appShareUrl(bridge));
 
     let sent: 'sent' | 'dismissed' | 'unsupported' = 'unsupported';
     try {

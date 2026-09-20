@@ -417,6 +417,13 @@ test('설정: 홈에서 앱 정보·처리방침까지 간다', async ({ page })
   await expect(page.getByTestId('settings')).toBeVisible();
   // 설정은 앱을 쓰는 데 필요한 안내만 담는다. 도움받을 곳은 여기 없다
   await expect(page.getByTestId('settings')).not.toContainText('도움받을 곳');
+  /*
+    ⚠ **앱 안에 문의 주소를 적지 않는다.** 문의는 토스가 받아 콘솔 「문의 내역」으로 넘겨
+    주고, 콘솔 「앱 정보」에 등록한 주소가 사람에게 공개된다. 여기에 또 적어 두었다가
+    없는 주소(`help@buddhawords.kr`)가 출시 직전까지 남아 있었다.
+  */
+  await expect(page.getByTestId('settings')).not.toContainText('문의 이메일');
+  await expect(page.getByTestId('settings').locator('a[href^="mailto:"]')).toHaveCount(0);
   await shot(page, '41 설정', { fullPage: true });
 
   await page.goto('/settings/app');
@@ -425,7 +432,27 @@ test('설정: 홈에서 앱 정보·처리방침까지 간다', async ({ page })
 
   await page.goto('/settings/privacy');
   await expect(page.getByTestId('privacy')).toBeVisible();
+  await expect(page.getByTestId('privacy')).not.toContainText('@');
   await shot(page, '43 처리방침', { fullPage: true });
+});
+
+test('이용약관을 누르면 약관 절이 화면 안에 선다', async ({ page }) => {
+  /*
+   * 개인정보 안내와 이용약관이 한 문서다. 예전에는 약관을 눌렀는데 「개인정보 안내」라는
+   * 제목만 뜨고 약관은 다섯 화면 아래에 있어서, 누른 것이 열렸는지 알 수 없었다.
+   */
+  await page.goto('/settings');
+  await page.getByRole('button', { name: '이용약관' }).click();
+
+  const doc = page.getByTestId('privacy');
+  await expect(doc).toBeVisible();
+  // 제목이 두 문서를 다 말한다
+  await expect(doc.getByRole('heading', { level: 1 })).toContainText('이용약관');
+
+  // 약관 절이 첫 화면 안에 들어와 있다
+  const terms = page.locator('#terms');
+  await expect(terms).toBeInViewport();
+  await shot(page, '43-1 이용약관으로 들어왔을 때');
 });
 
 test('도움받을 곳: 답변 맨 아래 고지에서 들어간다', async ({ page }) => {

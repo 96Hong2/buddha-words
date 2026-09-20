@@ -5,6 +5,7 @@
 - `raw_text` 류 컬럼·로그·이벤트 파라미터에 고민 원문을 넣지 않는다. 예외는 사용자가 켠 동의 스위치 뒤 `consultations.raw_text` 하나.
 - crisis 는 어느 층(rules · classifier · pass1 safetyFlag)이든 올리면 올라간다. 내리는 코드를 만들지 않는다. crisis 면 pass1·pass2 를 부르지 않고 `ApiCrisis` 를 준다.
 - 위기 화면 문구·창구 번호는 `domains/safety/copy.ts` 고정 파일이다. LLM 이 만들지 않는다. 자해 방법·수단을 묘사하지 않는다.
+- **앱을 알리는 주소는 토스가 만든 것만 쓴다**(`bridge.share.appLink()` → `Share.createLink`). 우리가 조립한 주소를 내보내지 않는다. 백엔드 주소는 API 라 여는 사람이 404 를 보고, 미니앱이 서는 `*.tossmini.com` 은 토스 앱 밖에서 400 이다. 만들지 못하면 주소 줄을 빼고 보낸다.
 
 ## 위기 두 결과 위로 답변 (v0.3.1)
 

@@ -156,6 +156,10 @@
 .set-foot-mark {
   width: 72px;
   height: 72px;
+  /* 그림이 148×146 이라 정사각형에 그냥 넣으면 세로로 눌린다 */
+  object-fit: cover;
+  /* 그림에 구워진 반경과 같은 값이라 모서리가 두 번 깎이지 않는다 */
+  border-radius: var(--r-image);
 }
 
 .set-foot-name {

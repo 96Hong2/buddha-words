@@ -114,7 +114,18 @@ export function SaveGate({
             onClick={onWatch}
             {...testId(TEST_IDS.saveGateWatch)}
           >
-            {pending ? '광고를 여는 중이에요' : '30초 광고 보고 간직하기'}
+            {pending ? (
+              '광고를 여는 중이에요'
+            ) : (
+              <>
+                {/* 다른 두 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
+                30초{' '}
+                <span className="arch-ad-tag" {...testId(TEST_IDS.adBadge)}>
+                  광고
+                </span>{' '}
+                보고 간직하기
+              </>
+            )}
           </button>
           <button
             type="button"

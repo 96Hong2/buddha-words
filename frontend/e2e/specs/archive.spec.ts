@@ -252,6 +252,8 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
   // 몇 초짜리인지 적는다. 모르면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다
   await expect(gate).toContainText('보관함에 간직할까요?');
   await expect(page.getByTestId('save-gate-watch')).toContainText('30초 광고 보고 간직하기');
+  // 세 자리가 같은 모양이다. 「광고」는 글자이면서 배지다(토스 SSP 「Ad 표기 유지」)
+  await expect(page.getByTestId('save-gate-watch').getByTestId('ad-badge')).toBeVisible();
   // 광고를 강조하지 않는다. 개수 제한이 없다는 말이 함께 있어야 무엇을 잃는지가 분명하다
   await expect(gate).toContainText('개수 제한은 없어요');
   await shot(page, '28-5 간직 - 광고를 보면 간직할 수 있어요');
@@ -638,11 +640,57 @@ test('첫 말씀을 간직하면 앱 알리기 카드가 맨 앞에 서고, 둘�
   expect(sent.at(-1)).toContain('부처의 말');
   // 고민도 답도 여기 없다. 앱을 알리는 자리다
   expect(sent.at(-1)).not.toContain('가까울수록');
+  /*
+    주소를 만들 수 없는 기기에서는 주소 줄이 통째로 없다. 한때 운영 판이 백엔드 주소를
+    그대로 내보냈고, 받은 사람은 전부 `{"detail":"Not Found"}` 를 봤다.
+  */
+  expect(sent.at(-1)).not.toContain('http');
+  expect(sent.at(-1)?.endsWith('부처의 말')).toBe(true);
   await expect(card).toHaveCount(0);
 
   // 다시 열어도 안 뜬다. 부탁하지 않은 말은 한 번이다
   await page.reload();
   await expect(page.getByTestId('archive-app-share')).toHaveCount(0);
+});
+
+test('앱 알리기는 토스가 만들어 준 주소만 내보낸다', async ({ page }) => {
+  /*
+   * 받는 사람이 열 수 있는 주소는 토스가 만든 것 하나뿐이다(`Share.createLink`).
+   * 미니앱이 서는 주소는 토스 앱 밖에서 400 이고, 백엔드 주소는 앱이 아니라 API 다.
+   * 우리가 조립한 주소를 내보내면 받은 사람이 막다른 곳에 선다.
+   */
+  const LINK = 'https://toss.im/_m/stub-app-link';
+  await page.addInitScript((link) => {
+    window.__buddhaBridge = { ...window.__buddhaBridge, appLink: link };
+    if (localStorage.getItem('buddha.archive.v1') == null) {
+      localStorage.setItem(
+        'buddha.archive.v1',
+        JSON.stringify({
+          version: 1,
+          items: [
+            {
+              answerId: 'first-one',
+              savedAt: Date.now() - 60_000,
+              line: '가까울수록 사이를 두어라',
+              tags: ['fatigue'],
+              visualTheme: 'rest',
+            },
+          ],
+        }),
+      );
+    }
+    localStorage.setItem(
+      'buddha.milestones.v2',
+      JSON.stringify({ answers: 1, homeAddShown: 0, appShareDone: false, notifyDone: false }),
+    );
+  }, LINK);
+  await page.goto('/archive');
+
+  await page.getByTestId('archive-app-share-send').click();
+  const sent = await page.evaluate(() => window.__buddhaShares ?? []);
+  expect(sent.at(-1)).toContain(LINK);
+  // 백엔드 주소는 여기 없다
+  expect(sent.at(-1)).not.toContain('localhost:5187');
 });
 
 test('경전이 없는 옛 말씀은 내보낼 수 없다. 한마디는 고민을 읽고 쓴 글이다', async ({ page }) => {
