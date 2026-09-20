@@ -126,6 +126,41 @@ test('간직한 답변을 보관함에서 다시 펼친다. 앱을 새로 열어
   await expect(page.getByTestId('archive-detail')).toContainText(scripture);
 });
 
+test('보관함에서 다시 봐도 내일 여쭤봐 달라고 할 수 있다', async ({ page, stub }) => {
+  /*
+    간직해 둔 행동을 다시 읽는 순간이 「이번엔 해 보자」에 가장 가까운 자리다.
+    예전에는 이 버튼이 답변 화면에만 있어서, 그 순간을 놓치면 다시 부탁할 길이 없었다.
+
+    알림을 약속하는 문구는 `FLAGS.reminderPush` 가 켜진 빌드에서만 나온다. 여기서는 꺼져
+    있으므로 화면이 알림을 말하지 않아야 한다. 지킬 수 없는 말을 먼저 내보내지 않는다.
+  */
+  test.setTimeout(90_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  await page.goto('/');
+  await askOnce(page);
+  const action = await flat(page.locator('.acts li b').first());
+  await saveAnswerFromScreen(page);
+
+  await page.goto('/archive');
+  await page.getByTestId('archive-item').click();
+  const sheet = page.getByTestId('archive-detail');
+  await expect(sheet).toBeVisible();
+
+  // 간직한 그 행동이 그대로 있고, 그 아래 부탁 버튼이 선다
+  expect(await flat(sheet)).toContain(action);
+  const ask = sheet.getByTestId('tomorrow-ask');
+  await expect(ask).toBeVisible();
+  // 왜 눌러야 하는지 버튼 아래 한 줄이 말한다. 버튼만으로는 무엇이 좋아지는지 모른다
+  await expect(sheet).toContainText('딱 한 번만');
+  // 발송이 준비되기 전에는 알림을 약속하지 않는다
+  await expect(ask, '알림을 보낼 수 없는 판에서 알림을 약속했어요').not.toContainText('알림');
+  await ask.scrollIntoViewIfNeeded();
+  await shot(page, '28-8 보관함 - 간직한 답에서 내일 여쭤봐 달라고 하기');
+
+  await ask.click();
+  await expect(sheet.getByTestId('tomorrow-ask-done')).toContainText('다음에 앱을 열면');
+});
+
 test('오늘 받은 답을 간직하면 보관함에 한 장만 남는다', async ({ page, stub }) => {
   test.setTimeout(90_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });

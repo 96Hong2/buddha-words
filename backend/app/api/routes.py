@@ -32,6 +32,7 @@ from app.core.config import get_settings
 from app.domains import share
 from app.domains.answer import compose
 from app.domains.quota import usage
+from app.domains.reminder import service as reminder
 from app.domains.routing.rules import (
     ClassifierVerdict,
     RouteDecision,
@@ -86,6 +87,19 @@ class ExtensionRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     answer_id: str = Field(alias="answerId", max_length=64)
+
+
+class ReminderRequest(BaseModel):
+    """「내일 알림으로 여쭤볼게요」를 누른 사람의 예약.
+
+    **언제 보낼지는 화면이 정한다.** 사람이 고른 시각과 기기 시간대를 아는 쪽이 화면이다.
+    담기는 사용자 글은 행동 제목 하나뿐이고 고민 원문은 오지 않는다.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    due_at: float = Field(alias="dueAt")
+    action_title: str = Field(alias="actionTitle", max_length=200)
 
 
 async def _classify(text: str, llm: Any) -> ClassifierVerdict | None:
@@ -338,6 +352,31 @@ async def concern_extension(body: ExtensionRequest, anon_key: AnonKey) -> dict[s
     if payload is None:
         raise HTTPException(status.HTTP_409_CONFLICT, "더 드릴 구절이 남아 있지 않아요.")
     return payload
+
+
+@router.post("/reminder")
+async def reminder_reserve(body: ReminderRequest, anon_key: AnonKey) -> dict[str, Any]:
+    """내일 한 번 여쭤보기로 한다. 한 사람에 한 줄이고, 새로 누르면 앞의 것을 덮는다.
+
+    예약만 담는다. 실제 발송은 1분마다 도는 `scripts/send_reminders.py` 가 한다.
+    """
+    try:
+        reminder.reserve(
+            anon_key,
+            due_at=body.due_at,
+            action_title=body.action_title,
+            now=time.time(),
+        )
+    except reminder.InvalidReminderError as error:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(error)) from error
+    return {"reserved": True}
+
+
+@router.delete("/reminder")
+async def reminder_cancel(anon_key: AnonKey) -> dict[str, Any]:
+    """이미 답했거나 그만 받겠다고 했다. 보내지 않는다."""
+    reminder.cancel(anon_key)
+    return {"reserved": False}
 
 
 @router.get("/daily")

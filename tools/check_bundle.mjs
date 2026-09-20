@@ -100,12 +100,16 @@ for (const name of AD_GROUP_VARS) {
 
 const adsGiven = AD_GROUP_VARS.filter((name) => process.env[name]?.trim());
 
-// 광고를 붙여 빌드하면서 이어가기(전면형) 그룹만 빠뜨리면, 두 번째 이야기부터 광고 없이
-// 조용히 지나간다. 이어가기는 공용 보상형 그룹으로 떨어지지 않으니 여기서 막는다.
-if (adsGiven.length > 0 && !process.env.VITE_AD_GROUP_CONTINUE?.trim()) {
+// 이어가기를 전면형으로 돌리는 판에서만 전용 그룹이 있어야 한다. 그 판에서 값을 빠뜨리면
+// 두 번째 이야기부터 광고 없이 조용히 지나간다. 공용 그룹은 보상형이라 대신 쓸 수 없다.
+const continueKind = process.env.VITE_AD_CONTINUE_KIND?.trim() === 'interstitial'
+  ? 'interstitial'
+  : 'rewarded';
+
+if (continueKind === 'interstitial' && !process.env.VITE_AD_GROUP_CONTINUE?.trim()) {
   problems.push(
-    '광고 그룹을 줬는데 VITE_AD_GROUP_CONTINUE(이어가기 전면형)가 없다.\n' +
-      '    이어가기는 공용 보상형 그룹으로 떨어지지 않는다. 전면형 그룹 id 를 함께 준다.',
+    'VITE_AD_CONTINUE_KIND=interstitial 인데 VITE_AD_GROUP_CONTINUE 가 없다.\n' +
+      '    전면형으로 돌리려면 전면형 그룹 id 가 있어야 한다. 공용 그룹은 보상형이라 못 쓴다.',
   );
 }
 
@@ -123,7 +127,7 @@ console.log(
     : '  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다',
 );
 console.log(
-  process.env.VITE_AD_GROUP_CONTINUE?.trim()
-    ? '  이어가기(전면형) 광고 그룹 id: 들어 있다'
-    : '  이어가기(전면형) 광고 그룹 id: 없다. 이어가기는 광고 없이 지나간다',
+  continueKind === 'interstitial'
+    ? '  이어가기: 전면형. 전용 그룹 id 가 들어 있다'
+    : '  이어가기: 보상형(30초, 끝까지 봐야 이어감). 공용 그룹을 쓴다',
 );

@@ -71,6 +71,19 @@ export const FLAGS = {
    * 기본값이 on 인 것은 사용자가 그렇게 지시했기 때문이다. 템플릿 코드는 배포에서 준다.
    */
   notificationPrompt: flag(import.meta.env.VITE_FLAG_NOTIFICATION_PROMPT, true),
+
+  /**
+   * 「내일 알림으로 여쭤볼게요」를 **화면이 약속해도 되나.**
+   *
+   * 예약은 이 값과 무관하게 서버에 남는다. 이 플래그가 가르는 것은 **문구 하나**다.
+   * 알림이 실제로 나가려면 셋이 더 있어야 한다: 콘솔 기능성 캠페인과 그 문구 검수 승인,
+   * 발송 잡이 쓸 mTLS 인증서, 그리고 1분마다 잡을 깨우는 스케줄러.
+   *
+   * **기본값이 off 인 이유.** 셋이 갖춰지기 전에 「알림 드릴게요」라고 적으면 아무것도
+   * 안 오는 약속이 된다. 예전에 그런 적이 있어 문구를 거둬들였다. 셋이 갖춰진 배포에서
+   * `VITE_FLAG_REMINDER_PUSH=on` 으로 켠다.
+   */
+  reminderPush: flag(import.meta.env.VITE_FLAG_REMINDER_PUSH, false),
 } as const;
 
 /**

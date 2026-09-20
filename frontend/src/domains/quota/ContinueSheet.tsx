@@ -8,30 +8,44 @@
  * 광고를 못 띄우는 기기에서는 이 시트를 열지 않고 그냥 이어간다. 부르는 쪽이
  * `useRewardedAd('continue').supported` 를 먼저 보고, 잊었더라도 여기서 한 번 더 막는다.
  *
- * ── 광고와 답을 떼어 놓는다 ─────────────────────────────────────────
+ * ── 광고를 끝까지 봐야 이어간다 ─────────────────────────────────────
  *
- * 이 자리 광고는 **전면형**이고, **광고를 끝까지 봤는지와 답을 주는지는 아무 관계가 없다.**
- * 앱인토스 광고 정책이 「광고 소비를 보상과 직접 연결하는 구조」를 금지하고, 광고를 봐야
- * 무언가를 주는 구조는 보상형(`userEarnedReward` 때만 지급)에만 허용된다. 예전에는 보상형
- * 30초를 끝까지 봐야 했는데 실기기에서 너무 길었다. 그래서 짧은 전면형으로 바꾸고 답을
- * 광고와 떼었다. 광고를 곧바로 닫아도 답은 나온다.
+ * 이 자리는 **보상형**이고 **`userEarnedReward` 가 왔을 때만** 답으로 넘어간다.
+ * 공식 문서가 보상형의 대표 쓰임으로 「이어하기」를 들고, SDK 가이드가 `dismissed` 만으로는
+ * 지급하지 말라고 못 박는다. 정책이 막는 「광고 소비를 보상과 직접 연결」은 **누르면 즉시
+ * 보상** 같은 부당한 연결이지 이 구조가 아니다.
  *
- * 순서는 지킨다: **광고가 화면에 뜬 순간** 답을 만들기 시작하고 대기 화면으로 넘어간다.
- * 광고를 불러오는 동안은 시트에 머문다. 먼저 넘어가면 답을 읽는 도중에 광고가 뒤늦게 덮는다.
- * 광고가 안 오면(불러오기 시간 초과 포함) 광고 없이 넘어간다.
+ * 중간에 닫으면 답을 주지 않고 시트에 남는다. 한때 5초만 보면 답을 주었는데 그것이
+ * `dismissed` 지급이라 규칙에 어긋났다. 전면형으로 바꿔 답을 떼어 놓은 판도 있었지만,
+ * 광고를 볼 이유가 함께 사라지고 단가도 낮아 되돌렸다.
+ *
+ * `noFill` 은 **우리 쪽 사정**이라 막지 않고 그냥 이어간다. 광고를 못 받는 기기에서
+ * 기능이 통째로 막히면 막다른 구조가 된다.
+ *
+ * 전면형으로 돌리는 빌드(`VITE_AD_CONTINUE_KIND=interstitial`)에서는 보상 이벤트가 없어
+ * `dismissed` 로 끝나므로, 그 판에서는 닫아도 이어간다. 어느 쪽이 나은지는 지표로 가른다.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { BottomSheet } from '../../shared/ui';
+import { AD_KIND } from '../ads/placement';
 import { useRewardedAd, type AdOutcome } from '../ads/useRewardedAd';
 
 import './quota.css';
 
 const TITLE = '이야기를 이어가 볼까요?';
+
+/**
+ * 버튼에 몇 초라고 적나.
+ *
+ * 보상형은 30초다. 전면형은 길이가 문서에 없어 **아무 초도 적지 않는다.**
+ * 근거 없는 수치를 화면이 말하게 두지 않는다.
+ */
+const ADS_SECONDS_LABEL = AD_KIND.continue === 'rewarded' ? '30초 ' : '';
 
 export interface ContinueSheetProps {
   open: boolean;
@@ -77,20 +91,31 @@ export function ContinueSheet({
     onContinue();
   }, [ad.ready, ad.supported, onClose, onContinue, open]);
 
-  const watch = useCallback(async (): Promise<void> => {
-    let started = false;
-    const startAnswer = () => {
-      if (started) return;
-      started = true;
-      onContinue();
-    };
+  /** 중간에 닫았다. 답을 주지 않으므로 왜 안 넘어가는지 그 자리에 적는다 */
+  const [bailed, setBailed] = useState(false);
 
-    const outcome: AdOutcome = await ad.show(undefined, { onShown: startAnswer });
-    if (outcome === 'noFill' && !started) {
+  const watch = useCallback(async (): Promise<void> => {
+    setBailed(false);
+    const outcome: AdOutcome = await ad.show();
+
+    // 광고가 안 온 것은 우리 쪽 사정이다. 막지 않고 그냥 보낸다
+    if (outcome === 'noFill') {
       analytics.log('ad_skipped', { placement: 'continue', reason: 'no_fill' });
+      onContinue();
+      return;
     }
-    // 뜬 순간을 못 받았어도 광고가 끝났으면 답으로 간다. 닫은 사람도 똑같다
-    startAnswer();
+
+    /*
+      보상형은 끝까지 본 사람만 `watched` 다. 닫은 사람에게 답을 주면 `dismissed` 지급이라
+      SDK 가이드에 어긋난다. 전면형으로 돌리는 판에는 보상 이벤트가 없어 `dismissed` 가
+      정상 종료이므로 그때는 이어간다.
+    */
+    if (outcome === 'watched' || AD_KIND.continue === 'interstitial') {
+      onContinue();
+      return;
+    }
+
+    setBailed(true);
   }, [ad, analytics, onContinue]);
 
   return (
@@ -127,19 +152,23 @@ export function ContinueSheet({
               「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지 라벨이
               말하지 않으면 앱인토스 심사 규칙에 닿는다.
 
-              「광고 보고 답변 받기」라고 쓰지 않는다. 그 말은 광고를 봐야 답을 준다는
-              뜻이고, 그런 구조는 보상형에만 허용된다. 이 자리는 광고와 답이 따로 간다.
-              초도 적지 않는다. 전면형이 몇 초 뜨는지는 문서에 없다.
+              보상형이라 「광고 보고 답변 받기」가 맞는 말이다. 공식 문서가 보상형을 그렇게
+              설명한다. 초를 적는 것은 사용자 요구였다. 얼마나 참아야 하는지 모르는 채
+              전면 광고를 만나면 중간에 닫는다.
             */}
             <span className="continue-sheet__ad-label">
-              답변 받기{' '}
+              {ADS_SECONDS_LABEL}광고 보고 답변 받기{' '}
               <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
                 광고
               </span>
             </span>
           </button>
-          <p className="continue-sheet__note" role={ad.showing ? 'status' : undefined}>
-            {ad.showing ? '광고를 불러오고 있어요' : '광고가 먼저 나오고, 그동안 답변을 만들어요'}
+          <p className="continue-sheet__note" role={ad.showing || bailed ? 'status' : undefined}>
+            {ad.showing
+              ? '광고를 불러오고 있어요'
+              : bailed
+                ? '광고를 끝까지 봐야 이어갈 수 있어요'
+                : '광고가 끝나면 답변을 만들어 드려요'}
           </p>
         </div>
       </div>

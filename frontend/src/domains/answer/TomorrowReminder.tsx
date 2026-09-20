@@ -1,36 +1,37 @@
 /**
  * 「지금 할 수 있는 것」 아래 한 줄.
  *
- * ── 무엇이 바뀌었나 ──────────────────────────────────────────────────────
+ * ── 무엇을 하는 버튼인가 ────────────────────────────────────────────────
  *
- * 전에는 「오늘 이것만 해볼게요」였다. 누르면 화면이 「좋아요」 하고 끝났다. 눌렀다는
- * 사실만 로그에 남을 뿐 **그 뒤로 아무 일도 일어나지 않아서**, 실제로 해 봤는지는
- * 아무도 묻지 않았다. 그리고 회고 카드는 누르지도 않은 사람에게 매일 홈에서 물었다.
+ * 누르면 **내일 알림 한 통**을 예약한다. 「어제 이야기드린 그거, 해 보셨나요?」가 앱 밖에서
+ * 온다. 앱 안에서 묻는 것이 아니다. 앱을 열어야 묻는 구조는 이미 온 사람에게만 닿아서,
+ * 돌아오게 만드는 힘이 없다.
  *
- * 지금은 둘을 이어 붙였다. 여기서 누른 사람에게만 다음 날 한 번 묻는다.
- * 안 누르면 홈에는 아무것도 뜨지 않는다.
+ * 예약은 **서버에 남긴다.** 알림은 앱이 꺼져 있을 때 가야 하고, 그러려면 보낼 시각에
+ * 서버가 대상을 알고 있어야 한다. 담기는 것은 익명키 · 보낼 시각 · 행동 제목 셋뿐이다.
+ * 고민 원문과 답변 본문은 올라가지 않는다.
  *
- * 알림 동의는 여기서 함께 받는다. 동의가 안 되는 기기에서도 남겨는 둔다. 알림이 없으면
- * 다음에 앱을 열 때 묻게 되는데, 아무것도 안 하는 것보다 낫다. 대신 화면에 뭐라고 적을지를
- * 그 결과로 가른다. 오지도 않을 알림을 온다고 말하지 않는다.
+ * 기기에도 한 줄 남긴다(`writeRecall`). 알림을 누르고 들어온 사람에게 무엇을 물을지
+ * 화면이 알아야 하고, 알림이 못 가는 기기에서는 이것이 유일한 길이 된다.
+ *
+ * ── 지킬 수 있는 말만 적는다 ────────────────────────────────────────────
+ *
+ * 알림을 실제로 보내려면 콘솔 기능성 캠페인과 문구 검수 승인, 서버 mTLS 인증서가 있어야
+ * 한다. 셋이 갖춰지기 전에는 **알림을 약속하지 않는다.** 예전에 「내일 이 시간에
+ * 여쭤볼게요」라고 적어 두고 아무것도 보내지 않은 적이 있다. 화면이 지킬 수 없는 말을 하면
+ * 그 다음부터 화면이 하는 모든 말이 값을 잃는다.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useBridge } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
-import { writeNotify, notifyTemplateCode } from '../../shared/prefs/notify';
+import { useApiClient } from '../../shared/api';
+import { FLAGS } from '../../shared/flags';
+import { writeNotify, notifyTemplateCode, notifyUsable } from '../../shared/prefs/notify';
+import { readNotifyHour } from '../../shared/prefs/notifyTime';
 import { writeRecall } from '../../shared/prefs/recall';
 import { TEST_IDS, testId } from '../../shared/testIds';
-
-/**
- * 눌렀을 때 그 자리에 남는 말.
- *
- * **시각을 약속하지 않는다.** 알림 동의를 받아도 실제로 보내는 것은 콘솔 스마트발송이고,
- * 우리가 그 시각을 정하지 않는다. 지금 확실한 것은 「다음에 열면 묻는다」 하나뿐이라
- * 그것만 적는다. 「내일 이 시간에」라고 적어 두었다가 아무것도 안 오면 거짓말이 된다.
- */
-const DONE_NOTE = '내일 앱을 열면 여쭤볼게요';
 
 /** 오늘 날짜 (사용자 시간대). 진입 카드·사용량과 같은 기준이다 */
 function todayISO(): string {
@@ -40,25 +41,60 @@ function todayISO(): string {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+/** '오후 9시'. 설정에서 고른 시각을 사람이 읽는 말로 */
+export function hourLabel(hour: number): string {
+  if (hour === 12) return '낮 12시';
+  return hour < 12 ? `오전 ${hour}시` : `오후 ${hour - 12}시`;
+}
+
+/**
+ * 내일 그 시각의 절대 시각(epoch 초).
+ *
+ * **기기가 계산한다.** 사람이 고른 시각과 기기 시간대를 아는 쪽이 여기다. 서버가 시간대를
+ * 다시 계산하면 기기와 어긋난 시각에 알림이 가고, 그 어긋남은 사람이 알아채기 어렵다.
+ */
+export function tomorrowAt(hour: number, now: Date = new Date()): number {
+  const due = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, hour, 0, 0, 0);
+  return Math.floor(due.getTime() / 1000);
+}
+
 export interface TomorrowReminderProps {
   answerId: string;
   /** 오늘 적어 드린 행동 하나의 제목. 내일 이 제목으로 묻는다 */
   actionTitle: string;
+  /** 어느 화면에서 눌렀나. 답변인지 보관함인지 로그로 가른다 */
+  surface?: 'answer' | 'archive';
 }
 
-export function TomorrowReminder({ answerId, actionTitle }: TomorrowReminderProps) {
+export function TomorrowReminder({
+  answerId,
+  actionTitle,
+  surface = 'answer',
+}: TomorrowReminderProps) {
   const bridge = useBridge();
+  const api = useApiClient();
   const analytics = useAnalytics();
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const seen = useRef('');
 
+  const hour = readNotifyHour();
+
+  /**
+   * 알림을 약속해도 되나.
+   *
+   * 플래그 하나로 가른다. 콘솔 캠페인 · 문구 검수 · mTLS 인증서가 다 갖춰진 빌드에서만 켠다.
+   * 꺼져 있으면 예약은 그대로 하되 **화면은 알림을 말하지 않는다.** 나중에 켜면 같은 예약이
+   * 그대로 알림으로 나간다.
+   */
+  const promisesPush = FLAGS.reminderPush && notifyUsable(bridge.supports('notification'));
+
   useEffect(() => {
     if (seen.current === answerId) return;
     seen.current = answerId;
-    analytics.log('tomorrow_ask_view', { answer_id: answerId }, { kind: 'impression' });
-  }, [analytics, answerId]);
+    analytics.log('tomorrow_ask_view', { answer_id: answerId, surface }, { kind: 'impression' });
+  }, [analytics, answerId, surface]);
 
-  async function accept(): Promise<void> {
+  const accept = useCallback(async (): Promise<void> => {
     if (state !== 'idle') return;
     setState('busy');
 
@@ -74,28 +110,65 @@ export function TomorrowReminder({ answerId, actionTitle }: TomorrowReminderProp
       writeNotify(notify === 'granted' ? 'on' : notify === 'denied' ? 'declined' : 'unsupported');
     }
 
-    // 알림이 안 되어도 남긴다. 다음에 열 때 묻는 길이 남는다
+    // 알림을 누르고 들어온 사람에게 무엇을 물을지 화면이 알아야 한다
     await writeRecall(bridge.storage, {
       answerId,
       date: todayISO(),
       firstActionTitle: actionTitle,
     });
 
-    analytics.log('tomorrow_ask_accept', { answer_id: answerId, notify }, { kind: 'click' });
+    /*
+      서버 예약. 거절한 사람에게는 보낼 수 없으니 올리지 않는다.
+      올리지 못해도 기기 쪽 한 줄은 남아 있어서 다음에 열면 묻는 길이 산다.
+    */
+    let reserved = false;
+    if (notify !== 'denied') {
+      try {
+        await api.reserveReminder({ dueAt: tomorrowAt(hour), actionTitle });
+        reserved = true;
+      } catch {
+        // 알림 하나 때문에 답변 화면을 멈추지 않는다
+      }
+    }
+
+    analytics.log(
+      'tomorrow_ask_accept',
+      { answer_id: answerId, notify, reserved, hour, surface },
+      { kind: 'click' },
+    );
     setState('done');
+  }, [actionTitle, analytics, answerId, api, bridge, hour, state, surface]);
+
+  if (state === 'done') {
+    return (
+      <p className="p-micro" {...testId(TEST_IDS.tomorrowAskDone)}>
+        {promisesPush
+          ? `내일 ${hourLabel(hour)}에 알림으로 여쭤볼게요`
+          : '다음에 앱을 열면 여쭤볼게요'}
+      </p>
+    );
   }
 
-  if (state === 'done') return <p className="p-micro">{DONE_NOTE}</p>;
-
   return (
-    <button
-      type="button"
-      className="act-commit-btn"
-      disabled={state === 'busy'}
-      onClick={() => void accept()}
-      {...testId(TEST_IDS.tomorrowAsk)}
-    >
-      {state === 'busy' ? '준비하고 있어요' : '내일 했는지 물어봐 주세요'}
-    </button>
+    <div className="act-commit__ask">
+      <button
+        type="button"
+        className="act-commit-btn"
+        disabled={state === 'busy'}
+        onClick={() => void accept()}
+        {...testId(TEST_IDS.tomorrowAsk)}
+      >
+        {state === 'busy'
+          ? '준비하고 있어요'
+          : promisesPush
+            ? '잊지 않게 내일 알려주세요'
+            : '내일 했는지 여쭤봐 주세요'}
+      </button>
+      <p className="act-commit__why">
+        {promisesPush
+          ? `까먹지 않게 내일 ${hourLabel(hour)}에 딱 한 번 알림을 보내 드려요`
+          : '딱 한 번만 여쭤봐요. 해냈는지 스스로 확인하는 자리예요'}
+      </p>
+    </div>
   );
 }

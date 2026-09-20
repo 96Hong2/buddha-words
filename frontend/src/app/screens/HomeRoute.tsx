@@ -22,7 +22,7 @@ import {
   saveFromServer,
   type QuotaState,
 } from '../../domains/quota/quota';
-import type { Quota } from '../../shared/api';
+import { useApiClient, type Quota } from '../../shared/api';
 import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { markAdWatched } from '../../shared/api/http';
@@ -75,6 +75,7 @@ export function HomeRoute() {
   const { state } = useLocation();
   const bridge = useBridge();
   const { beginSubmit, sent } = useSession();
+  const api = useApiClient();
 
   /**
    * 온보딩을 아직 안 봤나. 마운트할 때 한 번만 읽는다.
@@ -198,7 +199,7 @@ export function HomeRoute() {
     held.current = '';
     if (text === '') return;
     // 이어가기 광고 자리를 지났다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다.
-    // 광고를 끝까지 봤다는 뜻은 아니다. 이 자리 광고는 답과 따로 간다
+    // 보상형 판에서는 끝까지 본 사람만 여기까지 온다. 광고가 안 온 사람은 그냥 통과한다
     markAdWatched();
     send(text);
   }, [send]);
@@ -233,11 +234,19 @@ export function HomeRoute() {
     [dailyOpen],
   );
 
-  /** 물어본 것에 답했다. 기기에서도 지운다. 화면에서만 치우면 다음에 또 같은 것을 묻는다 */
+  /**
+   * 물어본 것에 답했다. 기기에서도 지운다. 화면에서만 치우면 다음에 또 같은 것을 묻는다.
+   *
+   * 서버 예약도 거둔다. 알림이 가기 전에 앱에서 먼저 답한 사람에게 같은 것을 또 물으면,
+   * 되짚기가 아니라 잔소리가 된다.
+   */
   const respondRecall = useCallback(() => {
     void clearRecall(bridge.storage);
+    void api.cancelReminder().catch(() => {
+      // 못 거뒀으면 알림이 한 번 더 간다. 그것 때문에 홈을 멈추지 않는다
+    });
     setRecall(null);
-  }, [bridge]);
+  }, [api, bridge]);
 
   /**
    * 답하지 않고 닫았다.

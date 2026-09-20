@@ -389,7 +389,7 @@ async function waitForAnonKey(getAnonKey: () => AnonKeyState): Promise<string> {
 
 interface Call {
   path: string;
-  method: 'GET' | 'POST';
+  method: 'GET' | 'POST' | 'DELETE';
   body?: Record<string, unknown>;
   idempotencyKey?: string;
   timeoutMs?: number;
@@ -522,6 +522,20 @@ export function createHttpClient(baseUrl: string, options: ApiClientOptions): Ap
     async fetchSharedCard(token) {
       if (!SHARE_ID.test(token)) return null;
       return { kind: 'image', imageUrl: `${baseUrl}/share/${token}/card.png` };
+    },
+
+    /**
+     * 내일 한 번 여쭤보기로 한다.
+     *
+     * 보내는 것은 **보낼 시각과 행동 제목 둘뿐**이다. 고민 원문도 답변 본문도 가지 않는다.
+     * 알림 문구에 실릴 수 있는 사용자 글은 행동 제목 하나로 끝난다.
+     */
+    async reserveReminder({ dueAt, actionTitle }) {
+      await call({ path: '/reminder', method: 'POST', body: { dueAt, actionTitle } });
+    },
+
+    async cancelReminder() {
+      await call({ path: '/reminder', method: 'DELETE' });
     },
   };
 }

@@ -58,6 +58,15 @@ export interface ApiClient {
   }): Promise<ShareLink>;
   /** 링크로 들어온 사람이 보는 카드. 보낸 사람의 고민 원문은 담기지 않는다 */
   fetchSharedCard(token: string): Promise<SharedCard | null>;
+  /**
+   * 「내일 알림으로 여쭤볼게요」. 보낼 시각과 행동 제목만 올린다.
+   *
+   * 서버에 올리는 이유는 하나다. **알림은 앱이 꺼져 있을 때 가야 한다.** 기기에만 담으면
+   * 앱을 열어야 알 수 있어서 「다음에 열면 묻는다」 밖으로 못 나간다.
+   */
+  reserveReminder(req: { dueAt: number; actionTitle: string }): Promise<void>;
+  /** 이미 답했다. 아직 안 간 알림을 거둔다 */
+  cancelReminder(): Promise<void>;
 }
 
 /** 스텁 구현 묶음. 지금 받지 않고 실제로 쓸 때 받는다 */
@@ -156,6 +165,11 @@ export function createStubClient(): ApiClient {
       await stub.sleep(120);
       return stub.readShared(token);
     },
+
+    // 스텁에는 알림을 보낼 서버가 없다. 받아 두기만 하고 아무 일도 하지 않는다
+    async reserveReminder() {},
+
+    async cancelReminder() {},
   };
 }
 
@@ -208,6 +222,8 @@ function createBrokenClient(why: string): ApiClient {
     fetchDailyQuote: fail,
     createShareToken: fail,
     fetchSharedCard: fail,
+    reserveReminder: fail,
+    cancelReminder: fail,
   };
 }
 
