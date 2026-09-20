@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ROUTES } from '../../app/router';
@@ -36,9 +36,6 @@ import {
 } from '../../shared/prefs/notifyTime';
 
 import './settings.css';
-
-/** 문의를 받는 곳. 앱 안에서 바로 메일 앱으로 넘긴다 */
-const CONTACT_EMAIL = 'help@buddhawords.kr';
 
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
@@ -573,7 +570,7 @@ export function SettingsScreen() {
           <button
             type="button"
             className="set-item"
-            onClick={() => openRow('terms', ROUTES.privacy)}
+            onClick={() => openRow('terms', `${ROUTES.privacy}#terms`)}
           >
             <span className="set-icon" aria-hidden="true">
               <svg
@@ -593,35 +590,6 @@ export function SettingsScreen() {
             </span>
             <Chevron />
           </button>
-        </div>
-
-        <p className="set-group">문의</p>
-        <div className="set-list">
-          <a
-            className="set-item"
-            href={`mailto:${CONTACT_EMAIL}`}
-            onClick={() =>
-              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })
-            }
-          >
-            <span className="set-icon" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              >
-                <rect x="3.4" y="5.6" width="17.2" height="12.8" rx="2.4" />
-                <path d="M4.2 7.2L12 12.6l7.8-5.4" strokeLinecap="round" />
-              </svg>
-            </span>
-            <span className="set-text">
-              <span className="set-item-title">문의 이메일</span>
-              <span className="set-item-desc">{CONTACT_EMAIL} 로 보낼 수 있어요</span>
-            </span>
-            <Chevron />
-          </a>
 
           <button
             type="button"
@@ -651,15 +619,15 @@ export function SettingsScreen() {
         </div>
 
         <div className="set-foot">
-          {/* logo_lockup 은 마크 아래에 이름이 픽셀로 박혀 있다. 마크만 잘라 쓰고 이름은 아래에서 다시 쓴다 */}
-          <div
-            className="asset-crop set-foot-mark"
-            style={
-              { '--iw': 172, '--ih': 166, '--cx': 44, '--cy': 12, '--k': 0.857 } as CSSProperties
-            }
-          >
-            <img src="/assets/logo_lockup.webp" alt="" />
-          </div>
+          {/*
+            앱 아이콘을 그대로 쓴다. 이름은 아래에서 글자로 다시 쓴다.
+
+            한때 `logo_lockup` 을 잘라 썼는데, 그 그림은 연꽃 아래에 이름이 픽셀로 박혀 있어
+            **정사각형으로 자르면 연꽃을 다 담는 순간 이름 윗머리가 따라 들어온다.** 연꽃이
+            81×56 이라 가로가 훨씬 넓어서 그렇다. 크롭 좌표를 맞춰 봐도 연꽃이 오른쪽으로
+            밀리거나 아래가 잘렸다. 아이콘은 애초에 정사각형에 맞춰 그린 그림이라 자를 것이 없다.
+          */}
+          <img className="set-foot-mark" src="/assets/app_icon.webp" alt="" />
           <div className="set-foot-name">부처의 말</div>
           <div className="set-foot-ver">버전 {__APP_VERSION__} · 답변은 AI가 만들어요</div>
         </div>

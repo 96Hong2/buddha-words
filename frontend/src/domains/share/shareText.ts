@@ -27,8 +27,7 @@
  */
 
 import { attributionLine, type Scripture } from '../../shared/api';
-import { resolveApiBaseUrl } from '../../shared/api/baseUrl';
-import { resolveApiMode } from '../../shared/api/client';
+import type { MiniAppBridge } from '../../shared/toss';
 
 /** 링크 앞에 서는 한 줄. 받는 사람에게 이게 무엇인지 알린다 */
 const FROM_SCRIPTURE = '부처의 말에서 받았어요';
@@ -62,18 +61,30 @@ export function shareMessage({ scripture, url, full = false }: ShareTextInput): 
 }
 
 /**
- * 앱 자체로 가는 주소.
+ * 앱 자체로 가는 주소. 만들지 못하면 null 이다.
  *
  * 답변 공유와 달리 특정 답으로 가지 않는다. 받는 사람이 열면 자기 이야기를 쓰는 첫 화면이다.
- * 토스 딥링크(`intoss://`)는 토스가 깔린 기기에서만 열려서, 카톡으로 받은 사람 중 토스가
- * 없는 쪽이 막다른 곳에 선다.
+ *
+ * ⚠ **이 주소는 토스가 만들어 준다**(`Share.createLink`). 우리가 조립하지 않는다.
+ * 한때 운영 판에서 백엔드 주소를 그대로 내보냈는데, 그 주소는 API 라 여는 사람마다
+ * `{"detail":"Not Found"}` 를 봤다. 미니앱이 서는 주소(`*.tossmini.com`)도 토스 앱
+ * 밖에서는 400 이라 대안이 못 된다. 토스가 주는 주소만 받는 사람에게 실제로 열린다.
+ *
+ * 못 만들면 주소를 빼고 보낸다. 죽은 주소를 보내는 것보다 낫다.
  *
  * 답변 화면과 보관함이 같은 주소를 써야 해서 여기 둔다. 두 자리가 각자 조립하면 한쪽만 고쳐진다.
  */
-export function appShareUrl(): string {
-  const api = resolveApiMode() === 'http' ? resolveApiBaseUrl() : null;
-  if (api != null) return api;
-  return typeof window === 'undefined' ? '' : window.location.origin;
+export async function appShareUrl(bridge: MiniAppBridge): Promise<string | null> {
+  /*
+    `supports('share')` 로 먼저 거르지 않는다. 그 값은 **네이티브 공유 시트**를 열 수 있나를
+    말하고, 주소를 만드는 일과 별개다. 시트를 못 여는 기기는 글을 복사해 건네는데, 거기서
+    주소를 빼면 복사한 글에 갈 곳이 없다.
+  */
+  try {
+    return await bridge.share.appLink();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -81,7 +92,10 @@ export function appShareUrl(): string {
  *
  * 앱 이름과 무엇을 해 주는지, 그리고 주소. 고민도 답도 여기에 없다. 이건 그 사람의
  * 이야기를 나누는 자리가 아니라 앱을 알리는 자리다.
+ *
+ * 주소가 없으면 그 줄을 통째로 뺀다. 빈 줄로 끝나는 메시지를 내보내지 않는다.
  */
-export function appShareMessage(url: string): string {
-  return ['마음에 걸리는 일을 적으면 경전에서 답을 찾아 줘요', '', '부처의 말', url].join('\n');
+export function appShareMessage(url?: string | null): string {
+  const head = ['마음에 걸리는 일을 적으면 경전에서 답을 찾아 줘요', '', '부처의 말'];
+  return (url != null && url.trim() !== '' ? [...head, url.trim()] : head).join('\n');
 }

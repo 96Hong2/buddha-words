@@ -433,6 +433,26 @@
   color: var(--text-muted);
 }
 
+/*
+ * 간직 버튼 안의 「광고」 배지. 이어가기 시트·다른 관점 카드와 같은 모양이다.
+ * 짙은 버튼 위에 얹히므로 색은 그쪽 짝(`--accent-on-deep` / `--surface-deep`)을 쓴다.
+ */
+.arch-ad-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--r-xs);
+  background: var(--accent-on-deep);
+  color: var(--surface-deep);
+  font-size: var(--t-micro);
+  line-height: var(--lh-micro);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.04em;
+  /* 줄이 바뀌는 자리에서 배지만 혼자 떨어지지 않게 한다 */
+  white-space: nowrap;
+}
+
 /* 되돌릴 수 없는 자리. 색으로만 말하지 않고 한 번 더 묻는 단계를 함께 둔다 */
 .arch-btn--danger {
   background: var(--surface-chip);

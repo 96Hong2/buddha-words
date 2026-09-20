@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router';
+
 import { TEST_IDS, testId } from '../../shared/testIds';
 
 import './settings.css';
@@ -10,14 +13,29 @@ const TRANSFER = [
   { k: '얼마나 두나요', v: '답변을 만드는 동안만요' },
 ];
 
-const CONTACT_EMAIL = 'help@buddhawords.kr';
-
+/**
+ * 개인정보 안내와 이용약관이 **한 문서**다.
+ *
+ * 설정에는 줄이 둘이지만 둘 다 여기로 온다. 읽을 글이 짧아 화면을 가를 이유가 없다.
+ * 대신 제목이 둘을 다 말하고, 「이용약관」으로 들어오면(`#terms`) 그 절로 바로 내려간다.
+ * 예전에는 약관을 눌렀는데 「개인정보 안내」라는 제목이 뜨고, 약관은 한참 아래에 있었다.
+ */
 export function PrivacyScreen() {
+  const { hash } = useLocation();
+  const terms = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (hash !== '#terms') return;
+    terms.current?.scrollIntoView({ block: 'start' });
+  }, [hash]);
+
   return (
     <div className="set-screen" {...testId(TEST_IDS.privacy)}>
       <div className="set-pad">
-        <h1 className="set-title">개인정보 안내</h1>
-        <p className="set-sub">적으신 이야기를 어떻게 다루는지 적어 뒀어요</p>
+        <h1 className="set-title">개인정보 안내와 이용약관</h1>
+        <p className="set-sub">
+          적으신 이야기를 어떻게 다루는지, 그리고 지켜 주실 것을 적어 뒀어요
+        </p>
 
         <section className="set-card set-doc">
           <h2 className="set-doc-title">무엇을 받나요</h2>
@@ -106,7 +124,7 @@ export function PrivacyScreen() {
           </ul>
         </section>
 
-        <section className="set-card set-doc">
+        <section className="set-card set-doc" id="terms" ref={terms}>
           <h2 className="set-doc-title">이용약관</h2>
           <ul className="set-doc-list">
             <li>답변은 AI가 만든 글이에요. 전문가의 판단을 대신하지 않아요.</li>
@@ -123,8 +141,6 @@ export function PrivacyScreen() {
             <li>다른 사람에게 해가 되는 쓰임이 확인되면 이용이 제한될 수 있어요.</li>
           </ul>
         </section>
-
-        <p className="set-hint">궁금한 것이 있으면 {CONTACT_EMAIL} 로 보내 주세요</p>
       </div>
     </div>
   );

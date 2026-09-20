@@ -21,13 +21,13 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useOverlayBackClose } from '../../app/providers';
+import { useBridge, useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { markHomeAddDone, type Nudge } from '../../shared/prefs/milestones';
 import { readNotify, writeNotify } from '../../shared/prefs/notify';
 import { TEST_IDS, testId } from '../../shared/testIds';
 
-import { appShareMessage } from '../share/shareText';
+import { appShareMessage, appShareUrl } from '../share/shareText';
 
 import './growth.css';
 
@@ -36,8 +36,6 @@ export interface NudgeOverlayProps {
   nudge: Nudge;
   /** 지금까지 받은 답의 수. 로그에 싣는다 */
   answersTotal: number;
-  /** 앱 첫 화면으로 가는 주소. 앱 알리기에만 쓴다 */
-  appUrl: string;
   /** 네이티브 공유 시트를 연다. 주지 않으면 주소를 복사한다 */
   onSendMessage?: (message: string) => Promise<'sent' | 'dismissed' | 'unsupported'>;
   /** 알림 동의를 묻는다. 이 기기에서 못 쓰면 null 을 준다 */
@@ -57,12 +55,12 @@ function CloseIcon() {
 export function NudgeOverlay({
   nudge,
   answersTotal,
-  appUrl,
   onSendMessage,
   onAskNotify,
   onDone,
 }: NudgeOverlayProps) {
   const analytics = useAnalytics();
+  const bridge = useBridge();
   const [busy, setBusy] = useState(false);
   /** 뜨는 말 한 줄. `close` 가 false 면 카드를 그대로 둔다 */
   const [toast, setToast] = useState<{ text: string; close: boolean } | null>(null);
@@ -128,10 +126,14 @@ export function NudgeOverlay({
 
   async function share(): Promise<void> {
     if (busy) return;
-    const message = appShareMessage(appUrl);
+    /*
+      주소를 만드는 것도 브릿지를 한 번 다녀오는 일이다. 그 사이에 버튼이 멀쩡해 보이면
+      사람이 한 번 더 누르고, 공유 시트가 두 번 열린다. 누른 순간부터 잠근다.
+    */
+    setBusy(true);
+    const message = appShareMessage(await appShareUrl(bridge));
 
     if (onSendMessage != null) {
-      setBusy(true);
       let result: 'sent' | 'dismissed' | 'unsupported';
       try {
         result = await onSendMessage(message);
@@ -148,6 +150,7 @@ export function NudgeOverlay({
       if (result === 'dismissed') return;
     }
 
+    setBusy(false);
     try {
       await navigator.clipboard.writeText(message);
       analytics.log('app_share_complete', { method: 'copy' });

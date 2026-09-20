@@ -223,6 +223,14 @@ export type ShareResult = 'sent' | 'dismissed' | 'unsupported';
 export interface ShareBridge {
   /** 시스템 공유 시트를 연다. 던지지 않는다. */
   sendMessage(message: string): Promise<ShareResult>;
+  /**
+   * 이 미니앱을 여는 주소. 못 만들면 null 이고, 그러면 메시지에 주소를 안 붙인다.
+   *
+   * 토스가 만들어 주는 https 주소다. 받는 사람에게 토스가 깔려 있으면 앱이 열려 이
+   * 미니앱으로 바로 오고, 없으면 앱스토어·플레이스토어로 간다. 그래서 카톡으로 받은
+   * 사람도 막다른 곳에 서지 않는다. 던지지 않는다.
+   */
+  appLink(): Promise<string | null>;
 }
 
 /**

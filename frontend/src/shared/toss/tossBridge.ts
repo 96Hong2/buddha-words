@@ -393,7 +393,20 @@ class TossShareBridge implements ShareBridge {
       return 'dismissed';
     }
   }
+
+  async appLink(): Promise<string | null> {
+    try {
+      const link = await Share.createLink({ path: APP_DEEP_LINK });
+      return typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
+    } catch {
+      // 옛 토스 앱이면 못 만든다. 주소 없이 보내는 쪽이 죽은 주소를 보내는 쪽보다 낫다
+      return null;
+    }
+  }
 }
+
+/** 이 미니앱을 여는 토스 딥링크. 백엔드의 `APP_SCHEME` 과 같은 값이다 */
+const APP_DEEP_LINK = 'intoss://buddha-words';
 
 /**
  * 이 앱 버전에서 공유 시트를 열 수 있나.
