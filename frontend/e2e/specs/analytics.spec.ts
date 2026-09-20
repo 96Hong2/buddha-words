@@ -241,6 +241,31 @@ test('간직은 누른 것과 담긴 것을 갈라 남긴다', async ({ page }) 
   expect(done?.params.gate).toBe('ad');
 });
 
+test('갈래가 정해진 순간이 로그에 남는다', async ({ page }) => {
+  /*
+   * 통합 개발 계획의 확인 항목이 요구하는 순서다:
+   *   input_type_* → model_route → answer_generated(pass=1) → answer_generated(pass=2)
+   *
+   * `input_type_*` 는 v0.3 부터 정본에 적혀 있었는데 2026-09-20 까지 한 번도 안 나갔다.
+   * 그동안 활성화 지표(`activation`)의 분모가 통째로 비어 있었고 아무도 몰랐다.
+   */
+  await page.goto('/');
+  await answerOnce(page);
+
+  const order = (await names(page)).filter(
+    (n) => n.startsWith('input_type_') || n === 'model_route' || n === 'answer_generated',
+  );
+  expect(order[0], '갈래가 model_route 보다 먼저 찍혀야 한다').toMatch(/^input_type_/);
+  expect(order).toContain('model_route');
+  expect(order.indexOf('model_route')).toBeLessThan(order.indexOf('answer_generated'));
+
+  const typed = (await logs(page)).find((row) => row.name.startsWith('input_type_'));
+  expect(typed?.params).toHaveProperty('chars_bucket');
+  expect(typed?.params).toHaveProperty('lines_bucket');
+  // 고민 원문은 여기에도 안 실린다
+  for (const secret of SECRETS) expect(JSON.stringify(typed?.params)).not.toContain(secret);
+});
+
 test('광고 한 편이 세션 집계에 한 번만 잡힌다', async ({ page }) => {
   /*
    * 이어가기가 보상형으로 돌아온 뒤에도 세는 자리가 전면형 시절 그대로였다.

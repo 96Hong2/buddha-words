@@ -27,13 +27,18 @@ export const EVENTS = {
   deep_hint_shown:      { params: ['chars_bucket'] as const },                               // 점 셋이 다 차 「깊게 볼 수 있어요」가 떴다
   concern_submit:       { params: ['chars_bucket', 'lines_bucket', 'typing_bucket_ms', 'deep_hint_seen', 'restored'] as const },
   /*
-    입력·라우팅.
+    입력·라우팅. 셋은 **답이 와서 갈래가 정해진 순간** `model_route` 바로 앞에 찍힌다.
 
-    ⚠ 한때 여기 `input_type_light` · `input_type_normal` · `input_type_deep` 셋이 있었다.
-    **선언만 있고 코드 어디에서도 보내지 않았다.** 그 셋을 분모로 쓰던 `activation` 과
-    `viral_landing` 은 그동안 계산 자체가 안 됐다. 같은 사실을 이미 둘이 나눠 지고 있어서
-    (`concern_submit` 이 글자·줄 수와 전송 시각을, `model_route` 가 갈래를) 되살리지 않고 뺐다.
+    ⚠ 이 셋은 v0.3 부터 여기 적혀 있었는데 **2026-09-20 까지 코드 어디에서도 보내지 않았다.**
+    그동안 `activation` 과 `viral_landing` 은 분모가 비어 계산 자체가 안 됐고, 통합 개발 계획의
+    확인 항목(로그 순서 10번)도 지킬 수 없는 상태였다. 아무도 로그를 안 봐서 몰랐다.
+
+    `stage`(rules · classifier · fallback)는 **아직 못 싣는다.** 그 값을 아는 곳은 서버이고
+    응답 스키마에 없다. 없는 값을 지어내지 않고 비워 둔다. 서버가 내보내면 그때 채운다.
   */
+  input_type_light:    { params: ['chars_bucket', 'lines_bucket'] as const },
+  input_type_normal:   { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
+  input_type_deep:     { params: ['chars_bucket', 'lines_bucket', 'stage'] as const },
   invalid_input:       { params: ['message_key'] as const },
   crisis_detected:     { params: ['stage', 'level', 'minor', 'abuse'] as const },          // level: acute | distress
   crisis_continue_click:{ params: ['level'] as const },                                    // 「그래도 이야기를 들어주세요」. acute 에서는 버튼 자체가 없다
@@ -223,7 +228,7 @@ export const BUCKETS = {
 
 /** KPI 정의. 분자/분모 이벤트가 둘 다 찍히는지 M6 에서 콘솔로 확인한다 */
 export const KPI = {
-  activation:       { name: '첫 전송 → 첫 답변 도달',   num: 'answer_generated(pass=1|light, first)', den: 'concern_submit (first)', target: '≥ 90%. 여기가 낮으면 서버가 답을 못 준 것이다' },
+  activation:       { name: '첫 입력 → 첫 답변 도달',   num: 'answer_generated(pass=1|light, first)', den: 'input_type_* (first)', target: '≥ 90%' },
   quality:          { name: '답변 70% 완독률',         num: 'answer_read_70', den: 'answer_generated(pass=2|light)', target: 'normal·deep 따로 본다' },
   deep_engagement:  { name: 'Deep Extension 클릭률',   num: 'rewarded_ad_start(placement=extension)', den: 'deep_extension_view', target: '실측 후 정한다' },
   ad_optin:         { name: '광고 opt-in',             num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
@@ -264,7 +269,7 @@ export const KPI = {
   viral_share:      { name: '공유 완료 / 답변 생성',     num: 'share_complete', den: 'answer_generated(pass=2|light)', target: '' },
   share_scope_mix:  { name: '전체 공유 비율',            num: 'share_scope_select(scope=full)', den: 'share_scope_select', target: '무엇을 보내고 싶어 하는지 본다' },
   app_share_conv:   { name: '앱 권유 수락률',            num: 'app_share_complete', den: 'app_share_view', target: '' },
-  viral_landing:    { name: '공유 링크 → 고민 전송',     num: 'share_landing_cta → concern_submit', den: 'share_landing_open', target: '' },
+  viral_landing:    { name: '공유 링크 → 고민 입력',     num: 'share_landing_cta → input_type_*', den: 'share_landing_open', target: '' },
   // ── 활성화 깔때기. 한 단계라도 빠지면 그 자리가 제품을 막고 있다 ──
   onboarding_done:  { name: '온보딩 완주율',            num: 'onboarding_complete', den: 'onboarding_view(step=1)', target: '≥ 85%' },
   input_start:      { name: '열고 나서 쓰기 시작',       num: 'concern_input_start', den: 'app_open', target: '' },
