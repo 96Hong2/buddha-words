@@ -5,6 +5,7 @@ import {
   IAP,
   Notification,
   PermissionError,
+  Review,
   SafeArea,
   Screen,
   Share,
@@ -470,6 +471,8 @@ export class TossMiniAppBridge implements MiniAppBridge {
         return true;
       case 'share':
         return shareSupported();
+      case 'review':
+        return Review.request.isSupported();
     }
   }
 
@@ -480,7 +483,9 @@ export class TossMiniAppBridge implements MiniAppBridge {
         ? Notification.requestAgreement.MIN_TOSS_APP_VERSION
         : capability === 'purchase'
           ? IAP.createOneTimePurchaseOrder.MIN_TOSS_APP_VERSION
-          : null;
+          : capability === 'review'
+            ? Review.request.MIN_TOSS_APP_VERSION
+            : null;
     if (gate == null) return null;
     if (this.platform === 'ios') return gate.ios;
     if (this.platform === 'android') return gate.android;
@@ -567,6 +572,26 @@ export class TossMiniAppBridge implements MiniAppBridge {
         },
       });
     });
+  }
+
+  /**
+   * 리뷰 화면을 청한다.
+   *
+   * `requestReview` 가 아니라 `Review.request` 를 쓴다. 앞엣것은 SDK 3.2 에서
+   * deprecated 이고 선언 자체가 뒤엣것을 가리킨다.
+   *
+   * 던지는 것을 삼키지 않고 위로 올린다. 부르는 쪽이 「청했다」를 적기 전에 실패를
+   * 알아야, 못 뜬 판에서 다시 물을지 정할 수 있다.
+   */
+  async requestReview(): Promise<void> {
+    if (!Review.request.isSupported()) {
+      throw new BridgeError('UNSUPPORTED', '이 토스 앱 버전에서는 리뷰를 쓸 수 없어요.');
+    }
+    try {
+      await Review.request();
+    } catch (error) {
+      throw toBridgeError(error, '리뷰 화면을 열지 못했어요.');
+    }
   }
 
   getSafeAreaInsets(): SafeAreaInsets {

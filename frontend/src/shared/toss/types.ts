@@ -26,7 +26,9 @@ export type BridgeCapability =
   | 'notification'
   | 'analytics'
   /** 네이티브 공유 시트. 카톡·메시지·메일이 여기서 갈린다. */
-  | 'share';
+  | 'share'
+  /** 미니앱 리뷰 요청 화면. 토스 앱 5.253.0 부터다. */
+  | 'review';
 
 /**
  * 토스 알림 동의 요청의 결과.
@@ -335,6 +337,17 @@ export interface MiniAppBridge {
    * 않는다. 이 버전에서 못 쓰거나 템플릿 코드가 없으면 BridgeError('UNSUPPORTED').
    */
   requestNotificationAgreement(templateCode: string): Promise<NotificationAgreementResult>;
+
+  /**
+   * 토스 리뷰 화면을 청한다. **가치를 느낀 시점에만, 한 세션에 한 번.**
+   *
+   * 떴는지는 알 수 없다. 토스가 사람의 피로도를 보고 띄울지 정하고 결과를 주지 않는다.
+   * 그래서 이 호출이 끝났다고 리뷰가 남은 것은 아니다. 다음 화면으로 넘어가는 일이나
+   * 보상을 여기에 매달면 안 된다.
+   *
+   * 못 쓰는 버전이면 BridgeError('UNSUPPORTED').
+   */
+  requestReview(): Promise<void>;
 
   getSafeAreaInsets(): SafeAreaInsets;
   subscribeSafeArea(listener: (insets: SafeAreaInsets) => void): () => void;

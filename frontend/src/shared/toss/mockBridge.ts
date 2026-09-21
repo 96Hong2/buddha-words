@@ -77,6 +77,13 @@ export interface MockScenario {
    */
   share?: 'sent' | 'dismissed' | 'unsupported';
   /**
+   * 리뷰 화면을 청했을 때 무슨 일이 벌어지나.
+   *
+   * `ok` 면 조용히 끝난다(실제 SDK 도 떴는지 안 알려 준다). `failed` 는 던지는 판이다.
+   * 리뷰를 못 열었다고 홈이 깨지면 안 되는 것을 e2e 가 본다.
+   */
+  review?: 'ok' | 'failed' | 'unsupported';
+  /**
    * 토스가 만들어 주는 앱 공유 주소. 기본은 없음이다.
    *
    * 브라우저에는 이 앱을 여는 주소가 실제로 없어서, 기본값을 두면 그것이 화면에 뜬다.
@@ -122,6 +129,8 @@ declare global {
      * 섞이면 그 자리에서 실패한다.
      */
     __buddhaShares?: string[];
+    /** 리뷰를 몇 번 청했나. e2e 가 「한 번만 청한다」를 이걸로 본다 */
+    __buddhaReviews?: number;
   }
 }
 
@@ -429,6 +438,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
     if (capability === 'fullScreenAd') return this.scenario.fullScreenAd !== 'unsupported';
     if (capability === 'purchase') return this.scenario.purchase !== 'unsupported';
     if (capability === 'share') return this.scenario.share !== 'unsupported';
+    if (capability === 'review') return this.scenario.review !== 'unsupported';
     return true;
   }
 
@@ -476,6 +486,23 @@ export class MockMiniAppBridge implements MiniAppBridge {
       throw new BridgeError('UNSUPPORTED', '목: 이 환경에서는 알림을 켤 수 없어요.');
     }
     return this.scenario.notification ?? 'alreadyAgreed';
+  }
+
+  /**
+   * 리뷰 화면. 실제 SDK 처럼 **떴는지 알려 주지 않는다.**
+   *
+   * 몇 번 불렸는지만 창에 남긴다. 화면이 같은 사람에게 두 번 청하지 않는 것을 e2e 가 본다.
+   */
+  async requestReview(): Promise<void> {
+    if (!this.supports('review')) {
+      throw new BridgeError('UNSUPPORTED', '목: 이 환경에서는 리뷰를 쓸 수 없어요.');
+    }
+    if (typeof window !== 'undefined') {
+      window.__buddhaReviews = (window.__buddhaReviews ?? 0) + 1;
+    }
+    if (this.scenario.review === 'failed') {
+      throw new BridgeError('UNKNOWN', '목: 리뷰 화면을 열지 못했어요.');
+    }
   }
 
   getSafeAreaInsets(): SafeAreaInsets {

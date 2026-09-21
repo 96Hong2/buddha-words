@@ -24,6 +24,15 @@
  *
  * 전면형으로 돌리는 빌드(`VITE_AD_CONTINUE_KIND=interstitial`)에서는 보상 이벤트가 없어
  * `dismissed` 로 끝나므로, 그 판에서는 닫아도 이어간다. 어느 쪽이 나은지는 지표로 가른다.
+ *
+ * ── 연잎이 있으면 광고를 안 본다 ─────────────────────────────────────
+ *
+ * 연잎 한 장은 **미리 치러 둔 광고 한 편**이다. 가진 사람에게는 그 버튼이 주 버튼이고
+ * 광고가 아래 보조로 내려간다. 순서를 뒤집으면 이미 값을 낸 사람 앞에 광고를 또 세우는
+ * 화면이 되고, 그러면 연잎을 미리 모을 이유가 그 자리에서 사라진다.
+ *
+ * 연잎을 실제로 빼는 일은 **부르는 쪽(app 층)이 한다.** 여기서 빼면 시트가 닫히는 길과
+ * 이어가는 길이 갈릴 때 빠진 연잎이 어디에도 안 쓰인 채 사라진다.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -31,7 +40,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { BottomSheet } from '../../shared/ui';
+import { BottomSheet, LeafAltAdButton, LeafUseButton } from '../../shared/ui';
 import { AD_KIND } from '../ads/placement';
 import { useRewardedAd, type AdOutcome } from '../ads/useRewardedAd';
 
@@ -51,6 +60,14 @@ const TITLE = '이야기를 이어가 볼까요?';
  */
 const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 광고 보고 답변 받기' : '답변 받기';
 
+/**
+ * 연잎이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
+ *
+ * 「광고」를 빼고 쓴다. 그 자리는 배지가 이미 말하고 있어서, 주 버튼과 달리 글자와 배지가
+ * 나란히 서면 한 줄에 같은 말이 두 번 나온다. 간직 시트의 보조 버튼과 같은 말투다.
+ */
+const AD_ALT_LABEL = AD_KIND.continue === 'rewarded' ? '30초 보고 답변 받기' : '답변 받기';
+
 export interface ContinueSheetProps {
   open: boolean;
   /** 오늘 이미 이어간 횟수. 로그에만 쓴다 */
@@ -58,6 +75,13 @@ export interface ContinueSheetProps {
   onClose: () => void;
   /** 답을 만들기 시작한다. 광고는 아직 떠 있을 수 있다 */
   onContinue: () => void;
+  /** 지금 가진 연잎. 1 장 이상이면 광고 대신 이것을 먼저 권한다 */
+  leaves?: number;
+  /**
+   * 연잎으로 이어간다. **연잎을 빼는 일은 부르는 쪽이 한다.**
+   * 못 뺐으면(그 사이에 잔액이 0 이 됐다) 이어가지 않고 그대로 둔다.
+   */
+  onUseLeaf?: () => void;
 }
 
 export function ContinueSheet({
@@ -65,6 +89,8 @@ export function ContinueSheet({
   continuesUsed,
   onClose,
   onContinue,
+  leaves = 0,
+  onUseLeaf,
 }: ContinueSheetProps) {
   const analytics = useAnalytics();
   const ad = useRewardedAd('continue');
@@ -94,6 +120,9 @@ export function ContinueSheet({
 
   /** 중간에 닫았다. 답을 주지 않으므로 왜 안 넘어가는지 그 자리에 적는다 */
   const [bailed, setBailed] = useState(false);
+
+  /** 연잎으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
+  const hasLeaf = leaves > 0 && onUseLeaf != null;
 
   const watch = useCallback(async (): Promise<void> => {
     setBailed(false);
@@ -127,54 +156,93 @@ export function ContinueSheet({
           횟수를 적지 않는다. 하루 천장을 없앴으므로 「오늘 N번 더」는 거짓이 됐다.
           그 문구는 광고를 보고도 막히는 줄 알게 만들었다(2026-09-20 사용자 지적).
         */}
-        <p className="continue-sheet__sub">광고를 보면 오늘도 계속 이어갈 수 있어요</p>
+        <p className="continue-sheet__sub">
+          {hasLeaf
+            ? '모아 둔 연잎으로 광고 없이 이어갈 수 있어요'
+            : '광고를 보면 오늘도 계속 이어갈 수 있어요'}
+        </p>
 
         <div className="continue-sheet__actions">
-          <button
-            type="button"
-            className="continue-sheet__ad"
-            disabled={ad.showing}
-            onClick={() => {
-              void watch();
-            }}
-            {...testId(TEST_IDS.continueWatch)}
-          >
-            <span className="continue-sheet__play" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              >
-                <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
-                <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
-              </svg>
-            </span>
-            {/*
+          {/*
+            연잎이 있으면 이쪽이 주 버튼이다. 광고는 아래 보조로 내려간다.
+            없으면 이 자리에 아무것도 그리지 않고 광고 버튼이 그대로 주 버튼으로 남는다.
+          */}
+          {hasLeaf && onUseLeaf != null && (
+            <LeafUseButton
+              count={leaves}
+              action="답변 받기"
+              disabled={ad.showing}
+              onClick={onUseLeaf}
+              testKey="leafSpendContinue"
+            />
+          )}
+
+          {hasLeaf ? (
+            <LeafAltAdButton
+              label={AD_ALT_LABEL}
+              disabled={ad.showing}
+              onClick={() => {
+                void watch();
+              }}
+              testKey="continueWatch"
+            />
+          ) : (
+            <button
+              type="button"
+              className="continue-sheet__ad"
+              disabled={ad.showing}
+              onClick={() => {
+                void watch();
+              }}
+              {...testId(TEST_IDS.continueWatch)}
+            >
+              <span className="continue-sheet__play" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
+                  <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              {/*
               「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지 라벨이
               말하지 않으면 앱인토스 심사 규칙에 닿는다.
 
               무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
               「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 그 말이 거짓이 된다.
             */}
-            <span className="continue-sheet__ad-label">
-              {AD_BUTTON_LABEL}{' '}
-              <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                광고
+              <span className="continue-sheet__ad-label">
+                {AD_BUTTON_LABEL}{' '}
+                <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                  광고
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          )}
           <p className="continue-sheet__note" role={ad.showing || bailed ? 'status' : undefined}>
+            {/*
+              연잎을 **안 가진 사람에게** 어디서 얻는지 알려 준다. 한때 가진 사람 쪽에만
+              두었는데, 그러면 이미 아는 사람에게만 얻는 법을 말하는 구조가 된다.
+
+              ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
+              「베푼 것을 세는 문장」과 한 글자도 안 겹치게 하려고 `flows.spec.ts` 가
+              문자열로 지키는 자리다. 같은 뜻을 「바로 이어갈 수 있어요」로 적는다.
+            */}
             {ad.showing
               ? '광고를 불러오고 있어요'
               : bailed
                 ? '광고를 끝까지 봐야 이어갈 수 있어요'
-                : AD_KIND.continue === 'rewarded'
-                  ? '광고가 끝나면 답변을 만들어 드려요'
-                  : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
+                : hasLeaf
+                  ? '광고를 보면 연잎을 아끼고 이어갈 수 있어요'
+                  : AD_KIND.continue === 'rewarded'
+                    ? '홈 위쪽 연잎을 미리 모아 두면 다음엔 바로 이어갈 수 있어요'
+                    : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
           </p>
         </div>
       </div>

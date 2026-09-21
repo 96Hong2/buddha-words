@@ -657,6 +657,16 @@
   gap: var(--s-3);
 }
 
+/* 버튼 아래 한 줄. 이어가기 시트의 .continue-sheet__note 와 같은 모양이다.
+   두 게이트가 다르게 생기면 같은 앱으로 안 읽힌다 */
+.pw-leaf-note {
+  margin: var(--s-2) 0 0;
+  text-align: center;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
 /* ── 간직한 말씀 상세 시트 ────────────────────────────────────────────── */
 
 /*

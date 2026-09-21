@@ -22,7 +22,7 @@
  * 저장하지 않으므로 이 화면에 원문이 나올 수 없다.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MouseEvent } from 'react';
 
 import { useAnalytics } from '../../shared/analytics';
 import { daysSince, recallWording, type RecallEntry } from '../../shared/prefs/recall';
@@ -57,11 +57,24 @@ export function RecallAsk({ entry, onRespond, onClose }: RecallAskProps) {
     onRespond(done);
   }
 
+  /**
+   * 누르는 동안 입력칸의 초점을 빼앗지 않는다.
+   *
+   * 초점이 빠지면 홈 제목이 두 줄로 펴지면서 이 카드가 통째로 아래로 밀린다. 그러면
+   * 누르던 것이 손가락 밑에서 비켜나 mouseup 이 엉뚱한 곳에 닿는다. 닫기 X 가 카드
+   * 위쪽에 있어 특히 크게 벗어난다(e2e 가 이것을 먼저 잡았다). 예시 칩·리뷰 카드가
+   * 같은 처리를 한다.
+   */
+  function keepFocus(event: MouseEvent) {
+    event.preventDefault();
+  }
+
   return (
     <div
       className="recall-ask"
       role="group"
       aria-label="지난 이야기"
+      onMouseDown={keepFocus}
       {...testId(TEST_IDS.recallSheet)}
     >
       <div className="recall-ask__head">

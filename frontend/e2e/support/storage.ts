@@ -38,6 +38,40 @@ export const SEEDED_MILESTONES = JSON.stringify({
   notifyDone: true,
 });
 
+/** 제품 코드의 leaves 와 같은 키다 */
+export const LEAVES_KEY = 'buddha.leaves.v1';
+
+/**
+ * 연잎을 **다 쓴** 사람. 온보딩·답 횟수와 같은 이유로 기본 출발점이다.
+ *
+ * 첫 연잎 한 장을 그냥 주므로, 그대로 두면 이어가기 시트와 간직 시트가 광고 버튼 대신
+ * 연잎 버튼을 주 버튼으로 세운다. 광고를 재는 spec 이 전부 거기에 걸린다. 그 spec 들이
+ * 재려는 것은 광고지 연잎이 아니다.
+ *
+ * `welcomed: true` 가 핵심이다. 이것이 없으면 앱이 열릴 때 한 장을 다시 준다.
+ *
+ * 연잎 자체를 재는 spec 은 `withLeaves(page, n)` 으로 원하는 잔액을 심고 시작한다.
+ */
+export const SEEDED_LEAVES = JSON.stringify({
+  count: 0,
+  welcomed: true,
+  earned: 1,
+  spent: 1,
+});
+
+/** 제품 코드의 review 와 같은 키다 */
+export const REVIEW_KEY = 'buddha.review.v1';
+
+/**
+ * 리뷰를 **이미 청한** 사람. 기본 출발점이다.
+ *
+ * 기본 출발점이 답을 아홉 번 받아 본 사람이라, 그대로 두면 리뷰 카드가 모든 spec 의
+ * 홈 맨 앞에 선다. 카드 하나가 화면을 밀어 내려 입력칸 자리를 재는 spec 들이 깨진다.
+ *
+ * 리뷰 카드를 재는 spec 은 `asReviewCandidate(page)` 로 이 표를 지우고 시작한다.
+ */
+export const SEEDED_REVIEW = JSON.stringify({ asked: true, snoozedAt: 0 });
+
 /**
  * 앱이 서는 주소가 둘이다(스텁 판 5183 · 실제 HTTP 클라이언트 판 5186). 같은 spec 이
  * 둘을 오가므로 **둘 다** 적어 둔다. 하나만 적으면 그 spec 만 온보딩에 막힌다.
@@ -52,6 +86,8 @@ export function seenOnboarding(
       localStorage: [
         { name: ONBOARDING_KEY, value: 'done' },
         { name: MILESTONES_KEY, value: SEEDED_MILESTONES },
+        { name: LEAVES_KEY, value: SEEDED_LEAVES },
+        { name: REVIEW_KEY, value: SEEDED_REVIEW },
       ],
     })),
   };

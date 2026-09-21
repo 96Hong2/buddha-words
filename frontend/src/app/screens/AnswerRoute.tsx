@@ -21,6 +21,7 @@ import {
   type SaveDoneKind,
 } from '../../domains/archive';
 import { NudgeOverlay, notifyAlreadySettled } from '../../domains/growth/NudgeOverlay';
+import { useLeafWallet } from '../../domains/leaf';
 import {
   countAnswer,
   markNudgeShown,
@@ -80,6 +81,7 @@ export function AnswerRoute() {
   const { response, archivePass } = useSession();
   const ad = useRewardedAd('extension');
   const saveAd = useRewardedAd('save');
+  const leaf = useLeafWallet();
 
   const [shareOpen, setShareOpen] = useState(false);
   /** 무엇을 보낼지. 기본은 적게 나가는 쪽이다 */
@@ -185,7 +187,7 @@ export function AnswerRoute() {
    * 광고를 보고 받은 「다른 관점」도 같이 담는다. 이것만 빠지면 광고를 끝까지 본 대가가 사라진다.
    */
   const store = useCallback(
-    (gate: 'ad' | 'pass' | 'free' | 'first_use'): StoreOutcome => {
+    (gate: 'ad' | 'pass' | 'free' | 'first_use' | 'leaf'): StoreOutcome => {
       if (answer == null) return 'failed';
       const pass2 = answer.pass2;
       const before = countSaved();
@@ -255,6 +257,10 @@ export function AnswerRoute() {
    *   이용권을 산 사람   그 사람이 산 것이 지금은 이것이다
    *   광고를 못 띄우는 판 구버전·광고 끄기·그룹 id 가 없는 번들. 그냥 담는다
    *
+   * 연잎은 이 넷에 끼지 않는다. **시트를 열고 사람이 고른다.** 여기서 자동으로 빼면,
+   * 광고를 볼 생각이었던 사람의 연잎이 말없이 사라진다. 광고를 못 띄우는 판에서
+   * 그냥 담기는 것도 그대로 둔다. 안 써도 되는 자리에서 연잎을 쓰게 할 이유가 없다.
+   *
    * 넷 다 화면에서는 똑같이 「광고 없이 담겼다」로 보인다. 왜 없었는지를 `ad_skipped` 로
    * 남겨야 나중에 0건을 보고 원인을 가를 수 있다.
    */
@@ -296,6 +302,36 @@ export function AnswerRoute() {
     }
     setGateOpen(true);
   }, [afterStore, analytics, answer, answersTotal, archivePass, saveAd.ready, saveAd.supported, store]);
+
+  /**
+   * 「연잎 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
+   *
+   * ⚠ **담고 나서 뺀다. 순서가 중요하다.**
+   *
+   * 먼저 빼면, 저장소가 막힌 기기에서 `store` 가 `failed` 를 내는 순간 연잎만 사라진다.
+   * 담기지도 않았는데 값은 치른 것이다. 광고 경로에는 이 문제가 없다. 광고는 어차피
+   * 되돌릴 수 없어서 잃을 것이 없는데, 연잎은 되돌릴 수 있는 것이라 잃으면 우리 잘못이다.
+   *
+   * 잔액 확인과 빼기 사이에 다른 화면이 끼어들 수 없다(한 갈래로 돈다). 그래도 `spend`
+   * 결과를 보고, 어긋났으면 로그로 남긴다. 담긴 것을 되돌리지는 않는다: 사람은 이미
+   * 담긴 화면을 봤고, 그것을 도로 빼앗는 쪽이 한 장을 못 받은 것보다 나쁘다.
+   */
+  const saveWithLeaf = useCallback(() => {
+    if (answer == null || leaf.count < 1) return;
+    setGateOpen(false);
+
+    const outcome = store('leaf');
+    if (outcome === 'failed') {
+      // 담기지 못했다. 연잎은 그대로 둔다
+      afterStore(outcome);
+      return;
+    }
+    if (!leaf.spend('save')) {
+      analytics.log('leaf_spend_missed', { placement: 'save' });
+    }
+    analytics.log('ad_skipped', { placement: 'save', reason: 'leaf' });
+    afterStore(outcome);
+  }, [afterStore, analytics, answer, leaf, store]);
 
   /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
   const watchAndSave = useCallback(async () => {
@@ -441,6 +477,8 @@ export function AnswerRoute() {
           open={gateOpen}
           answerId={answer.answerId}
           pending={gateBusy}
+          leaves={leaf.count}
+          onUseLeaf={saveWithLeaf}
           onClose={() => setGateOpen(false)}
           onWatch={() => void watchAndSave()}
           onBuyPass={() => {

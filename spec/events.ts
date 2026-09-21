@@ -87,7 +87,7 @@ export const EVENTS = {
    * 사람이 광고를 꺼 둔 것인지가 전부 「0건」으로 똑같이 보인다. 실제로 그 상태로
    * 번들을 올려 놓고 광고가 안 뜬다는 것을 실기기에서야 알았다.
    *
-   * reason: first_use | no_group | unsupported | opt_out | pass | already_saved | answer_ready
+   * reason: first_use | no_group | unsupported | opt_out | pass | already_saved | answer_ready | leaf
    */
   ad_skipped:          { params: ['placement', 'reason'] as const },
   post_ad_continue:    { params: ['placement', 'answer_id'] as const },                   // 광고를 보고 하던 일을 이어갔다
@@ -101,6 +101,24 @@ export const EVENTS = {
    * 이어가기를 전면형으로 돌리는 빌드에서만 보상 이벤트가 없어 이것이 유일한 완료 신호가 된다.
    */
   ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
+  /*
+    연잎. 광고 한 편을 **미리** 치러 두는 표다. 이어가기와 간직하기에서 한 장씩 쓴다.
+
+    이 넷이 대답하는 질문은 하나다: **광고를 미리 보게 하는 것이 광고를 더 보게 하나,
+    덜 보게 하나.** 미리 보기가 늘고 그 자리 광고가 그만큼 줄면 시점만 옮긴 것이고,
+    둘 다 늘면 이긴 것이다. `rewarded_ad_complete(placement='collect')` 와 짝으로 읽는다.
+  */
+  leaf_welcome:        { params: [] as const },                                          // 첫 한 장을 그냥 받았다. 사람당 한 번
+  leaf_earn:           { params: ['balance'] as const },                                 // 광고를 끝까지 보고 한 장 모았다
+  leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연잎으로 지났다
+  leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연잎 칩으로 모으기 시트를 열었다
+  /**
+   * 쓰려고 했는데 잔액이 없었다. **평소에는 한 건도 안 나와야 한다.**
+   *
+   * 화면이 잔액을 보고 버튼을 그린 뒤, 실제로 빼는 사이에 0 이 된 경우다. 한 갈래로
+   * 도는 코드라 날 수 없는 일인데, 나면 우리가 모르는 길이 하나 더 있다는 뜻이다.
+   */
+  leaf_spend_missed:   { params: ['placement'] as const },
   // 같은 날 두 번째 고민
   second_question_start:{ params: ['continues_used', 'gate'] as const },                  // gate: free | ad_continue | exhausted
   // 공유
@@ -118,7 +136,7 @@ export const EVENTS = {
   save_click:          { params: ['answer_id', 'slot_index'] as const },                  // 누른 순간. 담긴 것은 save_complete 다
   save_gate_view:      { params: ['answer_id'] as const },                                // 「짧은 광고를 보면」 시트를 봤다
   save_gate_accept:    { params: ['answer_id'] as const },                                // 「보고 간직하기」를 눌렀다
-  save_complete:       { params: ['answer_id', 'slot_index', 'gate'] as const },          // gate: ad | pass | free | first_use. 실제로 담겼다
+  save_complete:       { params: ['answer_id', 'slot_index', 'gate'] as const },          // gate: ad | pass | free | first_use | leaf. 실제로 담겼다
   save_done_view:      { params: ['answer_id', 'kind'] as const },                        // kind: saved | already. 담고 나서 뜨는 한 장
   save_done_action:    { params: ['action'] as const },                                   // action: archive | stay. 보러 갔나 읽던 답에 남았나
   archive_view:        { params: ['items_bucket'] as const },
@@ -160,6 +178,18 @@ export const EVENTS = {
   tomorrow_ask_accept: { params: ['answer_id', 'notify', 'reserved', 'hour', 'surface'] as const }, // notify: granted|denied|unsupported · reserved: 서버 예약까지 남았나
   recall_card_impression:{ params: ['days_since'] as const },                              // 다음 날 물어보는 시트가 떴다
   recall_card_click:   { params: ['days_since', 'done'] as const },                        // done: true(해봤어요) | false(아직이요). 이 앱이 행동까지 갔는지 재는 유일한 답이다
+  /*
+    리뷰. 앱인토스가 「추천 미니앱」을 UX · 실사용 지표 · **리뷰** · 성능 넷으로 가르는데
+    그 셋째 칸이 비어 있었다. 답을 두 번 이상 받아 본 사람에게 홈 맨 위 카드로 한 번 청한다.
+
+    ⚠ **떴는지는 못 잰다.** `Review.request` 가 `Promise<void>` 이고 토스가 사람의 피로도를
+    보고 띄울지 정한다. 그래서 `review_request` 는 「청했다」이지 「떴다」가 아니다.
+    실제 별점과 리뷰 수는 콘솔 「평점 및 리뷰」에서 본다.
+  */
+  review_card_view:    { params: ['answers_total'] as const },                             // 홈 맨 위에 카드가 떴다
+  review_card_accept:  { params: ['answers_total'] as const },                             // 「별점 남기기」를 눌렀다
+  review_card_later:   { params: ['answers_total'] as const },                             // 「나중에」. 답을 두 번 더 받으면 한 번 더 묻는다
+  review_request:      { params: ['result'] as const },                                    // result: asked | unsupported | failed
   // 마찰. 사람이 막힌 자리를 화면 녹화 없이 알아내는 최소한의 신호다
   friction_repeat_submit:{ params: ['within_bucket_ms'] as const },                        // 3초 안에 전송을 다시 눌렀다
   friction_generation_abandon:{ params: ['route', 'elapsed_bucket_ms'] as const },         // 답을 만드는 중에 나갔다

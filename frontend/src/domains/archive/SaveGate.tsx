@@ -12,6 +12,9 @@
  *
  * 광고를 못 띄우는 기기·광고 그룹 id 가 없는 번들에서는 이 시트가 아예 열리지 않는다.
  * 부르는 쪽이 그때는 곧바로 간직한다. 광고 때문에 간직이 막히면 안 된다.
+ *
+ * 연잎이 있으면 그 버튼이 주 버튼이고 광고가 아래로 내려간다. 이어가기 시트와 같은
+ * 부품·같은 순서를 쓴다. 두 자리가 다르게 생기면 같은 앱으로 안 읽힌다.
  */
 
 import { useEffect, useRef } from 'react';
@@ -20,6 +23,7 @@ import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { isArchivePassEnabled } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
+import { LeafAltAdButton, LeafUseButton } from '../../shared/ui';
 
 import './archive.css';
 
@@ -40,6 +44,13 @@ export interface SaveGateProps {
    * 세우면 다시 읽으러 온 사람에게 파는 말을 먼저 건네게 된다.
    */
   onBuyPass?: () => void;
+  /** 지금 가진 연잎. 1 장 이상이면 광고 대신 이것을 먼저 권한다 */
+  leaves?: number;
+  /**
+   * 연잎으로 간직한다. **연잎을 빼는 일은 부르는 쪽이 한다.**
+   * 못 뺐으면 간직하지 않고 그대로 둔다.
+   */
+  onUseLeaf?: () => void;
 }
 
 export function SaveGate({
@@ -49,9 +60,14 @@ export function SaveGate({
   onWatch,
   pending = false,
   onBuyPass,
+  leaves = 0,
+  onUseLeaf,
 }: SaveGateProps) {
   const analytics = useAnalytics();
   const sheetRef = useRef<HTMLDivElement>(null);
+
+  /** 연잎으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
+  const hasLeaf = leaves > 0 && onUseLeaf != null;
 
   useOverlayBackClose(open, onClose);
 
@@ -100,33 +116,66 @@ export function SaveGate({
         <h2 className="pw-title" id="save-gate-title">
           보관함에 간직할까요?
         </h2>
-        <p className="pw-sub">담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.</p>
+        {/*
+          연잎이 있으면 「개수 제한이 없다」는 줄을 뺀다. 세 문장이 되면 읽기 전에 눈이
+          먼저 지친다. 둘 중 지금 고르는 데 쓰이는 것은 연잎 쪽이다.
+        */}
+        <p className="pw-sub">
+          {hasLeaf
+            ? '담아 두면 앱을 닫아도 남아요. 모아 둔 연잎으로 광고 없이 담을 수 있어요.'
+            : '담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.'}
+        </p>
 
         <div className="pw-actions">
+          {/* 연잎이 있으면 이쪽이 주 버튼이다. 없으면 아래 광고 버튼이 그대로 주 버튼이다 */}
+          {hasLeaf && onUseLeaf != null && (
+            <LeafUseButton
+              count={leaves}
+              action="간직하기"
+              disabled={pending}
+              onClick={onUseLeaf}
+              testKey="leafSpendSave"
+            />
+          )}
+
           {/*
             이어가기 시트와 같은 말투다. **초를 적는다.** 얼마나 참아야 하는지 모르는 채로
             전면 광고를 만나면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다.
           */}
-          <button
-            type="button"
-            className="arch-btn arch-btn--primary arch-btn--lg"
-            disabled={pending}
-            onClick={onWatch}
-            {...testId(TEST_IDS.saveGateWatch)}
-          >
-            {pending ? (
-              '광고를 여는 중이에요'
-            ) : (
-              <>
-                {/* 다른 두 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
-                30초{' '}
-                <span className="arch-ad-tag" {...testId(TEST_IDS.adBadge)}>
-                  광고
-                </span>{' '}
-                보고 간직하기
-              </>
-            )}
-          </button>
+          {hasLeaf ? (
+            /*
+              라벨을 고정한다. 한때 pending 일 때 「광고를 여는 중이에요」로 바꿨는데,
+              이 부품이 라벨 뒤에 「광고」 배지를 늘 붙여서 「광고를 여는 중이에요 [광고]」가
+              됐다. 진행 상태는 아래 안내 줄이 맡는다. 이어가기 시트와 같은 방식이다.
+            */
+            <LeafAltAdButton
+              label="30초 보고 간직하기"
+              disabled={pending}
+              onClick={onWatch}
+              testKey="saveGateWatch"
+            />
+          ) : (
+            <button
+              type="button"
+              className="arch-btn arch-btn--primary arch-btn--lg"
+              disabled={pending}
+              onClick={onWatch}
+              {...testId(TEST_IDS.saveGateWatch)}
+            >
+              {pending ? (
+                '광고를 여는 중이에요'
+              ) : (
+                <>
+                  {/* 다른 두 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
+                  30초{' '}
+                  <span className="arch-ad-tag" {...testId(TEST_IDS.adBadge)}>
+                    광고
+                  </span>{' '}
+                  보고 간직하기
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             className="arch-btn arch-btn--plain"
@@ -136,6 +185,21 @@ export function SaveGate({
             다음에
           </button>
         </div>
+
+        {/*
+          한 줄 안내. 두 가지를 맡는다.
+
+          연잎이 없는 사람에게는 **어디서 얻는지** 알려 준다. 한때 이 말을 가진 사람 쪽에만
+          두었는데, 그러면 이미 아는 사람에게만 얻는 법을 알려 주는 구조가 된다.
+          있는 사람에게는 광고를 여는 중인지를 말한다. 이어가기 시트와 같은 자리다.
+        */}
+        <p className="pw-leaf-note" role={pending ? 'status' : undefined}>
+          {pending
+            ? '광고를 불러오고 있어요'
+            : hasLeaf
+              ? '광고를 보면 연잎을 아끼고 담을 수 있어요'
+              : '홈 위쪽 연잎을 미리 모아 두면 광고 없이 담을 수 있어요'}
+        </p>
 
         {/* 파는 말은 작게 아래에 둔다. 광고를 보는 쪽이 이 화면의 기본 길이다 */}
         {isArchivePassEnabled() && onBuyPass != null && (
