@@ -24,6 +24,10 @@ export const TEST_IDS = {
   draftCard: 'draft-card',
   returnCard: 'return-card',
   recallCard: 'recall-card',
+  reviewCard: 'review-card',
+  reviewCardAccept: 'review-card-accept',
+  reviewCardLater: 'review-card-later',
+  leafChip: 'leaf-chip',
   dailyCard: 'daily-card',
   dailySheet: 'daily-sheet',
 
@@ -73,6 +77,16 @@ export const TEST_IDS = {
 
   // 광고 · 사용량
   adBadge: 'ad-badge',
+
+  // 연잎
+  leafSheet: 'leaf-sheet',
+  leafSheetCount: 'leaf-sheet-count',
+  leafWatch: 'leaf-watch',
+  leafEarned: 'leaf-earned',
+  leafUnavailable: 'leaf-unavailable',
+  leafSpendContinue: 'leaf-spend-continue',
+  leafSpendSave: 'leaf-spend-save',
+  leafMore: 'leaf-more',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
 

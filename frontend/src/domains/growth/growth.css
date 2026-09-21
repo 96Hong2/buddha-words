@@ -184,3 +184,86 @@
   font-weight: var(--w-semibold);
   text-align: center;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   리뷰 청하기 카드 (홈 맨 앞)
+
+   권유 카드(.gr-card)보다 **한 단 세게** 잡는다. 저쪽은 답변을 읽는 사람 위에 얹히는
+   말이라 조용해야 하지만, 이쪽은 홈에서 하려던 일(이야기 쓰기)을 가리지 않는 자리에
+   서고 사람당 한 번뿐이라 눈에 띄어도 된다. 대신 닫는 길을 카드 안에 둔다.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.review-card {
+  margin: 0 0 var(--s-3);
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.review-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-card__stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--accent-text);
+}
+
+.review-card__title {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-weight: var(--w-bold);
+  color: var(--text);
+  text-wrap: balance;
+}
+
+.review-card__body {
+  margin: 6px 0 12px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+}
+
+.review-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* 주 버튼. 금색 면 위라 바닥은 짙은 갈색을 쓴다(경전면 위 버튼과 같은 조합) */
+.review-card__go {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px var(--s-4);
+  border: 0;
+  border-radius: var(--r-button);
+  background: var(--btn);
+  color: var(--on-btn);
+  font-family: inherit;
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
+  font-weight: var(--w-bold);
+}
+
+.review-card__go:active {
+  background: var(--btn-pressed);
+}
+
+/* 닫는 길. 글자 버튼이라 최소 터치 크기를 높이로 확보한다 */
+.review-card__later {
+  flex: none;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+}

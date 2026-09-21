@@ -165,3 +165,64 @@ export async function saveAnswerFromScreen(page: Page): Promise<void> {
   await page.getByTestId('save-done-stay').click();
   await expect(doneSheet).toHaveCount(0);
 }
+
+/**
+ * 연잎을 이만큼 가진 사람으로 시작한다.
+ *
+ * 기본 출발점은 「연잎을 다 쓴 사람」이다(`support/storage.ts`). 광고를 재는 spec 들이
+ * 연잎 버튼에 걸리지 않게 하려는 것이라, 연잎 자체를 재는 spec 만 이걸 부른다.
+ *
+ * 표를 심는 것만으로는 모자라다. 픽스처의 씨앗은 **화면을 옮길 때마다 다시 도므로**,
+ * 다음 goto 에서 잔액이 도로 0 이 된다. 그래서 sessionStorage 에 표를 세워 씨앗 쪽이
+ * 그 표를 보고 건너뛰게 한다. `asNewcomer` 와 같은 구조다.
+ *
+ * 표는 탭이 사는 동안 남으므로, 심은 뒤에 쓰거나 모은 것은 그대로 쌓인다.
+ */
+export async function withLeaves(page: Page, count: number): Promise<void> {
+  await page.addInitScript((n) => {
+    try {
+      sessionStorage.setItem('e2e.leaves', '1');
+      if (sessionStorage.getItem('e2e.leaves.seeded') != null) return;
+      sessionStorage.setItem('e2e.leaves.seeded', '1');
+      localStorage.setItem(
+        'buddha.leaves.v1',
+        JSON.stringify({ count: n, welcomed: true, earned: n, spent: 0 }),
+      );
+    } catch {
+      /* 심을 수 없으면 그 spec 이 실패로 알려 준다 */
+    }
+  }, count);
+}
+
+/**
+ * 아직 리뷰를 청한 적 없는 사람으로 시작한다.
+ *
+ * 기본 출발점은 「이미 청한 사람」이다. 기본 답 횟수가 아홉이라 그대로 두면 리뷰 카드가
+ * 모든 spec 의 홈 맨 앞에 서기 때문이다. 리뷰 카드를 재는 spec 만 이걸 부른다.
+ */
+export async function asReviewCandidate(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    try {
+      sessionStorage.setItem('e2e.review', '1');
+      if (sessionStorage.getItem('e2e.review.cleared') != null) return;
+      sessionStorage.setItem('e2e.review.cleared', '1');
+      localStorage.removeItem('buddha.review.v1');
+    } catch {
+      /* 지울 수 없으면 그 spec 이 실패로 알려 준다 */
+    }
+  });
+}
+
+/** 지금 기기에 남아 있는 연잎 수 */
+export async function leafBalance(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    try {
+      const raw = localStorage.getItem('buddha.leaves.v1');
+      if (raw == null) return 0;
+      const parsed = JSON.parse(raw) as { count?: number };
+      return typeof parsed.count === 'number' ? parsed.count : 0;
+    } catch {
+      return 0;
+    }
+  });
+}

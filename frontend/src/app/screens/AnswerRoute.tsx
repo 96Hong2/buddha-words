@@ -21,6 +21,7 @@ import {
   type SaveDoneKind,
 } from '../../domains/archive';
 import { NudgeOverlay, notifyAlreadySettled } from '../../domains/growth/NudgeOverlay';
+import { useLeafWallet } from '../../domains/leaf';
 import {
   countAnswer,
   markNudgeShown,
@@ -80,6 +81,7 @@ export function AnswerRoute() {
   const { response, archivePass } = useSession();
   const ad = useRewardedAd('extension');
   const saveAd = useRewardedAd('save');
+  const leaf = useLeafWallet();
 
   const [shareOpen, setShareOpen] = useState(false);
   /** 무엇을 보낼지. 기본은 적게 나가는 쪽이다 */
@@ -185,7 +187,7 @@ export function AnswerRoute() {
    * 광고를 보고 받은 「다른 관점」도 같이 담는다. 이것만 빠지면 광고를 끝까지 본 대가가 사라진다.
    */
   const store = useCallback(
-    (gate: 'ad' | 'pass' | 'free' | 'first_use'): StoreOutcome => {
+    (gate: 'ad' | 'pass' | 'free' | 'first_use' | 'leaf'): StoreOutcome => {
       if (answer == null) return 'failed';
       const pass2 = answer.pass2;
       const before = countSaved();
@@ -255,6 +257,10 @@ export function AnswerRoute() {
    *   이용권을 산 사람   그 사람이 산 것이 지금은 이것이다
    *   광고를 못 띄우는 판 구버전·광고 끄기·그룹 id 가 없는 번들. 그냥 담는다
    *
+   * 연잎은 이 넷에 끼지 않는다. **시트를 열고 사람이 고른다.** 여기서 자동으로 빼면,
+   * 광고를 볼 생각이었던 사람의 연잎이 말없이 사라진다. 광고를 못 띄우는 판에서
+   * 그냥 담기는 것도 그대로 둔다. 안 써도 되는 자리에서 연잎을 쓰게 할 이유가 없다.
+   *
    * 넷 다 화면에서는 똑같이 「광고 없이 담겼다」로 보인다. 왜 없었는지를 `ad_skipped` 로
    * 남겨야 나중에 0건을 보고 원인을 가를 수 있다.
    */
@@ -296,6 +302,20 @@ export function AnswerRoute() {
     }
     setGateOpen(true);
   }, [afterStore, analytics, answer, answersTotal, archivePass, saveAd.ready, saveAd.supported, store]);
+
+  /**
+   * 「연잎 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
+   *
+   * **잔액을 빼는 데 성공했을 때만 담는다.** 실패하면 시트에 그대로 둔다. 그 사이에
+   * 잔액이 0 이 된 것이라, 닫아 버리면 사람은 담긴 줄 알고 떠난다.
+   */
+  const saveWithLeaf = useCallback(() => {
+    if (answer == null) return;
+    if (!leaf.spend('save')) return;
+    analytics.log('ad_skipped', { placement: 'save', reason: 'leaf' });
+    setGateOpen(false);
+    afterStore(store('leaf'));
+  }, [afterStore, analytics, answer, leaf, store]);
 
   /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
   const watchAndSave = useCallback(async () => {
@@ -441,6 +461,8 @@ export function AnswerRoute() {
           open={gateOpen}
           answerId={answer.answerId}
           pending={gateBusy}
+          leaves={leaf.count}
+          onUseLeaf={saveWithLeaf}
           onClose={() => setGateOpen(false)}
           onWatch={() => void watchAndSave()}
           onBuyPass={() => {

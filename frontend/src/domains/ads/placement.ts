@@ -21,6 +21,14 @@ export const AD_PLACEMENT = {
   continue: 'continue',
   /** 보관함에 간직하기 */
   save: 'save',
+  /**
+   * 연잎 모으기. **하려던 일이 없을 때 스스로 여는 자리다.**
+   *
+   * 앞의 셋은 무언가를 하려는 길목에 선다. 이 자리만 다르다: 사람이 한가할 때 미리 보고
+   * 연잎을 쌓아 두면, 정작 답을 기다릴 때는 광고를 안 봐도 된다. 낼 값은 같고 내는
+   * 시점만 사람이 고른다.
+   */
+  collect: 'collect',
 } as const;
 
 export type AdPlacement = (typeof AD_PLACEMENT)[keyof typeof AD_PLACEMENT];
@@ -56,6 +64,8 @@ export const AD_KIND: Record<AdPlacement, AdKind> = {
   extension: 'rewarded',
   continue: continueKind(),
   save: 'rewarded',
+  // 끝까지 본 사람에게만 연잎을 준다. 전면형에는 보상 이벤트가 없어 쓸 수 없다
+  collect: 'rewarded',
 };
 
 /**
@@ -76,6 +86,7 @@ export const AD_GROUP_ENV: Record<AdPlacement, string> = {
   extension: 'VITE_AD_GROUP_EXTENSION',
   continue: 'VITE_AD_GROUP_CONTINUE',
   save: 'VITE_AD_GROUP_SAVE',
+  collect: 'VITE_AD_GROUP_COLLECT',
 };
 
 /**
@@ -118,12 +129,14 @@ export function adGroupId(placement: AdPlacement): string | null {
     return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL) ?? TEST_INTERSTITIAL;
   }
 
-  // 보상형 세 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
+  // 보상형 네 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
   const own =
     placement === 'extension'
       ? trimmed(import.meta.env.VITE_AD_GROUP_EXTENSION)
       : placement === 'continue'
         ? trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE)
-        : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
+        : placement === 'collect'
+          ? trimmed(import.meta.env.VITE_AD_GROUP_COLLECT)
+          : trimmed(import.meta.env.VITE_AD_GROUP_SAVE);
   return own ?? trimmed(import.meta.env.VITE_AD_GROUP_DEFAULT) ?? TEST_REWARDED;
 }

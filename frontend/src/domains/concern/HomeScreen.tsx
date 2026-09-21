@@ -54,9 +54,26 @@ export interface HomeScreenProps {
    * 부탁한 질문이라 아래 카드 자리가 아니라 먼저 보이는 자리에 둔다. 덮개는 쓰지 않는다.
    */
   topCard?: ReactNode;
+  /**
+   * 제목 바로 아래, 카드 묶음 **맨 앞** 자리.
+   *
+   * `topCard` 와 다르다. 저쪽은 입력칸 바로 위라 쓰려는 사람의 손 가까이 서고, 이쪽은
+   * 화면을 위에서 아래로 훑을 때 가장 먼저 눈에 들어온다. 사람당 한 번뿐인 말(리뷰
+   * 청하기)을 여기 둔다. 둘이 같이 있으면 이것이 위다.
+   */
+  leadCard?: ReactNode;
+  /** 서비스 줄 오른쪽, 설정 아이콘 옆에 서는 연잎 잔액 칩 */
+  leafChip?: ReactNode;
 }
 
-export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScreenProps = {}) {
+export function HomeScreen({
+  onSubmit,
+  notice,
+  renderCards,
+  topCard,
+  leadCard,
+  leafChip,
+}: HomeScreenProps = {}) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
   const client = useApiClient();
@@ -254,28 +271,31 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
           <p className="svc-line">
             <b>부처의 말</b>
           </p>
-          <button
-            {...testId(TEST_IDS.settingsButton)}
-            className="icon-btn"
-            type="button"
-            aria-label="설정"
-            onClick={() => navigate(ROUTES.settings)}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+          <div className="svc-right">
+            {leafChip}
+            <button
+              {...testId(TEST_IDS.settingsButton)}
+              className="icon-btn"
+              type="button"
+              aria-label="설정"
+              onClick={() => navigate(ROUTES.settings)}
             >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-            </svg>
-          </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* 키보드가 올라오면 제목이 한 줄로 접히고 입력 묶음이 위로 붙는다 */}
@@ -296,6 +316,8 @@ export function HomeScreen({ onSubmit, notice, renderCards, topCard }: HomeScree
         )}
 
         <div className="cluster">
+          {/* 맨 앞 자리. 사람당 한 번뿐인 말이 여기 선다 */}
+          {leadCard}
           {topCard}
           {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
           <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />

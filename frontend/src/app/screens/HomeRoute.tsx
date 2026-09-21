@@ -12,17 +12,17 @@ import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen'
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
 import { RecallAsk } from '../../domains/daily/RecallAsk';
+import { ReviewCard } from '../../domains/growth/ReviewCard';
+import { LeafChip, LeafSheet, useLeafWallet } from '../../domains/leaf';
 import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
-import {
-  gateFor,
-  readQuota,
-  saveFromServer,
-  type QuotaState,
-} from '../../domains/quota/quota';
+import { gateFor, readQuota, saveFromServer, type QuotaState } from '../../domains/quota/quota';
+import { useAnalytics } from '../../shared/analytics';
 import { useApiClient, type Quota } from '../../shared/api';
 import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
+import { readMilestones } from '../../shared/prefs/milestones';
+import { markReviewAsked, reviewCardDue, snoozeReview } from '../../shared/prefs/review';
 import { markAdWatched } from '../../shared/api/http';
 import { markEntryCardSeen } from '../../domains/concern/EntryCard';
 import {
@@ -74,6 +74,8 @@ export function HomeRoute() {
   const bridge = useBridge();
   const { beginSubmit, sent } = useSession();
   const api = useApiClient();
+  const analytics = useAnalytics();
+  const leaf = useLeafWallet();
 
   /**
    * 온보딩을 아직 안 봤나. 마운트할 때 한 번만 읽는다.
@@ -96,6 +98,16 @@ export function HomeRoute() {
    * 안 눌렀으면 홈에는 아무것도 없다.
    */
   const [recall, setRecall] = useState<RecallEntry | null>(null);
+  /** 연잎 모으기 시트 */
+  const [leafOpen, setLeafOpen] = useState(false);
+  /**
+   * 지금까지 받은 답의 수와, 그것으로 정해지는 리뷰 카드.
+   *
+   * 마운트할 때 한 번 읽고 끝이다. 홈에 서 있는 동안에는 답이 늘지 않고, 답을 받고
+   * 돌아오면 이 화면이 새로 마운트된다.
+   */
+  const [answers] = useState(() => readMilestones().answers);
+  const [reviewOpen, setReviewOpen] = useState(() => reviewCardDue(readMilestones().answers));
   /** 시트가 열려 있는 동안 들고 있는 글. 시트를 닫아도 입력창에는 그대로 남는다 */
   const held = useRef('');
   /** 이미 문을 연 서버 사용량. 같은 값으로 시트를 두 번 열지 않는다 */
@@ -191,6 +203,55 @@ export function HomeRoute() {
     send(text);
   }, [send]);
 
+  /**
+   * 연잎으로 이어간다. 광고를 띄우지 않는다.
+   *
+   * **잔액을 빼는 데 성공했을 때만 넘어간다.** 두 화면이 거의 같은 순간에 마지막 한 장을
+   * 쓰려 할 때, 있다고 믿고 진행하면 없는 연잎으로 두 번 지나간다.
+   *
+   * `goOn` 이 `markAdWatched` 를 세운다. 서버는 연잎을 모르므로(기기에만 있다) 그 표가
+   * 없으면 광고 문에서 다시 막힌다. 연잎도 광고 한 편을 미리 치른 것이라 같은 표를 쓴다.
+   */
+  const continueWithLeaf = useCallback(() => {
+    if (!leaf.spend('continue')) return;
+    analytics.log('ad_skipped', { placement: 'continue', reason: 'leaf' });
+    goOn();
+  }, [analytics, goOn, leaf]);
+
+  /**
+   * 리뷰 화면을 청한다.
+   *
+   * **떴는지는 알 수 없다.** `Review.request` 가 아무것도 돌려주지 않고, 토스가 사람의
+   * 피로도를 보고 띄울지 정한다. 그래서 여기서 「청했다」를 적고 다시 묻지 않는다.
+   * 못 연 경우(`failed`)만 미룸으로 돌려, 우리 쪽 사정으로 기회를 잃지 않게 한다.
+   */
+  const askReview = useCallback(async () => {
+    analytics.log('review_card_accept', { answers_total: answers }, { kind: 'click' });
+    setReviewOpen(false);
+
+    if (!bridge.supports('review')) {
+      // 낡은 토스 앱이다. 업데이트를 청하는 말을 여기서 꺼내지 않는다. 부탁이 두 겹이 된다
+      markReviewAsked();
+      analytics.log('review_request', { result: 'unsupported' });
+      return;
+    }
+    try {
+      await bridge.requestReview();
+      markReviewAsked();
+      analytics.log('review_request', { result: 'asked' });
+    } catch {
+      // 우리 쪽 사정으로 못 열었다. 영영 안 묻는 대신 답을 두 번 더 받으면 한 번 더 묻는다
+      snoozeReview(answers);
+      analytics.log('review_request', { result: 'failed' });
+    }
+  }, [analytics, answers, bridge]);
+
+  const laterReview = useCallback(() => {
+    analytics.log('review_card_later', { answers_total: answers }, { kind: 'click' });
+    snoozeReview(answers);
+    setReviewOpen(false);
+  }, [analytics, answers]);
+
   const renderCards = useCallback(
     ({ quote, focusField }: HomeCardSlot): ReactNode =>
       quote != null ? (
@@ -251,6 +312,20 @@ export function HomeRoute() {
       <HomeScreen
         onSubmit={submit}
         renderCards={renderCards}
+        leafChip={<LeafChip onOpen={() => setLeafOpen(true)} />}
+        /*
+          맨 앞 자리. **되짚기가 있으면 리뷰는 그날 물러난다.**
+          되짚기는 사람이 「내일 물어봐 주세요」를 눌러 청한 것이고 리뷰는 우리가 하는
+          부탁이다. 둘이 한 화면에 쌓이면 이야기를 쓰러 온 사람 앞에 카드가 두 장 선다.
+        */
+        leadCard={
+          <ReviewCard
+            open={reviewOpen && recall == null}
+            answersTotal={answers}
+            onAccept={() => void askReview()}
+            onLater={laterReview}
+          />
+        }
         /* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 입력칸 바로 위에 한 번 */
         topCard={<RecallAsk entry={recall} onRespond={respondRecall} onClose={hushRecall} />}
       />
@@ -260,8 +335,15 @@ export function HomeRoute() {
         continuesUsed={quota.continuesUsed}
         onClose={closeContinue}
         onContinue={goOn}
+        leaves={leaf.count}
+        onUseLeaf={continueWithLeaf}
       />
 
+      {/*
+        연잎 모으기. 홈에서 여는 판은 **모으고 나서도 시트에 남는다.**
+        한 장 모았다고 닫아 버리면 여러 장 쌓으려는 사람이 칩을 매번 다시 눌러야 한다.
+      */}
+      <LeafSheet open={leafOpen} surface="home_chip" onClose={() => setLeafOpen(false)} />
     </>
   );
 }

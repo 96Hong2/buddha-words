@@ -15,7 +15,15 @@ import { test as base, expect, type Page } from '@playwright/test';
 import { DEV_STACK_URLS } from './env';
 import type { StubDial } from '../../src/shared/api/stubData';
 
-import { MILESTONES_KEY, ONBOARDING_KEY, SEEDED_MILESTONES } from './storage';
+import {
+  LEAVES_KEY,
+  MILESTONES_KEY,
+  ONBOARDING_KEY,
+  REVIEW_KEY,
+  SEEDED_LEAVES,
+  SEEDED_MILESTONES,
+  SEEDED_REVIEW,
+} from './storage';
 
 export interface Fixtures {
   page: Page;
@@ -33,7 +41,7 @@ export const test = base.extend<Fixtures>({
     // 답 횟수도 같은 이유로 지나온 것으로 둔다. 첫 답에는 광고가 없고 권유가 한 장 떠서,
     // 그 둘이 대상이 아닌 spec 이 전부 거기에 걸린다. 자세한 이유는 support/storage.ts
     await page.addInitScript(
-      ([key, milestonesKey, milestones]) => {
+      ([key, milestonesKey, milestones, leavesKey, leaves, reviewKey, review]) => {
         try {
           localStorage.setItem(key, 'done');
           // `asNewcomer` 를 부른 spec 에서는 심지 않는다. 이 스크립트는 화면을 옮길 때마다
@@ -41,11 +49,30 @@ export const test = base.extend<Fixtures>({
           if (sessionStorage.getItem('e2e.newcomer') == null) {
             localStorage.setItem(milestonesKey, milestones);
           }
+          /*
+            연잎과 리뷰도 같다. 잔액이 있으면 광고 시트가 연잎 버튼을 주 버튼으로 세우고,
+            리뷰를 안 청한 사람이면 홈 맨 앞에 카드가 서서 아래가 통째로 밀린다.
+            둘 다 그 spec 들이 재려는 것이 아니다. 잰다면 각자 표를 지우고 시작한다.
+          */
+          if (sessionStorage.getItem('e2e.leaves') == null) {
+            localStorage.setItem(leavesKey, leaves);
+          }
+          if (sessionStorage.getItem('e2e.review') == null) {
+            localStorage.setItem(reviewKey, review);
+          }
         } catch {
           // 저장소가 막힌 판에서는 온보딩이 뜬다. 그 spec 이 알아서 지나간다
         }
       },
-      [ONBOARDING_KEY, MILESTONES_KEY, SEEDED_MILESTONES] as const,
+      [
+        ONBOARDING_KEY,
+        MILESTONES_KEY,
+        SEEDED_MILESTONES,
+        LEAVES_KEY,
+        SEEDED_LEAVES,
+        REVIEW_KEY,
+        SEEDED_REVIEW,
+      ] as const,
     );
 
     page.on('console', (msg) => {

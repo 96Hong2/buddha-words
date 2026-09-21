@@ -14,6 +14,7 @@
 
 import { useEffect, useRef } from 'react';
 
+import { useWelcomeLeaf } from '../domains/leaf';
 import { useAnalytics } from '../shared/analytics';
 import { recordVisit } from '../shared/lib/visitLog';
 
@@ -32,6 +33,15 @@ export function SessionTracker() {
   const bridge = useBridge();
   const analytics = useAnalytics();
   const opened = useRef(false);
+
+  /*
+    첫 연잎 한 장. **여기서 준다.**
+
+    홈에서 주면 공유 링크나 보관함으로 바로 들어온 사람이 빈손으로 시작한다. 그 사람이
+    처음 만나는 광고 문이 「연잎이 없어서」 서는 것이면, 있지도 않은 것을 잃은 셈이 된다.
+    두 번째 이상 여는 사람에게는 아무 일도 일어나지 않는다(저장소가 막는다).
+  */
+  useWelcomeLeaf();
 
   useEffect(() => {
     if (opened.current) return;

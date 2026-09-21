@@ -668,3 +668,11 @@
 .home-screen .draft-clear-ask__btn--clear {
   color: var(--danger);
 }
+
+/* 서비스 줄 오른쪽 묶음. 연잎 잔액 칩과 설정 아이콘이 나란히 선다 */
+.home-screen .svc-right {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
