@@ -8,16 +8,27 @@
 
 import { useState } from 'react';
 
+import { useRewardedAd } from '../../domains/ads/useRewardedAd';
 import { LeafSheet, useLeafCount } from '../../domains/leaf';
 import { SettingsScreen } from '../../domains/settings/SettingsScreen';
 
 export function SettingsRoute() {
   const [leafOpen, setLeafOpen] = useState(false);
   const leafCount = useLeafCount();
+  /*
+    못 모으는 기기에 모으라고 적지 않는다. 판정이 끝나기 전(`ready` 가 false)에는
+    모을 수 있는 쪽으로 본다. 반대로 두면 설정을 여는 순간 「모을 수 없어요」가 깜빡
+    떴다가 바뀐다. 모으기 시트가 같은 자리에서 같은 판단을 한다.
+  */
+  const ad = useRewardedAd('collect');
 
   return (
     <>
-      <SettingsScreen leafCount={leafCount} onOpenLeaf={() => setLeafOpen(true)} />
+      <SettingsScreen
+        leafCount={leafCount}
+        leafCollectable={!ad.ready || ad.supported}
+        onOpenLeaf={() => setLeafOpen(true)}
+      />
       {/* 홈에서 여는 것과 같은 시트다. 모으고 나서도 닫히지 않고 그대로 남는다 */}
       <LeafSheet open={leafOpen} onClose={() => setLeafOpen(false)} />
     </>

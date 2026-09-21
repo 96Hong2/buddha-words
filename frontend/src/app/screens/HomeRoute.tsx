@@ -158,6 +158,19 @@ export function HomeRoute() {
    * 먼저 지나갔거나 시트를 닫은 뒤에 늦게 도착한 답이 화면을 빼앗는 일을 막는다.
    */
   const preflightSeq = useRef(0);
+  /**
+   * 뒤에서 보낸 요청의 답을 아직 기다리는 중인가.
+   *
+   * 그동안 시트의 버튼을 잠근다. 잠그지 않으면 **위기 글을 쓴 사람이 30초 광고를
+   * 끝까지 보고 나서 창구를 만난다.** 분류기만 잡는 위기 표현은 규칙층 가드를 지나
+   * 여기까지 오기 때문이다(「돌아오지 않는 여행을 가려고 해요」 같은 글).
+   *
+   * 답이 이미 만들어지는 중인데 광고를 보고 같은 키로 또 보내면 서버가 409 로 막는
+   * 자리도 이 잠금이 함께 닫는다.
+   */
+  const [gateChecking, setGateChecking] = useState(false);
+  /** 시트를 닫은 것이 아니라 **새 이야기가 시작되어** seq 가 올라갔나 */
+  const supersededByNewStory = useRef(false);
 
   /**
    * 서버가 사용량으로 막아 대기 화면이 돌려보낸 자리.
@@ -237,9 +250,18 @@ export function HomeRoute() {
   const preflight = useCallback(
     async (text: string, key: string) => {
       const seq = preflightSeq.current;
+      setGateChecking(true);
       try {
         const response = await api.submitConcern({ text, idempotencyKey: key });
-        if (response.responseType === 'crisis') {
+        /*
+          위기는 시트를 닫은 뒤에도 통과시킨다. 사람이 광고를 안 보기로 했다고 해서
+          위기 글이 창구에 못 닿으면 화면이 먼저 막던 옛 구조로 되돌아간다.
+
+          다만 **더 새로운 이야기가 시작됐으면** 통과시키지 않는다. 그때는 세션이 쥔
+          글도 새것이라, 옛 글의 위기 화면에서 「그래도 들어주세요」를 누르면 새 글이
+          나간다. 같은 사람의 위기라도 화면과 글이 어긋난 채로는 보낼 수 없다.
+        */
+        if (response.responseType === 'crisis' && !supersededByNewStory.current) {
           held.current = '';
           setContinueOpen(false);
           setResponse(response);
@@ -250,7 +272,8 @@ export function HomeRoute() {
         if (seq !== preflightSeq.current) return;
         held.current = '';
         setContinueOpen(false);
-        void navigate(ROUTES.loading);
+        // **받은 답을 버리지 않는다.** 버리면 대기 화면이 같은 키로 한 번 더 보낸다
+        void navigate(ROUTES.loading, { state: { preflight: { response } } });
       } catch (error) {
         if (seq !== preflightSeq.current) return;
         const failed = error instanceof ApiFailure ? error : null;
@@ -259,10 +282,15 @@ export function HomeRoute() {
           setQuota(saveFromServer(failed.quota));
           return;
         }
-        // 못 보냈다. 「다시 해보기」가 있는 대기 화면이 이 실패를 그린다
+        // 못 보냈다. 「다시 해보기」가 있는 대기 화면이 이 실패를 그린다.
+        // 실패도 그대로 넘긴다. 여기서 버리면 대기 화면이 같은 벽에 한 번 더 부딪힌다
         held.current = '';
         setContinueOpen(false);
-        void navigate(ROUTES.loading);
+        void navigate(ROUTES.loading, {
+          state: failed != null ? { preflight: { error: failed } } : undefined,
+        });
+      } finally {
+        if (seq === preflightSeq.current) setGateChecking(false);
       }
     },
     [api, navigate, setResponse],
@@ -297,9 +325,16 @@ export function HomeRoute() {
 
       // 여기부터는 광고 문이 설 자리다. 화면을 넘기지 않고 시트를 먼저 세운다
       preflightSeq.current += 1;
-      const key = beginSubmit(text);
+      supersededByNewStory.current = true;
+      /*
+        **옛 답을 지우지 않는다.** 시트를 닫고 돌아갈 수 있는 자리라, 여기서 세션의
+        응답을 비우면 보관함의 「오늘 나눈 이야기」가 사라지고 방금 받은 답으로 돌아갈
+        길이 없어진다. 실제로 보낼 때(`goOn`)는 비운다.
+      */
+      const key = beginSubmit(text, { keepResponse: true });
       held.current = text;
       setContinueOpen(true);
+      setGateChecking(serverOpensTheGate());
 
       // 스텁 판에는 사용량을 세는 서버가 없다. 뒤에서 보낼 것도 없다
       if (serverOpensTheGate()) void preflight(text, key);
@@ -315,6 +350,8 @@ export function HomeRoute() {
    */
   const closeContinue = useCallback(() => {
     preflightSeq.current += 1;
+    supersededByNewStory.current = false;
+    setGateChecking(false);
     setContinueOpen(false);
   }, []);
 
@@ -326,21 +363,29 @@ export function HomeRoute() {
    */
   const goOn = useCallback((): boolean => {
     setContinueOpen(false);
+    /*
+      이어가기 광고 자리를 지났다는 표를 **먼저** 세운다. 다음 요청이 이걸 들고 가야
+      서버가 문을 연다. 보상형 판에서는 끝까지 본 사람만 여기까지 온다.
+
+      빈 글 검사보다 앞이어야 한다. 뒤에 두면, 뒤에서 돌던 요청이 먼저 끝나 붙들어 둔
+      글을 비운 사이에 광고를 다 본 사람의 30초가 아무 데도 안 쓰인다.
+    */
+    markAdWatched();
     const text = held.current;
     held.current = '';
     if (text === '') return false;
     // 뒤에서 돌던 요청이 이제 와서 화면을 바꾸지 않게 한다. 사람이 먼저 지나갔다
     preflightSeq.current += 1;
-    // 이어가기 광고 자리를 지났다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다.
-    // 보상형 판에서는 끝까지 본 사람만 여기까지 온다. 광고가 안 온 사람은 그냥 통과한다
-    markAdWatched();
+    supersededByNewStory.current = false;
+    // 이제 진짜로 새 답을 받으러 간다. 옛 답은 여기서 비운다
+    setResponse(null);
     /*
       **여기서 멱등키를 다시 만들지 않는다.** 시트를 열 때 이미 정해 뒀다. 새 키로 보내면
       광고 문 앞에서 이미 분류까지 마친 그 이야기를 서버가 처음 보는 글로 다시 받는다.
     */
     void navigate(ROUTES.loading);
     return true;
-  }, [navigate]);
+  }, [navigate, setResponse]);
 
   /**
    * 연꽃으로 이어간다. 광고를 띄우지 않는다.
@@ -515,6 +560,7 @@ export function HomeRoute() {
       <ContinueSheet
         open={continueOpen}
         continuesUsed={quota.continuesUsed}
+        checking={gateChecking}
         onClose={closeContinue}
         onContinue={goOn}
         leaves={leaf.count}

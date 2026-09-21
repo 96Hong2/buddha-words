@@ -129,7 +129,14 @@ interface SessionValue {
   sent: string;
   response: ApiResponse | null;
   idempotencyKey: string;
-  beginSubmit: (text: string) => string;
+  /**
+   * 이 글로 한 번의 이야기를 시작한다. 멱등키를 돌려준다.
+   *
+   * `keepResponse` 는 **아직 보낼지 안 보낼지 모를 때** 쓴다. 광고 시트를 띄워 두고
+   * 뒤에서 확인만 하는 자리가 그렇다. 그 자리에서 옛 답을 비우면, 시트를 닫고 돌아간
+   * 사람의 보관함에서 「오늘 나눈 이야기」가 사라진다.
+   */
+  beginSubmit: (text: string, options?: { keepResponse?: boolean }) => string;
   setResponse: (res: ApiResponse | null) => void;
   clear: () => void;
 
@@ -165,11 +172,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     writeDraft(text);
   }, []);
 
-  const beginSubmit = useCallback((text: string) => {
+  const beginSubmit = useCallback((text: string, options?: { keepResponse?: boolean }) => {
     const key = newKey();
     setSent(text);
     setKey(key);
-    setResponse(null);
+    if (options?.keepResponse !== true) setResponse(null);
     return key;
   }, []);
 

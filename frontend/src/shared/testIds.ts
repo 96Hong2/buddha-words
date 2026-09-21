@@ -101,6 +101,7 @@ export const TEST_IDS = {
   shareCopy: 'share-copy',
   shareScopeScripture: 'share-scope-scripture',
   shareScopeFull: 'share-scope-full',
+  shareFullNote: 'share-full-note',
   shareFullPreview: 'share-full-preview',
 
   // 성장. 사람이 부탁하지 않은 말이라 한 번씩만 뜨고, 한 화면에 둘이 겹치지 않는다

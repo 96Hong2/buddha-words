@@ -766,3 +766,13 @@
   user-select: text;
   text-align: left;
 }
+
+/* 잠긴 「답변 전체」 칸의 이유 한 줄. 고르는 자리 바로 아래에 조용히 붙는다 */
+.sh-scope__note {
+  margin: 8px 0 0;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-muted);
+  text-align: center;
+  text-wrap: balance;
+}

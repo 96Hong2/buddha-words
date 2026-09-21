@@ -112,9 +112,21 @@ export interface SettingsScreenProps {
    */
   leafCount?: number;
   onOpenLeaf?: () => void;
+  /**
+   * 이 기기에서 연꽃을 모을 수 있나. 못 모으는 판에서는 **모으라고 청하지 않는다.**
+   *
+   * 구버전·광고 끄기·그룹 id 가 없는 번들이 그렇다. 그 사람에게 「광고를 보면 모아둘
+   * 수 있어요」라고 적으면 눌러 봐야 아는 거짓말이 된다. 모으기 시트가 같은 자리에서
+   * 같은 판단을 한다(`LeafSheet` 의 `canCollect`).
+   */
+  leafCollectable?: boolean;
 }
 
-export function SettingsScreen({ leafCount, onOpenLeaf }: SettingsScreenProps = {}) {
+export function SettingsScreen({
+  leafCount,
+  onOpenLeaf,
+  leafCollectable = true,
+}: SettingsScreenProps = {}) {
   const navigate = useNavigate();
   const bridge = useBridge();
   const api = useApiClient();
@@ -496,7 +508,11 @@ export function SettingsScreen({ leafCount, onOpenLeaf }: SettingsScreenProps = 
                 </span>
                 <span className="set-text">
                   <span className="set-item-title">연꽃 모으기</span>
-                  <span className="set-item-desc">광고를 보면 연꽃을 1개씩 모아둘 수 있어요</span>
+                  <span className="set-item-desc">
+                    {leafCollectable
+                      ? '광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요'
+                      : '지금은 모을 수 없어요. 가진 연꽃은 그대로 쓸 수 있어요'}
+                  </span>
                 </span>
                 <span className="set-value">{leafCount}송이</span>
                 <Chevron />

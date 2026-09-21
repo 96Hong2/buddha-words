@@ -47,9 +47,13 @@
   background: var(--surface-pressed);
 }
 
+/*
+   아이콘의 `color` 는 이제 **꽃잎을 가르는 선의 색**이다(꽃잎 자체는 그라데이션).
+   놓인 면과 같은 색이라야 꽃잎 다섯 장이 갈려 보인다.
+*/
 .leaf-chip__icon {
   flex: none;
-  color: var(--leaf);
+  color: var(--surface);
 }
 
 /* 잔액이 0 일 때. 숫자를 감추지 않는다. 없다는 것도 정보다 */
@@ -64,8 +68,14 @@
   color: var(--text-muted);
 }
 
+/*
+   잔액이 0 이면 꽃을 한 단 옅게 뺀다. 회색으로 바꾸지는 않는다. 무슨 그림인지
+   알아볼 수 없어지면 연꽃이라는 것이 있다는 사실까지 사라진다.
+   그라데이션 두 끝을 한 칸씩 올려 3.07~5.02 로 둔다(카드 위 기준).
+*/
 .leaf-chip--empty .leaf-chip__icon {
-  color: var(--leaf-dim);
+  --leaf-grad-from: var(--c-lotus-200);
+  --leaf-grad-to: var(--leaf-dim);
 }
 
 /* ── 모으기 시트 ────────────────────────────────────────────────────── */
@@ -78,8 +88,9 @@
   margin-bottom: var(--s-4);
 }
 
+/* 시트 바닥과 같은 색. 꽃잎 경계선이 그 면으로 그어진다 */
 .leaf-sheet__icon {
-  color: var(--leaf);
+  color: var(--surface);
 }
 
 .leaf-sheet__count {
@@ -254,7 +265,8 @@
 */
 .leaf-use__icon {
   flex: none;
-  color: var(--leaf-on-deep);
+  /* 경계선도 함께 뒤집는다. 밝은 크림색으로 두면 연한 꽃잎과 1.26 이라 선이 사라진다 */
+  color: var(--btn);
   --leaf-grad-from: var(--leaf-grad-from-deep);
   --leaf-grad-to: var(--leaf-grad-to-deep);
 }
@@ -324,7 +336,12 @@
 .leaf-spent {
   position: fixed;
   left: 50%;
-  top: calc(12px + var(--safe-top, 0px));
+  /*
+     답변 화면 맨 위에는 진행선과 「AI 생성 · 경전은 원문」 배지가 있다(top 12px).
+     12px 에 두었더니 이 알약이 그 배지를 통째로 가렸다. 지울 수 없는 표기라
+     그 아래로 내린다(배지 높이 + 여유).
+  */
+  top: calc(56px + var(--safe-top, 0px));
   z-index: 60; /* 시트(50)·광고 덮개보다 위. 시트가 닫히는 중에도 읽혀야 한다 */
   transform: translateX(-50%);
   max-width: calc(100% - 32px);
@@ -356,8 +373,22 @@
   }
 }
 
+/*
+   내용이 없을 때. 리전 노드는 남기되 눈과 손에서는 지운다. `display: none` 은
+   낭독기가 리전째 무시하는 기기가 있어 쓰지 않는다.
+*/
+.leaf-spent--off {
+  opacity: 0;
+  pointer-events: none;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  animation: none;
+}
+
 .leaf-spent__icon {
   flex: none;
+  color: var(--surface);
 }
 
 /*

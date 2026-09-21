@@ -22,7 +22,7 @@
  * `shared/prefs/milestones` 의 시간표 한 곳이 정하고, 이 컴포넌트는 받은 하나만 그린다.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useBridge, useOverlayBackClose } from '../../app/providers';
@@ -157,12 +157,38 @@ export function NudgeOverlay({
 }: NudgeOverlayProps) {
   const analytics = useAnalytics();
   const bridge = useBridge();
+  const cardRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   const [busy, setBusy] = useState(false);
   /** 뜨는 말 한 줄. `close` 가 false 면 카드를 그대로 둔다 */
   const [toast, setToast] = useState<{ text: string; close: boolean } | null>(null);
 
   // 다른 오버레이 아홉과 같은 자리다. 뒤로가기로도 닫힌다
   useOverlayBackClose(true, () => close('close'));
+
+  /*
+    다른 시트 여섯이 하는 것을 그대로 한다: 초점을 카드로 옮기고, 뒤 화면 스크롤을 막고,
+    Esc 로 닫는다. `aria-modal` 을 선언해 놓고 이것들이 없으면 초점은 덮개 뒤 버튼에
+    남고 뒤 화면이 그대로 움직인다.
+  */
+  useEffect(() => {
+    cardRef.current?.focus();
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+
+    function onKeyDown(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      close('close');
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = overflow;
+    };
+    // close 는 매 렌더 새로 만들어진다. 한 번만 걸면 된다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * 봤다는 사실만 남긴다. **「띄웠다」로 세는 일은 여기서 하지 않는다.**
@@ -336,10 +362,12 @@ export function NudgeOverlay({
       />
       <div className="gr-nudge-wrap">
         <div
+          ref={cardRef}
           className="gr-nudge"
           role="dialog"
           aria-modal="true"
-          aria-label="안내"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           {...testId(body.testId)}
         >
           <button
@@ -357,7 +385,9 @@ export function NudgeOverlay({
             {body.art}
           </div>
 
-          <p className="gr-card__title">{body.title}</p>
+          <p className="gr-card__title" id={titleId}>
+            {body.title}
+          </p>
           <p className="gr-card__how">{body.how}</p>
 
           {body.cta != null && (

@@ -45,21 +45,32 @@ export function LeafSpentToast() {
     return () => window.clearTimeout(timer);
   }, [seq]);
 
-  if (notice == null) return null;
-
+  /*
+    **리전 껍데기를 늘 둔다.** 라이브 리전은 내용이 바뀌기 전에 이미 DOM 에 있어야
+    읽힌다. 글과 함께 마운트하면 리전 자체가 새로 생기는 것이라 안 읽는 기기가 있다.
+    같은 사고를 연꽃 모으기 시트에서 한 번 겪었다(`LeafSheet` 의 `leaf-earned`).
+  */
   return createPortal(
-    <div className="leaf-spent" role="status" {...testId(TEST_IDS.leafSpentToast)}>
-      <LotusIcon size={20} className="leaf-spent__icon" />
-      <span className="leaf-spent__text">
-        {/* 한 줄에 한 마디. 무엇을 했는지 먼저, 얼마 남았는지 그다음 */}
-        <span className="leaf-spent__did">
-          연꽃 한 송이로 {ACTION[notice.placement] ?? '지나갔어요'}
-        </span>
-        {/* 남은 수를 붙여 다음에 무엇을 만날지 미리 알린다. 0 이면 그 사실을 말한다 */}
-        <b className="leaf-spent__left">
-          {notice.balance === 0 ? '남은 연꽃이 없어요' : `${notice.balance}송이 남았어요`}
-        </b>
-      </span>
+    <div
+      className={notice == null ? 'leaf-spent leaf-spent--off' : 'leaf-spent'}
+      role="status"
+      {...testId(TEST_IDS.leafSpentToast)}
+    >
+      {notice == null ? null : (
+        <>
+          <LotusIcon size={20} className="leaf-spent__icon" />
+          <span className="leaf-spent__text">
+            {/* 한 줄에 한 마디. 무엇을 했는지 먼저, 얼마 남았는지 그다음 */}
+            <span className="leaf-spent__did">
+              연꽃 한 송이로 {ACTION[notice.placement] ?? '지나갔어요'}
+            </span>
+            {/* 남은 수를 붙여 다음에 무엇을 만날지 미리 알린다. 0 이면 그 사실을 말한다 */}
+            <b className="leaf-spent__left">
+              {notice.balance === 0 ? '남은 연꽃이 없어요' : `${notice.balance}송이 남았어요`}
+            </b>
+          </span>
+        </>
+      )}
     </div>,
     document.body,
   );

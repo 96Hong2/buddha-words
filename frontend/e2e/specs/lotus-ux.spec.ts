@@ -17,6 +17,7 @@ import {
   dismissEntry,
   dismissNudge,
   leafBalance,
+  revealBottomBar,
   withLeaves,
 } from '../support/flow';
 import { shot } from '../support/shots';
@@ -37,6 +38,10 @@ test('이야기를 보내면 답 만드는 화면을 거치지 않고 그 자리
    * 한때 이랬다: 보내기를 누르면 답을 만드는 화면이 뜨고, 3초쯤 뒤에 그 화면이 사라지며
    * 광고 시트가 올라왔다. 만들다 만 것처럼 보이고, 광고를 보기도 전에 답이 만들어지는
    * 줄로 읽힌다. 지금은 홈에 선 채로 시트가 먼저 뜬다.
+   *
+   * ⚠ 이 spec 은 스텁 판이라 **뒤에서 도는 요청이 없다.** 그 장치(`preflight`)와
+   * 「요청이 한 번만 나간다」는 http 판에서 잰다(`api-errors.spec.ts`). 여기서 지키는
+   * 것은 스텁 판에서도 같은 길로 간다는 것이다.
    */
   await withLeaves(page, 0);
   await page.goto('/');
@@ -91,7 +96,6 @@ test('연꽃으로 지나가면 썼다고 알리고 몇 송이 남았는지 말�
   await page.getByTestId('leaf-spend-continue').click();
 
   const toast = page.getByTestId('leaf-spent-toast');
-  await expect(toast).toBeVisible();
   await expect(toast).toContainText('연꽃 한 송이로 이어갔어요');
   await expect(toast).toContainText('1송이 남았어요');
   await shot(page, '13 연꽃 - 썼다고 알린다');
@@ -125,7 +129,7 @@ test('설정에서도 연꽃을 모을 수 있다', async ({ page }) => {
   await row.scrollIntoViewIfNeeded();
   await expect(row).toBeVisible();
   await expect(row).toContainText('연꽃 모으기');
-  await expect(row).toContainText('광고를 보면 연꽃을 1개씩 모아둘 수 있어요');
+  await expect(row).toContainText('광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요');
   // 지금 몇 송이인지도 그 줄에서 읽힌다
   await expect(row).toContainText('3송이');
   await shot(page, '13 설정 - 연꽃 모으기');
@@ -161,8 +165,40 @@ test('권유 카드는 화면 한가운데에 그림과 함께 선다', async ({
   expect(center).toBeGreaterThan(view.height * 0.25);
   expect(center).toBeLessThan(view.height * 0.75);
 
-  // 덮개가 함께 선다. 뒤가 눌리지 않아야 「맨 앞」이 된다
+  /*
+    덮개가 뒤를 **실제로 막는다.** 개수만 세면 안 된다. 한때 덮개가 z 6 이고 답변
+    하단 바가 40 이라, 덮개가 떠 있는데도 「간직하기」가 그 위로 나와 눌렸다.
+  */
   await expect(page.locator('.gr-scrim')).toHaveCount(1);
+  const blocked = await page.evaluate(() => {
+    const save = document.querySelector('[data-testid="save-button"]');
+    if (save == null) return 'no-button';
+    const box = save.getBoundingClientRect();
+    const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    return save.contains(top) ? 'clickable' : 'blocked';
+  });
+  expect(blocked).toBe('blocked');
+
+  // 뒤 화면 스크롤도 잠긴다
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+});
+
+test('말씀을 간직할 때도 연꽃을 썼다고 알린다', async ({ page }) => {
+  // 쓰는 자리가 둘이다. 한쪽만 재면 다른 쪽 문구가 조용히 어긋난다
+  await withLeaves(page, 2);
+  await page.goto('/');
+  await askOnce(page);
+  await dismissNudge(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+
+  await expect(page.getByTestId('save-gate')).toBeVisible();
+  await page.getByTestId('leaf-spend-save').click();
+
+  const toast = page.getByTestId('leaf-spent-toast');
+  await expect(toast).toContainText('연꽃 한 송이로 간직했어요');
+  await expect(toast).toContainText('1송이 남았어요');
+  expect(await leafBalance(page)).toBe(1);
 });
 
 test('오늘의 부처의 말과 경전 카드가 붙어 있지 않다', async ({ page }) => {
@@ -209,9 +245,14 @@ test('앱을 알리는 링크에는 메신저 미리보기 그림이 함께 간�
   await page.getByTestId('app-share-send').click();
 
   const og = await page.evaluate(() => window.__buddhaShareOgImage ?? null);
+  /*
+    번들이 아니라 **백엔드가** 내주는 그림이다. 번들 주소(`*.apps.tossmini.com`)는
+    토스 밖에서 400 이라 크롤러가 애초에 못 읽는다. 그래서 경로만 보지 않고 앞자리까지
+    본다: 화면이 보는 백엔드 주소와 같아야 한다.
+  */
   expect(og).not.toBeNull();
-  // 번들이 아니라 백엔드가 내주는 그림이다. 번들 주소는 토스 밖에서 열리지 않는다
-  expect(og).toContain('/og/default.jpg');
+  expect(og).toMatch(/^https?:\/\/[^/]+\/og\/default\.jpg$/);
+  expect(og).not.toContain('tossmini.com');
 });
 
 test('위기 글은 광고 시트를 거치지 않고 곧장 창구로 간다', async ({ page }) => {

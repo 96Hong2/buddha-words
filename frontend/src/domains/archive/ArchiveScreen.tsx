@@ -16,7 +16,6 @@ import { ArchiveAppShare, archiveShareDone } from './ArchiveAppShare';
 import { ArchiveDetail } from './ArchiveDetail';
 import { ArchiveItem } from './ArchiveItem';
 import {
-  asShareableAnswer,
   listSaved,
   removeSaved,
   toggleFavorite,
@@ -86,6 +85,8 @@ export function ArchiveScreen() {
   /** 지금 고른 범위. 답변 화면과 같이 경전 구절부터 시작한다 */
   const [shareScope, setShareScope] = useState<ShareScope>('scripture');
   const [shareLink, setShareLink] = useState<ShareLinkState>({ status: 'making' });
+  /** 이번에 연 시트에서 한 번이라도 내보냈나. 닫을 때 취소로 셀지 가른다 */
+  const shareDone = useRef(false);
   const [filter, setFilter] = useState<Filter>('all');
   /** 지금까지 몇 장을 펼쳤나. 「더 보기」를 누를 때마다 한 쪽씩 는다 */
   const [shown, setShown] = useState(PAGE);
@@ -169,24 +170,23 @@ export function ArchiveScreen() {
    * 여기서 한 번 더 막는 것은 부르는 쪽이 바뀌어도 이 규칙이 남게 하기 위해서다.
    */
   /**
-   * 고른 범위가 가리킬 주소.
+   * 고른 범위가 가리킬 주소. **보관함에서 나가는 것은 경전 구절과 앱 주소뿐이다.**
    *
-   * 경전 구절만 보낼 때는 **앱으로 오는 주소**다. 받는 사람은 구절을 읽고 앱을 열게 된다.
-   * 답변 전체는 간직할 때 만들어 둔 랜딩 주소다. 없으면 실패로 둔다.
+   * 「답변 전체」는 서버가 만든 링크가 있어야 하는데, 서버는 답변 본문을 30분만 들고
+   * 있어서(`compose.PENDING_TTL_SECONDS`, 게다가 프로세스 메모리) 며칠 뒤에는 만들 길이
+   * 없다. 간직하는 순간에 미리 만들어 두는 길도 재 봤는데, 그러면 **공유를 누른 적도 없는
+   * 사람의 답변 전체가 30일짜리 공개 링크로 올라간다.** 설정의 개인정보 안내와 결제 직전
+   * 문구가 「공유 링크를 만들었을 때만 남는다」라고 약속한 자리라 그 길은 접었다.
+   *
+   * 그래서 보관함에서는 전체 칸을 잠그고 왜 잠겼는지 적는다. 시트는 그대로 연다.
    */
   const makeShareLink = useCallback(
-    async (item: SavedAnswer, scope: ShareScope) => {
+    async () => {
       setShareLink({ status: 'making' });
-      if (scope === 'full') {
-        const saved = item.shareUrl;
-        setShareLink(saved != null ? { status: 'ready', url: saved } : { status: 'failed' });
-        return;
-      }
       /*
-        경전 구절만 보낼 때 **주소는 덤이다.** 못 만들었다고 보내기를 막지 않는다.
-        옛 토스 앱에서는 링크를 못 만드는데, 그 사람에게 구절조차 못 보내게 하면
-        보관함 공유가 통째로 막힌다. 주소가 빈 값이면 메시지에서 그 줄이 빠진다
-        (`shareText.shareMessage`). 답변 전체는 다르다: 주소가 곧 내용이라 없으면 실패다.
+        **주소는 덤이다.** 못 만들었다고 보내기를 막지 않는다. 옛 토스 앱에서는 링크를
+        못 만드는데, 그 사람에게 구절조차 못 보내게 하면 보관함 공유가 통째로 막힌다.
+        빈 값이면 메시지에서 그 줄이 빠진다(`shareText.shareMessage`).
       */
       const url = await appShareUrl(bridge);
       setShareLink({ status: 'ready', url: url ?? '' });
@@ -217,7 +217,8 @@ export function ArchiveScreen() {
       );
       setShareItem(item);
       setShareScope('scripture');
-      void makeShareLink(item, 'scripture');
+      shareDone.current = false;
+      void makeShareLink();
     },
     [analytics, makeShareLink],
   );
@@ -233,10 +234,8 @@ export function ArchiveScreen() {
       } catch {
         sent = 'unsupported';
       }
-      if (sent === 'dismissed') {
-        analytics.log('archive_share_cancel', {});
-        return 'dismissed' as const;
-      }
+      // 스스로 닫은 것은 실패가 아니다. 시트는 그대로 남고 다시 누를 수 있다
+      if (sent === 'dismissed') return 'dismissed' as const;
       // 나갔다는 기록은 `onComplete` 한 곳에서 찍는다. 시트가 스스로 복사로 넘어가는
       // 길이 있어서, 여기서만 세면 복사로 끝난 것이 분자에서 빠진다
       return sent;
@@ -496,21 +495,27 @@ export function ArchiveScreen() {
         <ShareSheet
           open
           surface="archive"
-          onClose={() => setShareItem(null)}
+          onClose={() => {
+            // 아무것도 안 하고 닫은 것도 사실이다. 시작에 대응하는 끝이 하나는 남아야 한다
+            if (!shareDone.current) analytics.log('archive_share_cancel', {});
+            setShareItem(null);
+          }}
           answerId={shareItem.answerId}
           scripture={shareItem.detail.scripture}
           gloss={shareItem.detail.explanation ?? ''}
           scope={shareScope}
-          onScopeChange={(next) => {
-            setShareScope(next);
-            void makeShareLink(shareItem, next);
-          }}
-          /* 주소가 없으면 전체 칸을 고를 수 없게 한다. 반쪽짜리를 보내지 않는다 */
-          answer={shareItem.shareUrl != null ? asShareableAnswer(shareItem) : null}
+          onScopeChange={setShareScope}
+          /* 전체 칸은 잠긴다. 잠긴 이유를 그 자리에 적는다 */
+          answer={null}
+          fullNote="답변 전체는 받은 날 답변 화면에서 보낼 수 있어요"
           link={shareLink}
-          onRetryLink={() => void makeShareLink(shareItem, shareScope)}
+          onRetryLink={() => void makeShareLink()}
           onSendMessage={shareSend}
-          onComplete={(method) => analytics.log('archive_share_complete', { method })}
+          onComplete={(method) => {
+            shareDone.current = true;
+            analytics.log('archive_share_complete', { method });
+          }}
+          onCopyBlocked={() => analytics.log('archive_share_fail', { reason: 'copy_blocked' })}
         />
       )}
 

@@ -12,7 +12,6 @@ import { useRewardedAd } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
 import {
-  attachShareUrl,
   countSaved,
   isSaved,
   Paywall,
@@ -228,39 +227,9 @@ export function AnswerRoute() {
         slot_index: result.slotIndex,
         gate,
       });
-      /*
-        간직한 그 자리에서 「답변 전체」 주소를 하나 만들어 붙여 둔다.
-
-        서버는 답변 본문을 30분만 들고 있다(`compose.PENDING_TTL_SECONDS`, 게다가 프로세스
-        메모리라 배포 한 번에 사라진다). 그래서 며칠 뒤 보관함에서 청하면 만들 길이 없고,
-        보관함 공유는 경전 구절만 보낼 수 있었다. 링크 자체는 30일 사니(`share/store.py`)
-        만들 수 있을 때 만들어 두면 그 사이가 메워진다.
-
-        못 만들어도 아무 말 하지 않는다. 그 항목은 경전 구절만 보낼 수 있고, 그건 앞선
-        판과 같은 상태라 사람이 잃는 것이 없다. 간직 자체를 이 실패로 되돌리지 않는다.
-      */
-      void client
-        .createShareToken({
-          answerId: answer.answerId,
-          scope: 'full',
-          // 스텁 판이 그릴 카드. http 판은 이 값을 보내지 않고 서버가 자기 행에서 읽는다
-          card: {
-            kind: 'fields',
-            buddhaMessage: answer.modernBuddhaMessage,
-            scripture: answer.scriptures[0],
-            emotionTags: answer.emotionTags,
-            explanation: pass2.status === 'done' ? [pass2.scriptureExplanation] : [],
-          },
-        })
-        .then(({ token, landingUrl }) => {
-          attachShareUrl(answer.answerId, landingUrl ?? shareUrlFor(token));
-        })
-        .catch(() => {
-          // 링크는 덤이다. 없으면 없는 대로 둔다
-        });
       return 'saved';
     },
-    [analytics, answer, client, extension],
+    [analytics, answer, extension],
   );
 
   /**
@@ -473,7 +442,7 @@ export function AnswerRoute() {
       />
 
       {/*
-        답변 위로 올라오는 권유 한 장. 한 번에 하나이고 덮개를 쓰지 않는다.
+        화면 한가운데 서는 권유 한 장. 한 번에 하나이고 덮개 위에 선다.
         간직 시트나 공유 시트가 열려 있는 동안에는 물러난다. 시트 둘이 겹치면
         사람이 무엇을 누르고 있는지 잃는다.
       */}

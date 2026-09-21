@@ -72,6 +72,14 @@ export interface ContinueSheetProps {
   open: boolean;
   /** 오늘 이미 이어간 횟수. 로그에만 쓴다 */
   continuesUsed: number;
+  /**
+   * 이 이야기를 서버가 아직 보고 있나. **그동안 버튼을 잠근다.**
+   *
+   * 서버는 위기를 사용량보다 먼저 본다. 잠그지 않으면 분류기만 잡는 위기 글을 쓴
+   * 사람이 30초 광고를 끝까지 보고 나서야 창구를 만난다. 계획 1.6 이 「절대 광고를
+   * 두지 않는 곳」으로 위기 화면을 적어 둔 자리다.
+   */
+  checking?: boolean;
   onClose: () => void;
   /** 답을 만들기 시작한다. 광고는 아직 떠 있을 수 있다 */
   onContinue: () => void;
@@ -87,6 +95,7 @@ export interface ContinueSheetProps {
 export function ContinueSheet({
   open,
   continuesUsed,
+  checking = false,
   onClose,
   onContinue,
   leaves = 0,
@@ -113,10 +122,11 @@ export function ContinueSheet({
 
   // 광고를 띄울 수 없는 기기라면 시트가 길을 막고 서 있는 셈이다. 조용히 비켜 준다.
   useEffect(() => {
-    if (!open || !ad.ready || ad.supported) return;
+    // 확인이 끝나기 전에 지나가면 답이 이미 만들어지는 중인데 같은 키로 또 보낸다
+    if (!open || checking || !ad.ready || ad.supported) return;
     onClose();
     onContinue();
-  }, [ad.ready, ad.supported, onClose, onContinue, open]);
+  }, [ad.ready, ad.supported, checking, onClose, onContinue, open]);
 
   /** 중간에 닫았다. 답을 주지 않으므로 왜 안 넘어가는지 그 자리에 적는다 */
   const [bailed, setBailed] = useState(false);
@@ -171,7 +181,7 @@ export function ContinueSheet({
             <LeafUseButton
               count={leaves}
               action="답변 받기"
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={onUseLeaf}
               testKey="leafSpendContinue"
             />
@@ -180,7 +190,7 @@ export function ContinueSheet({
           {hasLeaf ? (
             <LeafAltAdButton
               label={AD_ALT_LABEL}
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={() => {
                 void watch();
               }}
@@ -190,7 +200,7 @@ export function ContinueSheet({
             <button
               type="button"
               className="continue-sheet__ad"
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={() => {
                 void watch();
               }}
@@ -225,7 +235,10 @@ export function ContinueSheet({
               </span>
             </button>
           )}
-          <p className="continue-sheet__note" role={ad.showing || bailed ? 'status' : undefined}>
+          <p
+            className="continue-sheet__note"
+            role={checking || ad.showing || bailed ? 'status' : undefined}
+          >
             {/*
               연꽃을 **안 가진 사람에게** 어디서 얻는지 알려 준다. 한때 가진 사람 쪽에만
               두었는데, 그러면 이미 아는 사람에게만 얻는 법을 말하는 구조가 된다.
@@ -234,7 +247,9 @@ export function ContinueSheet({
               「베푼 것을 세는 문장」과 한 글자도 안 겹치게 하려고 `flows.spec.ts` 가
               문자열로 지키는 자리다. 같은 뜻을 「바로 이어갈 수 있어요」로 적는다.
             */}
-            {ad.showing
+            {checking
+              ? '이야기를 살펴보고 있어요'
+              : ad.showing
               ? '광고를 불러오고 있어요'
               : bailed
                 ? '광고를 끝까지 봐야 이어갈 수 있어요'

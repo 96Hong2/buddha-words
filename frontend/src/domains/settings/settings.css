@@ -606,3 +606,8 @@
   text-wrap: balance;
   word-break: keep-all;
 }
+
+/* 연꽃 아이콘의 color 는 꽃잎 경계선 색이다. 다른 줄의 금색 규칙을 따르지 않는다 */
+.set-item[data-testid='settings-leaf'] .set-icon {
+  color: var(--surface);
+}

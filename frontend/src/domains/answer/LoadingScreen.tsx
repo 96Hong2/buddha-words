@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
-import { ApiFailure, messageFor, type ErrorCode } from '../../shared/api';
+import { ApiFailure, messageFor, type ApiResponse, type ErrorCode } from '../../shared/api';
 import { useApiClient } from '../../shared/api';
 import { charsBucket, elapsedBucket, linesBucket, useAnalytics } from '../../shared/analytics';
 import type { EventName } from '../../shared/analytics';
@@ -122,11 +122,27 @@ function routeEvent(response: { responseType: string; route?: string }): EventNa
   return response.route === 'deep' ? 'input_type_deep' : 'input_type_normal';
 }
 
+/**
+ * 홈이 광고 문 앞에서 미리 받아 둔 것. **여기로 넘겨받아 요청을 한 번만 보낸다.**
+ *
+ * 홈은 광고 시트를 띄워 두고 뒤에서 요청을 하나 보낸다(`HomeRoute` 의 `preflight`).
+ * 그 요청이 답을 가져왔는데 이 화면이 같은 멱등키로 또 보내면, 한 인스턴스에서는
+ * 서버가 같은 답을 돌려주지만(replay) 요청이 다른 인스턴스로 가면 그 막이 없다.
+ * Cloud Run 은 인스턴스를 늘려 확장하고 사용량 장부는 프로세스 메모리다. 그러면
+ * 모델을 두 번 부르고 사용량을 두 번 센다.
+ */
+interface LoadingNavState {
+  preflight?: { response: ApiResponse } | { error: ApiFailure };
+}
+
 export function LoadingScreen() {
   const client = useApiClient();
   const analytics = useAnalytics();
   const navigate = useNavigate();
+  const { state } = useLocation();
   const { sent, idempotencyKey, setResponse } = useSession();
+  /** 한 번 쓰고 버린다. 「다시 해보기」는 새로 요청해야 한다 */
+  const handed = useRef((state as LoadingNavState | null)?.preflight ?? null);
 
   const [stage, setStage] = useState(0);
   const [quote, setQuote] = useState(0);
@@ -142,10 +158,20 @@ export function LoadingScreen() {
     const myKey = idempotencyKey;
     liveKey = myKey;
     try {
-      const response = await client.submitConcern({
-        text: sent,
-        idempotencyKey: myKey,
-      });
+      /*
+        홈이 이미 받아 둔 것이 있으면 그걸 쓴다. 한 번 쓰고 버리므로 「다시 해보기」는
+        정상적으로 서버를 다시 부른다.
+      */
+      const handedOver = handed.current;
+      handed.current = null;
+      if (handedOver != null && 'error' in handedOver) throw handedOver.error;
+      const response =
+        handedOver != null
+          ? handedOver.response
+          : await client.submitConcern({
+              text: sent,
+              idempotencyKey: myKey,
+            });
       /**
        * 이 이야기가 어느 갈래로 읽혔나. **`model_route` 와 `answer_generated` 보다 먼저 찍는다.**
        *

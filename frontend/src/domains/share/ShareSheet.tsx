@@ -189,6 +189,15 @@ export interface ShareSheetProps {
    * 부르는 쪽은 `onSendMessage` 만 보고 있으면 복사로 끝난 것을 모른다.
    */
   onComplete?: (method: 'system' | 'copy' | 'image') => void;
+  /**
+   * 「답변 전체」 칸이 잠겼을 때 그 옆에 적는 한 줄.
+   *
+   * 잠긴 버튼만 두면 왜 못 누르는지 알 길이 없다. 보관함에서는 서버가 답변 본문을
+   * 30분만 들고 있어 며칠 뒤에는 링크를 만들 수 없는데, 그 사정을 사람이 알 수는 없다.
+   */
+  fullNote?: string;
+  /** 클립보드가 막혔다. 부르는 쪽이 자기 이름으로 기록한다 */
+  onCopyBlocked?: () => void;
 }
 
 export function ShareSheet({
@@ -205,6 +214,8 @@ export function ShareSheet({
   onSendMessage,
   surface = 'answer',
   onComplete,
+  fullNote,
+  onCopyBlocked,
   onSaveImage,
   onOpenSettings,
 }: ShareSheetProps) {
@@ -331,6 +342,7 @@ export function ShareSheet({
       setToast(notice);
       return;
     }
+    onCopyBlocked?.();
     setManual(text);
     setBlock('copy_failed');
   }
@@ -377,7 +389,8 @@ export function ShareSheet({
 
   /** 주소만 가져간다. 붙여 넣을 곳을 이미 아는 사람을 위한 자리다 */
   async function copyLink(): Promise<void> {
-    if (link.status !== 'ready') {
+    // 빈 주소는 「만들지 못한 것」과 같다. 붙여 넣을 것이 없는데 복사했다고 말하지 않는다
+    if (link.status !== 'ready' || link.url.trim() === '') {
       setBlock('link_failed');
       return;
     }
@@ -482,6 +495,13 @@ export function ShareSheet({
               );
             })}
           </div>
+
+          {/* 잠긴 칸의 이유. 누르지 못하는 버튼을 설명 없이 두지 않는다 */}
+          {!fullReady && fullNote != null && (
+            <p className="sh-scope__note" {...testId(TEST_IDS.shareFullNote)}>
+              {fullNote}
+            </p>
+          )}
 
           <p className="sh-sheet__safe">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">

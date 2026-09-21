@@ -130,7 +130,13 @@
 .gr-scrim {
   position: fixed;
   inset: 0;
-  z-index: 6;
+  /*
+     80 이다. 이 모달이 뜨는 유일한 화면(답변)에는 공유·간직 바(40)와 진행선(30)이
+     떠 있고, `.app`·`#root`·`body` 어디에도 쌓임 맥락이 없어 전부 루트에서 겨룬다.
+     6 이었을 때는 덮개 위로 그 바가 그대로 그려지고 눌렸다(리뷰가 잡았다).
+     층 표는 `shared/styles/tokens.css` 맨 아래에 있다.
+  */
+  z-index: 80;
   background: var(--dim);
   animation: gr-scrim-in 180ms ease-out both;
 }
@@ -143,7 +149,7 @@
 .gr-nudge-wrap {
   position: fixed;
   inset: 0;
-  z-index: 7;
+  z-index: 81;
   display: grid;
   place-items: center;
   padding: var(--gutter);
@@ -175,7 +181,8 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--surface);
+  /* 카드 바닥(--surface-illust)과 1.03 이라 --surface 로는 원이 안 보였다. 1.22 로 올린다 */
+  background: var(--accent-soft);
   color: var(--accent-text);
 }
 
@@ -197,14 +204,24 @@
   text-wrap: balance;
 }
 
-/* 닫기는 카드 오른쪽 위 모서리에 띄워 둔다. 제목과 한 줄에 서지 않는다 */
+/*
+   닫기는 카드 오른쪽 위 모서리에 띄워 둔다. 제목과 한 줄에 서지 않는다.
+   카드가 스크롤되는 판(글자 「아주 크게」 + 낮은 화면)에서도 남아 있어야 해서
+   absolute 가 아니라 sticky 다. absolute 면 내용과 함께 위로 밀려 사라진다.
+*/
 .gr-nudge .gr-card__x {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  margin: 0;
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: -8px -8px 0 0;
   width: var(--tap-min);
   height: var(--tap-min);
+}
+
+/* 44px 원 안의 14px X 는 작아 보인다 */
+.gr-nudge .gr-card__x svg {
+  width: 17px;
+  height: 17px;
 }
 
 .gr-nudge .gr-card__cta {
@@ -261,7 +278,7 @@
    * 겹치지 않게 화면 바닥 가까이로 내린다. 공유·간직 바(76px)보다 위다.
    */
   bottom: calc(96px + var(--safe-bottom, 0px));
-  z-index: 8;
+  z-index: 82;
   transform: translateX(-50%);
   max-width: calc(100% - 48px);
   padding: 10px 16px;

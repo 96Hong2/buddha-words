@@ -141,6 +141,31 @@ async function seedQuota(page: Page, firstUsed: boolean, continuesUsed: number) 
   );
 }
 
+/**
+ * 화면이 실제로 지나간 길을 적어 둔다.
+ *
+ * 「대기 화면을 거치지 않는다」는 나중에 `toHaveCount(0)` 로 재면 거짓이 된다. 거쳤다가
+ * 돌아온 판과 한 번도 안 간 판이 그 시점에는 똑같이 보인다. 그래서 라우터가 주소를
+ * 바꾸는 순간을 전부 받아 적는다.
+ */
+async function trackRoutes(page: Page) {
+  await page.addInitScript(() => {
+    const seen: string[] = [location.pathname];
+    (window as unknown as { __routes: string[] }).__routes = seen;
+    for (const name of ['pushState', 'replaceState'] as const) {
+      const original = history[name].bind(history);
+      history[name] = function patched(data: unknown, unused: string, url?: string | URL | null) {
+        original(data, unused, url);
+        seen.push(location.pathname);
+      };
+    }
+  });
+}
+
+function visited(page: Page): Promise<string[]> {
+  return page.evaluate(() => (window as unknown as { __routes?: string[] }).__routes ?? []);
+}
+
 /** 고민을 보내고 답을 기다린다. 이어가기 시트가 끼면 지나간다 */
 async function send(page: Page, text = CONCERN) {
   const entry = page.getByTestId('entry-card');
@@ -388,4 +413,99 @@ test('전역 예산으로 닫힌 429 는 잠시 뒤에 다시 보내라고 한�
   await expect(state).toContainText('지금은 이야기가 많이 몰려 있어요');
   // 하루 천장이 아니다. 천장 안내를 잘못 띄우면 오늘 더 못 하는 줄 알고 나간다
   await expect(page.getByTestId('exhausted')).toHaveCount(0);
+});
+
+/**
+ * 이번 판의 핵심 장치는 **서버가 문을 여는 판에서만** 돈다.
+ *
+ * 스텁 판에는 뒤에서 도는 요청 자체가 없어서(`serverOpensTheGate()` 가 false) 여기
+ * 아니면 한 줄도 지나가지 않는다. 실제로 그랬다: 처음 쓴 spec 여덟 건이 고치기 전
+ * 코드로도 전부 초록이었다(2026-09-21 리뷰가 잡았다).
+ */
+test('광고 문 앞에서 답 만드는 화면을 거치지 않고, 요청도 한 번만 나간다', async ({ page }) => {
+  await trackRoutes(page);
+  await page.route(
+    (url) => url.pathname === '/daily',
+    (route) => route.fulfill(json(DAILY)),
+  );
+  const keys: string[] = [];
+  await page.route(
+    (url) => url.pathname === '/concern',
+    (route) => {
+      const body = route.request().postDataJSON();
+      keys.push(`${body.idempotencyKey}:${body.adWatched === true}`);
+      if (body.adWatched !== true) return route.fulfill(quota429('ad_required', AD_GATE_QUOTA));
+      return route.fulfill(json({ ...ANSWER, quota: { ...AD_GATE_QUOTA, adContinuesUsed: 1 } }));
+    },
+  );
+  await page.route(
+    (url) => url.pathname === '/concern/pass2',
+    (route) => route.fulfill(json({ ...ANSWER, ...PASS2 })),
+  );
+
+  await seedQuota(page, true, 1);
+  await page.goto('/');
+  await send(page);
+
+  await expect(page.getByTestId('continue-sheet')).toBeVisible({ timeout: 30_000 });
+  // 시트가 뜰 때까지 화면은 홈 그대로다. 답 만드는 화면을 들렀다 온 것이 아니다
+  expect(await visited(page)).not.toContain('/loading');
+  await shot(page, '52 광고 문 - 홈에 선 채로 시트가 먼저 뜬다');
+
+  await page.getByTestId('continue-watch').click();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+
+  /*
+    요청은 딱 둘이다: 문 앞에서 한 번(광고 전), 광고를 보고 한 번. **같은 멱등키다.**
+    키가 갈리면 서버는 두 이야기로 보고 사용량을 두 번 센다. 인스턴스가 여럿이면
+    같은 키라도 replay 가 안 걸려 모델이 두 번 도는데, 그래서 횟수 자체를 줄여야 한다.
+  */
+  expect(keys).toHaveLength(2);
+  const [first, second] = keys.map((one) => one.split(':'));
+  expect(first[0]).toBe(second[0]);
+  expect(first[1]).toBe('false');
+  expect(second[1]).toBe('true');
+});
+
+test('서버가 보는 동안에는 광고 버튼이 잠긴다', async ({ page }) => {
+  /*
+   * 규칙층이 못 잡는 위기 표현이 있다(「밤마다 다리 위에 서 있다가 와요」). 그 글은
+   * 시트를 거치는데, 그 몇 초 안에 광고를 누를 수 있으면 **위기 상태인 사람이 30초
+   * 광고를 다 보고 나서** 창구를 만난다. 계획 1.6 이 「절대 광고를 두지 않는 곳」으로
+   * 위기 화면을 적어 둔 자리다.
+   */
+  await trackRoutes(page);
+  await page.route(
+    (url) => url.pathname === '/daily',
+    (route) => route.fulfill(json(DAILY)),
+  );
+  // 서버가 천천히 답한다. 그동안 버튼이 잠겨 있어야 한다
+  await page.route(
+    (url) => url.pathname === '/concern',
+    async (route) => {
+      await new Promise((done) => setTimeout(done, 1500));
+      return route.fulfill(json(CRISIS));
+    },
+  );
+
+  await seedQuota(page, true, 1);
+  await page.goto('/');
+  /*
+    규칙층 사전에 없는 문장이라야 한다. 「죽고 싶다」처럼 사전에 걸리는 글은 화면이
+    시트를 아예 안 세운다(`HomeRoute` 의 가드). 여기서 재려는 것은 그 가드를 지나
+    **분류기까지 가야 알 수 있는** 글이다. ADR 0010 이 「규칙층 사전만 넓힌다」를
+    버리며 근거로 든 바로 그 모양이다(실측: `routeByRules` 가 light 로 둔다).
+  */
+  await send(page, '밤마다 다리 위에 서 있다가 와요');
+
+  const sheet = page.getByTestId('continue-sheet');
+  await expect(sheet).toBeVisible({ timeout: 30_000 });
+  // 광고를 누를 수 없다. 왜 기다리는지도 적는다
+  await expect(page.getByTestId('continue-watch')).toBeDisabled();
+  await expect(sheet).toContainText('살펴보고 있어요');
+  await shot(page, '53 광고 문 - 서버가 보는 동안은 잠긴다');
+
+  // 다 보고 나면 시트를 걷고 창구로 데려간다
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 30_000 });
+  await expect(sheet).toHaveCount(0);
 });
