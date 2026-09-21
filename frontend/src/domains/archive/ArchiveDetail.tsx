@@ -24,10 +24,13 @@ export interface ArchiveDetailProps {
   onClose: () => void;
   onDelete: (answerId: string) => void;
   /**
-   * 간직한 말씀을 내보낸다. 보내지 못하면 복사한 것으로 답한다.
-   * 주지 않으면 공유 버튼을 그리지 않는다.
+   * 공유 시트를 연다. 주지 않으면 공유 버튼을 그리지 않는다.
+   *
+   * 예전에는 여기서 곧장 내보내고 결과 문구까지 이 화면이 적었다. 지금은 답변 화면과
+   * 같은 시트가 무엇을 보낼지 묻고 결과도 그쪽이 말한다. 같은 버튼이 자리마다 다르게
+   * 굴지 않게 한 것이다.
    */
-  onShare?: (item: SavedAnswer) => Promise<'sent' | 'copied' | 'dismissed' | 'failed'>;
+  onShare?: (item: SavedAnswer) => void;
 }
 
 /** 공유 아이콘. 답변 화면 것과 같은 모양을 쓴다 */
@@ -68,9 +71,6 @@ export function ArchiveDetail({
   const sheetRef = useRef<HTMLDivElement>(null);
   /** 지우기는 되돌릴 수 없다. 한 번 더 묻고 지운다 */
   const [asking, setAsking] = useState(false);
-  /** 공유를 누른 뒤 한마디. 시트를 못 여는 기기에서는 복사했다고 말한다 */
-  const [shareNote, setShareNote] = useState<string | null>(null);
-  const [sharing, setSharing] = useState(false);
 
   const open = item != null;
 
@@ -79,7 +79,6 @@ export function ArchiveDetail({
   useEffect(() => {
     if (!open) return;
     setAsking(false);
-    setShareNote(null);
     sheetRef.current?.focus();
 
     const { overflow } = document.body.style;
@@ -277,8 +276,9 @@ export function ArchiveDetail({
               {/*
                 간직한 말씀은 **언제든** 내보낼 수 있다. 며칠 전에 담은 것도 마찬가지다.
                 나가는 것은 경전 구절과 앱 주소뿐이고, 적으신 이야기도 풀이도 따라가지 않는다.
-                답변 화면의 공유와 달리 서버 링크를 만들지 않는다. 그 링크는 방금 받은 답에만
-                살아 있어서, 지난달에 담은 것을 누르면 「찾을 수 없어요」가 돌아온다.
+                「답변 전체」로 보내려면 간직할 때 만들어 둔 주소가 있어야 한다. 서버는 답변
+                본문을 30분만 들고 있어서 여기서 새로 만들 길이 없다. 그 주소가 없는 항목은
+                시트가 전체 칸을 잠그고 경전 구절만 보낸다.
 
                 ⚠ **경전이 함께 담긴 것만 내보낸다.** 앞선 판에서 담아 한마디만 남은 항목은
                 그 한마디가 `modernBuddhaMessage` 다. 그 문장은 이 사람의 고민을 읽고 쓴 글이라
@@ -290,18 +290,7 @@ export function ArchiveDetail({
                 <button
                   type="button"
                   className="arch-btn arch-btn--share arch-btn--lg"
-                  disabled={sharing}
-                  onClick={() => {
-                    if (sharing) return;
-                    setSharing(true);
-                    setShareNote(null);
-                    void onShare(item)
-                      .then((result) => {
-                        if (result === 'copied') setShareNote('보낼 글을 복사했어요');
-                        else if (result === 'failed') setShareNote('지금은 보내지 못했어요');
-                      })
-                      .finally(() => setSharing(false));
-                  }}
+                  onClick={() => onShare(item)}
                   {...testId(TEST_IDS.archiveShare)}
                 >
                   <span className="arch-btn__icon" aria-hidden="true">
@@ -310,10 +299,8 @@ export function ArchiveDetail({
                   공유하기
                 </button>
               )}
-              {/* 무엇이 나가는지 버튼 옆에서 말한다. 누른 뒤에 알면 늦다 */}
-              <p className="ad-hint" role={shareNote != null ? 'status' : undefined}>
-                {shareNote ?? '경전 구절과 앱 주소만 나가요'}
-              </p>
+              {/* 무엇이 나갈지 고르는 자리가 그다음에 열린다는 것을 미리 말한다 */}
+              <p className="ad-hint">무엇을 보낼지 고를 수 있어요</p>
               <button
                 type="button"
                 className="arch-btn arch-btn--primary arch-btn--lg"

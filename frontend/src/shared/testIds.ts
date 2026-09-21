@@ -78,7 +78,7 @@ export const TEST_IDS = {
   // 광고 · 사용량
   adBadge: 'ad-badge',
 
-  // 연잎
+  // 연꽃. 키 이름이 leaf 인 것은 이벤트·저장소 이름을 그대로 둔 것과 같은 이유다
   leafSheet: 'leaf-sheet',
   leafSheetCount: 'leaf-sheet-count',
   leafWatch: 'leaf-watch',
@@ -87,6 +87,8 @@ export const TEST_IDS = {
   leafNote: 'leaf-note',
   leafSpendContinue: 'leaf-spend-continue',
   leafSpendSave: 'leaf-spend-save',
+  leafSpentToast: 'leaf-spent-toast',
+  settingsLeaf: 'settings-leaf',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
 
@@ -99,6 +101,7 @@ export const TEST_IDS = {
   shareCopy: 'share-copy',
   shareScopeScripture: 'share-scope-scripture',
   shareScopeFull: 'share-scope-full',
+  shareFullNote: 'share-full-note',
   shareFullPreview: 'share-full-preview',
 
   // 성장. 사람이 부탁하지 않은 말이라 한 번씩만 뜨고, 한 화면에 둘이 겹치지 않는다

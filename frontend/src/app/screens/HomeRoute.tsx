@@ -8,6 +8,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
+import { routeByRules } from '@spec/router.ts';
+
 import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen';
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
@@ -18,7 +20,7 @@ import { OnboardingScreen, onboardingPending } from '../../domains/onboarding';
 import { ContinueSheet } from '../../domains/quota/ContinueSheet';
 import { gateFor, readQuota, saveFromServer, type QuotaState } from '../../domains/quota/quota';
 import { useAnalytics } from '../../shared/analytics';
-import { useApiClient, type Quota } from '../../shared/api';
+import { ApiFailure, useApiClient, type Quota } from '../../shared/api';
 import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { readMilestones } from '../../shared/prefs/milestones';
@@ -46,15 +48,23 @@ import { ROUTES } from '../router';
 /**
  * 사용량 문을 누가 여는가.
  *
- * **화면이 먼저 막지 않는다.** 예전에는 규칙층(`routeByRules`)만 보고 NORMAL·DEEP 이면
- * 광고 시트를 띄웠다. 규칙층은 위기를 확정하지 못한다(normal·deep 판정은 늘 confidence 0.5,
- * 곧 「분류기가 봐야 한다」는 뜻이다). 그래서 분류기가 잡을 위기 글이 서버에 닿기도 전에
- * 광고에 막혔고, 시트를 닫으면 창구를 영영 못 봤다.
+ * **판정은 서버가 하고, 시트는 화면이 먼저 띄운다.** 둘을 나눈 것이 이 구조의 전부다.
  *
- * 지금은 보내고 나서 서버가 「광고가 필요하다」고 답할 때 시트를 연다. 서버는 위기를
- * 사용량보다 먼저 처리하므로(`routes.py`) 위기 글은 분류기까지 돌아 창구로 간다.
+ * 한때 화면이 스스로 막았다. 규칙층(`routeByRules`)만 보고 NORMAL·DEEP 이면 광고 시트를
+ * 띄웠는데, 규칙층은 위기를 확정하지 못한다(normal·deep 판정은 늘 confidence 0.5, 곧
+ * 「분류기가 봐야 한다」는 뜻이다). 분류기가 잡을 위기 글이 서버에 닿기도 전에 광고에
+ * 막혔고, 시트를 닫으면 창구를 영영 못 봤다.
  *
- * 스텁 판에는 사용량을 세는 서버가 없다. 그 판에서만 화면이 기기 사본으로 문을 연다.
+ * 그래서 보내고 나서 서버가 「광고가 필요하다」고 답할 때 시트를 열게 고쳤다. 안전은
+ * 지켜졌는데 **화면이 한 번 넘어갔다 돌아왔다.** 이야기 보내기를 누르면 답을 만드는
+ * 화면이 뜨고, 3초쯤 뒤에 그 화면이 사라지며 광고 시트가 올라왔다. 만들다 만 것처럼
+ * 보이고, 광고를 보기도 전에 답이 만들어지는 줄로 읽힌다(2026-09-21 사용자 지적).
+ *
+ * 지금은 **광고 문이 설 자리면 홈에 선 채로 시트부터 띄우고, 요청은 그 뒤에서 보낸다.**
+ * 서버가 하는 일은 한 글자도 안 바뀌었다: 위기면 창구를 주고, 아니면 광고 문을 세운다.
+ * 바뀐 것은 그동안 사람이 보는 화면뿐이다. 광고를 다 보면 그때 대기 화면으로 넘어간다.
+ *
+ * 스텁 판에는 사용량을 세는 서버가 없다. 그 판에서는 기기 사본만으로 시트를 연다.
  */
 /** 진입 카드와 같은 기준(기기 시간대 자정)으로 오늘을 적는다 */
 function todayISO(): string {
@@ -77,7 +87,7 @@ export function HomeRoute() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const bridge = useBridge();
-  const { beginSubmit, sent } = useSession();
+  const { beginSubmit, sent, setResponse } = useSession();
   const api = useApiClient();
   const analytics = useAnalytics();
   const leaf = useLeafWallet();
@@ -118,7 +128,7 @@ export function HomeRoute() {
    * 사람 앞에 부탁이 연달아 두 번 선다. 그날은 리뷰가 물러나 있는 것이 맞다.
    */
   const hadRecall = useRef(false);
-  /** 연잎 모으기 시트 */
+  /** 연꽃 모으기 시트 */
   const [leafOpen, setLeafOpen] = useState(false);
   /**
    * 지금까지 받은 답의 수와, 그것으로 정해지는 리뷰 카드.
@@ -141,6 +151,26 @@ export function HomeRoute() {
   const held = useRef('');
   /** 이미 문을 연 서버 사용량. 같은 값으로 시트를 두 번 열지 않는다 */
   const handledCap = useRef<Quota | null>(null);
+  /**
+   * 뒤에서 돌고 있는 요청의 번호.
+   *
+   * 이 값이 올라가면 그 전에 나간 요청은 화면을 바꾸지 못한다. 사람이 광고를 보고
+   * 먼저 지나갔거나 시트를 닫은 뒤에 늦게 도착한 답이 화면을 빼앗는 일을 막는다.
+   */
+  const preflightSeq = useRef(0);
+  /**
+   * 뒤에서 보낸 요청의 답을 아직 기다리는 중인가.
+   *
+   * 그동안 시트의 버튼을 잠근다. 잠그지 않으면 **위기 글을 쓴 사람이 30초 광고를
+   * 끝까지 보고 나서 창구를 만난다.** 분류기만 잡는 위기 표현은 규칙층 가드를 지나
+   * 여기까지 오기 때문이다(「돌아오지 않는 여행을 가려고 해요」 같은 글).
+   *
+   * 답이 이미 만들어지는 중인데 광고를 보고 같은 키로 또 보내면 서버가 409 로 막는
+   * 자리도 이 잠금이 함께 닫는다.
+   */
+  const [gateChecking, setGateChecking] = useState(false);
+  /** 시트를 닫은 것이 아니라 **새 이야기가 시작되어** seq 가 올라갔나 */
+  const supersededByNewStory = useRef(false);
 
   /**
    * 서버가 사용량으로 막아 대기 화면이 돌려보낸 자리.
@@ -159,7 +189,11 @@ export function HomeRoute() {
     handledCap.current = capped;
     void navigate(ROUTES.home, { replace: true, state: null });
     setQuota(saveFromServer(capped));
-    // 보낸 글은 세션이 그대로 쥐고 있다. 광고를 다 보면 이 글을 그대로 잇는다
+    /*
+      보낸 글은 세션이 그대로 쥐고 있다. 광고를 다 보면 이 글을 그대로 잇는다.
+      **여기서는 `beginSubmit` 을 다시 부르지 않는다.** 대기 화면이 정해 둔 멱등키가
+      아직 살아 있고, 그 키로 다시 보내야 서버가 같은 이야기로 알아본다.
+    */
     held.current = sent;
     setContinueOpen(true);
   }, [navigate, sent, state]);
@@ -201,56 +235,166 @@ export function HomeRoute() {
     [beginSubmit, navigate],
   );
 
+  /**
+   * 시트를 띄워 둔 채 뒤에서 보내는 요청. **위기 판정을 화면이 가로채지 않으려는 것이다.**
+   *
+   * 서버는 위기를 사용량보다 먼저 본다(`routes.py`). 그래서 이 요청 하나로 셋이 갈린다:
+   *
+   *   위기            창구 화면을 받는다. 시트를 닫고 그리로 보낸다
+   *   광고 문(429)    시트는 이미 떠 있다. 서버가 센 사용량만 적는다
+   *   그 밖           대기 화면으로 넘긴다. 같은 멱등키라 서버가 만든 답을 그대로 받는다
+   *
+   * **위기는 시트를 닫은 뒤에도 통과시킨다.** 사람이 광고를 안 보기로 했다고 해서 위기
+   * 글이 창구에 못 닿으면, 화면이 먼저 막던 옛 구조로 되돌아가는 셈이다.
+   */
+  const preflight = useCallback(
+    async (text: string, key: string) => {
+      const seq = preflightSeq.current;
+      setGateChecking(true);
+      try {
+        const response = await api.submitConcern({ text, idempotencyKey: key });
+        /*
+          위기는 시트를 닫은 뒤에도 통과시킨다. 사람이 광고를 안 보기로 했다고 해서
+          위기 글이 창구에 못 닿으면 화면이 먼저 막던 옛 구조로 되돌아간다.
+
+          다만 **더 새로운 이야기가 시작됐으면** 통과시키지 않는다. 그때는 세션이 쥔
+          글도 새것이라, 옛 글의 위기 화면에서 「그래도 들어주세요」를 누르면 새 글이
+          나간다. 같은 사람의 위기라도 화면과 글이 어긋난 채로는 보낼 수 없다.
+        */
+        if (response.responseType === 'crisis' && !supersededByNewStory.current) {
+          held.current = '';
+          setContinueOpen(false);
+          setResponse(response);
+          void navigate(ROUTES.crisis, { replace: true });
+          return;
+        }
+        // 그 사이 사람이 광고를 보고 지나갔거나 시트를 닫았다. 화면을 빼앗지 않는다
+        if (seq !== preflightSeq.current) return;
+        held.current = '';
+        setContinueOpen(false);
+        // **받은 답을 버리지 않는다.** 버리면 대기 화면이 같은 키로 한 번 더 보낸다
+        void navigate(ROUTES.loading, { state: { preflight: { response } } });
+      } catch (error) {
+        if (seq !== preflightSeq.current) return;
+        const failed = error instanceof ApiFailure ? error : null;
+        if (failed?.quota != null) {
+          // 광고 문이 섰다. 기다리던 답이라 화면은 그대로 두고 사용량만 맞춘다
+          setQuota(saveFromServer(failed.quota));
+          return;
+        }
+        // 못 보냈다. 「다시 해보기」가 있는 대기 화면이 이 실패를 그린다.
+        // 실패도 그대로 넘긴다. 여기서 버리면 대기 화면이 같은 벽에 한 번 더 부딪힌다
+        held.current = '';
+        setContinueOpen(false);
+        void navigate(ROUTES.loading, {
+          state: failed != null ? { preflight: { error: failed } } : undefined,
+        });
+      } finally {
+        if (seq === preflightSeq.current) setGateChecking(false);
+      }
+    },
+    [api, navigate, setResponse],
+  );
+
   const submit = useCallback(
     (text: string) => {
-      if (serverOpensTheGate()) {
-        // 막지 않고 보낸다. 광고가 필요하면 서버가 답으로 알려 주고 위의 효과가 시트를 연다
-        send(text);
-        return;
-      }
-
       const state = readQuota();
       setQuota(state);
 
-      const gate = gateFor(state);
-      if (gate === 'free') {
+      // 오늘 첫 이야기는 광고가 없다. 곧장 보낸다
+      if (gateFor(state) === 'free') {
         send(text);
         return;
       }
+
+      /*
+        **규칙층이 위기를 보면 시트를 세우지 않는다.**
+
+        서버도 같은 판정으로 광고 문을 건너뛴다(`routes.py` 의 `_rules_saw_crisis`).
+        그래서 이 글은 어차피 광고에 안 걸리는데, 시트만 잠깐 떴다 닫히면 죽고 싶다고
+        적은 사람이 광고 버튼을 먼저 보게 된다. 그 몇 초를 없앤다.
+
+        규칙층이 못 잡는 에두른 표현은 여전히 시트를 거친다. 그건 분류기가 봐야 알 수
+        있고, 그때는 뒤에서 도는 요청이 창구로 데려간다(`preflight`). 화면이 스스로
+        위기를 판정하지 않는다는 선은 그대로다.
+      */
+      if (routeByRules(text).route === 'crisis') {
+        send(text);
+        return;
+      }
+
+      // 여기부터는 광고 문이 설 자리다. 화면을 넘기지 않고 시트를 먼저 세운다
+      preflightSeq.current += 1;
+      supersededByNewStory.current = true;
+      /*
+        **옛 답을 지우지 않는다.** 시트를 닫고 돌아갈 수 있는 자리라, 여기서 세션의
+        응답을 비우면 보관함의 「오늘 나눈 이야기」가 사라지고 방금 받은 답으로 돌아갈
+        길이 없어진다. 실제로 보낼 때(`goOn`)는 비운다.
+      */
+      const key = beginSubmit(text, { keepResponse: true });
       held.current = text;
       setContinueOpen(true);
+      setGateChecking(serverOpensTheGate());
+
+      // 스텁 판에는 사용량을 세는 서버가 없다. 뒤에서 보낼 것도 없다
+      if (serverOpensTheGate()) void preflight(text, key);
     },
-    [send],
+    [beginSubmit, preflight, send],
   );
 
-  const closeContinue = useCallback(() => setContinueOpen(false), []);
+  /**
+   * 시트를 닫았다. **뒤에서 돌던 요청의 화면 전환을 무르게 한다.**
+   *
+   * 닫은 사람은 지금은 안 하겠다는 뜻이다. 그 뒤에 답이 도착해 화면이 저절로 넘어가면
+   * 방금 내린 결정이 뒤집힌다. 위기만은 그래도 통과한다(`preflight` 참고).
+   */
+  const closeContinue = useCallback(() => {
+    preflightSeq.current += 1;
+    supersededByNewStory.current = false;
+    setGateChecking(false);
+    setContinueOpen(false);
+  }, []);
 
   /**
    * 이야기를 이어간다. **보냈으면 true 다.**
    *
-   * 돌려주는 값이 있어야 연잎 경로가 값을 낼지 정할 수 있다. 붙들어 둔 글이 비어 있으면
-   * 아무것도 안 보내는데, 그때도 연잎을 빼면 아무 일도 안 하고 한 장이 사라진다.
+   * 돌려주는 값이 있어야 연꽃 경로가 값을 낼지 정할 수 있다. 붙들어 둔 글이 비어 있으면
+   * 아무것도 안 보내는데, 그때도 연꽃을 빼면 아무 일도 안 하고 한 장이 사라진다.
    */
   const goOn = useCallback((): boolean => {
     setContinueOpen(false);
+    /*
+      이어가기 광고 자리를 지났다는 표를 **먼저** 세운다. 다음 요청이 이걸 들고 가야
+      서버가 문을 연다. 보상형 판에서는 끝까지 본 사람만 여기까지 온다.
+
+      빈 글 검사보다 앞이어야 한다. 뒤에 두면, 뒤에서 돌던 요청이 먼저 끝나 붙들어 둔
+      글을 비운 사이에 광고를 다 본 사람의 30초가 아무 데도 안 쓰인다.
+    */
+    markAdWatched();
     const text = held.current;
     held.current = '';
     if (text === '') return false;
-    // 이어가기 광고 자리를 지났다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다.
-    // 보상형 판에서는 끝까지 본 사람만 여기까지 온다. 광고가 안 온 사람은 그냥 통과한다
-    markAdWatched();
-    send(text);
+    // 뒤에서 돌던 요청이 이제 와서 화면을 바꾸지 않게 한다. 사람이 먼저 지나갔다
+    preflightSeq.current += 1;
+    supersededByNewStory.current = false;
+    // 이제 진짜로 새 답을 받으러 간다. 옛 답은 여기서 비운다
+    setResponse(null);
+    /*
+      **여기서 멱등키를 다시 만들지 않는다.** 시트를 열 때 이미 정해 뒀다. 새 키로 보내면
+      광고 문 앞에서 이미 분류까지 마친 그 이야기를 서버가 처음 보는 글로 다시 받는다.
+    */
+    void navigate(ROUTES.loading);
     return true;
-  }, [send]);
+  }, [navigate, setResponse]);
 
   /**
-   * 연잎으로 이어간다. 광고를 띄우지 않는다.
+   * 연꽃으로 이어간다. 광고를 띄우지 않는다.
    *
    * **잔액을 빼는 데 성공했을 때만 넘어간다.** 두 화면이 거의 같은 순간에 마지막 한 장을
-   * 쓰려 할 때, 있다고 믿고 진행하면 없는 연잎으로 두 번 지나간다.
+   * 쓰려 할 때, 있다고 믿고 진행하면 없는 연꽃으로 두 번 지나간다.
    *
-   * `goOn` 이 `markAdWatched` 를 세운다. 서버는 연잎을 모르므로(기기에만 있다) 그 표가
-   * 없으면 광고 문에서 다시 막힌다. 연잎도 광고 한 편을 미리 치른 것이라 같은 표를 쓴다.
+   * `goOn` 이 `markAdWatched` 를 세운다. 서버는 연꽃을 모르므로(기기에만 있다) 그 표가
+   * 없으면 광고 문에서 다시 막힌다. 연꽃도 광고 한 편을 미리 치른 것이라 같은 표를 쓴다.
    */
   const continueWithLeaf = useCallback(() => {
     if (leaf.count < 1) return;
@@ -416,6 +560,7 @@ export function HomeRoute() {
       <ContinueSheet
         open={continueOpen}
         continuesUsed={quota.continuesUsed}
+        checking={gateChecking}
         onClose={closeContinue}
         onContinue={goOn}
         leaves={leaf.count}
@@ -423,7 +568,7 @@ export function HomeRoute() {
       />
 
       {/*
-        연잎 모으기. 홈에서 여는 판은 **모으고 나서도 시트에 남는다.**
+        연꽃 모으기. 홈에서 여는 판은 **모으고 나서도 시트에 남는다.**
         한 장 모았다고 닫아 버리면 여러 장 쌓으려는 사람이 칩을 매번 다시 눌러야 한다.
       */}
       <LeafSheet open={leafOpen} onClose={() => setLeafOpen(false)} />

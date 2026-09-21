@@ -3,18 +3,24 @@ import { useNavigate } from 'react-router';
 
 import { useBridge } from '../../app/providers';
 import { ROUTES } from '../../app/router';
-import type { ApiResponse } from '../../shared/api';
+import type { ApiResponse, ShareScope } from '../../shared/api';
 import { useSession } from '../../shared/session/session';
 import { itemsBucket, useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { sceneForScreen } from '../../shared/visual/scene';
 
-import { appShareUrl, shareMessage } from '../share/shareText';
+import { ShareSheet, type ShareLinkState } from '../share/ShareSheet';
+import { appShareUrl } from '../share/shareText';
 
 import { ArchiveAppShare, archiveShareDone } from './ArchiveAppShare';
 import { ArchiveDetail } from './ArchiveDetail';
 import { ArchiveItem } from './ArchiveItem';
-import { listSaved, removeSaved, toggleFavorite, type SavedAnswer } from './archiveStore';
+import {
+  listSaved,
+  removeSaved,
+  toggleFavorite,
+  type SavedAnswer,
+} from './archiveStore';
 
 import './archive.css';
 
@@ -74,6 +80,13 @@ export function ArchiveScreen() {
   const [saved, setSaved] = useState<SavedAnswer[]>(listSaved);
   /** 펼쳐 보는 중인 항목. 카드를 누르면 여기 들어온다 */
   const [opened, setOpened] = useState<SavedAnswer | null>(null);
+  /** 공유 시트를 연 항목. null 이면 시트가 없다 */
+  const [shareItem, setShareItem] = useState<SavedAnswer | null>(null);
+  /** 지금 고른 범위. 답변 화면과 같이 경전 구절부터 시작한다 */
+  const [shareScope, setShareScope] = useState<ShareScope>('scripture');
+  const [shareLink, setShareLink] = useState<ShareLinkState>({ status: 'making' });
+  /** 이번에 연 시트에서 한 번이라도 내보냈나. 닫을 때 취소로 셀지 가른다 */
+  const shareDone = useRef(false);
   const [filter, setFilter] = useState<Filter>('all');
   /** 지금까지 몇 장을 펼쳤나. 「더 보기」를 누를 때마다 한 쪽씩 는다 */
   const [shown, setShown] = useState(PAGE);
@@ -156,49 +169,78 @@ export function ArchiveScreen() {
    * 경전이 없는 항목(앞선 판에서 담은 것)은 상세가 공유 버튼을 아예 그리지 않는다.
    * 여기서 한 번 더 막는 것은 부르는 쪽이 바뀌어도 이 규칙이 남게 하기 위해서다.
    */
-  const share = useCallback(
-    async (item: SavedAnswer): Promise<'sent' | 'copied' | 'dismissed' | 'failed'> => {
-      const scripture = item.detail?.scripture;
-      if (scripture == null) {
-        analytics.log('archive_share_fail', { reason: 'no_scripture' });
-        return 'failed';
-      }
-      const message = shareMessage({ scripture, url: await appShareUrl(bridge) });
+  /**
+   * 고른 범위가 가리킬 주소. **보관함에서 나가는 것은 경전 구절과 앱 주소뿐이다.**
+   *
+   * 「답변 전체」는 서버가 만든 링크가 있어야 하는데, 서버는 답변 본문을 30분만 들고
+   * 있어서(`compose.PENDING_TTL_SECONDS`, 게다가 프로세스 메모리) 며칠 뒤에는 만들 길이
+   * 없다. 간직하는 순간에 미리 만들어 두는 길도 재 봤는데, 그러면 **공유를 누른 적도 없는
+   * 사람의 답변 전체가 30일짜리 공개 링크로 올라간다.** 설정의 개인정보 안내와 결제 직전
+   * 문구가 「공유 링크를 만들었을 때만 남는다」라고 약속한 자리라 그 길은 접었다.
+   *
+   * 그래서 보관함에서는 전체 칸을 잠그고 왜 잠겼는지 적는다. 시트는 그대로 연다.
+   */
+  const makeShareLink = useCallback(
+    async () => {
+      setShareLink({ status: 'making' });
+      /*
+        **주소는 덤이다.** 못 만들었다고 보내기를 막지 않는다. 옛 토스 앱에서는 링크를
+        못 만드는데, 그 사람에게 구절조차 못 보내게 하면 보관함 공유가 통째로 막힌다.
+        빈 값이면 메시지에서 그 줄이 빠진다(`shareText.shareMessage`).
+      */
+      const url = await appShareUrl(bridge);
+      setShareLink({ status: 'ready', url: url ?? '' });
+    },
+    [bridge],
+  );
 
+  /**
+   * 공유 시트를 연다. **무엇을 보낼지는 답변 화면과 똑같이 사람이 고른다.**
+   *
+   * 예전에는 누르면 곧장 경전 구절이 나갔다. 답변 화면에는 고르는 자리가 있는데 여기만
+   * 없어서, 같은 버튼이 자리마다 다르게 굴었다(2026-09-21 사용자 지적).
+   *
+   * 「답변 전체」는 간직할 때 미리 만들어 둔 주소가 있어야 고를 수 있다(`shareUrl`).
+   * 서버가 답변 본문을 30분만 들고 있어서 여기서 새로 만들 길이 없기 때문이다.
+   * 그 주소가 없는 항목(앞선 판에서 담은 것)은 시트가 그 칸을 잠근다.
+   */
+  const openShare = useCallback(
+    (item: SavedAnswer) => {
+      if (item.detail?.scripture == null) {
+        analytics.log('archive_share_fail', { reason: 'no_scripture' });
+        return;
+      }
       analytics.log(
         'archive_share_start',
         { has_scripture: true, days_since: daysSince(item.savedAt) },
         { kind: 'click' },
       );
+      setShareItem(item);
+      setShareScope('scripture');
+      shareDone.current = false;
+      void makeShareLink();
+    },
+    [analytics, makeShareLink],
+  );
 
+
+
+  /** 시트가 만든 글을 실제로 내보낸다. 못 열면 복사하고 복사했다고 말한다 */
+  const shareSend = useCallback(
+    async (message: string) => {
       let sent: 'sent' | 'dismissed' | 'unsupported' = 'unsupported';
       try {
         sent = await sendMessage(message);
       } catch {
         sent = 'unsupported';
       }
-
-      // 스스로 닫은 것은 실패가 아니다. 아무 말도 하지 않는다
-      if (sent === 'dismissed') {
-        analytics.log('archive_share_cancel', {});
-        return 'dismissed';
-      }
-      if (sent === 'sent') {
-        analytics.log('archive_share_complete', { method: 'system' });
-        return 'sent';
-      }
-
-      // 시트를 못 여는 기기에서는 복사하고 **복사했다고 말한다.** 말없이 복사하지 않는다
-      try {
-        await navigator.clipboard.writeText(message);
-      } catch {
-        analytics.log('archive_share_fail', { reason: 'copy_blocked' });
-        return 'failed';
-      }
-      analytics.log('archive_share_complete', { method: 'copy' });
-      return 'copied';
+      // 스스로 닫은 것은 실패가 아니다. 시트는 그대로 남고 다시 누를 수 있다
+      if (sent === 'dismissed') return 'dismissed' as const;
+      // 나갔다는 기록은 `onComplete` 한 곳에서 찍는다. 시트가 스스로 복사로 넘어가는
+      // 길이 있어서, 여기서만 세면 복사로 끝난 것이 분자에서 빠진다
+      return sent;
     },
-    [analytics, bridge, sendMessage],
+    [analytics, sendMessage],
   );
 
   /**
@@ -441,8 +483,41 @@ export function ArchiveScreen() {
         today={opened != null && today != null && today.answerId === opened.answerId}
         onClose={() => setOpened(null)}
         onDelete={remove}
-        onShare={share}
+        onShare={openShare}
       />
+
+      {/*
+        답변 화면과 **같은 시트**다. 두 벌을 만들면 「무엇이 나가는지」를 적어 둔 문구와
+        미리보기가 한쪽만 고쳐진다. 카드 이미지 저장은 주지 않는다: 그 그림은 서버가
+        답변 직후에 그려 둔 것이라 며칠 지난 항목에는 없다.
+      */}
+      {shareItem?.detail?.scripture != null && (
+        <ShareSheet
+          open
+          surface="archive"
+          onClose={() => {
+            // 아무것도 안 하고 닫은 것도 사실이다. 시작에 대응하는 끝이 하나는 남아야 한다
+            if (!shareDone.current) analytics.log('archive_share_cancel', {});
+            setShareItem(null);
+          }}
+          answerId={shareItem.answerId}
+          scripture={shareItem.detail.scripture}
+          gloss={shareItem.detail.explanation ?? ''}
+          scope={shareScope}
+          onScopeChange={setShareScope}
+          /* 전체 칸은 잠긴다. 잠긴 이유를 그 자리에 적는다 */
+          answer={null}
+          fullNote="답변 전체는 받은 날 답변 화면에서 보낼 수 있어요"
+          link={shareLink}
+          onRetryLink={() => void makeShareLink()}
+          onSendMessage={shareSend}
+          onComplete={(method) => {
+            shareDone.current = true;
+            analytics.log('archive_share_complete', { method });
+          }}
+          onCopyBlocked={() => analytics.log('archive_share_fail', { reason: 'copy_blocked' })}
+        />
+      )}
 
     </div>
   );

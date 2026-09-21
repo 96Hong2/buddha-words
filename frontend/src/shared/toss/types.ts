@@ -231,8 +231,12 @@ export interface ShareBridge {
    * 토스가 만들어 주는 https 주소다. 받는 사람에게 토스가 깔려 있으면 앱이 열려 이
    * 미니앱으로 바로 오고, 없으면 앱스토어·플레이스토어로 간다. 그래서 카톡으로 받은
    * 사람도 막다른 곳에 서지 않는다. 던지지 않는다.
+   *
+   * `ogImageUrl` 은 메신저 미리보기에 뜰 그림이다. **안 주면 토스 그림이 뜬다.**
+   * 카톡에 붙은 우리 링크가 토스 로고로 보이던 것이 그 때문이었다(2026-09-21).
+   * 크롤러가 여는 주소라 토스 밖에서도 열리는 절대주소여야 한다.
    */
-  appLink(): Promise<string | null>;
+  appLink(ogImageUrl?: string): Promise<string | null>;
 }
 
 /**

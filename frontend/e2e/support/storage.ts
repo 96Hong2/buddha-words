@@ -42,15 +42,15 @@ export const SEEDED_MILESTONES = JSON.stringify({
 export const LEAVES_KEY = 'buddha.leaves.v1';
 
 /**
- * 연잎을 **다 쓴** 사람. 온보딩·답 횟수와 같은 이유로 기본 출발점이다.
+ * 연꽃을 **다 쓴** 사람. 온보딩·답 횟수와 같은 이유로 기본 출발점이다.
  *
- * 첫 연잎 한 장을 그냥 주므로, 그대로 두면 이어가기 시트와 간직 시트가 광고 버튼 대신
- * 연잎 버튼을 주 버튼으로 세운다. 광고를 재는 spec 이 전부 거기에 걸린다. 그 spec 들이
- * 재려는 것은 광고지 연잎이 아니다.
+ * 첫 연꽃 한 장을 그냥 주므로, 그대로 두면 이어가기 시트와 간직 시트가 광고 버튼 대신
+ * 연꽃 버튼을 주 버튼으로 세운다. 광고를 재는 spec 이 전부 거기에 걸린다. 그 spec 들이
+ * 재려는 것은 광고지 연꽃이 아니다.
  *
  * `welcomed: true` 가 핵심이다. 이것이 없으면 앱이 열릴 때 한 장을 다시 준다.
  *
- * 연잎 자체를 재는 spec 은 `withLeaves(page, n)` 으로 원하는 잔액을 심고 시작한다.
+ * 연꽃 자체를 재는 spec 은 `withLeaves(page, n)` 으로 원하는 잔액을 심고 시작한다.
  */
 export const SEEDED_LEAVES = JSON.stringify({
   count: 0,

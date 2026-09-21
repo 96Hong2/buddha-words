@@ -115,6 +115,8 @@ declare global {
      * e2e 는 페이지를 열기 전에 여기에 얹는다. API 스텁의 `__buddhaStub` 과 짝이다.
      */
     __buddhaBridge?: MockScenario;
+    /** 공유 링크를 만들 때 넘긴 미리보기 그림 주소. e2e 가 본다 */
+    __buddhaShareOgImage?: string | null;
     /**
      * 지금 앱이 쓰고 있는 목 브릿지 그 자체.
      *
@@ -399,7 +401,9 @@ class MockShareBridge implements ShareBridge {
    * 미니앱이 서는 주소(`*.tossmini.com`)는 토스 앱 안에서만 열리고, 백엔드 주소는
    * 앱이 아니라 API 다. 지어내지 않고 null 을 준다. 그러면 메시지에 주소가 안 붙는다.
    */
-  async appLink(): Promise<string | null> {
+  async appLink(ogImageUrl?: string): Promise<string | null> {
+    // e2e 가 「미리보기 그림을 같이 줬나」를 여기서 본다. 실기기에서는 확인할 길이 없다
+    if (typeof window !== 'undefined') window.__buddhaShareOgImage = ogImageUrl ?? null;
     return this.link;
   }
 }

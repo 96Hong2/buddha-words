@@ -65,7 +65,7 @@ export interface HomeScreenProps {
    * 키보드로 쓰는 사람이 화면 맨 위로 튕기지 않는다.
    */
   leadCard?: (slot: HomeCardSlot) => ReactNode;
-  /** 서비스 줄 오른쪽, 설정 아이콘 옆에 서는 연잎 잔액 칩 */
+  /** 서비스 줄 오른쪽, 설정 아이콘 옆에 서는 연꽃 잔액 칩 */
   leafChip?: ReactNode;
 }
 

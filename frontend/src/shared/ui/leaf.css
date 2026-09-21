@@ -1,5 +1,5 @@
 /*
-   연잎. 잔액 칩 · 모으기 시트 · 쓰기 버튼.
+   연꽃. 잔액 칩 · 모으기 시트 · 쓰기 버튼.
 
    쓰기 버튼(.leaf-use)은 이어가기 시트와 간직 시트가 **함께 쓴다.** 두 자리에 같은
    선택지가 서는데 모양이 다르면 같은 앱으로 안 읽힌다. 광고 버튼 셋의 말투를 한 곳에
@@ -12,7 +12,7 @@
 
 /*
    ⚠ 높이가 --tap-min 이어야 한다. 한때 32px 이었는데, 바로 옆 설정 버튼이 44px 라
-   한 줄에 두 크기가 나란히 섰다. 연잎 시트로 가는 **유일한** 입구이기도 하다.
+   한 줄에 두 크기가 나란히 섰다. 연꽃 시트로 가는 **유일한** 입구이기도 하다.
 
    보이는 알약은 32px 로 두고 버튼이 그 위아래 여백을 먹는다. 모양을 키우면 서비스 줄이
    무거워진다.
@@ -47,9 +47,13 @@
   background: var(--surface-pressed);
 }
 
+/*
+   아이콘의 `color` 는 이제 **꽃잎을 가르는 선의 색**이다(꽃잎 자체는 그라데이션).
+   놓인 면과 같은 색이라야 꽃잎 다섯 장이 갈려 보인다.
+*/
 .leaf-chip__icon {
   flex: none;
-  color: var(--leaf);
+  color: var(--surface);
 }
 
 /* 잔액이 0 일 때. 숫자를 감추지 않는다. 없다는 것도 정보다 */
@@ -57,15 +61,21 @@
   color: var(--text-muted);
 }
 
-/* 잔액이 0 이어도 **잎 색은 남긴다.** 회색으로 빼면 무슨 그림인지 알아볼 수 없어져서,
-   연잎이라는 것이 있다는 사실까지 함께 사라진다. 숫자만 조용해지면 된다.
-   한 단 옅은 sage-300 은 카드 위 2.24 라 그래픽 하한(3.0)에 못 미쳐 --leaf-dim(3.31)을 쓴다 */
+/* 잔액이 0 이어도 **꽃 색은 남긴다.** 회색으로 빼면 무슨 그림인지 알아볼 수 없어져서,
+   연꽃이라는 것이 있다는 사실까지 함께 사라진다. 숫자만 조용해지면 된다.
+   한 단 옅은 lotus-300 은 카드 위 2.08 이라 그래픽 하한(3.0)에 못 미쳐 --leaf-dim(3.07)을 쓴다 */
 .leaf-chip--empty .leaf-chip__pill {
   color: var(--text-muted);
 }
 
+/*
+   잔액이 0 이면 꽃을 한 단 옅게 뺀다. 회색으로 바꾸지는 않는다. 무슨 그림인지
+   알아볼 수 없어지면 연꽃이라는 것이 있다는 사실까지 사라진다.
+   그라데이션 두 끝을 한 칸씩 올려 3.07~5.02 로 둔다(카드 위 기준).
+*/
 .leaf-chip--empty .leaf-chip__icon {
-  color: var(--leaf-dim);
+  --leaf-grad-from: var(--c-lotus-200);
+  --leaf-grad-to: var(--leaf-dim);
 }
 
 /* ── 모으기 시트 ────────────────────────────────────────────────────── */
@@ -78,8 +88,9 @@
   margin-bottom: var(--s-4);
 }
 
+/* 시트 바닥과 같은 색. 꽃잎 경계선이 그 면으로 그어진다 */
 .leaf-sheet__icon {
-  color: var(--leaf);
+  color: var(--surface);
 }
 
 .leaf-sheet__count {
@@ -216,8 +227,8 @@
   background: var(--leaf);
 }
 
-/* ── 연잎으로 지나가는 버튼 (이어가기 · 간직하기 공용) ───────────────────
-   주 버튼 자리를 연잎이 가져간다. 가진 사람에게는 이쪽이 기본이고, 광고는 그 아래
+/* ── 연꽃으로 지나가는 버튼 (이어가기 · 간직하기 공용) ───────────────────
+   주 버튼 자리를 연꽃이 가져간다. 가진 사람에게는 이쪽이 기본이고, 광고는 그 아래
    보조로 내려간다. 순서를 뒤집으면 「이미 치러 둔 값」을 두고 광고를 또 권하는 화면이 된다. */
 
 .leaf-use {
@@ -246,14 +257,18 @@
 }
 
 /*
-   버튼 안의 잎.
+   버튼 안의 꽃.
 
-   짙은 바닥 위라 --leaf(4.44 는 카드 기준)로는 어둡다. 짙은 면 전용 토큰을 쓴다(--btn 위 7.22).
-   짙은 면 위에서 대비가 무너진 전례가 토큰 파일에 적혀 있다.
+   짙은 바닥 위라 카드 기준 색으로는 어둡다. **그라데이션 두 끝을 통째로 뒤집는다.**
+   색 하나를 바꾸는 것으로는 안 된다. 아이콘이 그라데이션이라 연한 쪽이 그대로 남으면
+   짙은 면 위에서 꽃잎 끝이 먼저 사라지고 아래만 떠 있는 모양이 된다(--btn 위 5.31~8.79).
 */
 .leaf-use__icon {
   flex: none;
-  color: var(--leaf-on-deep);
+  /* 경계선도 함께 뒤집는다. 밝은 크림색으로 두면 연한 꽃잎과 1.26 이라 선이 사라진다 */
+  color: var(--btn);
+  --leaf-grad-from: var(--leaf-grad-from-deep);
+  --leaf-grad-to: var(--leaf-grad-to-deep);
 }
 
 /* 잔액을 버튼 안에 적는다. 쓰고 나면 몇 장 남는지를 누르기 전에 알아야 한다 */
@@ -263,7 +278,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 연잎이 있을 때 광고 버튼은 보조로 내려간다 */
+/* 연꽃이 있을 때 광고 버튼은 보조로 내려간다 */
 .leaf-alt {
   width: 100%;
   min-height: 48px;
@@ -287,7 +302,7 @@
   cursor: default;
 }
 
-/* 광고 버튼은 라벨과 **아이콘**으로 광고임을 밝힌다(계획 1.6). 주 버튼 자리를 연잎에
+/* 광고 버튼은 라벨과 **아이콘**으로 광고임을 밝힌다(계획 1.6). 주 버튼 자리를 연꽃에
    내줬다고 이쪽만 아이콘을 잃으면 안 된다 */
 .leaf-alt__play {
   flex: none;
@@ -308,4 +323,95 @@
   font-weight: var(--w-bold);
   letter-spacing: 0.04em;
   white-space: nowrap;
+}
+
+/* ── 「연꽃 한 송이를 썼어요」 ─────────────────────────────────────────────
+   연꽃으로 지나가면 광고가 안 뜬다. 그 조용함이 **아무 일도 안 일어난 것**처럼 읽혀서
+   한 줄로 알린다.
+
+   자리는 화면 **위**다. 아래쪽은 이미 붐빈다: 답변 화면에는 공유·간직 바가 붙어 있고
+   그 위에 권유 카드와 권유 토스트가 선다. 연꽃을 쓰는 순간이 바로 그 카드가 뜨는
+   순간이라(간직 직후) 같은 자리에 두면 둘이 겹친다. */
+
+.leaf-spent {
+  position: fixed;
+  left: 50%;
+  /*
+     답변 화면 맨 위에는 진행선과 「AI 생성 · 경전은 원문」 배지가 있다(top 12px).
+     12px 에 두었더니 이 알약이 그 배지를 통째로 가렸다. 지울 수 없는 표기라
+     그 아래로 내린다(배지 높이 + 여유).
+  */
+  top: calc(56px + var(--safe-top, 0px));
+  z-index: 60; /* 시트(50)·광고 덮개보다 위. 시트가 닫히는 중에도 읽혀야 한다 */
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  border: 1px solid var(--accent-rule);
+  box-shadow: 0 8px 24px rgba(43, 36, 29, 0.16);
+  animation: leaf-spent-in 200ms ease-out both;
+}
+
+@keyframes leaf-spent-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leaf-spent {
+    animation: none;
+  }
+}
+
+/*
+   내용이 없을 때. 리전 노드는 남기되 눈과 손에서는 지운다. `display: none` 은
+   낭독기가 리전째 무시하는 기기가 있어 쓰지 않는다.
+*/
+.leaf-spent--off {
+  opacity: 0;
+  pointer-events: none;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  animation: none;
+}
+
+.leaf-spent__icon {
+  flex: none;
+  color: var(--surface);
+}
+
+/*
+   두 마디를 두 줄로 쌓는다. 한 줄에 몰면 24자가 넘어 폰 폭에서 아무 데서나 접히고,
+   그러면 왼쪽 꽃 아이콘만 세 줄 한가운데에 떠 있는 모양이 된다(실제로 그랬다).
+*/
+.leaf-spent__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.leaf-spent__did {
+  font-weight: var(--w-semibold);
+}
+
+/* 남은 수. 다음에 광고를 만날지 아닐지가 이 줄에 달려 있다 */
+.leaf-spent__left {
+  font-weight: var(--w-bold);
+  color: var(--leaf-text);
+  font-variant-numeric: tabular-nums;
 }

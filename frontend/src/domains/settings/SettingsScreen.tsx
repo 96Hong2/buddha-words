@@ -18,6 +18,7 @@ import {
   type ArchivePassState,
 } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
+import { LotusIcon } from '../../shared/ui';
 import { useAnalytics } from '../../shared/analytics';
 import {
   readTextSize,
@@ -102,7 +103,30 @@ function Chevron() {
   );
 }
 
-export function SettingsScreen() {
+export interface SettingsScreenProps {
+  /**
+   * 지금 가진 연꽃과 모으기 시트를 여는 길. **둘 다 있어야 줄을 그린다.**
+   *
+   * 연꽃은 `domains/leaf` 것이고 여기는 `domains/settings` 다. 도메인끼리는 서로를
+   * 들여오지 않기로 해서, 잇는 일은 app 층(`SettingsRoute`)이 한다.
+   */
+  leafCount?: number;
+  onOpenLeaf?: () => void;
+  /**
+   * 이 기기에서 연꽃을 모을 수 있나. 못 모으는 판에서는 **모으라고 청하지 않는다.**
+   *
+   * 구버전·광고 끄기·그룹 id 가 없는 번들이 그렇다. 그 사람에게 「광고를 보면 모아둘
+   * 수 있어요」라고 적으면 눌러 봐야 아는 거짓말이 된다. 모으기 시트가 같은 자리에서
+   * 같은 판단을 한다(`LeafSheet` 의 `canCollect`).
+   */
+  leafCollectable?: boolean;
+}
+
+export function SettingsScreen({
+  leafCount,
+  onOpenLeaf,
+  leafCollectable = true,
+}: SettingsScreenProps = {}) {
   const navigate = useNavigate();
   const bridge = useBridge();
   const api = useApiClient();
@@ -458,6 +482,43 @@ export function SettingsScreen() {
           <p className="set-hint" role="status">
             {notifyNotice}
           </p>
+        )}
+
+        {/*
+          연꽃 모으기.
+
+          홈 위쪽 칩이 유일한 입구였다. 그 칩은 작고, 설정을 열어 앱이 뭘 해 주는지
+          훑는 사람은 연꽃이라는 것이 있는 줄도 몰랐다. 여기에 한 줄 두면 **무엇이고
+          어떻게 얻는지**가 설명 한 문장과 함께 읽힌다.
+
+          알림 다음에 둔다. 위 둘은 「다시 오는 길」이고 이건 그다음 결이다.
+        */}
+        {leafCount != null && onOpenLeaf != null && (
+          <>
+            <p className="set-group">연꽃</p>
+            <div className="set-list">
+              <button
+                type="button"
+                className="set-item"
+                onClick={onOpenLeaf}
+                {...testId(TEST_IDS.settingsLeaf)}
+              >
+                <span className="set-icon" aria-hidden="true">
+                  <LotusIcon size={20} />
+                </span>
+                <span className="set-text">
+                  <span className="set-item-title">연꽃 모으기</span>
+                  <span className="set-item-desc">
+                    {leafCollectable
+                      ? '광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요'
+                      : '지금은 모을 수 없어요. 가진 연꽃은 그대로 쓸 수 있어요'}
+                  </span>
+                </span>
+                <span className="set-value">{leafCount}송이</span>
+                <Chevron />
+              </button>
+            </div>
+          </>
         )}
 
         {/*

@@ -50,7 +50,7 @@ export const test = base.extend<Fixtures>({
             localStorage.setItem(milestonesKey, milestones);
           }
           /*
-            연잎과 리뷰도 같다. 잔액이 있으면 광고 시트가 연잎 버튼을 주 버튼으로 세우고,
+            연꽃과 리뷰도 같다. 잔액이 있으면 광고 시트가 연꽃 버튼을 주 버튼으로 세우고,
             리뷰를 안 청한 사람이면 홈 맨 앞에 카드가 서서 아래가 통째로 밀린다.
             둘 다 그 spec 들이 재려는 것이 아니다. 잰다면 각자 표를 지우고 시작한다.
           */

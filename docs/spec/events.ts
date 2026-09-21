@@ -102,7 +102,7 @@ export const EVENTS = {
    */
   ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
   /*
-    연잎. 광고 한 편을 **미리** 치러 두는 표다. 이어가기와 간직하기에서 한 장씩 쓴다.
+    연꽃. 광고 한 편을 **미리** 치러 두는 표다. 이어가기와 간직하기에서 한 장씩 쓴다.
 
     이 넷이 대답하는 질문은 하나다: **광고를 미리 보게 하는 것이 광고를 더 보게 하나,
     덜 보게 하나.** 미리 보기가 늘고 그 자리 광고가 그만큼 줄면 시점만 옮긴 것이고,
@@ -110,8 +110,8 @@ export const EVENTS = {
   */
   leaf_welcome:        { params: [] as const },                                          // 첫 한 장을 그냥 받았다. 사람당 한 번
   leaf_earn:           { params: ['balance'] as const },                                 // 광고를 끝까지 보고 한 장 모았다
-  leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연잎으로 지났다
-  leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연잎 칩으로 모으기 시트를 열었다
+  leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연꽃으로 지났다
+  leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연꽃 칩으로 모으기 시트를 열었다
   /**
    * 쓰려고 했는데 잔액이 없었다. **평소에는 한 건도 안 나와야 한다.**
    *

@@ -25,14 +25,14 @@
  * 전면형으로 돌리는 빌드(`VITE_AD_CONTINUE_KIND=interstitial`)에서는 보상 이벤트가 없어
  * `dismissed` 로 끝나므로, 그 판에서는 닫아도 이어간다. 어느 쪽이 나은지는 지표로 가른다.
  *
- * ── 연잎이 있으면 광고를 안 본다 ─────────────────────────────────────
+ * ── 연꽃이 있으면 광고를 안 본다 ─────────────────────────────────────
  *
- * 연잎 한 장은 **미리 치러 둔 광고 한 편**이다. 가진 사람에게는 그 버튼이 주 버튼이고
+ * 연꽃 한 송이는 **미리 치러 둔 광고 한 편**이다. 가진 사람에게는 그 버튼이 주 버튼이고
  * 광고가 아래 보조로 내려간다. 순서를 뒤집으면 이미 값을 낸 사람 앞에 광고를 또 세우는
- * 화면이 되고, 그러면 연잎을 미리 모을 이유가 그 자리에서 사라진다.
+ * 화면이 되고, 그러면 연꽃을 미리 모을 이유가 그 자리에서 사라진다.
  *
- * 연잎을 실제로 빼는 일은 **부르는 쪽(app 층)이 한다.** 여기서 빼면 시트가 닫히는 길과
- * 이어가는 길이 갈릴 때 빠진 연잎이 어디에도 안 쓰인 채 사라진다.
+ * 연꽃을 실제로 빼는 일은 **부르는 쪽(app 층)이 한다.** 여기서 빼면 시트가 닫히는 길과
+ * 이어가는 길이 갈릴 때 빠진 연꽃이 어디에도 안 쓰인 채 사라진다.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -61,7 +61,7 @@ const TITLE = '이야기를 이어가 볼까요?';
 const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 광고 보고 답변 받기' : '답변 받기';
 
 /**
- * 연잎이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
+ * 연꽃이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
  *
  * 「광고」를 빼고 쓴다. 그 자리는 배지가 이미 말하고 있어서, 주 버튼과 달리 글자와 배지가
  * 나란히 서면 한 줄에 같은 말이 두 번 나온다. 간직 시트의 보조 버튼과 같은 말투다.
@@ -72,13 +72,21 @@ export interface ContinueSheetProps {
   open: boolean;
   /** 오늘 이미 이어간 횟수. 로그에만 쓴다 */
   continuesUsed: number;
+  /**
+   * 이 이야기를 서버가 아직 보고 있나. **그동안 버튼을 잠근다.**
+   *
+   * 서버는 위기를 사용량보다 먼저 본다. 잠그지 않으면 분류기만 잡는 위기 글을 쓴
+   * 사람이 30초 광고를 끝까지 보고 나서야 창구를 만난다. 계획 1.6 이 「절대 광고를
+   * 두지 않는 곳」으로 위기 화면을 적어 둔 자리다.
+   */
+  checking?: boolean;
   onClose: () => void;
   /** 답을 만들기 시작한다. 광고는 아직 떠 있을 수 있다 */
   onContinue: () => void;
-  /** 지금 가진 연잎. 1 장 이상이면 광고 대신 이것을 먼저 권한다 */
+  /** 지금 가진 연꽃. 한 송이 이상이면 광고 대신 이것을 먼저 권한다 */
   leaves?: number;
   /**
-   * 연잎으로 이어간다. **연잎을 빼는 일은 부르는 쪽이 한다.**
+   * 연꽃으로 이어간다. **연꽃을 빼는 일은 부르는 쪽이 한다.**
    * 못 뺐으면(그 사이에 잔액이 0 이 됐다) 이어가지 않고 그대로 둔다.
    */
   onUseLeaf?: () => void;
@@ -87,6 +95,7 @@ export interface ContinueSheetProps {
 export function ContinueSheet({
   open,
   continuesUsed,
+  checking = false,
   onClose,
   onContinue,
   leaves = 0,
@@ -113,15 +122,16 @@ export function ContinueSheet({
 
   // 광고를 띄울 수 없는 기기라면 시트가 길을 막고 서 있는 셈이다. 조용히 비켜 준다.
   useEffect(() => {
-    if (!open || !ad.ready || ad.supported) return;
+    // 확인이 끝나기 전에 지나가면 답이 이미 만들어지는 중인데 같은 키로 또 보낸다
+    if (!open || checking || !ad.ready || ad.supported) return;
     onClose();
     onContinue();
-  }, [ad.ready, ad.supported, onClose, onContinue, open]);
+  }, [ad.ready, ad.supported, checking, onClose, onContinue, open]);
 
   /** 중간에 닫았다. 답을 주지 않으므로 왜 안 넘어가는지 그 자리에 적는다 */
   const [bailed, setBailed] = useState(false);
 
-  /** 연잎으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
+  /** 연꽃으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
   const hasLeaf = leaves > 0 && onUseLeaf != null;
 
   const watch = useCallback(async (): Promise<void> => {
@@ -158,20 +168,20 @@ export function ContinueSheet({
         */}
         <p className="continue-sheet__sub">
           {hasLeaf
-            ? '모아 둔 연잎으로 광고 없이 이어갈 수 있어요'
+            ? '모아 둔 연꽃으로 광고 없이 이어갈 수 있어요'
             : '광고를 보면 오늘도 계속 이어갈 수 있어요'}
         </p>
 
         <div className="continue-sheet__actions">
           {/*
-            연잎이 있으면 이쪽이 주 버튼이다. 광고는 아래 보조로 내려간다.
+            연꽃이 있으면 이쪽이 주 버튼이다. 광고는 아래 보조로 내려간다.
             없으면 이 자리에 아무것도 그리지 않고 광고 버튼이 그대로 주 버튼으로 남는다.
           */}
           {hasLeaf && onUseLeaf != null && (
             <LeafUseButton
               count={leaves}
               action="답변 받기"
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={onUseLeaf}
               testKey="leafSpendContinue"
             />
@@ -180,7 +190,7 @@ export function ContinueSheet({
           {hasLeaf ? (
             <LeafAltAdButton
               label={AD_ALT_LABEL}
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={() => {
                 void watch();
               }}
@@ -190,7 +200,7 @@ export function ContinueSheet({
             <button
               type="button"
               className="continue-sheet__ad"
-              disabled={ad.showing}
+              disabled={ad.showing || checking}
               onClick={() => {
                 void watch();
               }}
@@ -225,23 +235,28 @@ export function ContinueSheet({
               </span>
             </button>
           )}
-          <p className="continue-sheet__note" role={ad.showing || bailed ? 'status' : undefined}>
+          <p
+            className="continue-sheet__note"
+            role={checking || ad.showing || bailed ? 'status' : undefined}
+          >
             {/*
-              연잎을 **안 가진 사람에게** 어디서 얻는지 알려 준다. 한때 가진 사람 쪽에만
+              연꽃을 **안 가진 사람에게** 어디서 얻는지 알려 준다. 한때 가진 사람 쪽에만
               두었는데, 그러면 이미 아는 사람에게만 얻는 법을 말하는 구조가 된다.
 
               ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
               「베푼 것을 세는 문장」과 한 글자도 안 겹치게 하려고 `flows.spec.ts` 가
               문자열로 지키는 자리다. 같은 뜻을 「바로 이어갈 수 있어요」로 적는다.
             */}
-            {ad.showing
+            {checking
+              ? '이야기를 살펴보고 있어요'
+              : ad.showing
               ? '광고를 불러오고 있어요'
               : bailed
                 ? '광고를 끝까지 봐야 이어갈 수 있어요'
                 : hasLeaf
-                  ? '광고를 보면 연잎을 아끼고 이어갈 수 있어요'
+                  ? '광고를 보면 연꽃을 아끼고 이어갈 수 있어요'
                   : AD_KIND.continue === 'rewarded'
-                    ? '홈 위쪽 연잎을 미리 모아 두면 다음엔 바로 이어갈 수 있어요'
+                    ? '홈 위쪽 연꽃을 미리 모아 두면 다음엔 바로 이어갈 수 있어요'
                     : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
           </p>
         </div>
