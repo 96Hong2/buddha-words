@@ -597,3 +597,12 @@
   background: var(--text);
   color: var(--surface);
 }
+
+/*
+   연꽃 줄의 설명만 두 줄이 된다. 값(「3송이」)과 화살표가 폭을 먹어서 다른 줄보다
+   글이 길어진 탓이다. 줄을 고르게 나눠 「모아둘 수 / 있어요」처럼 끊기지 않게 한다.
+*/
+.set-item[data-testid='settings-leaf'] .set-item-desc {
+  text-wrap: balance;
+  word-break: keep-all;
+}

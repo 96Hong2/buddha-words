@@ -22,10 +22,10 @@ export const AD_PLACEMENT = {
   /** 보관함에 간직하기 */
   save: 'save',
   /**
-   * 연잎 모으기. **하려던 일이 없을 때 스스로 여는 자리다.**
+   * 연꽃 모으기. **하려던 일이 없을 때 스스로 여는 자리다.**
    *
    * 앞의 셋은 무언가를 하려는 길목에 선다. 이 자리만 다르다: 사람이 한가할 때 미리 보고
-   * 연잎을 쌓아 두면, 정작 답을 기다릴 때는 광고를 안 봐도 된다. 낼 값은 같고 내는
+   * 연꽃을 쌓아 두면, 정작 답을 기다릴 때는 광고를 안 봐도 된다. 낼 값은 같고 내는
    * 시점만 사람이 고른다.
    */
   collect: 'collect',
@@ -64,7 +64,7 @@ export const AD_KIND: Record<AdPlacement, AdKind> = {
   extension: 'rewarded',
   continue: continueKind(),
   save: 'rewarded',
-  // 끝까지 본 사람에게만 연잎을 준다. 전면형에는 보상 이벤트가 없어 쓸 수 없다
+  // 끝까지 본 사람에게만 연꽃을 준다. 전면형에는 보상 이벤트가 없어 쓸 수 없다
   collect: 'rewarded',
 };
 

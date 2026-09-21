@@ -491,6 +491,16 @@
   margin-top: var(--gap-card);
 }
 
+/*
+   경전 카드만 스크롤 계측용 <div data-answer-section="scripture"> 안에 한 겹 들어 있다.
+   그래서 그 안에서는 **자기가 첫 자식**이 되어 위 `:first-child` 규칙에 걸렸고,
+   「오늘의 부처의 말」 바로 아래에 붙어 두 덩이가 한 덩이로 읽혔다(2026-09-21 사용자 지적).
+   래퍼 한 겹을 건너뛰고 섹션 간격을 되돌려 준다.
+*/
+.ans [data-answer-section='scripture'] > .block:first-child {
+  margin-top: var(--gap-section);
+}
+
 /* ── ① 마음 태그 ───────────────────────────────────────────────────── */
 
 /* 칩을 읽기 전에 서는 한 줄. 판정이 아니라 안내라서 작고 조용하다.

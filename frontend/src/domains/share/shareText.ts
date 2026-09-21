@@ -26,7 +26,7 @@
  * 갈려 있어야 접힌 뒤에도 첫 줄에 구절이 남는다.
  */
 
-import { attributionLine, type Scripture } from '../../shared/api';
+import { attributionLine, resolveApiBaseUrl, type Scripture } from '../../shared/api';
 import type { MiniAppBridge } from '../../shared/toss';
 
 /** 링크 앞에 서는 한 줄. 받는 사람에게 이게 무엇인지 알린다 */
@@ -81,10 +81,27 @@ export async function appShareUrl(bridge: MiniAppBridge): Promise<string | null>
     주소를 빼면 복사한 글에 갈 곳이 없다.
   */
   try {
-    return await bridge.share.appLink();
+    return await bridge.share.appLink(appShareOgImageUrl() ?? undefined);
   } catch {
     return null;
   }
+}
+
+/**
+ * 메신저 미리보기에 뜰 그림.
+ *
+ * **안 주면 토스 그림이 뜬다.** 카톡에 붙은 우리 링크가 토스 로고로 보이던 것이 그
+ * 때문이었다(2026-09-21 실기기 신고). 토스는 자기가 만든 링크에 기본 그림을 넣는다.
+ *
+ * 그림은 백엔드가 낸다. 미니앱 번들에 두면 안 되는 이유가 둘이다: 번들은 앱을 켤 때
+ * 통째로 내려받는 zip 이라 화면이 안 쓰는 그림이 첫 접속 시간을 늘리고(최초 접속 20초
+ * 초과로 한 번 반려당했다), 번들 주소는 토스 밖에서 400 이라 크롤러가 못 읽는다.
+ *
+ * 주소가 없는 판(스텁·설정 누락)에서는 null 이다. 그러면 그림 없이 링크만 나간다.
+ */
+export function appShareOgImageUrl(): string | null {
+  const base = resolveApiBaseUrl();
+  return base == null ? null : `${base}/og/default.jpg`;
 }
 
 /**

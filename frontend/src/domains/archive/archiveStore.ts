@@ -16,6 +16,7 @@ import {
   isEmotionTag,
   type Action,
   type AnalysisSection,
+  type ApiAnswer,
   type EmotionTag,
   type Scripture,
   type Term,
@@ -77,6 +78,16 @@ export interface SavedAnswer {
    * 길어질수록 처음 담은 것이 아래로 밀려 사실상 사라진다.
    */
   favorite?: boolean;
+  /**
+   * 이 답을 「답변 전체」로 보낼 수 있는 주소.
+   *
+   * **간직하는 그 순간에 만들어 둔다.** 서버는 답변 본문을 30분만 들고 있어서(메모리,
+   * `compose.PENDING_TTL_SECONDS`) 며칠 뒤 보관함에서 청하면 만들 길이 없다. 링크 자체는
+   * 30일 산다(`share/store.py` 의 TTL). 그 두 숫자 사이의 틈을 여기서 메운다.
+   *
+   * 없으면 이 항목은 경전 구절만 보낼 수 있다. 앞선 판에서 간직한 것이 그렇다.
+   */
+  shareUrl?: string;
 }
 
 export type SavedInput = Omit<SavedAnswer, 'savedAt'>;
@@ -232,6 +243,7 @@ function parseSaved(value: unknown): SavedAnswer | null {
     visualTheme: item.visualTheme,
     detail: parseDetail(item.detail),
     favorite: item.favorite === true,
+    shareUrl: str(item.shareUrl),
   };
 }
 
@@ -285,6 +297,21 @@ export function toggleFavorite(answerId: string): boolean {
   return write(next) ? !was : was;
 }
 
+/**
+ * 공유 주소를 나중에 붙인다. 간직한 **뒤에** 서버가 링크를 내주기 때문이다.
+ *
+ * 못 붙여도(저장이 막혔거나 그 사이 지웠다) 조용히 지나간다. 이 값이 없으면 그 항목은
+ * 경전 구절만 보낼 수 있고, 그건 앞선 판과 같은 상태라 사람이 잃는 것이 없다.
+ */
+export function attachShareUrl(answerId: string, url: string): boolean {
+  const items = read();
+  const at = items.findIndex((item) => item.answerId === answerId);
+  if (at < 0) return false;
+  const next = [...items];
+  next[at] = { ...next[at], shareUrl: url };
+  return write(next);
+}
+
 /** 즐겨찾기 개수. 필터 칩이 이 수를 적는다 */
 export function countFavorites(): number {
   return read().filter((item) => item.favorite === true).length;
@@ -335,4 +362,42 @@ export function removeSaved(answerId: string): boolean {
   const left = items.filter((item) => item.answerId !== answerId);
   if (left.length === items.length) return false;
   return write(left);
+}
+
+/**
+ * 간직한 답을 **공유 시트가 아는 모양**으로 바꾼다.
+ *
+ * 공유 시트는 답변 화면 것을 그대로 쓴다. 두 벌을 만들면 「무엇이 나가는지」를 적어 둔
+ * 문구와 미리보기가 한쪽만 고쳐진다. 대신 시트가 받는 타입이 방금 받은 답(`ApiAnswer`)
+ * 이라, 보관함 항목을 그 모양으로 한 번 맞춰 준다.
+ *
+ * **경전과 풀이가 둘 다 있어야 돌려준다.** 앞선 판에서 담아 한마디만 남은 항목은 null 이고,
+ * 그러면 시트가 「답변 전체」 칸을 고를 수 없게 그린다. 반쪽짜리를 보내지 않는다.
+ *
+ * `route` 는 `normal` 로 적는다. 간직할 때 저장하지 않은 값이고, 시트는 이 값을 읽지
+ * 않는다. 지어낸 값이 화면에 나가지 않는다는 뜻이다.
+ */
+export function asShareableAnswer(item: SavedAnswer): ApiAnswer | null {
+  const detail = item.detail;
+  const scripture = detail?.scripture;
+  if (scripture == null || detail?.explanation == null) return null;
+
+  return {
+    responseType: 'answer',
+    answerId: item.answerId,
+    route: 'normal',
+    emotionTags: item.tags,
+    modernBuddhaMessage: item.line,
+    scriptures: [scripture],
+    visualTheme: item.visualTheme,
+    extensionAvailable: false,
+    pass2: {
+      status: 'done',
+      scriptureExplanation: detail.explanation,
+      terms: detail.terms,
+      personalAnalysis: detail.analysis ?? [],
+      actions: detail.actions ?? [],
+      closingMessage: detail.closing ?? '',
+    },
+  };
 }

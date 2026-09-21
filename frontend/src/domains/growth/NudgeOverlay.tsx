@@ -1,15 +1,19 @@
 /**
- * 답변을 받은 뒤 화면 위로 올라오는 권유 한 장.
+ * 답변을 받은 뒤 화면 한가운데 서는 권유 한 장.
  *
- * ── 왜 화면 위인가 ───────────────────────────────────────────────────────
+ * ── 자리를 두 번 옮겼다 ─────────────────────────────────────────────────
  *
  * 처음에는 답변 맨 아래 문서 흐름 안에 카드로 두었다. 읽기를 가리지 않는 대신 **스크롤을
- * 끝까지 내린 사람만 만났다.** 실기기에서 「너무 아래에 있다」는 말이 나왔고, 실제로 답변은
- * 2,000자가 넘어 거기까지 내려오는 사람이 많지 않다.
+ * 끝까지 내린 사람만 만났다.** 답변이 2,000자가 넘어 거기까지 내려오는 사람이 많지 않다.
  *
- * 그래서 화면에 붙여 띄운다. 대신 **덮개(dim)를 쓰지 않는다.** 뒤 본문은 그대로 읽히고
- * 스크롤도 막지 않는다. 자리는 공유·간직 바 위다. 답을 받으러 온 사람이 하려던 일을
- * 가리지 않으면서, 스크롤 위치와 상관없이 한 번은 보이게 하는 선이 여기다.
+ * 그다음에는 화면 아래에 붙여 띄웠다. 덮개 없이, 공유·간직 바 위에. 하려던 일을 가리지
+ * 않으려는 선이었는데 **너무 조용해서 안 읽혔다.** 실기기에서 「애매한 위치에 애매한
+ * 크기」라는 말을 들었다(2026-09-21). 화면 아래 3분의 1은 버튼이 늘 서 있는 자리라,
+ * 거기 또 하나가 얹히면 그 카드도 버튼 줄의 일부로 읽힌다.
+ *
+ * 지금은 **화면 한가운데, 덮개 위에** 선다. 부탁은 한 사람에게 한 번뿐이라(시간표가
+ * 그렇게 짠다) 그 한 번은 확실히 보이는 편이 맞다. 대신 닫는 길을 셋 둔다: X · 아래
+ * 글자 버튼 · 덮개. 그리고 위에 그림을 한 장 얹어 무슨 이야기인지 읽기 전에 알게 한다.
  *
  * ── 왜 하나만 뜨나 ───────────────────────────────────────────────────────
  *
@@ -48,6 +52,98 @@ function CloseIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/*
+  카드 위에 서는 그림 셋.
+
+  사진이나 일러스트를 쓰지 않는다. 번들은 통째로 내려받는 zip 이라 그림 한 장이 첫 접속
+  시간을 그만큼 늘린다(최초 접속 20초 초과로 한 번 반려당한 자리다). 선으로 그린 도형은
+  글자와 같이 실려 오고 글자 크기를 키운 사람에게도 같이 커진다.
+
+  말투도 앱과 맞춘다: 금색 선 한 겹, 면은 모래빛, 강조 하나. 색은 `currentColor` 를
+  따라가므로 감싼 원이 정한다.
+*/
+
+/** 홈 타일 위에 앉은 연꽃. 오른쪽 아래에 더하기 표가 붙는다 */
+function HomeAddArt() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      {/* 토스 홈에 놓이는 타일 한 칸 */}
+      <rect x="14" y="12" width="36" height="36" rx="10" stroke="currentColor" strokeWidth="2.2" />
+      {/* 그 안의 연꽃. 아이콘과 같은 다섯 장이되 선으로만 */}
+      <g stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M32 21.5c2.1 2.7 3.1 5 3.1 7.1 0 2-1 3.8-3.1 5.4-2.1-1.6-3.1-3.4-3.1-5.4 0-2.1 1-4.4 3.1-7.1z" />
+        <path d="M23.4 24.6c2.5 1 4.2 2.3 5.1 4.1.7 1.5.6 3.2-.3 5-2.5-.7-4.2-1.8-5.1-3.3-1.1-2-1-3.9.3-5.8z" />
+        <path d="M40.6 24.6c1.3 1.9 1.4 3.8.3 5.8-.9 1.5-2.6 2.6-5.1 3.3-.9-1.8-1-3.5-.3-5 .9-1.8 2.6-3.1 5.1-4.1z" />
+      </g>
+      {/* 여기에 더해진다는 표 */}
+      <circle cx="47" cy="45" r="9" fill="var(--surface-illust)" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M47 41v8M43 45h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** 말풍선 둘. 한쪽에서 다른 쪽으로 건너간다 */
+function AppShareArt() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <path
+        d="M11 22.5a5 5 0 0 1 5-5h17a5 5 0 0 1 5 5v9a5 5 0 0 1-5 5h-9l-7 5.5v-5.5h-1a5 5 0 0 1-5-5z"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M53 33.5a5 5 0 0 0-5-5h-4"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M53 33.5v8a5 5 0 0 1-5 5h-3l-6 5v-5h-1"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {/* 건네는 것은 말 한마디다. 점 셋으로 적는다 */}
+      <g fill="currentColor">
+        <circle cx="20" cy="27" r="1.9" />
+        <circle cx="26.5" cy="27" r="1.9" />
+        <circle cx="33" cy="27" r="1.9" />
+      </g>
+    </svg>
+  );
+}
+
+/** 종 하나. 아래에 하루가 지나는 선 */
+function NotifyArt() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <path
+        d="M32 15a11 11 0 0 1 11 11v7.5l3 5.5H18l3-5.5V26a11 11 0 0 1 11-11z"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      <path d="M32 11.5V15" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path
+        d="M27.5 43.5a4.5 4.5 0 0 0 9 0"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      {/* 하루 한 번이라는 결. 종 옆으로 지나가는 두 줄 */}
+      <path
+        d="M49 22.5c1.6 1.8 2.5 4 2.5 6.5M15 22.5A9.6 9.6 0 0 0 12.5 29"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.55"
+      />
     </svg>
   );
 }
@@ -185,6 +281,7 @@ export function NudgeOverlay({
     if (nudge === 'home_add') {
       return {
         testId: TEST_IDS.homeAdd,
+        art: <HomeAddArt />,
         title: '토스 홈에 두고 바로 열 수 있어요',
         how: (
           <>
@@ -204,6 +301,7 @@ export function NudgeOverlay({
     if (nudge === 'app_share') {
       return {
         testId: TEST_IDS.appShare,
+        art: <AppShareArt />,
         title: '요즘 비슷한 마음일 것 같은 사람이 있나요?',
         how: <>앱만 건네줄 수 있어요. 적으신 이야기는 전해지지 않아요.</>,
         cta: {
@@ -216,6 +314,7 @@ export function NudgeOverlay({
     }
     return {
       testId: TEST_IDS.notifyNudge,
+      art: <NotifyArt />,
       title: '매일 하루를 돌아봐요',
       how: <>하루 한 번, 마음을 들여다볼 시간을 알려드려요. 언제든 설정에서 끌 수 있어요.</>,
       cta: {
@@ -229,9 +328,20 @@ export function NudgeOverlay({
 
   return createPortal(
     <>
-      <div className="gr-nudge" role="region" aria-label="안내" {...testId(body.testId)}>
-        <div className="gr-card__top">
-          <p className="gr-card__title">{body.title}</p>
+      {/* 덮개. 누르면 닫힌다. 다른 시트들과 나가는 길을 맞춘다 */}
+      <div
+        className="gr-scrim"
+        onClick={() => close('close')}
+        {...testId(TEST_IDS.sheetDim)}
+      />
+      <div className="gr-nudge-wrap">
+        <div
+          className="gr-nudge"
+          role="dialog"
+          aria-modal="true"
+          aria-label="안내"
+          {...testId(body.testId)}
+        >
           <button
             type="button"
             className="gr-card__x"
@@ -241,29 +351,35 @@ export function NudgeOverlay({
           >
             <CloseIcon />
           </button>
-        </div>
 
-        <p className="gr-card__how">{body.how}</p>
+          {/* 읽기 전에 무슨 이야기인지 알게 하는 그림 한 장 */}
+          <div className="gr-art" aria-hidden="true">
+            {body.art}
+          </div>
 
-        {body.cta != null && (
+          <p className="gr-card__title">{body.title}</p>
+          <p className="gr-card__how">{body.how}</p>
+
+          {body.cta != null && (
+            <button
+              type="button"
+              className="gr-card__cta"
+              disabled={busy}
+              onClick={() => void body.cta.run()}
+              {...testId(body.cta.testId)}
+            >
+              {body.cta.label}
+            </button>
+          )}
+
           <button
             type="button"
-            className="gr-card__cta"
-            disabled={busy}
-            onClick={() => void body.cta.run()}
-            {...testId(body.cta.testId)}
+            className="gr-card__later"
+            onClick={() => close(body.later.how)}
           >
-            {body.cta.label}
+            {body.later.label}
           </button>
-        )}
-
-        <button
-          type="button"
-          className="gr-card__later"
-          onClick={() => close(body.later.how)}
-        >
-          {body.later.label}
-        </button>
+        </div>
       </div>
 
       {toast != null ? (

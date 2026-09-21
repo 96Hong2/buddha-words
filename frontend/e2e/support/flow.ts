@@ -167,10 +167,10 @@ export async function saveAnswerFromScreen(page: Page): Promise<void> {
 }
 
 /**
- * 연잎을 이만큼 가진 사람으로 시작한다.
+ * 연꽃을 이만큼 가진 사람으로 시작한다.
  *
- * 기본 출발점은 「연잎을 다 쓴 사람」이다(`support/storage.ts`). 광고를 재는 spec 들이
- * 연잎 버튼에 걸리지 않게 하려는 것이라, 연잎 자체를 재는 spec 만 이걸 부른다.
+ * 기본 출발점은 「연꽃을 다 쓴 사람」이다(`support/storage.ts`). 광고를 재는 spec 들이
+ * 연꽃 버튼에 걸리지 않게 하려는 것이라, 연꽃 자체를 재는 spec 만 이걸 부른다.
  *
  * 표를 심는 것만으로는 모자라다. 픽스처의 씨앗은 **화면을 옮길 때마다 다시 도므로**,
  * 다음 goto 에서 잔액이 도로 0 이 된다. 그래서 sessionStorage 에 표를 세워 씨앗 쪽이
@@ -213,7 +213,7 @@ export async function asReviewCandidate(page: Page): Promise<void> {
   });
 }
 
-/** 지금 기기에 남아 있는 연잎 수 */
+/** 지금 기기에 남아 있는 연꽃 수 */
 export async function leafBalance(page: Page): Promise<number> {
   return page.evaluate(() => {
     try {

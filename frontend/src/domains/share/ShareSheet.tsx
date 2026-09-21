@@ -173,6 +173,22 @@ export interface ShareSheetProps {
   onSaveImage?: () => Promise<ShareSaveResult> | ShareSaveResult;
   /** 사진 접근 설정을 연다. 브릿지를 아는 쪽이 넘긴다 */
   onOpenSettings?: () => void;
+  /**
+   * 어느 화면에서 열렸나. **로그 이름이 갈린다.**
+   *
+   * 답변 화면은 `share_*` 를, 보관함은 `archive_share_*` 를 쓴다. 자리가 다르면 묻는
+   * 것도 다르다: 저쪽은 「답을 받고 바로 보내나」이고 이쪽은 「며칠 뒤에 다시 꺼내 보내나」다.
+   * 한 이름으로 합치면 두 질문 다 답할 수 없다. 보관함 쪽 로그는 `ArchiveScreen` 이 찍으므로
+   * 여기서는 아무것도 찍지 않는다.
+   */
+  surface?: 'answer' | 'archive';
+  /**
+   * 실제로 내보냈다. **무엇으로 나갔는지 부르는 쪽이 알아야 하는 자리다.**
+   *
+   * 시트는 시스템 공유가 안 되면 스스로 복사로 넘어간다. 그 갈림이 시트 안에서 일어나서,
+   * 부르는 쪽은 `onSendMessage` 만 보고 있으면 복사로 끝난 것을 모른다.
+   */
+  onComplete?: (method: 'system' | 'copy' | 'image') => void;
 }
 
 export function ShareSheet({
@@ -187,6 +203,8 @@ export function ShareSheet({
   link,
   onRetryLink,
   onSendMessage,
+  surface = 'answer',
+  onComplete,
   onSaveImage,
   onOpenSettings,
 }: ShareSheetProps) {
@@ -215,7 +233,10 @@ export function ShareSheet({
 
   useEffect(() => {
     if (!open) return;
-    analytics.log('share_start', { answer_id: answerId, card_kind: CARD_KIND[scope] });
+    // 보관함에서 연 판은 부르는 쪽이 `archive_share_*` 로 따로 센다
+    if (surface === 'answer') {
+      analytics.log('share_start', { answer_id: answerId, card_kind: CARD_KIND[scope] });
+    }
     // 열고 아무것도 안 하고 닫은 것도 사실이다. 공유가 어디서 끊기는지 이 짝으로 본다
     let completed = false;
     const done = () => {
@@ -223,11 +244,13 @@ export function ShareSheet({
     };
     completedRef.current = done;
     return () => {
-      if (!completed) analytics.log('share_cancel', { answer_id: answerId });
+      if (!completed && surface === 'answer') {
+        analytics.log('share_cancel', { answer_id: answerId });
+      }
     };
     // 범위를 바꿨다고 새로 연 것으로 세지 않는다. 한 번 연 것은 한 번이다
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, answerId, analytics]);
+  }, [open, answerId, analytics, surface]);
 
   useEffect(() => {
     if (!open) return;
@@ -265,18 +288,23 @@ export function ShareSheet({
   if (!open) return null;
 
   function complete(method: 'system' | 'copy' | 'image'): void {
-    analytics.log('share_complete', {
-      answer_id: answerId,
-      card_kind: CARD_KIND[scope],
-      method,
-    });
+    if (surface === 'answer') {
+      analytics.log('share_complete', {
+        answer_id: answerId,
+        card_kind: CARD_KIND[scope],
+        method,
+      });
+    }
+    onComplete?.(method);
     completedRef.current?.();
   }
 
   function pick(next: ShareScope): void {
     if (next === scope) return;
     if (next === 'full' && !fullReady) return;
-    analytics.log('share_scope_select', { answer_id: answerId, scope: next }, { kind: 'click' });
+    if (surface === 'answer') {
+      analytics.log('share_scope_select', { answer_id: answerId, scope: next }, { kind: 'click' });
+    }
     onScopeChange(next);
   }
 

@@ -1,5 +1,5 @@
 /**
- * 연잎.
+ * 연꽃.
  *
  * 광고 한 편을 **미리** 치러 두는 표다. 재는 것은 셋이다.
  *
@@ -30,14 +30,14 @@ async function withBridge(page: Page, scenario: MockScenario) {
   }, scenario);
 }
 
-/** 홈에서 연잎 시트를 연다 */
+/** 홈에서 연꽃 시트를 연다 */
 async function openLeafSheet(page: Page) {
   await dismissEntry(page);
   await page.getByTestId('leaf-chip').click();
   await expect(page.getByTestId('leaf-sheet')).toBeVisible();
 }
 
-test('처음 온 사람은 연잎 한 장을 들고 시작한다', async ({ page }) => {
+test('처음 온 사람은 연꽃 한 송이를 들고 시작한다', async ({ page }) => {
   // 기본 출발점은 「다 쓴 사람」이라 표를 통째로 지워야 첫 지급이 돈다
   await page.addInitScript(() => {
     try {
@@ -54,7 +54,7 @@ test('처음 온 사람은 연잎 한 장을 들고 시작한다', async ({ page
   expect(await leafBalance(page)).toBe(1);
 });
 
-test('두 번째로 열어도 연잎을 또 주지 않는다', async ({ page }) => {
+test('두 번째로 열어도 연꽃을 또 주지 않는다', async ({ page }) => {
   /*
     ⚠ `withLeaves` 로 심으면 안 된다. 그쪽은 `welcomed: true` 를 함께 심어서,
     `grantWelcome` 이 그 표를 저장하지 않는 회귀가 나도 씨앗이 대신 막아 준다.
@@ -82,39 +82,39 @@ test('두 번째로 열어도 연잎을 또 주지 않는다', async ({ page }) 
   expect(await leafBalance(page)).toBe(1);
 });
 
-test('연잎이 없어도 칩은 0 으로 서 있는다', async ({ page }) => {
+test('연꽃이 없어도 칩은 0 으로 서 있는다', async ({ page }) => {
   await page.goto('/');
   await dismissEntry(page);
 
-  // 감추면 연잎이라는 것이 있다는 사실까지 사라진다. 그러면 이어가기 시트에서 처음
+  // 감추면 연꽃이라는 것이 있다는 사실까지 사라진다. 그러면 이어가기 시트에서 처음
   // 만난 사람은 그게 무엇인지 모른 채 고르게 된다
   await expect(page.getByTestId('leaf-chip')).toHaveText('0');
-  await shot(page, '11 연잎 - 잔액이 0 인 홈', { fullPage: true });
+  await shot(page, '11 연꽃 - 잔액이 0 인 홈', { fullPage: true });
 });
 
-test('광고를 끝까지 보면 연잎이 한 장 는다', async ({ page }) => {
+test('광고를 끝까지 보면 연꽃이 한 송이 는다', async ({ page }) => {
   await withBridge(page, { fullScreenAd: 'ok', fullScreenAdMs: 60 });
   await page.goto('/');
   await openLeafSheet(page);
 
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0장');
-  await shot(page, '11 연잎 - 모으기 시트');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0송이');
+  await shot(page, '11 연꽃 - 모으기 시트');
 
   await page.getByTestId('leaf-watch').click();
 
   await expect(page.getByTestId('leaf-earned')).toBeVisible();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('1장');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('1송이');
   expect(await leafBalance(page)).toBe(1);
-  await shot(page, '11 연잎 - 한 장 모았다');
+  await shot(page, '11 연꽃 - 한 장 모았다');
 
   // 시트는 닫히지 않는다. 여러 장 쌓으려는 사람이 칩을 매번 다시 누르지 않게 한다
   await expect(page.getByTestId('leaf-sheet')).toBeVisible();
   await page.getByTestId('leaf-watch').click();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2장');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2송이');
   expect(await leafBalance(page)).toBe(2);
 });
 
-test('광고를 중간에 닫으면 연잎이 늘지 않고 그 이유를 적는다', async ({ page }) => {
+test('광고를 중간에 닫으면 연꽃이 늘지 않고 그 이유를 적는다', async ({ page }) => {
   await withBridge(page, { fullScreenAd: 'dismissed', fullScreenAdMs: 60 });
   await page.goto('/');
   await openLeafSheet(page);
@@ -122,14 +122,14 @@ test('광고를 중간에 닫으면 연잎이 늘지 않고 그 이유를 적는
   await page.getByTestId('leaf-watch').click();
 
   // 끝까지 본 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다
-  await expect(page.getByText('광고를 끝까지 봐야 연잎이 생겨요')).toBeVisible();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0장');
+  await expect(page.getByText('광고를 끝까지 봐야 연꽃이 생겨요')).toBeVisible();
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0송이');
   // 성공 문구 자리는 늘 DOM 에 있다(라이브 리전이라 그래야 읽힌다). 비어 있는지를 본다
   await expect(page.getByTestId('leaf-earned')).toHaveText('');
   expect(await leafBalance(page)).toBe(0);
 });
 
-test('광고가 한 장도 안 오면 사람 탓으로 적지 않는다', async ({ page }) => {
+test('광고가 한 편도 안 오면 사람 탓으로 적지 않는다', async ({ page }) => {
   await withBridge(page, { fullScreenAd: 'noFill' });
   await page.goto('/');
   await openLeafSheet(page);
@@ -137,8 +137,8 @@ test('광고가 한 장도 안 오면 사람 탓으로 적지 않는다', async 
   await page.getByTestId('leaf-watch').click();
 
   // `noFill` 은 우리 쪽 사정이다. 「끝까지 봐야」는 사람이 닫았을 때만 하는 말이다
-  await expect(page.getByText('광고를 끝까지 봐야 연잎이 생겨요')).toHaveCount(0);
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0장');
+  await expect(page.getByText('광고를 끝까지 봐야 연꽃이 생겨요')).toHaveCount(0);
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0송이');
   expect(await leafBalance(page)).toBe(0);
 });
 
@@ -151,11 +151,11 @@ test('광고를 못 띄우는 기기에서는 왜 못 모으는지 적고 앱을
   await expect(page.getByTestId('leaf-unavailable')).toBeVisible();
   await expect(page.getByTestId('leaf-watch')).toHaveCount(0);
   // 가진 것은 그대로 쓸 수 있어야 한다. 모을 길이 막혔다고 잔액까지 얼리지 않는다
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2장');
-  await shot(page, '11 연잎 - 모을 수 없는 기기');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2송이');
+  await shot(page, '11 연꽃 - 모을 수 없는 기기');
 });
 
-test('연잎으로 이야기를 이어가면 광고가 뜨지 않고 한 장이 준다', async ({ page }) => {
+test('연꽃으로 이야기를 이어가면 광고가 뜨지 않고 한 장이 준다', async ({ page }) => {
   await withLeaves(page, 2);
   await page.goto('/');
 
@@ -164,7 +164,7 @@ test('연잎으로 이야기를 이어가면 광고가 뜨지 않고 한 장이 
   await dismissNudge(page);
   await page.goBack();
 
-  // 두 번째부터 문이 선다. 연잎이 있으므로 연잎 버튼이 주 버튼이다
+  // 두 번째부터 문이 선다. 연꽃이 있으므로 연꽃 버튼이 주 버튼이다
   await dismissEntry(page);
   await dismissDraftConfirm(page);
   await page.getByTestId('concern-field').fill('회사에서 실수를 했는데 계속 생각나요.');
@@ -174,8 +174,8 @@ test('연잎으로 이야기를 이어가면 광고가 뜨지 않고 한 장이 
   await expect(sheet).toBeVisible();
   const useLeaf = page.getByTestId('leaf-spend-continue');
   await expect(useLeaf).toBeVisible();
-  await expect(useLeaf).toContainText('1장 남아요');
-  await shot(page, '11 연잎 - 이어가기에서 연잎이 주 버튼이다');
+  await expect(useLeaf).toContainText('1송이 남아요');
+  await shot(page, '11 연꽃 - 이어가기에서 연꽃이 주 버튼이다');
 
   await useLeaf.click();
 
@@ -198,12 +198,12 @@ test('마지막 한 장을 쓸 때는 숫자 대신 마지막이라고 말한다
   await page.getByTestId('concern-field').fill('요즘 잠을 잘 못 자요.');
   await page.getByTestId('submit').click();
 
-  // 「0장 남아요」보다 먼저 읽힌다. 마지막인 줄 모르고 썼다가 다음에 광고를 만나면
+  // 「0송이 남아요」보다 먼저 읽힌다. 마지막인 줄 모르고 썼다가 다음에 광고를 만나면
   // 그때서야 알게 된다
-  await expect(page.getByTestId('leaf-spend-continue')).toContainText('마지막 장');
+  await expect(page.getByTestId('leaf-spend-continue')).toContainText('마지막 한 송이');
 });
 
-test('연잎이 없으면 이어가기는 예전처럼 광고 버튼 하나다', async ({ page }) => {
+test('연꽃이 없으면 이어가기는 예전처럼 광고 버튼 하나다', async ({ page }) => {
   await page.goto('/');
   await askOnce(page);
   await dismissNudge(page);
@@ -219,7 +219,7 @@ test('연잎이 없으면 이어가기는 예전처럼 광고 버튼 하나다',
   await expect(page.getByTestId('continue-watch')).toBeVisible();
 });
 
-test('연잎으로 말씀을 간직하면 광고가 뜨지 않고 한 장이 준다', async ({ page }) => {
+test('연꽃으로 말씀을 간직하면 광고가 뜨지 않고 한 장이 준다', async ({ page }) => {
   await withLeaves(page, 1);
   await page.goto('/');
   await askOnce(page);
@@ -232,8 +232,8 @@ test('연잎으로 말씀을 간직하면 광고가 뜨지 않고 한 장이 준
 
   const useLeaf = page.getByTestId('leaf-spend-save');
   await expect(useLeaf).toBeVisible();
-  await expect(useLeaf).toContainText('마지막 장');
-  await shot(page, '11 연잎 - 간직하기에서 연잎이 주 버튼이다');
+  await expect(useLeaf).toContainText('마지막 한 송이');
+  await shot(page, '11 연꽃 - 간직하기에서 연꽃이 주 버튼이다');
 
   await useLeaf.click();
 
@@ -242,7 +242,7 @@ test('연잎으로 말씀을 간직하면 광고가 뜨지 않고 한 장이 준
   expect(await leafBalance(page)).toBe(0);
 });
 
-test('연잎을 다 쓰고 나면 다음 간직하기는 광고로 돌아간다', async ({ page }) => {
+test('연꽃을 다 쓰고 나면 다음 간직하기는 광고로 돌아간다', async ({ page }) => {
   await withLeaves(page, 1);
   await withBridge(page, { fullScreenAd: 'ok', fullScreenAdMs: 60 });
   await page.goto('/');
@@ -255,7 +255,7 @@ test('연잎을 다 쓰고 나면 다음 간직하기는 광고로 돌아간다'
   await expect(page.getByTestId('save-done')).toBeVisible();
   expect(await leafBalance(page)).toBe(0);
 
-  // 새 이야기를 하나 더. 이번에는 연잎이 없으니 간직 시트가 광고만 세운다
+  // 새 이야기를 하나 더. 이번에는 연꽃이 없으니 간직 시트가 광고만 세운다
   await page.getByTestId('save-done-stay').click();
   await page.goBack();
   await dismissEntry(page);
@@ -279,15 +279,15 @@ test('연잎을 다 쓰고 나면 다음 간직하기는 광고로 돌아간다'
   await expect(page.getByTestId('save-gate-watch')).toBeVisible();
 });
 
-test('간직에 실패하면 연잎은 그대로 남는다', async ({ page }) => {
+test('간직에 실패하면 연꽃은 그대로 남는다', async ({ page }) => {
   await withLeaves(page, 1);
   await page.goto('/');
 
   /*
     담는 자리(localStorage)를 막는다. **앱이 쓰는 다른 키는 그대로 둔다.**
-    통째로 막으면 연잎도 못 읽어 재는 대상 자체가 사라진다.
+    통째로 막으면 연꽃도 못 읽어 재는 대상 자체가 사라진다.
 
-    연잎을 먼저 빼고 담았다면 여기서 한 장이 증발한다. 담긴 것도 없고 값은 치른 상태다.
+    연꽃을 먼저 빼고 담았다면 여기서 한 장이 증발한다. 담긴 것도 없고 값은 치른 상태다.
   */
   await page.evaluate(() => {
     const real = Storage.prototype.setItem;
@@ -304,13 +304,13 @@ test('간직에 실패하면 연잎은 그대로 남는다', async ({ page }) =>
   await page.getByTestId('save-button').click();
   await page.getByTestId('leaf-spend-save').click();
 
-  // 담기지 못했다고 말하고, 연잎은 그대로다
+  // 담기지 못했다고 말하고, 연꽃은 그대로다
   await expect(page.getByText('지금은 간직하지 못했어요', { exact: false })).toBeVisible();
   await expect(page.getByTestId('save-done')).toHaveCount(0);
   expect(await leafBalance(page)).toBe(1);
 });
 
-test('광고를 못 띄우는 기기에서는 연잎을 쓰지 않고 그냥 지나간다', async ({ page }) => {
+test('광고를 못 띄우는 기기에서는 연꽃을 쓰지 않고 그냥 지나간다', async ({ page }) => {
   await withBridge(page, { fullScreenAd: 'unsupported' });
   await withLeaves(page, 1);
   await page.goto('/');
@@ -318,7 +318,7 @@ test('광고를 못 띄우는 기기에서는 연잎을 쓰지 않고 그냥 지
   await askOnce(page);
   await dismissNudge(page);
 
-  // 간직: 시트 자체가 안 선다. 광고도 연잎도 없이 담긴다
+  // 간직: 시트 자체가 안 선다. 광고도 연꽃도 없이 담긴다
   await revealBottomBar(page);
   await page.getByTestId('save-button').click();
   await expect(page.getByTestId('save-gate')).toHaveCount(0);

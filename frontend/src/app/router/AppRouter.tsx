@@ -8,9 +8,8 @@ import { AppInfoScreen } from '../../domains/settings/AppInfoScreen';
 import { DebugEventsScreen } from '../../domains/settings/DebugEventsScreen';
 import { HelpLinesScreen } from '../../domains/settings/HelpLinesScreen';
 import { PrivacyScreen } from '../../domains/settings/PrivacyScreen';
-import { SettingsScreen } from '../../domains/settings/SettingsScreen';
 import { LandingScreen } from '../../domains/share/LandingScreen';
-import { AnswerRoute, HomeRoute } from '../screens';
+import { AnswerRoute, HomeRoute, SettingsRoute } from '../screens';
 
 import { ROUTES } from './routes';
 
@@ -23,7 +22,7 @@ export function AppRouter() {
       <Route path={ROUTES.crisis} element={<CrisisScreen />} />
       <Route path={ROUTES.solace} element={<SolaceScreen />} />
       <Route path={ROUTES.archive} element={<ArchiveScreen />} />
-      <Route path={ROUTES.settings} element={<SettingsScreen />} />
+      <Route path={ROUTES.settings} element={<SettingsRoute />} />
       <Route path={ROUTES.appInfo} element={<AppInfoScreen />} />
       <Route path={ROUTES.privacy} element={<PrivacyScreen />} />
       <Route path={ROUTES.helpLines} element={<HelpLinesScreen />} />

@@ -1,7 +1,7 @@
 /**
  * 홈 맨 위에 서는 잔액 칩. 누르면 모으기 시트가 열린다.
  *
- * **0 장일 때도 숨기지 않는다.** 없다는 것도 정보다. 감추면 연잎이라는 것이 있다는
+ * **0 송이일 때도 숨기지 않는다.** 없다는 것도 정보다. 감추면 연꽃이라는 것이 있다는
  * 사실까지 함께 사라져서, 정작 이어가기 시트에서 처음 만난 사람은 그것이 무엇인지
  * 모른 채 고르게 된다. 설정 화면의 알림 줄을 늘 그리는 것과 같은 판단이다.
  */
@@ -9,7 +9,7 @@
 import { type MouseEvent } from 'react';
 
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { LeafIcon } from '../../shared/ui';
+import { LotusIcon } from '../../shared/ui';
 import '../../shared/ui/leaf.css';
 
 import { useLeafCount } from './useLeaves';
@@ -35,12 +35,12 @@ export function LeafChip({ onOpen }: LeafChipProps) {
       className={count > 0 ? 'leaf-chip' : 'leaf-chip leaf-chip--empty'}
       onMouseDown={keepFocus}
       onClick={onOpen}
-      aria-label={`연잎 ${count}장. 눌러서 모으기`}
+      aria-label={`연꽃 ${count}송이. 눌러서 모으기`}
       {...testId(TEST_IDS.leafChip)}
     >
       {/* 보이는 알약은 32px, 버튼은 --tap-min. 손가락 자리를 모양보다 크게 둔다 */}
       <span className="leaf-chip__pill">
-        <LeafIcon size={18} className="leaf-chip__icon" />
+        <LotusIcon size={18} className="leaf-chip__icon" />
         <span aria-hidden="true">{count}</span>
       </span>
     </button>

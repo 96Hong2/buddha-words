@@ -395,9 +395,18 @@ class TossShareBridge implements ShareBridge {
     }
   }
 
-  async appLink(): Promise<string | null> {
+  async appLink(ogImageUrl?: string): Promise<string | null> {
+    /*
+      `ogImageUrl` 은 토스 앱 Android 5.240.0 · iOS 5.239.0 부터 동작한다(SDK 선언).
+      낮은 버전에서는 이 값이 그냥 무시되고 링크는 그대로 만들어진다. 버전을 재서
+      가르지 않는 이유가 그것이다: 재서 빼면 되는 기기에서도 그림이 빠진다.
+    */
     try {
-      const link = await Share.createLink({ path: APP_DEEP_LINK });
+      const link = await Share.createLink(
+        ogImageUrl != null && ogImageUrl !== ''
+          ? { path: APP_DEEP_LINK, ogImageUrl }
+          : { path: APP_DEEP_LINK },
+      );
       return typeof link === 'string' && link.trim() !== '' ? link.trim() : null;
     } catch {
       // 옛 토스 앱이면 못 만든다. 주소 없이 보내는 쪽이 죽은 주소를 보내는 쪽보다 낫다

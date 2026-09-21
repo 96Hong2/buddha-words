@@ -564,9 +564,8 @@ test('보관함이 길어지면 한 쪽씩 보여 주고, 별을 켜면 즐겨�
 
 test('간직한 말씀은 언제든 내보낼 수 있고, 고민 원문은 따라가지 않는다', async ({ page }) => {
   /*
-   * 답변 화면의 공유는 서버가 링크를 만든다. 그 링크는 방금 받은 답에만 살아 있어서,
-   * 지난달에 담은 것을 그 길로 보내면 「찾을 수 없어요」가 돌아온다. 그래서 보관함은
-   * 기기에 있는 것으로 글을 만들어 보낸다. 나가는 것은 경전 구절과 앱 주소뿐이다.
+   * 보관함 공유도 **답변 화면과 같은 시트**를 연다. 무엇을 보낼지 고르는 자리가 한쪽에만
+   * 있으면 같은 버튼이 자리마다 다르게 군다. 나가는 것은 경전 구절과 앱 주소뿐이다.
    */
   await seedWithOriginal(page);
   await page.goto('/archive');
@@ -581,6 +580,14 @@ test('간직한 말씀은 언제든 내보낼 수 있고, 고민 원문은 따�
   await shot(page, '30 보관함 - 간직한 말씀에도 공유가 있다');
 
   await share.click();
+
+  // 고르는 자리가 열린다. 두 칸 다 보인다
+  await expect(page.getByTestId('share-sheet')).toBeVisible();
+  await expect(page.getByTestId('share-scope-scripture')).toBeVisible();
+  await expect(page.getByTestId('share-scope-full')).toBeVisible();
+  await shot(page, '30 보관함 - 무엇을 보낼지 고른다');
+
+  await page.getByTestId('share-link').click();
 
   const sent = await page.evaluate(() => window.__buddhaShares ?? []);
   expect(sent).toHaveLength(1);
@@ -736,7 +743,9 @@ test('공유 시트를 못 여는 기기는 복사하고 복사했다고 말한�
   await page.getByTestId('archive-item').first().click();
 
   await page.getByTestId('archive-share').click();
-  await expect(page.getByText('보낼 글을 복사했어요')).toBeVisible();
+  await expect(page.getByTestId('share-sheet')).toBeVisible();
+  await page.getByTestId('share-link').click();
+  await expect(page.getByText('링크가 복사됐어요')).toBeVisible();
 
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toContain(KEPT_ORIGINAL.text);
@@ -763,10 +772,12 @@ test('공유 시트를 스스로 닫으면 실패가 아니다. 아무 말도 �
   await page.getByTestId('archive-item').first().click();
 
   await page.getByTestId('archive-share').click();
-  // 실패 문구가 뜨지 않는다. 안내 자리는 「무엇이 나가는지」 그대로다
+  await expect(page.getByTestId('share-sheet')).toBeVisible();
+  await page.getByTestId('share-link').click();
+
+  // 실패 문구가 뜨지 않는다. 시트는 그대로 열려 있고 다시 누를 수 있다
   await expect(page.getByText('지금은 보내지 못했어요')).toHaveCount(0);
-  await expect(page.getByText('보낼 글을 복사했어요')).toHaveCount(0);
-  await expect(page.getByText('경전 구절과 앱 주소만 나가요')).toBeVisible();
+  await expect(page.getByTestId('share-sheet')).toBeVisible();
 
   const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
   expect(names).toContain('archive_share_cancel');

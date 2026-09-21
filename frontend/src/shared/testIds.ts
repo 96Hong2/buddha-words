@@ -78,7 +78,7 @@ export const TEST_IDS = {
   // 광고 · 사용량
   adBadge: 'ad-badge',
 
-  // 연잎
+  // 연꽃. 키 이름이 leaf 인 것은 이벤트·저장소 이름을 그대로 둔 것과 같은 이유다
   leafSheet: 'leaf-sheet',
   leafSheetCount: 'leaf-sheet-count',
   leafWatch: 'leaf-watch',
@@ -87,6 +87,8 @@ export const TEST_IDS = {
   leafNote: 'leaf-note',
   leafSpendContinue: 'leaf-spend-continue',
   leafSpendSave: 'leaf-spend-save',
+  leafSpentToast: 'leaf-spent-toast',
+  settingsLeaf: 'settings-leaf',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
 

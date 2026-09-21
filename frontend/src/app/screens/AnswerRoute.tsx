@@ -12,6 +12,7 @@ import { useRewardedAd } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
 import {
+  attachShareUrl,
   countSaved,
   isSaved,
   Paywall,
@@ -227,9 +228,39 @@ export function AnswerRoute() {
         slot_index: result.slotIndex,
         gate,
       });
+      /*
+        간직한 그 자리에서 「답변 전체」 주소를 하나 만들어 붙여 둔다.
+
+        서버는 답변 본문을 30분만 들고 있다(`compose.PENDING_TTL_SECONDS`, 게다가 프로세스
+        메모리라 배포 한 번에 사라진다). 그래서 며칠 뒤 보관함에서 청하면 만들 길이 없고,
+        보관함 공유는 경전 구절만 보낼 수 있었다. 링크 자체는 30일 사니(`share/store.py`)
+        만들 수 있을 때 만들어 두면 그 사이가 메워진다.
+
+        못 만들어도 아무 말 하지 않는다. 그 항목은 경전 구절만 보낼 수 있고, 그건 앞선
+        판과 같은 상태라 사람이 잃는 것이 없다. 간직 자체를 이 실패로 되돌리지 않는다.
+      */
+      void client
+        .createShareToken({
+          answerId: answer.answerId,
+          scope: 'full',
+          // 스텁 판이 그릴 카드. http 판은 이 값을 보내지 않고 서버가 자기 행에서 읽는다
+          card: {
+            kind: 'fields',
+            buddhaMessage: answer.modernBuddhaMessage,
+            scripture: answer.scriptures[0],
+            emotionTags: answer.emotionTags,
+            explanation: pass2.status === 'done' ? [pass2.scriptureExplanation] : [],
+          },
+        })
+        .then(({ token, landingUrl }) => {
+          attachShareUrl(answer.answerId, landingUrl ?? shareUrlFor(token));
+        })
+        .catch(() => {
+          // 링크는 덤이다. 없으면 없는 대로 둔다
+        });
       return 'saved';
     },
-    [analytics, answer, extension],
+    [analytics, answer, client, extension],
   );
 
   /**
@@ -257,9 +288,9 @@ export function AnswerRoute() {
    *   이용권을 산 사람   그 사람이 산 것이 지금은 이것이다
    *   광고를 못 띄우는 판 구버전·광고 끄기·그룹 id 가 없는 번들. 그냥 담는다
    *
-   * 연잎은 이 넷에 끼지 않는다. **시트를 열고 사람이 고른다.** 여기서 자동으로 빼면,
-   * 광고를 볼 생각이었던 사람의 연잎이 말없이 사라진다. 광고를 못 띄우는 판에서
-   * 그냥 담기는 것도 그대로 둔다. 안 써도 되는 자리에서 연잎을 쓰게 할 이유가 없다.
+   * 연꽃은 이 넷에 끼지 않는다. **시트를 열고 사람이 고른다.** 여기서 자동으로 빼면,
+   * 광고를 볼 생각이었던 사람의 연꽃이 말없이 사라진다. 광고를 못 띄우는 판에서
+   * 그냥 담기는 것도 그대로 둔다. 안 써도 되는 자리에서 연꽃을 쓰게 할 이유가 없다.
    *
    * 넷 다 화면에서는 똑같이 「광고 없이 담겼다」로 보인다. 왜 없었는지를 `ad_skipped` 로
    * 남겨야 나중에 0건을 보고 원인을 가를 수 있다.
@@ -304,13 +335,13 @@ export function AnswerRoute() {
   }, [afterStore, analytics, answer, answersTotal, archivePass, saveAd.ready, saveAd.supported, store]);
 
   /**
-   * 「연잎 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
+   * 「연꽃 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
    *
    * ⚠ **담고 나서 뺀다. 순서가 중요하다.**
    *
-   * 먼저 빼면, 저장소가 막힌 기기에서 `store` 가 `failed` 를 내는 순간 연잎만 사라진다.
+   * 먼저 빼면, 저장소가 막힌 기기에서 `store` 가 `failed` 를 내는 순간 연꽃만 사라진다.
    * 담기지도 않았는데 값은 치른 것이다. 광고 경로에는 이 문제가 없다. 광고는 어차피
-   * 되돌릴 수 없어서 잃을 것이 없는데, 연잎은 되돌릴 수 있는 것이라 잃으면 우리 잘못이다.
+   * 되돌릴 수 없어서 잃을 것이 없는데, 연꽃은 되돌릴 수 있는 것이라 잃으면 우리 잘못이다.
    *
    * 잔액 확인과 빼기 사이에 다른 화면이 끼어들 수 없다(한 갈래로 돈다). 그래도 `spend`
    * 결과를 보고, 어긋났으면 로그로 남긴다. 담긴 것을 되돌리지는 않는다: 사람은 이미
@@ -322,7 +353,7 @@ export function AnswerRoute() {
 
     const outcome = store('leaf');
     if (outcome === 'failed') {
-      // 담기지 못했다. 연잎은 그대로 둔다
+      // 담기지 못했다. 연꽃은 그대로 둔다
       afterStore(outcome);
       return;
     }
