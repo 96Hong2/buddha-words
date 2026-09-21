@@ -121,23 +121,24 @@ test('나중에를 누르면 물러났다가 답을 두 번 더 받으면 되돌
   await expect(page.getByTestId('review-card')).toBeVisible();
 });
 
-test('리뷰를 못 쓰는 토스 앱에서도 홈이 멀쩡하고 다시 묻지 않는다', async ({ page }) => {
+test('리뷰를 못 쓰는 토스 앱에서는 카드를 아예 세우지 않는다', async ({ page }) => {
   await asReviewCandidate(page);
   await withAnswers(page, 2);
   await withBridge(page, { review: 'unsupported' });
   await page.goto('/');
   await dismissEntry(page);
 
-  await page.getByTestId('review-card-accept').click();
-
-  // 업데이트를 청하는 말을 여기서 꺼내지 않는다. 부탁이 두 겹이 된다
+  /*
+    눌러도 아무 일이 없는 버튼을 세우지 않는다. **우리가 미리 아는 막다른 길**이다.
+    「불러도 안 뜰 수 있다」와는 다르다. 저쪽은 토스가 피로도를 보고 정하는 것이고
+    이쪽은 지원 여부라 호출 전에 알 수 있다.
+  */
   await expect(page.getByTestId('review-card')).toHaveCount(0);
   await expect(page.getByTestId('concern-field')).toBeVisible();
   expect(await reviewCalls(page)).toBe(0);
 
-  await page.reload();
-  await dismissEntry(page);
-  await expect(page.getByTestId('review-card')).toHaveCount(0);
+  // 기회를 영영 버리지도 않는다. 토스 앱을 올리면 그때 묻는다
+  await expect(page.evaluate(() => localStorage.getItem('buddha.review.v1'))).resolves.toBe(null);
 });
 
 test('리뷰 화면을 못 열면 우리 쪽 사정이므로 기회를 되돌려 준다', async ({ page }) => {
@@ -191,4 +192,71 @@ test('리뷰 카드가 떠 있어도 이야기는 그대로 보낼 수 있다', 
   await askOnce(page);
   await dismissNudge(page);
   await expect(page.getByTestId('answer')).toBeVisible();
+});
+
+test('두 번째 답을 실제로 받고 나면 그 길로 카드가 선다', async ({ page }) => {
+  /*
+    다른 테스트는 답 횟수를 저장소에 직접 심는다. 그것만으로는 **제품이 임계를 넘는 길**
+    (`countAnswer` → 홈 재마운트 → `reviewCardDue`)이 한 번도 안 돈다. 그 길이 끊기면
+    아무에게도 카드가 안 뜨는데 나머지 테스트는 전부 초록이다.
+  */
+  await asReviewCandidate(page);
+  await asNewcomer(page);
+  await page.goto('/');
+
+  // 첫 답. 아직 안 뜬다
+  await askOnce(page);
+  await dismissNudge(page);
+  await page.goBack();
+  await dismissEntry(page);
+  await expect(page.getByTestId('review-card')).toHaveCount(0);
+
+  // 두 번째 답
+  await askOnce(page, '요즘 사람 만나는 게 버거워요.');
+  await dismissNudge(page);
+  await page.goBack();
+  await dismissEntry(page);
+
+  await expect(page.getByTestId('review-card')).toBeVisible();
+});
+
+test('세 번을 그냥 지나가면 더 묻지 않는다', async ({ page }) => {
+  await asReviewCandidate(page);
+  await withAnswers(page, 2);
+  await page.goto('/');
+
+  // 누르지도 미루지도 않고 세 번 지나간다. 셋까지는 뜬다
+  for (const _ of [1, 2, 3]) {
+    await dismissEntry(page);
+    await expect(page.getByTestId('review-card')).toBeVisible();
+    await page.reload();
+  }
+
+  // 네 번째. 세 번을 무시한 사람은 네 번째에도 안 누른다
+  await dismissEntry(page);
+  await expect(page.getByTestId('review-card')).toHaveCount(0);
+});
+
+test('되짚기를 닫아도 그날은 리뷰가 올라오지 않는다', async ({ page }) => {
+  await asReviewCandidate(page);
+  await withAnswers(page, 3);
+  await page.addInitScript(() => {
+    const yesterday = new Date(Date.now() - 86_400_000);
+    const pad = (n: number) => `${n}`.padStart(2, '0');
+    const date = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
+    localStorage.setItem(
+      'pocket:mock:recall-last',
+      JSON.stringify({ answerId: 'seed-recall-2', date, firstActionTitle: '창문 열고 숨 고르기' }),
+    );
+  });
+  await page.goto('/');
+  await dismissEntry(page);
+  await expect(page.getByTestId('recall-sheet')).toBeVisible();
+
+  // 되짚기를 치운다
+  await page.getByTestId('recall-sheet').getByTestId('sheet-close').click();
+  await expect(page.getByTestId('recall-sheet')).toHaveCount(0);
+
+  // 방금 하나를 치운 사람 앞에 부탁이 연달아 두 번 서면 안 된다
+  await expect(page.getByTestId('review-card')).toHaveCount(0);
 });

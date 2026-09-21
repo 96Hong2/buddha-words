@@ -60,8 +60,11 @@ export interface HomeScreenProps {
    * `topCard` 와 다르다. 저쪽은 입력칸 바로 위라 쓰려는 사람의 손 가까이 서고, 이쪽은
    * 화면을 위에서 아래로 훑을 때 가장 먼저 눈에 들어온다. 사람당 한 번뿐인 말(리뷰
    * 청하기)을 여기 둔다. 둘이 같이 있으면 이것이 위다.
+   *
+   * 카드 자리와 같은 슬롯을 받는다. 카드가 사라질 때 초점을 입력칸으로 돌려놓아야
+   * 키보드로 쓰는 사람이 화면 맨 위로 튕기지 않는다.
    */
-  leadCard?: ReactNode;
+  leadCard?: (slot: HomeCardSlot) => ReactNode;
   /** 서비스 줄 오른쪽, 설정 아이콘 옆에 서는 연잎 잔액 칩 */
   leafChip?: ReactNode;
 }
@@ -317,7 +320,7 @@ export function HomeScreen({
 
         <div className="cluster">
           {/* 맨 앞 자리. 사람당 한 번뿐인 말이 여기 선다 */}
-          {leadCard}
+          {leadCard?.({ quote, focusField })}
           {topCard}
           {/* 답을 받고 돌아온 자리에서만 묻는다. 덮지 않고 입력칸 위에 선다 */}
           <DraftConfirm open={askClear && text !== ''} onAnswer={answerDraft} />

@@ -47,8 +47,14 @@ export function LeafUseButton({
     >
       <LeafIcon size={20} className="leaf-use__icon" />
       연잎 한 장으로 {action}
-      {/* 마지막 한 장이면 숫자 대신 그 사실을 말한다. 「0장 남아요」보다 먼저 읽힌다 */}
-      <span className="leaf-use__left">{left === 0 ? '(마지막 장)' : `(${left}장 남아요)`}</span>
+      {/*
+        「(1장 남아요)」는 쓰기 전인지 후인지 안 갈린다. 두 장 가진 사람이 그 말을 보면
+        지금 한 장뿐인 줄 알고 망설인다. **시제를 박는다.**
+        마지막 한 장이면 숫자 대신 그 사실을 말한다. 「0장 남아요」보다 먼저 읽힌다.
+      */}
+      <span className="leaf-use__left">
+        {left === 0 ? '(마지막 장)' : `(쓰면 ${left}장 남아요)`}
+      </span>
     </button>
   );
 }
@@ -81,6 +87,21 @@ export function LeafAltAdButton({
       onClick={onClick}
       {...testId(TEST_IDS[testKey])}
     >
+      {/* 광고임을 라벨과 아이콘 둘로 밝힌다(계획 1.6 「광고 기술 규칙」) */}
+      <span className="leaf-alt__play" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        >
+          <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
+          <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
+        </svg>
+      </span>
       {label}{' '}
       <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
         광고

@@ -84,9 +84,9 @@ export const TEST_IDS = {
   leafWatch: 'leaf-watch',
   leafEarned: 'leaf-earned',
   leafUnavailable: 'leaf-unavailable',
+  leafNote: 'leaf-note',
   leafSpendContinue: 'leaf-spend-continue',
   leafSpendSave: 'leaf-spend-save',
-  leafMore: 'leaf-more',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
 

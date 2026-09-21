@@ -111,7 +111,14 @@ export const EVENTS = {
   leaf_welcome:        { params: [] as const },                                          // 첫 한 장을 그냥 받았다. 사람당 한 번
   leaf_earn:           { params: ['balance'] as const },                                 // 광고를 끝까지 보고 한 장 모았다
   leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연잎으로 지났다
-  leaf_sheet_view:     { params: ['balance', 'surface'] as const },                      // surface: home_chip | continue | save. 어디서 열었나
+  leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연잎 칩으로 모으기 시트를 열었다
+  /**
+   * 쓰려고 했는데 잔액이 없었다. **평소에는 한 건도 안 나와야 한다.**
+   *
+   * 화면이 잔액을 보고 버튼을 그린 뒤, 실제로 빼는 사이에 0 이 된 경우다. 한 갈래로
+   * 도는 코드라 날 수 없는 일인데, 나면 우리가 모르는 길이 하나 더 있다는 뜻이다.
+   */
+  leaf_spend_missed:   { params: ['placement'] as const },
   // 같은 날 두 번째 고민
   second_question_start:{ params: ['continues_used', 'gate'] as const },                  // gate: free | ad_continue | exhausted
   // 공유

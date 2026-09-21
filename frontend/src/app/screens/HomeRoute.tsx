@@ -22,7 +22,12 @@ import { useApiClient, type Quota } from '../../shared/api';
 import { resolveApiMode } from '../../shared/api/client';
 import { FLAGS } from '../../shared/flags';
 import { readMilestones } from '../../shared/prefs/milestones';
-import { markReviewAsked, reviewCardDue, snoozeReview } from '../../shared/prefs/review';
+import {
+  countReviewShown,
+  markReviewAsked,
+  reviewCardDue,
+  snoozeReview,
+} from '../../shared/prefs/review';
 import { markAdWatched } from '../../shared/api/http';
 import { markEntryCardSeen } from '../../domains/concern/EntryCard';
 import {
@@ -98,6 +103,21 @@ export function HomeRoute() {
    * 안 눌렀으면 홈에는 아무것도 없다.
    */
   const [recall, setRecall] = useState<RecallEntry | null>(null);
+  /**
+   * 되짚기 조회가 끝났나. **끝나기 전에는 리뷰 카드를 그리지 않는다.**
+   *
+   * 브릿지 저장소가 비동기라 `recall` 초기값이 null 이다. 그대로 두면 첫 페인트에 리뷰
+   * 카드가 떴다가 조회가 끝나면 사라진다. 그 찰나에 노출 로그가 이미 찍혀 분모가 부풀고,
+   * 화면도 한 번 덜컹한다.
+   */
+  const [recallChecked, setRecallChecked] = useState(false);
+  /**
+   * 오늘 되짚기가 있었나. 답하거나 닫아서 치운 뒤에도 남는다.
+   *
+   * `recall` 이 null 이 되는 순간 리뷰 카드가 그 자리에 바로 올라오면, 방금 하나를 치운
+   * 사람 앞에 부탁이 연달아 두 번 선다. 그날은 리뷰가 물러나 있는 것이 맞다.
+   */
+  const hadRecall = useRef(false);
   /** 연잎 모으기 시트 */
   const [leafOpen, setLeafOpen] = useState(false);
   /**
@@ -107,7 +127,16 @@ export function HomeRoute() {
    * 돌아오면 이 화면이 새로 마운트된다.
    */
   const [answers] = useState(() => readMilestones().answers);
-  const [reviewOpen, setReviewOpen] = useState(() => reviewCardDue(readMilestones().answers));
+  /*
+    리뷰 카드를 띄울까.
+
+    **못 쓰는 토스 앱에서는 아예 안 그린다.** 눌러도 아무 일이 없는 버튼을 세우는 것은
+    우리가 미리 알고 있는 막다른 길이다. 「불러도 안 뜰 수 있다」와는 다르다. 저쪽은
+    토스가 피로도를 보고 정하는 것이고 이쪽은 우리가 먼저 아는 사실이다.
+  */
+  const [reviewOpen, setReviewOpen] = useState(
+    () => bridge.supports('review') && reviewCardDue(readMilestones().answers),
+  );
   /** 시트가 열려 있는 동안 들고 있는 글. 시트를 닫아도 입력창에는 그대로 남는다 */
   const held = useRef('');
   /** 이미 문을 연 서버 사용량. 같은 값으로 시트를 두 번 열지 않는다 */
@@ -147,11 +176,15 @@ export function HomeRoute() {
       if (!alive) return;
       if (entry == null) {
         setRecall(null);
+        setRecallChecked(true);
         return;
       }
       const since = daysSince(entry.date);
       const dueToday = since >= 1 && since <= RECALL_MAX_DAYS;
-      setRecall(dueToday && !recallHushedToday() ? entry : null);
+      const due = dueToday && !recallHushedToday();
+      if (due) hadRecall.current = true;
+      setRecall(due ? entry : null);
+      setRecallChecked(true);
       // 이레가 지나면 조용히 버린다. 남겨 두면 다음 달에도 계속 걸린다
       if (since > RECALL_MAX_DAYS) void clearRecall(bridge.storage);
     });
@@ -192,15 +225,22 @@ export function HomeRoute() {
 
   const closeContinue = useCallback(() => setContinueOpen(false), []);
 
-  const goOn = useCallback(() => {
+  /**
+   * 이야기를 이어간다. **보냈으면 true 다.**
+   *
+   * 돌려주는 값이 있어야 연잎 경로가 값을 낼지 정할 수 있다. 붙들어 둔 글이 비어 있으면
+   * 아무것도 안 보내는데, 그때도 연잎을 빼면 아무 일도 안 하고 한 장이 사라진다.
+   */
+  const goOn = useCallback((): boolean => {
     setContinueOpen(false);
     const text = held.current;
     held.current = '';
-    if (text === '') return;
+    if (text === '') return false;
     // 이어가기 광고 자리를 지났다는 표를 세운다. 다음 요청이 이걸 들고 가야 서버가 문을 연다.
     // 보상형 판에서는 끝까지 본 사람만 여기까지 온다. 광고가 안 온 사람은 그냥 통과한다
     markAdWatched();
     send(text);
+    return true;
   }, [send]);
 
   /**
@@ -213,9 +253,14 @@ export function HomeRoute() {
    * 없으면 광고 문에서 다시 막힌다. 연잎도 광고 한 편을 미리 치른 것이라 같은 표를 쓴다.
    */
   const continueWithLeaf = useCallback(() => {
-    if (!leaf.spend('continue')) return;
+    if (leaf.count < 1) return;
+    // 보낸 뒤에 뺀다. 붙들어 둔 글이 비어 있으면 아무 일도 안 일어나는데, 먼저 빼면
+    // 그 판에서 한 장이 그냥 사라진다. 간직하기도 같은 순서다
+    if (!goOn()) return;
+    if (!leaf.spend('continue')) {
+      analytics.log('leaf_spend_missed', { placement: 'continue' });
+    }
     analytics.log('ad_skipped', { placement: 'continue', reason: 'leaf' });
-    goOn();
   }, [analytics, goOn, leaf]);
 
   /**
@@ -229,9 +274,18 @@ export function HomeRoute() {
     analytics.log('review_card_accept', { answers_total: answers }, { kind: 'click' });
     setReviewOpen(false);
 
+    /*
+      여기까지 오면 카드를 그린 뒤에 지원 여부가 바뀐 것이다(거의 없다). 카드를 띄울 때
+      이미 걸렀으므로 평소에는 이 가지를 안 탄다. 그래도 남겨 둔다: 없으면 낡은 앱에서
+      던지는 것을 아래 catch 가 「우리 쪽 실패」로 읽어 계속 다시 묻게 된다.
+    */
     if (!bridge.supports('review')) {
-      // 낡은 토스 앱이다. 업데이트를 청하는 말을 여기서 꺼내지 않는다. 부탁이 두 겹이 된다
-      markReviewAsked();
+      /*
+        **영구히 닫지 않는다.** 리뷰 화면이 뜬 적이 없는데 「청했다」로 적으면, 나중에
+        토스 앱을 최신으로 올려도 카드가 다시는 안 뜬다. 아래 catch 와 같은 「우리 쪽
+        사정」이라 같게 다룬다. 카드를 띄울 때 이미 걸러서 평소에는 여기까지 안 온다.
+      */
+      snoozeReview(answers);
       analytics.log('review_request', { result: 'unsupported' });
       return;
     }
@@ -251,6 +305,27 @@ export function HomeRoute() {
     snoozeReview(answers);
     setReviewOpen(false);
   }, [analytics, answers]);
+
+  /**
+   * 카드를 띄웠다는 사실을 센다. **누르지 않고 지나간 사람을 위한 것이다.**
+   *
+   * 「나중에」를 누르면 미룸으로 적히지만, 그냥 이야기를 쓰러 가는 사람에게는 아무 표도
+   * 안 남아서 앱을 열 때마다 같은 부탁이 같은 자리에 다시 섰다. 세 번 보여 주고 그만둔다
+   * (`REVIEW_MAX_SHOWN`). 막는 일은 다음에 열 때 `reviewCardDue` 가 한다. 이번 한 번은
+   * 끝까지 보여 준다.
+   *
+   * **여기서 닫지 않는다.** 세자마자 닫으면 세 번째 사람은 카드를 보지도 못한다.
+   *
+   * 세는 조건이 그리는 조건과 같아야 한다(`recall` 이 있는 날은 카드가 물러난다).
+   * 안 보인 것을 세면 되짚기가 있던 날들이 조용히 기회를 먹는다.
+   */
+  const reviewCounted = useRef(false);
+  const reviewShowing = reviewOpen && recallChecked && recall == null && !hadRecall.current;
+  useEffect(() => {
+    if (!reviewShowing || reviewCounted.current) return;
+    reviewCounted.current = true;
+    countReviewShown();
+  }, [reviewShowing]);
 
   const renderCards = useCallback(
     ({ quote, focusField }: HomeCardSlot): ReactNode =>
@@ -318,14 +393,22 @@ export function HomeRoute() {
           되짚기는 사람이 「내일 물어봐 주세요」를 눌러 청한 것이고 리뷰는 우리가 하는
           부탁이다. 둘이 한 화면에 쌓이면 이야기를 쓰러 온 사람 앞에 카드가 두 장 선다.
         */
-        leadCard={
+        leadCard={({ focusField }) => (
           <ReviewCard
-            open={reviewOpen && recall == null}
+            open={reviewShowing}
             answersTotal={answers}
-            onAccept={() => void askReview()}
-            onLater={laterReview}
+            /* 카드가 사라질 때 초점을 입력칸으로 돌린다. 키보드로 누른 사람이 화면 맨
+               위로 튕기지 않게 한다. 마우스·터치는 카드가 초점을 안 빼앗아 그대로다 */
+            onAccept={() => {
+              void askReview();
+              focusField();
+            }}
+            onLater={() => {
+              laterReview();
+              focusField();
+            }}
           />
-        }
+        )}
         /* 「내일 물어봐 주세요」를 누른 사람에게만, 다음 날 입력칸 바로 위에 한 번 */
         topCard={<RecallAsk entry={recall} onRespond={respondRecall} onClose={hushRecall} />}
       />
@@ -343,7 +426,7 @@ export function HomeRoute() {
         연잎 모으기. 홈에서 여는 판은 **모으고 나서도 시트에 남는다.**
         한 장 모았다고 닫아 버리면 여러 장 쌓으려는 사람이 칩을 매번 다시 눌러야 한다.
       */}
-      <LeafSheet open={leafOpen} surface="home_chip" onClose={() => setLeafOpen(false)} />
+      <LeafSheet open={leafOpen} onClose={() => setLeafOpen(false)} />
     </>
   );
 }

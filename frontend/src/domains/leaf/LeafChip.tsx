@@ -38,8 +38,11 @@ export function LeafChip({ onOpen }: LeafChipProps) {
       aria-label={`연잎 ${count}장. 눌러서 모으기`}
       {...testId(TEST_IDS.leafChip)}
     >
-      <LeafIcon size={18} className="leaf-chip__icon" />
-      <span aria-hidden="true">{count}</span>
+      {/* 보이는 알약은 32px, 버튼은 --tap-min. 손가락 자리를 모양보다 크게 둔다 */}
+      <span className="leaf-chip__pill">
+        <LeafIcon size={18} className="leaf-chip__icon" />
+        <span aria-hidden="true">{count}</span>
+      </span>
     </button>
   );
 }

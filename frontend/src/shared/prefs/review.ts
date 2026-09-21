@@ -34,14 +34,25 @@ export const REVIEW_AFTER_ANSWERS = 2;
 /** 「나중에」를 누른 사람에게 다시 묻기까지 받아야 하는 답의 수 */
 const SNOOZE_ANSWERS = 2;
 
+/**
+ * 카드를 이만큼 띄우고 나면 그만둔다.
+ *
+ * **누르지도 미루지도 않고 지나가는 사람을 위한 상한이다.** 「나중에」를 누르면 미룸으로
+ * 적히지만, 그냥 이야기를 쓰러 가면 아무 표도 안 남아 앱을 열 때마다 같은 부탁이 같은
+ * 자리에 다시 섰다. 세 번을 무시한 사람은 네 번째에도 안 누른다.
+ */
+export const REVIEW_MAX_SHOWN = 3;
+
 export interface ReviewState {
   /** 리뷰 화면을 청한 적이 있나. 한 번이면 끝이다 */
   asked: boolean;
   /** 「나중에」를 누른 시점의 답변 수. 0 이면 미룬 적이 없다 */
   snoozedAt: number;
+  /** 카드를 몇 번 띄웠나. 상한에 닿으면 그만 묻는다 */
+  shown: number;
 }
 
-const EMPTY: ReviewState = { asked: false, snoozedAt: 0 };
+const EMPTY: ReviewState = { asked: false, snoozedAt: 0, shown: 0 };
 
 let cached: ReviewState | null = null;
 
@@ -59,6 +70,7 @@ function read(): ReviewState {
             typeof item.snoozedAt === 'number' && item.snoozedAt >= 0
               ? Math.floor(item.snoozedAt)
               : 0,
+          shown: typeof item.shown === 'number' && item.shown >= 0 ? Math.floor(item.shown) : 0,
         };
         return cached;
       }
@@ -92,8 +104,22 @@ export function reviewCardDue(answers: number): boolean {
   if (answers < REVIEW_AFTER_ANSWERS) return false;
   const now = read();
   if (now.asked) return false;
+  if (now.shown >= REVIEW_MAX_SHOWN) return false;
   if (now.snoozedAt === 0) return true;
   return answers >= now.snoozedAt + SNOOZE_ANSWERS;
+}
+
+/**
+ * 카드를 한 번 띄웠다고 세고, 센 뒤의 횟수를 돌려준다.
+ *
+ * 화면이 카드를 **실제로 그리는 그 자리에서** 한 번 부른다. 판정 함수 안에서 세면 안 된다.
+ * 그쪽은 렌더마다 여러 번 불릴 수 있어 한 번 띄운 것이 둘·셋으로 세어진다.
+ */
+export function countReviewShown(): number {
+  const now = read();
+  const next = { ...now, shown: now.shown + 1 };
+  write(next);
+  return next.shown;
 }
 
 /** 리뷰 화면을 청했다. 떴는지는 알 수 없고, 그래서 다시 묻지 않는다 */

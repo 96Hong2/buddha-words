@@ -306,15 +306,31 @@ export function AnswerRoute() {
   /**
    * 「연잎 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
    *
-   * **잔액을 빼는 데 성공했을 때만 담는다.** 실패하면 시트에 그대로 둔다. 그 사이에
-   * 잔액이 0 이 된 것이라, 닫아 버리면 사람은 담긴 줄 알고 떠난다.
+   * ⚠ **담고 나서 뺀다. 순서가 중요하다.**
+   *
+   * 먼저 빼면, 저장소가 막힌 기기에서 `store` 가 `failed` 를 내는 순간 연잎만 사라진다.
+   * 담기지도 않았는데 값은 치른 것이다. 광고 경로에는 이 문제가 없다. 광고는 어차피
+   * 되돌릴 수 없어서 잃을 것이 없는데, 연잎은 되돌릴 수 있는 것이라 잃으면 우리 잘못이다.
+   *
+   * 잔액 확인과 빼기 사이에 다른 화면이 끼어들 수 없다(한 갈래로 돈다). 그래도 `spend`
+   * 결과를 보고, 어긋났으면 로그로 남긴다. 담긴 것을 되돌리지는 않는다: 사람은 이미
+   * 담긴 화면을 봤고, 그것을 도로 빼앗는 쪽이 한 장을 못 받은 것보다 나쁘다.
    */
   const saveWithLeaf = useCallback(() => {
-    if (answer == null) return;
-    if (!leaf.spend('save')) return;
-    analytics.log('ad_skipped', { placement: 'save', reason: 'leaf' });
+    if (answer == null || leaf.count < 1) return;
     setGateOpen(false);
-    afterStore(store('leaf'));
+
+    const outcome = store('leaf');
+    if (outcome === 'failed') {
+      // 담기지 못했다. 연잎은 그대로 둔다
+      afterStore(outcome);
+      return;
+    }
+    if (!leaf.spend('save')) {
+      analytics.log('leaf_spend_missed', { placement: 'save' });
+    }
+    analytics.log('ad_skipped', { placement: 'save', reason: 'leaf' });
+    afterStore(outcome);
   }, [afterStore, analytics, answer, leaf, store]);
 
   /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */

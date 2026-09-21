@@ -10,24 +10,40 @@
    앱 배경 위에 선다. 바닥이 --surface 인 이유는 토큰 파일에 적어 두었다:
    --leaf-soft 는 앱 배경과 1.01 이라 칩이 통째로 사라진다. */
 
+/*
+   ⚠ 높이가 --tap-min 이어야 한다. 한때 32px 이었는데, 바로 옆 설정 버튼이 44px 라
+   한 줄에 두 크기가 나란히 섰다. 연잎 시트로 가는 **유일한** 입구이기도 하다.
+
+   보이는 알약은 32px 로 두고 버튼이 그 위아래 여백을 먹는다. 모양을 키우면 서비스 줄이
+   무거워진다.
+*/
 .leaf-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+}
+
+.leaf-chip__pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   height: 32px;
   padding: 0 10px 0 7px;
-  border: 0;
   border-radius: 999px;
   background: var(--surface);
   color: var(--leaf-text);
-  font-family: inherit;
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   font-weight: var(--w-bold);
   font-variant-numeric: tabular-nums;
 }
 
-.leaf-chip:active {
+.leaf-chip:active .leaf-chip__pill {
   background: var(--surface-pressed);
 }
 
@@ -42,9 +58,14 @@
 }
 
 /* 잔액이 0 이어도 **잎 색은 남긴다.** 회색으로 빼면 무슨 그림인지 알아볼 수 없어져서,
-   연잎이라는 것이 있다는 사실까지 함께 사라진다. 숫자만 조용해지면 된다 */
+   연잎이라는 것이 있다는 사실까지 함께 사라진다. 숫자만 조용해지면 된다.
+   한 단 옅은 sage-300 은 카드 위 2.24 라 그래픽 하한(3.0)에 못 미쳐 --leaf-dim(3.31)을 쓴다 */
+.leaf-chip--empty .leaf-chip__pill {
+  color: var(--text-muted);
+}
+
 .leaf-chip--empty .leaf-chip__icon {
-  color: var(--c-sage-300);
+  color: var(--leaf-dim);
 }
 
 /* ── 모으기 시트 ────────────────────────────────────────────────────── */
@@ -121,6 +142,10 @@
   font-size: var(--t-label);
   line-height: var(--lh-label);
   font-weight: var(--w-bold);
+}
+
+/* 버튼이 flex 라 라벨은 익명 아이템이다. 줄 나눔은 이 span 이 맡는다 */
+.leaf-sheet__ad-label {
   text-wrap: balance;
 }
 
@@ -153,8 +178,16 @@
 }
 
 /* 어디에 쓰나. 파는 말이 아니라 쓰임새라 작게 아래에 둔다 */
+.leaf-sheet__uses-title {
+  margin: var(--s-5) 0 6px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--w-bold);
+  color: var(--text-muted);
+}
+
 .leaf-sheet__uses {
-  margin: var(--s-5) 0 0;
+  margin: 0;
   padding: var(--s-3) var(--s-4);
   list-style: none;
   border-radius: var(--r-card);
@@ -204,6 +237,7 @@
   line-height: var(--lh-label);
   font-weight: var(--w-bold);
   text-wrap: balance;
+  flex-wrap: wrap;
 }
 
 .leaf-use[disabled] {
@@ -214,12 +248,12 @@
 /*
    버튼 안의 잎.
 
-   짙은 바닥 위라 --leaf(4.44 는 카드 기준)로는 어둡다. 밝은 쪽 램프를 직접 쓴다.
+   짙은 바닥 위라 --leaf(4.44 는 카드 기준)로는 어둡다. 짙은 면 전용 토큰을 쓴다(--btn 위 7.22).
    짙은 면 위에서 대비가 무너진 전례가 토큰 파일에 적혀 있다.
 */
 .leaf-use__icon {
   flex: none;
-  color: var(--c-sage-200);
+  color: var(--leaf-on-deep);
 }
 
 /* 잔액을 버튼 안에 적는다. 쓰고 나면 몇 장 남는지를 누르기 전에 알아야 한다 */
@@ -243,14 +277,22 @@
   background: transparent;
   color: var(--text);
   font-family: inherit;
-  font-size: var(--t-caption);
-  line-height: var(--lh-caption);
+  font-size: var(--t-label);
+  line-height: var(--lh-label);
   font-weight: var(--w-bold);
 }
 
 .leaf-alt[disabled] {
   opacity: 0.55;
   cursor: default;
+}
+
+/* 광고 버튼은 라벨과 **아이콘**으로 광고임을 밝힌다(계획 1.6). 주 버튼 자리를 연잎에
+   내줬다고 이쪽만 아이콘을 잃으면 안 된다 */
+.leaf-alt__play {
+  flex: none;
+  display: inline-flex;
+  color: var(--text-muted);
 }
 
 .leaf-alt__badge {

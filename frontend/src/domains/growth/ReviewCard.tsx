@@ -59,9 +59,23 @@ export function ReviewCard({ open, answersTotal, onAccept, onLater }: ReviewCard
   return (
     <div className="review-card" role="group" aria-label="리뷰 남기기" {...testId(TEST_IDS.reviewCard)}>
       <div className="review-card__head">
+        {/*
+          **윤곽선이다.** 채운 금색 별 다섯을 두었더니 「이 앱은 별 다섯」처럼 보였고,
+          누를 수 있는 줄 알고 세 번째 별을 누르는 사람이 나온다(눌러도 아무 일이 없다).
+          비어 있는 별은 「여기에 매겨 주세요」로 읽힌다.
+        */}
         <span className="review-card__stars" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((i) => (
-            <svg key={i} viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <svg
+              key={i}
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+            >
               <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9z" />
             </svg>
           ))}
