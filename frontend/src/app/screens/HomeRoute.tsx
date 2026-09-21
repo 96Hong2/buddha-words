@@ -8,6 +8,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
+import { routeByRules } from '@spec/router.ts';
+
 import { HomeScreen, type HomeCardSlot } from '../../domains/concern/HomeScreen';
 import { DailyQuoteCard } from '../../domains/daily/DailyQuoteCard';
 import { DailyQuoteSheet } from '../../domains/daily/DailyQuoteSheet';
@@ -273,6 +275,22 @@ export function HomeRoute() {
 
       // 오늘 첫 이야기는 광고가 없다. 곧장 보낸다
       if (gateFor(state) === 'free') {
+        send(text);
+        return;
+      }
+
+      /*
+        **규칙층이 위기를 보면 시트를 세우지 않는다.**
+
+        서버도 같은 판정으로 광고 문을 건너뛴다(`routes.py` 의 `_rules_saw_crisis`).
+        그래서 이 글은 어차피 광고에 안 걸리는데, 시트만 잠깐 떴다 닫히면 죽고 싶다고
+        적은 사람이 광고 버튼을 먼저 보게 된다. 그 몇 초를 없앤다.
+
+        규칙층이 못 잡는 에두른 표현은 여전히 시트를 거친다. 그건 분류기가 봐야 알 수
+        있고, 그때는 뒤에서 도는 요청이 창구로 데려간다(`preflight`). 화면이 스스로
+        위기를 판정하지 않는다는 선은 그대로다.
+      */
+      if (routeByRules(text).route === 'crisis') {
         send(text);
         return;
       }

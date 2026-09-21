@@ -213,3 +213,22 @@ test('앱을 알리는 링크에는 메신저 미리보기 그림이 함께 간�
   // 번들이 아니라 백엔드가 내주는 그림이다. 번들 주소는 토스 밖에서 열리지 않는다
   expect(og).toContain('/og/default.jpg');
 });
+
+test('위기 글은 광고 시트를 거치지 않고 곧장 창구로 간다', async ({ page }) => {
+  /*
+   * 가장 중요한 자리다. 답을 두 번째로 보내는 길에는 광고 문이 서는데, 죽고 싶다고 적은
+   * 사람이 그 문 앞에 서면 안 된다. 서버도 같은 판정으로 광고 문을 건너뛴다
+   * (`routes.py` 의 `_rules_saw_crisis`). 화면도 같은 기준을 쓴다.
+   */
+  await withLeaves(page, 0);
+  await page.goto('/');
+  await afterFirstStory(page);
+
+  await page.getByTestId('concern-field').fill('요즘 다 그만두고 죽고 싶다는 생각이 들어요.');
+  await page.getByTestId('submit').click();
+
+  // 광고 시트가 한 번도 서지 않는다
+  await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
+});
