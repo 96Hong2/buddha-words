@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -748,3 +749,37 @@ def test_timezone_header_moves_the_reset_time(client: TestClient) -> None:
     hawaii = client.get("/daily", headers={**anon, "X-Timezone": "Pacific/Honolulu"}).json()["date"]
     # 서울과 호놀룰루는 19시간 차이라 같은 순간에도 날짜가 갈리는 때가 하루의 대부분이다
     assert seoul >= hawaii
+
+
+def test_free_once_does_not_reopen_at_midnight() -> None:
+    """무료는 하루 한 번이 아니라 **사람마다 한 번**이다.
+
+    2026-09-22 에 좁혔다. 날짜 칸을 새로 열어도 무료가 따라 열리면 안 된다. 그 버그는
+    화면에서 「연꽃이 없는데도 답변을 받는다」로 보인다.
+    """
+    zone = usage.resolve_zone("Asia/Seoul")
+    today = datetime(2026, 9, 22, 10, 0, tzinfo=zone)
+    tomorrow = datetime(2026, 9, 23, 10, 0, tzinfo=zone)
+
+    assert usage.reserve("solo", "normal", zone, now=today).gate == "free"
+    assert usage.reserve("solo", "normal", zone, now=today).gate == "ad_continue"
+
+    # 자정을 넘겨도 무료는 다시 열리지 않는다
+    assert usage.reserve("solo", "normal", zone, now=tomorrow).gate == "ad_continue"
+    assert usage.snapshot("solo", zone, now=tomorrow)["freeUsed"] == 1
+
+    # 이어간 수는 날짜마다 새로 센다. 무료 칸만 날짜 밖이다
+    assert usage.snapshot("solo", zone, now=tomorrow)["adContinuesUsed"] == 1
+
+    # 다른 사람에게는 그 사람의 첫 한 번이 그대로 있다
+    assert usage.reserve("other", "normal", zone, now=tomorrow).gate == "free"
+
+
+def test_free_once_comes_back_when_the_answer_failed() -> None:
+    """생성이 실패하면 쓰지 않은 것이다. 평생 한 번을 실패로 잃게 두지 않는다."""
+    zone = usage.resolve_zone("Asia/Seoul")
+    out = usage.reserve("flaky", "normal", zone)
+    assert out.gate == "free"
+    usage.release("flaky", out.gate, zone)
+    assert usage.snapshot("flaky", zone)["freeUsed"] == 0
+    assert usage.reserve("flaky", "normal", zone).gate == "free"

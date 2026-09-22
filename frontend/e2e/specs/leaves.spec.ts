@@ -121,8 +121,9 @@ test('광고를 중간에 닫으면 연꽃이 늘지 않고 그 이유를 적는
 
   await page.getByTestId('leaf-watch').click();
 
-  // 끝까지 본 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다
-  await expect(page.getByText('광고를 끝까지 봐야 연꽃이 생겨요')).toBeVisible();
+  // 보상을 받은 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다.
+  // 「끝까지」가 아니라 **무엇이 모자랐는지**를 적는다(2026-09-22)
+  await expect(page.getByText('보상을 받기 전에 닫아서 연꽃이 생기지 않았어요')).toBeVisible();
   await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0송이');
   // 성공 문구 자리는 늘 DOM 에 있다(라이브 리전이라 그래야 읽힌다). 비어 있는지를 본다
   await expect(page.getByTestId('leaf-earned')).toHaveText('');
@@ -335,4 +336,137 @@ test('광고를 못 띄우는 기기에서는 연꽃을 쓰지 않고 그냥 지
 
   // 두 문을 다 지났는데 잔액은 그대로다. 안 써도 되는 자리에서 뺏지 않는다
   expect(await leafBalance(page)).toBe(1);
+});
+
+test('이어가기 시트에서 연꽃을 모으러 갔다가 그대로 돌아온다', async ({ page }) => {
+  /*
+   * 전에는 광고 버튼 아래에 「홈 위쪽 연꽃을 미리 모아 두면…」이 작은 회색 글씨로만
+   * 있었다. 읽어도 **지금 할 수 있는 일이 아니었다.** 홈으로 돌아가 칩을 찾아 눌러야
+   * 했고, 그러면 쓰던 이야기를 놓친다. 이제 여기서 바로 가고, 닫으면 돌아온다.
+   * 시트를 쌓지 않고 바꿔 끼운다. (2026-09-22 사용자 지시)
+   */
+  await withBridge(page, { ads: 'ok' });
+  await page.goto('/');
+
+  // 오늘 첫 이야기는 광고가 없다. 두 번째부터 문이 선다
+  await askOnce(page);
+  await dismissNudge(page);
+  await page.goBack();
+  await dismissEntry(page);
+  await dismissDraftConfirm(page);
+  await page.getByTestId('concern-field').fill('내일 발표가 있는데 잠이 안 와요.');
+  await page.getByTestId('submit').click();
+
+  const sheet = page.getByTestId('continue-sheet');
+  await expect(sheet).toBeVisible();
+
+  // 연꽃이 없는 사람에게도 보인다. 얻는 법을 아는 사람에게만 말하면 아무 소용이 없다
+  const cta = page.getByTestId('leaf-collect-cta');
+  await expect(cta).toBeVisible();
+  await expect(cta).toContainText('지금 0송이');
+  await shot(page, '15 연꽃 - 이어가기 시트에서 모으러 갈 수 있다');
+
+  await cta.click();
+  // 쌓지 않는다. 이어가기는 닫히고 모으기가 열린다
+  await expect(page.getByTestId('leaf-sheet')).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+
+  await page.getByTestId('leaf-watch').click();
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('1송이');
+
+  // 닫으면 쓰던 이야기가 그대로 있는 이어가기 시트로 돌아온다
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('leaf-sheet')).toHaveCount(0);
+  await expect(sheet).toBeVisible();
+
+  // 방금 모은 한 송이로 바로 이어간다
+  await expect(page.getByTestId('leaf-spend-continue')).toBeVisible();
+  await page.getByTestId('leaf-spend-continue').click();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
+  expect(await leafBalance(page)).toBe(0);
+});
+
+test('연꽃을 쓰면 꽃 한 송이가 버튼으로 날아오고 숫자가 준다', async ({ page }) => {
+  /*
+   * 연꽃으로 지나가면 광고가 안 뜬다. 그 조용함 때문에 **한 송이가 쓰였다는 사실이
+   * 그 순간에는 안 읽힌다.** 쓰고 난 뒤의 알림만으로는 「보낼 때마다 하나씩 쓰인다」가
+   * 안 남는다. 홈 칩에서 버튼으로 꽃이 건너가고, 닿는 순간 숫자가 준다.
+   * (2026-09-22 사용자 지시)
+   */
+  await withLeaves(page, 3);
+  await page.goto('/');
+
+  await askOnce(page);
+  await dismissNudge(page);
+  await page.goBack();
+  await dismissEntry(page);
+  await dismissDraftConfirm(page);
+  await page.getByTestId('concern-field').fill('요즘 사람 만나는 게 버거워요.');
+  await page.getByTestId('submit').click();
+
+  const useLeaf = page.getByTestId('leaf-spend-continue');
+  await expect(useLeaf).toBeVisible();
+  await expect(useLeaf).toContainText('쓰면 2송이 남아요');
+
+  /*
+    버튼 글자가 바뀌는 순간은 0.16초뿐이라 폴링으로는 놓친다. 눌러 보기 전에
+    감시자를 붙여 **거쳐 간 글자를 모두** 받아 둔다.
+  */
+  await page.evaluate(() => {
+    const target = document.querySelector('[data-testid="leaf-spend-continue"]')!;
+    const seen: string[] = [];
+    (window as unknown as { __leafSeen: string[] }).__leafSeen = seen;
+    new MutationObserver(() => seen.push((target.textContent ?? '').trim())).observe(target, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+    });
+  });
+
+  await useLeaf.click();
+
+  // 꽃이 실제로 날아간다. 시작 자리는 홈 칩이다
+  await expect(page.locator('.leaf-fly')).toBeVisible();
+
+  // 그러고 나서 실제로 이어간다
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
+  expect(await leafBalance(page)).toBe(2);
+  // 날아간 꽃은 스스로 치운다. 남아 있으면 다음 화면 위에 꽃이 떠 있다
+  await expect(page.locator('.leaf-fly')).toHaveCount(0);
+});
+
+test('연꽃이 닿는 순간 버튼 안 숫자가 준다', async ({ page }) => {
+  // 위 테스트와 나눈 이유: 저쪽은 꽃이 나는 것, 이쪽은 **숫자가 그때 바뀌는 것**이다
+  await withLeaves(page, 3);
+  await page.goto('/');
+  await askOnce(page);
+  await dismissNudge(page);
+  await page.goBack();
+  await dismissEntry(page);
+  await dismissDraftConfirm(page);
+  await page.getByTestId('concern-field').fill('마음이 자꾸 무겁습니다.');
+  await page.getByTestId('submit').click();
+
+  const useLeaf = page.getByTestId('leaf-spend-continue');
+  await expect(useLeaf).toContainText('쓰면 2송이 남아요');
+
+  await page.evaluate(() => {
+    const target = document.querySelector('[data-testid="leaf-spend-continue"]')!;
+    const seen: string[] = [];
+    (window as unknown as { __leafSeen: string[] }).__leafSeen = seen;
+    new MutationObserver(() => seen.push((target.textContent ?? '').trim())).observe(target, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+    });
+  });
+
+  await useLeaf.click();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
+
+  // 화면이 떠나기 전에 「2송이 남았어요」를 한 번은 보여 줬어야 한다
+  const seen = await page.evaluate(
+    () => (window as unknown as { __leafSeen?: string[] }).__leafSeen ?? [],
+  );
+  expect(seen.some((text) => text.includes('2송이 남았어요'))).toBe(true);
 });

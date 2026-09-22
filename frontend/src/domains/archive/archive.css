@@ -484,14 +484,15 @@
   left: calc(16px + var(--app-gap));
   right: calc(16px + var(--app-gap));
   bottom: calc(20px + var(--safe-bottom, 0px));
-  height: 64px;
+  /* 홈 탭바와 같은 이유로 높이를 못 박지 않는다(concern.css 의 .tabbar 주석) */
+  min-height: 64px;
   background: var(--surface);
   border-radius: var(--r-pill);
   box-shadow: var(--sh-tabbar);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 var(--s-2);
+  padding: 6px var(--s-2);
   z-index: 4;
 }
 
@@ -499,7 +500,9 @@
   /* 탭이 셋이 되면서 고정 폭을 뺐다. 셋으로 나눠 갖는다 */
   flex: 1 1 0;
   min-width: 0;
-  height: 48px;
+  /* 고른 탭의 알약 배경이 곧 이 상자다. 내용이 커지면 함께 커진다 */
+  min-height: 48px;
+  padding: 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -509,10 +512,12 @@
   background: transparent;
   border-radius: var(--r-pill);
   color: var(--text-muted);
-  font-size: var(--t-label);
+  font-size: var(--t-nav);
   line-height: var(--lh-label);
   letter-spacing: var(--ls-label);
   font-weight: var(--w-semibold);
+  /* 세 칸이 자리를 나눠 갖는다. 한 칸만 접히면 바 전체가 기운다 */
+  white-space: nowrap;
 }
 
 .arch-tab svg {

@@ -116,20 +116,49 @@
   margin: 0;
 }
 
+/*
+   ⚠ 자리가 모자라면 **제목이 아니라 이 그림이 양보한다.**
+
+   글자를 「크게」로 올리면 제목 줄이 길어져 이 그림이 화면 밖으로 62px 밀려 나갔다
+   (2026-09-22 실측). 고칠 길이 둘이었는데 제목을 줄어들게 하는 쪽은 버렸다. 그러면
+   390px 기기에서 두 줄이던 제목이 세 줄로 접혀 아래 카드가 화면 밖으로 밀린다.
+
+   제목은 이 화면이 무엇을 묻는지 말하는 유일한 줄이고, 이 그림은 `alt` 가 빈 장식이다.
+   폭만 줄이면 눌린 부처가 되므로 높이가 따라오게 한다.
+
+   아주 좁아지면 알아볼 수 없는 조각이 남는다. 그 구간은 아래 두 규칙이 통째로 비운다.
+*/
 .home-screen .home-face {
+  flex: 0 1 auto;
+  min-width: 0;
   width: 72px;
-  height: 72px;
+  aspect-ratio: 1;
+  height: auto;
   border-radius: var(--r-image);
   object-fit: cover;
   background: var(--surface-illust);
-  flex: none;
   margin-left: auto;
 }
 
 .home-screen .home-face--sm {
   width: 44px;
-  height: 44px;
   border-radius: 12px;
+}
+
+/*
+   글자를 키우면 제목이 줄을 더 먹어 이 그림이 설 자리가 없다. 조각만 남기느니 비운다.
+   키보드가 올라온 줄(.hero-row)은 제목이 한 줄이고 그림도 44px 이라 그대로 둔다.
+*/
+:root[data-text='l'] .home-screen .lead-row .home-face,
+:root[data-text='xl'] .home-screen .lead-row .home-face {
+  display: none;
+}
+
+/* 아주 좁은 기기도 같다. 360px 이면 제목만으로 줄이 찬다 */
+@media (max-width: 360px) {
+  .home-screen .lead-row .home-face {
+    display: none;
+  }
 }
 
 /* ── 입력 묶음 ───────────────────────────────────────────────────────────── */
@@ -344,7 +373,16 @@
   left: 16px;
   right: 16px;
   bottom: 24px;
-  height: 64px;
+  /*
+     ⚠ 높이를 못 박지 않는다. 글자 크기를 「아주 크게」로 올리면 아이콘·글자가 48px 을
+     넘어서, 고른 탭의 알약 배경이 그 위로 삐져나온 아이콘을 못 덮었다(2026-09-22).
+
+     그래도 **실제 높이는 네 단 모두 64px 이다.** 아래 비워 둔 자리(.body 의
+     padding-bottom)와 보관함·설정의 빈 칸이 그 값을 전제하기 때문이다. 라벨 쪽을
+     --t-nav 로 막고(최대 16px) 안쪽 여백을 6px 로 잡아, 가장 큰 단에서도 51+12=63 이라
+     min-height 안에 든다. 셋 중 하나를 키우면 이 셈을 다시 해야 한다.
+  */
+  min-height: 64px;
   display: flex;
   align-items: center;
   /*
@@ -352,7 +390,7 @@
    * 바 왼쪽 끝에 그대로 붙는다. 실기기에서 「좌측 여백이 없다」로 보였다.
    */
   gap: 4px;
-  padding: 0 8px;
+  padding: 6px 8px;
   background: var(--surface);
   border-radius: var(--r-pill);
   box-shadow: var(--sh-tabbar);
@@ -367,16 +405,25 @@
   /* 탭이 셋이 되면서 고정 폭을 뺐다. 셋으로 나눠 갖는다 */
   flex: 1 1 0;
   min-width: 0;
-  height: 48px;
+  /* 알약 배경이 곧 이 상자다. 내용이 커지면 함께 커져야 아이콘이 배경 밖으로 안 나간다 */
+  min-height: 48px;
   border: 0;
   background: none;
-  padding: 0;
+  padding: 2px;
   border-radius: var(--r-pill);
   font-family: inherit;
-  font-size: var(--t-label);
+  font-size: var(--t-nav);
+  line-height: var(--lh-label);
   font-weight: var(--w-semibold);
   letter-spacing: var(--ls-label);
   color: var(--text-muted);
+  /* 세 칸이 자리를 나눠 갖는다. 접히면 탭 하나만 두 줄이 되어 바 전체가 기운다 */
+  white-space: nowrap;
+}
+
+/* 라벨이 커져도 아이콘은 그대로다. 줄어들면 탭 안에서 글자만 남는다 */
+.home-screen .tab > svg {
+  flex: none;
 }
 
 .home-screen .tab.sel {

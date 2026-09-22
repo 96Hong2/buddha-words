@@ -661,7 +661,7 @@
       }
     },
     "Quota": {
-      "description": "사용자 시간대 자정 기준. 첫 고민은 무료, 그다음은 광고를 보고 이어간다. light·invalid·crisis 는 세지 않는다",
+      "description": "이어간 수와 다시 열리는 시각은 사용자 시간대 자정 기준이다. freeUsed 만 다르다: 무료는 사람마다 평생 한 번이라 자정에 안 비워진다(2026-09-22). light·invalid·crisis 는 세지 않는다",
       "type": "object",
       "required": [
         "freeUsed",
@@ -671,6 +671,7 @@
       ],
       "properties": {
         "freeUsed": {
+          "description": "이 사람이 평생 한 번뿐인 첫 이야기를 썼으면 1 이다. 날짜가 바뀌어도 0 으로 안 돌아간다",
           "type": "integer",
           "minimum": 0,
           "maximum": 1

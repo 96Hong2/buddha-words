@@ -11,13 +11,25 @@
  *
  * 닫는 길은 손잡이·바깥·뒤로가기다. 닫기 버튼을 따로 두지 않는다. 눌러야 할 버튼이
  * 하나일 때 그 옆에 닫기를 세우면 둘 중 하나로 보인다(이어가기 시트와 같은 이유).
+ *
+ * ── 몇 초를 봐야 한 송이인가 ──────────────────────────────────────────
+ *
+ * **초로 정해진 선이 우리 쪽에 없다.** 주는 조건은 하나다: 앱인토스 SDK 가 보상을
+ * 받았다고 알려 줄 때(`userEarnedReward`, 이 코드의 `outcome === 'watched'`).
+ * 그 순간을 정하는 것은 광고 네트워크이고, 보통 30초짜리를 끝까지 본 뒤다.
+ * 우리가 「20초부터」 같은 선을 따로 두면 그것이 곧 `dismissed` 지급이라 SDK 가이드에
+ * 어긋난다(계획 1.6 · [[ADR 0016]]).
+ *
+ * 그래서 화면도 초로 약속하지 않는다. **「보상을 받았다고 뜰 때까지」**라고 적는다.
+ * 버튼에 적는 「30초」는 얼마나 걸리는지의 안내이지 지급 조건이 아니다.
+ * (2026-09-22 사용자 질문: 「몇 초까지 보면 모을 수 있어?」)
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { BottomSheet, LotusIcon } from '../../shared/ui';
+import { BottomSheet, LotusIcon, Spinner } from '../../shared/ui';
 import '../../shared/ui/leaf.css';
 import { useRewardedAd } from '../ads/useRewardedAd';
 
@@ -82,7 +94,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
     setFailed(null);
     setJustEarned(false);
     const outcome = await ad.show();
-    // 끝까지 본 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다
+    // 보상을 받은 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다
     if (outcome !== 'watched') {
       setFailed(outcome === 'dismissed' ? 'dismissed' : 'noFill');
       return;
@@ -149,13 +161,24 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
                 다른 광고 자리와 같은 말투다: 몇 초짜리인지와 무엇을 얻는지를 한 줄에.
                 `text-wrap: balance` 는 이 span 에 건다. 버튼이 flex 라 바깥에 걸면 안 먹는다
               */}
-              <span className="leaf-sheet__ad-label">
-                30초{' '}
-                <span className="leaf-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                  광고
-                </span>{' '}
-                보고 연꽃 한 송이 모으기
-              </span>
+              {/*
+                광고를 불러오는 동안 버튼이 잠긴다. 흐려지기만 하면 멈춘 것으로 읽혀서
+                도는 표와 이유를 함께 둔다(2026-09-22 사용자 지적).
+              */}
+              {ad.showing ? (
+                <>
+                  <Spinner className="leaf-sheet__spin" />
+                  <span className="leaf-sheet__ad-label">광고를 불러오고 있어요</span>
+                </>
+              ) : (
+                <span className="leaf-sheet__ad-label">
+                  30초{' '}
+                  <span className="leaf-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                    광고
+                  </span>{' '}
+                  보고 연꽃 한 송이 모으기
+                </span>
+              )}
             </button>
             <p
               className="leaf-sheet__note"
@@ -163,12 +186,13 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
               {...testId(TEST_IDS.leafNote)}
             >
               {ad.showing
-                ? '광고를 불러오고 있어요'
+                ? '잠시만 기다려 주세요'
                 : failed === 'dismissed'
-                  ? '광고를 끝까지 봐야 연꽃이 생겨요'
+                  ? // 무엇이 모자랐는지 정확히 말한다. 「끝까지」는 사람마다 다르게 읽힌다
+                    '보상을 받기 전에 닫아서 연꽃이 생기지 않았어요'
                   : failed === 'noFill'
                     ? '지금은 광고가 없어요. 잠시 뒤에 다시 눌러 주세요'
-                    : '몇 송이든 모을 수 있어요'}
+                    : '광고 화면에 보상을 받았다고 뜨면 한 송이가 생겨요'}
             </p>
           </>
         )}
@@ -180,6 +204,8 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
         <ul className="leaf-sheet__uses" aria-labelledby="leaf-uses-title">
           <li>이야기를 이어갈 때 한 송이</li>
           <li>말씀을 보관함에 간직할 때 한 송이</li>
+          {/* 쌓아 둘 수 있다는 사실. 한 송이만 모을 수 있는 줄 아는 사람이 있다 */}
+          <li>몇 송이든 모아 둘 수 있어요</li>
         </ul>
       </div>
     </BottomSheet>

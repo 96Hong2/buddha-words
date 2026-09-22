@@ -27,15 +27,6 @@ import {
   writeTextSize,
   type TextSize,
 } from '../../shared/prefs/textSize';
-import {
-  DEFAULT_NOTIFY_HOUR,
-  NOTIFY_HOURS,
-  notifyHourLabel,
-  readNotifyHour,
-  writeNotifyHour,
-  type NotifyHour,
-} from '../../shared/prefs/notifyTime';
-
 import './settings.css';
 
 /**
@@ -70,11 +61,11 @@ const RESTORE_NOTICE: Record<ArchivePassState, string> = {
  * 설정에서 끈 것은 알 수 없다. SDK 가 지금 상태를 되묻는 길을 주지 않는다.
  */
 const NOTIFY_ROW: Record<NotifyState, { value: string; desc: string }> = {
-  unset: { value: '받기', desc: '매일 마음을 기록해 보세요' },
+  unset: { value: '받기', desc: '하루 한 번, 마음을 들여다볼 시간을 알려드려요' },
   on: { value: '받기로 함', desc: '토스 앱 알림 설정에서 끌 수 있어요' },
   declined: { value: '받기', desc: '다시 받고 싶으면 눌러 주세요' },
   unsupported: { value: '준비 중', desc: '지금 토스 앱 버전에서는 켤 수 없어요' },
-  pending: { value: '준비 중', desc: '매일 마음을 기록해 보세요. 알림은 곧 시작해요' },
+  pending: { value: '준비 중', desc: '하루 한 번 알려드릴게요. 곧 시작해요' },
 };
 
 /** 동의를 묻고 나서 하는 말 */
@@ -141,9 +132,6 @@ export function SettingsScreen({
   const [notifyNotice, setNotifyNotice] = useState<string | null>(null);
   /** 홈 추가 경로 안내를 펼쳤나. 시트를 열 만한 내용이 아니라 한 줄로 편다 */
   const [homeAddOpen, setHomeAddOpen] = useState(false);
-  /** 알림 받을 시각. 받기로 한 사람에게만 고르는 자리를 연다 */
-  const [hour, setHour] = useState<NotifyHour>(() => readNotifyHour());
-  const [hourOpen, setHourOpen] = useState(false);
 
   /**
    * 지금 토스에 동의를 물을 수 있나.
@@ -152,8 +140,7 @@ export function SettingsScreen({
    * 감췄는데, 실기기에서 「설정에 알림이 없다」는 말을 들었다. 감추면 준비 중이라는 사실도
    * 함께 사라져서, 사람은 이 앱에 알림이라는 것이 없다고 읽는다.
    *
-   * 물을 수 없을 때 하는 일은 셋이다: 줄을 「준비 중」으로 적고, 누를 수 없게 하고,
-   * **받고 싶은 시각은 그대로 받아 둔다.** 발송을 켤 때 기본 시각을 짐작으로 정하지 않는다.
+   * 물을 수 없을 때 하는 일은 둘이다: 줄을 「준비 중」으로 적고, 누를 수 없게 한다.
    */
   const canAsk = notifyUsable(bridge.supports('notification'));
 
@@ -176,27 +163,6 @@ export function SettingsScreen({
       { notify_state: readNotify(), text_size: readTextSize() },
       { kind: 'screen' },
     );
-  }, [analytics]);
-
-  /** 시각을 고른다. 고른 즉시 저장한다. 저장 버튼을 따로 두지 않는다 */
-  const pickHour = useCallback(
-    (next: NotifyHour) => {
-      setHour(next);
-      writeNotifyHour(next);
-      analytics.log(
-        'notify_time_set',
-        { hour: next, changed: next !== DEFAULT_NOTIFY_HOUR },
-        { kind: 'click' },
-      );
-    },
-    [analytics],
-  );
-
-  const toggleHour = useCallback(() => {
-    setHourOpen((now) => {
-      if (!now) analytics.log('notify_time_open', {}, { kind: 'click' });
-      return !now;
-    });
   }, [analytics]);
 
   /**
@@ -371,7 +337,53 @@ export function SettingsScreen({
         )}
 
         {/*
-          알림. 홈 추가 바로 아래에 둔다. 둘 다 「다시 오는 길」이라 같이 읽히는 것이 맞다.
+          연꽃 모으기.
+
+          홈 위쪽 칩이 유일한 입구였다. 그 칩은 작고, 설정을 열어 앱이 뭘 해 주는지
+          훑는 사람은 연꽃이라는 것이 있는 줄도 몰랐다. 여기에 한 줄 두면 **무엇이고
+          어떻게 얻는지**가 설명 한 문장과 함께 읽힌다.
+
+          **홈 추가 바로 아래에 둔다.** 알림은 아직 보낼 수 없는 자리라 「준비 중」으로
+          서 있는데, 그 아래에 두면 지금 쓸 수 있는 것이 못 쓰는 것 뒤에 가린다.
+          (2026-09-22 사용자 지시)
+        */}
+        {leafCount != null && onOpenLeaf != null && (
+          <>
+            <p className="set-group">연꽃</p>
+            <div className="set-list">
+              <button
+                type="button"
+                className="set-item"
+                onClick={onOpenLeaf}
+                {...testId(TEST_IDS.settingsLeaf)}
+              >
+                <span className="set-icon" aria-hidden="true">
+                  <LotusIcon size={20} />
+                </span>
+                <span className="set-text">
+                  <span className="set-item-title">연꽃 모으기</span>
+                  <span className="set-item-desc">
+                    {leafCollectable
+                      ? '광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요'
+                      : '지금은 모을 수 없어요. 가진 연꽃은 그대로 쓸 수 있어요'}
+                  </span>
+                </span>
+                <span className="set-value">{leafCount}송이</span>
+                <Chevron />
+              </button>
+            </div>
+          </>
+        )}
+
+        {/*
+          알림. **줄 하나다.**
+
+          한때 「매일 마음 돌아보기」와 「받고 싶은 시간」 두 줄이었다. 앞은 받을지 말지이고
+          뒤는 몇 시에 받을지라 서로 다른 것을 묻지만, **지금 토스 앱 버전에서는 받기 자체를
+          켤 수 없다.** 못 켜는 알림의 시각을 고르게 두면 골라 놓고 안 오는 것을 고장으로
+          읽는다. 보낼 수 있게 되면 시각 고르개를 그때 되살린다. 시각 값 자체는
+          `shared/prefs/notifyTime` 에 그대로 있고 답변 화면의 「내일 여쭤볼게요」가 쓴다.
+          (2026-09-22 사용자 지시)
 
           **늘 그린다.** 못 켜는 판에서는 줄을 감추는 대신 「준비 중」이라고 적는다.
           감추면 준비 중이라는 사실까지 사라져서 사람은 알림이 없는 앱으로 읽는다.
@@ -406,119 +418,17 @@ export function SettingsScreen({
               </svg>
             </span>
             <span className="set-text">
-              <span className="set-item-title">매일 마음 돌아보기</span>
+              <span className="set-item-title">알림 받기</span>
               <span className="set-item-desc">{NOTIFY_ROW[rowState].desc}</span>
             </span>
             <span className="set-value">{asking ? '여는 중' : NOTIFY_ROW[rowState].value}</span>
           </button>
-
-          {/*
-                받고 싶은 시각. **동의를 받았든 아직 못 받았든 늘 연다.**
-
-                예전에는 `notify === 'on'` 일 때만 그렸는데, 템플릿 코드가 없어 동의를 못 묻는
-                판에서는 시각 자리가 영영 안 보였다. 실기기에서 「설정에 알림이 없다」로 읽힌
-                것이 이 조합이다.
-
-                ⚠ 고른 시각은 **아직 발송을 움직이지 않는다.** 그 시각에 보내려면 콘솔 템플릿
-                코드와 서버 발송·스케줄러가 있어야 한다. 그래서 문구가 「보내드릴게요」라고
-                단정하지 않고 「받고 싶은 시간」이라고만 적는다. 지킬 수 있는 말만 한다.
-              */}
-          <button
-            type="button"
-            className="set-item"
-            onClick={toggleHour}
-            aria-expanded={hourOpen}
-            {...testId(TEST_IDS.settingsNotifyTime)}
-          >
-            <span className="set-icon" aria-hidden="true">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="8.2" />
-                <path d="M12 7.4V12l3 1.8" />
-              </svg>
-            </span>
-            <span className="set-text">
-              <span className="set-item-title">받고 싶은 시간</span>
-              <span className="set-item-desc">알림이 시작되면 이 시각에 보내드려요</span>
-            </span>
-            <span className="set-value">{notifyHourLabel(hour)}</span>
-          </button>
-
-          {hourOpen && (
-            <div className="set-hours-box">
-              <div className="set-hours" role="radiogroup" aria-label="알림 받을 시간">
-                {NOTIFY_HOURS.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    role="radio"
-                    aria-checked={hour === h}
-                    className={`set-hour${hour === h ? ' is-on' : ''}`}
-                    onClick={() => pickHour(h)}
-                    {...testId(TEST_IDS.settingsNotifyTimeOption)}
-                  >
-                    {notifyHourLabel(h)}
-                  </button>
-                ))}
-              </div>
-              {/*
-                        지킬 수 있는 말만 한다. 시각을 골라 놓고 알림이 안 오면 사람은
-                        고장으로 읽는다. 발송이 아직 없다는 것을 그 자리에서 밝힌다.
-                      */}
-              <p className="set-hours-note">
-                고르신 시간은 알림이 시작될 때 쓸게요. 아직은 보내드리지 않아요.
-              </p>
-            </div>
-          )}
         </div>
 
         {notifyNotice != null && notifyNotice !== '' && (
           <p className="set-hint" role="status">
             {notifyNotice}
           </p>
-        )}
-
-        {/*
-          연꽃 모으기.
-
-          홈 위쪽 칩이 유일한 입구였다. 그 칩은 작고, 설정을 열어 앱이 뭘 해 주는지
-          훑는 사람은 연꽃이라는 것이 있는 줄도 몰랐다. 여기에 한 줄 두면 **무엇이고
-          어떻게 얻는지**가 설명 한 문장과 함께 읽힌다.
-
-          알림 다음에 둔다. 위 둘은 「다시 오는 길」이고 이건 그다음 결이다.
-        */}
-        {leafCount != null && onOpenLeaf != null && (
-          <>
-            <p className="set-group">연꽃</p>
-            <div className="set-list">
-              <button
-                type="button"
-                className="set-item"
-                onClick={onOpenLeaf}
-                {...testId(TEST_IDS.settingsLeaf)}
-              >
-                <span className="set-icon" aria-hidden="true">
-                  <LotusIcon size={20} />
-                </span>
-                <span className="set-text">
-                  <span className="set-item-title">연꽃 모으기</span>
-                  <span className="set-item-desc">
-                    {leafCollectable
-                      ? '광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요'
-                      : '지금은 모을 수 없어요. 가진 연꽃은 그대로 쓸 수 있어요'}
-                  </span>
-                </span>
-                <span className="set-value">{leafCount}송이</span>
-                <Chevron />
-              </button>
-            </div>
-          </>
         )}
 
         {/*

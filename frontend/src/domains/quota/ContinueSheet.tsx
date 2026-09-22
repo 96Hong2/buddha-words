@@ -33,6 +33,14 @@
  *
  * 연꽃을 실제로 빼는 일은 **부르는 쪽(app 층)이 한다.** 여기서 빼면 시트가 닫히는 길과
  * 이어가는 길이 갈릴 때 빠진 연꽃이 어디에도 안 쓰인 채 사라진다.
+ *
+ * ── 여기서 바로 모으러 갈 수 있다 ─────────────────────────────────────
+ *
+ * 한때 「시트 위에 시트를 쌓지 않는다」를 지키려고 어디서 모으는지 한 줄만 적어 두었다.
+ * 그 줄은 **읽어도 지금 할 수 있는 일이 아니었다.** 홈으로 돌아가 작은 칩을 찾아야 했고,
+ * 쓰던 이야기를 놓칠까 봐 아무도 안 갔다. 이제 여기서 누르면 이 시트가 닫히고 모으기
+ * 시트가 열리며, 닫으면 이 시트로 되돌아온다. **쌓지 않고 바꿔 끼운다.**
+ * 오가는 일은 부르는 쪽(app 층)이 한다. 붙들어 둔 글이 거기 있기 때문이다.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -40,7 +48,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { BottomSheet, LeafAltAdButton, LeafUseButton } from '../../shared/ui';
+import {
+  BottomSheet,
+  LeafAltAdButton,
+  LeafCollectCta,
+  LeafUseButton,
+  Spinner,
+} from '../../shared/ui';
 import { AD_KIND } from '../ads/placement';
 import { useRewardedAd, type AdOutcome } from '../ads/useRewardedAd';
 
@@ -90,6 +104,11 @@ export interface ContinueSheetProps {
    * 못 뺐으면(그 사이에 잔액이 0 이 됐다) 이어가지 않고 그대로 둔다.
    */
   onUseLeaf?: () => void;
+  /**
+   * 연꽃을 모으러 간다. 이 시트를 닫고 모으기 시트를 여는 일은 부르는 쪽이 한다.
+   * 안 주면 모으러 가는 자리를 그리지 않는다(모을 길이 없는 판).
+   */
+  onCollectLeaf?: () => void;
 }
 
 export function ContinueSheet({
@@ -100,6 +119,7 @@ export function ContinueSheet({
   onContinue,
   leaves = 0,
   onUseLeaf,
+  onCollectLeaf,
 }: ContinueSheetProps) {
   const analytics = useAnalytics();
   const ad = useRewardedAd('continue');
@@ -191,6 +211,7 @@ export function ContinueSheet({
             <LeafAltAdButton
               label={AD_ALT_LABEL}
               disabled={ad.showing || checking}
+              busy={checking}
               onClick={() => {
                 void watch();
               }}
@@ -206,33 +227,53 @@ export function ContinueSheet({
               }}
               {...testId(TEST_IDS.continueWatch)}
             >
-              <span className="continue-sheet__play" aria-hidden="true">
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
-                  <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
-                </svg>
-              </span>
               {/*
-              「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지 라벨이
-              말하지 않으면 앱인토스 심사 규칙에 닿는다.
+                ── 잠겨 있는 동안 버튼이 스스로 말한다 ───────────────────────────
 
-              무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
-              「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 그 말이 거짓이 된다.
-            */}
-              <span className="continue-sheet__ad-label">
-                {AD_BUTTON_LABEL}{' '}
-                <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                  광고
-                </span>
-              </span>
+                보낸 이야기를 서버가 보는 1~3초 동안 이 버튼이 잠긴다. 예전에는 흐려지기만
+                해서 **앱이 멈춘 것처럼 보였다**(2026-09-22 사용자 지적). 도는 표와 함께
+                지금 무엇을 하는 중인지 버튼 안에 적는다.
+
+                이때 「광고」 배지를 떼는 것은 안전하다. 잠긴 버튼은 눌리지 않아서 광고가
+                뜰 수 없고, 풀리는 순간 라벨이 곧바로 「30초 광고 보고 답변 받기」로 돌아온다.
+                누르는 순간 무엇이 뜨는지 라벨이 말해야 한다는 규칙은 그대로 지켜진다.
+              */}
+              {checking ? (
+                <>
+                  <Spinner className="continue-sheet__spin" />
+                  <span className="continue-sheet__ad-label">이야기를 살펴보고 있어요</span>
+                </>
+              ) : (
+                <>
+                  <span className="continue-sheet__play" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
+                      <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
+                    </svg>
+                  </span>
+                  {/*
+                    「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지
+                    라벨이 말하지 않으면 앱인토스 심사 규칙에 닿는다.
+
+                    무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
+                    「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 거짓이 된다.
+                  */}
+                  <span className="continue-sheet__ad-label">
+                    {AD_BUTTON_LABEL}{' '}
+                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                      광고
+                    </span>
+                  </span>
+                </>
+              )}
             </button>
           )}
           <p
@@ -240,25 +281,40 @@ export function ContinueSheet({
             role={checking || ad.showing || bailed ? 'status' : undefined}
           >
             {/*
-              연꽃을 **안 가진 사람에게** 어디서 얻는지 알려 준다. 한때 가진 사람 쪽에만
-              두었는데, 그러면 이미 아는 사람에게만 얻는 법을 말하는 구조가 된다.
+              어디서 얻는지는 이제 아래 카드가 말한다. 이 줄은 **지금 무슨 일이
+              일어나는 중인지**만 맡는다.
 
               ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
               「베푼 것을 세는 문장」과 한 글자도 안 겹치게 하려고 `flows.spec.ts` 가
               문자열로 지키는 자리다. 같은 뜻을 「바로 이어갈 수 있어요」로 적는다.
             */}
             {checking
-              ? '이야기를 살펴보고 있어요'
+              ? '보내신 이야기를 살펴보는 중이에요. 곧 열려요'
               : ad.showing
-              ? '광고를 불러오고 있어요'
-              : bailed
-                ? '광고를 끝까지 봐야 이어갈 수 있어요'
-                : hasLeaf
-                  ? '광고를 보면 연꽃을 아끼고 이어갈 수 있어요'
-                  : AD_KIND.continue === 'rewarded'
-                    ? '홈 위쪽 연꽃을 미리 모아 두면 다음엔 바로 이어갈 수 있어요'
-                    : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
+                ? '광고를 불러오고 있어요'
+                : bailed
+                  ? // 「리워드 지급됨」까지 가야 한다는 것을 그 자리에서 밝힌다
+                    '광고 화면에 보상을 받았다고 뜰 때까지 봐야 이어갈 수 있어요'
+                  : hasLeaf
+                    ? '광고를 보면 연꽃을 아끼고 이어갈 수 있어요'
+                    : AD_KIND.continue === 'rewarded'
+                      ? '광고를 끝까지 보면 바로 이어져요'
+                      : '광고가 먼저 나오고, 그다음 답변을 만들어요'}
           </p>
+
+          {/*
+            연꽃을 모으러 가는 자리. 광고 버튼 **아래**다. 지금 답을 받으러 온 사람에게
+            먼저 권할 일이 아니고, 「이번에는 광고를 보고 다음부터는 안 봐도 된다」는
+            순서로 읽히는 것이 맞다.
+          */}
+          {onCollectLeaf != null && (
+            <LeafCollectCta
+              count={leaves}
+              action="이어가요"
+              disabled={ad.showing || checking}
+              onClick={onCollectLeaf}
+            />
+          )}
         </div>
       </div>
     </BottomSheet>

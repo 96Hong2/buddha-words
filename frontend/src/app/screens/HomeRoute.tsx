@@ -131,6 +131,14 @@ export function HomeRoute() {
   /** 연꽃 모으기 시트 */
   const [leafOpen, setLeafOpen] = useState(false);
   /**
+   * 연꽃을 모으러 간 길이 **이어가기 시트에서 출발했나.**
+   *
+   * 그랬으면 모으기를 닫을 때 그 시트로 되돌려 놓는다. 되돌리지 않으면 광고를 안 보려고
+   * 연꽃을 모으러 간 사람이 홈에 혼자 서 있게 되고, 쓰던 이야기를 다시 보내야 한다.
+   * 홈 칩으로 연 판에서는 그냥 닫힌다.
+   */
+  const cameFromContinue = useRef(false);
+  /**
    * 지금까지 받은 답의 수와, 그것으로 정해지는 리뷰 카드.
    *
    * 마운트할 때 한 번 읽고 끝이다. 홈에 서 있는 동안에는 답이 늘지 않고, 답을 받고
@@ -356,6 +364,28 @@ export function HomeRoute() {
   }, []);
 
   /**
+   * 이어가기 시트에서 연꽃을 모으러 간다. **시트를 쌓지 않고 바꿔 끼운다.**
+   *
+   * 뒤에서 돌던 요청은 여기서 무른다(`closeContinue`). 안 무르면 광고를 보는 30초 사이에
+   * 답이 도착해 대기 화면으로 끌려가고, 사람은 자기가 무엇을 하고 있었는지 잃는다.
+   * 붙들어 둔 글과 멱등키는 그대로라, 돌아와서 누르면 같은 이야기로 이어진다.
+   */
+  const goCollectLeaf = useCallback(() => {
+    cameFromContinue.current = true;
+    closeContinue();
+    setLeafOpen(true);
+  }, [closeContinue]);
+
+  /** 모으기를 닫는다. 이어가기에서 왔으면 그 시트로 돌려놓는다 */
+  const closeLeaf = useCallback(() => {
+    setLeafOpen(false);
+    if (!cameFromContinue.current) return;
+    cameFromContinue.current = false;
+    // 붙들어 둔 글이 비었으면 돌려놓을 자리가 없다. 그냥 홈에 선다
+    if (held.current !== '') setContinueOpen(true);
+  }, []);
+
+  /**
    * 이야기를 이어간다. **보냈으면 true 다.**
    *
    * 돌려주는 값이 있어야 연꽃 경로가 값을 낼지 정할 수 있다. 붙들어 둔 글이 비어 있으면
@@ -565,13 +595,14 @@ export function HomeRoute() {
         onContinue={goOn}
         leaves={leaf.count}
         onUseLeaf={continueWithLeaf}
+        onCollectLeaf={goCollectLeaf}
       />
 
       {/*
         연꽃 모으기. 홈에서 여는 판은 **모으고 나서도 시트에 남는다.**
         한 장 모았다고 닫아 버리면 여러 장 쌓으려는 사람이 칩을 매번 다시 눌러야 한다.
       */}
-      <LeafSheet open={leafOpen} onClose={() => setLeafOpen(false)} />
+      <LeafSheet open={leafOpen} onClose={closeLeaf} />
     </>
   );
 }
