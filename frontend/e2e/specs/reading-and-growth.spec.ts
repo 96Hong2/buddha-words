@@ -223,7 +223,7 @@ test('광고를 중간에 닫으면 답을 주지 않고 시트에 남는다', a
   await page.getByTestId('continue-watch').click();
 
   const sheet = page.getByTestId('continue-sheet');
-  await expect(sheet).toContainText('광고를 끝까지 봐야 이어갈 수 있어요');
+  await expect(sheet).toContainText('보상을 받았다고 뜰 때까지 봐야 이어갈 수 있어요');
   await expect(page.getByTestId('answer')).toHaveCount(0);
   expect(new URL(page.url()).pathname).toBe('/');
 
@@ -420,19 +420,29 @@ test('설정 맨 위가 토스 홈에 추가하기다', async ({ page }) => {
   expect(textSize).not.toBeNull();
   expect(homeAdd!.y).toBeLessThan(textSize!.y);
 
-  // 알림은 홈 추가 바로 아래다. 둘 다 「다시 오는 길」이라 같이 읽힌다
+  /*
+    연꽃이 홈 추가 **바로 아래**다(2026-09-22 사용자 지시). 알림은 아직 못 켜는 자리라
+    「준비 중」으로 서 있는데, 그 아래에 두면 지금 쓸 수 있는 것이 못 쓰는 것 뒤에 가린다.
+  */
+  const leaf = await page.getByTestId('settings-leaf').boundingBox();
   const notify = await page.getByTestId('settings-notify').boundingBox();
-  expect(notify!.y).toBeGreaterThan(homeAdd!.y);
+  expect(leaf).not.toBeNull();
+  expect(leaf!.y).toBeGreaterThan(homeAdd!.y);
+  expect(leaf!.y).toBeLessThan(notify!.y);
   expect(notify!.y).toBeLessThan(textSize!.y);
 
   await shot(page, '47-1 설정 - 홈 추가가 맨 위에 선다', { fullPage: true });
 });
 
-test('설정에 알림 자리가 늘 있고 받고 싶은 시간을 고를 수 있다', async ({ page }) => {
+test('설정 알림은 줄 하나이고, 늘 자리에 있다', async ({ page }) => {
   /*
    * 예전에는 콘솔 템플릿 코드가 없으면 알림 줄을 통째로 감췄고, 시각 줄은 동의를 받은
    * 뒤에만 그렸다. 실기기에서 그 둘이 겹쳐 **설정에 알림이 아예 없어** 보였다.
    * 지금은 자리를 늘 두고, 아직 못 보낸다는 사실을 그 자리에 적는다.
+   *
+   * 2026-09-22 에 **줄 하나로 줄였다.** 받을지 말지와 몇 시에 받을지는 서로 다른 것을
+   * 묻지만, 지금 토스 앱 버전에서는 받기 자체를 못 켠다. 못 켜는 알림의 시각을 고르게
+   * 두면 골라 놓고 안 오는 것을 고장으로 읽는다.
    */
   await page.goto('/settings');
   // 화면이 실제로 섰는지 먼저 본다. 이 줄이 없으면 빈 페이지에서도 「있다」가 흐려진다
@@ -440,32 +450,14 @@ test('설정에 알림 자리가 늘 있고 받고 싶은 시간을 고를 수 �
 
   const notifyRow = page.getByTestId('settings-notify');
   await expect(notifyRow).toBeVisible();
-  await expect(notifyRow).toContainText('매일 마음을 기록해 보세요');
+  await expect(notifyRow).toContainText('알림 받기');
+  await expect(notifyRow).toContainText('하루 한 번');
 
-  const timeRow = page.getByTestId('settings-notify-time');
-  // 동의 전에도 시각을 고를 수 있다. 켜야만 보이면 못 켜는 판에서 영영 안 보인다
-  await expect(timeRow).toBeVisible();
+  // 시각 고르는 줄은 없앴다. 되살아나면 여기서 걸린다
+  await expect(page.getByTestId('settings-notify-time')).toHaveCount(0);
+  await expect(page.getByTestId('settings-notify-time-option')).toHaveCount(0);
 
-  await notifyRow.click();
-  await expect(timeRow).toBeVisible();
-  // 기본은 밤 9시다. 하루를 덮고 마음을 들여다보는 시간대다
-  await expect(timeRow).toContainText('오후 9시');
-
-  await timeRow.click();
-  const options = page.getByTestId('settings-notify-time-option');
-  await expect(options.first()).toBeVisible();
-  // 새벽은 없다. 그 시각에 오는 알림은 도움이 아니라 방해다
-  await expect(page.getByRole('radio', { name: '오전 3시' })).toHaveCount(0);
-
-  await page.getByRole('radio', { name: '오전 8시' }).click();
-  await expect(timeRow).toContainText('오전 8시');
-  // 지킬 수 있는 말만 한다. 발송이 아직 없다는 것을 그 자리에서 밝힌다
-  await expect(page.getByText('아직은 보내드리지 않아요')).toBeVisible();
-  await shot(page, '47-2 설정 - 알림 받을 시간 고르기', { fullPage: true });
-
-  // 다시 열어도 고른 값이 남는다
-  await page.reload();
-  await expect(page.getByTestId('settings-notify-time')).toContainText('오전 8시');
+  await shot(page, '47-2 설정 - 알림은 줄 하나', { fullPage: true });
 
   const names = await page.evaluate(() => (window.__pocketLogs ?? []).map((log) => log.name));
   expect(names).toContain('settings_view');

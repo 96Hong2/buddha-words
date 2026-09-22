@@ -1,9 +1,15 @@
 /**
- * 하루에 나눌 수 있는 이야기를 세는 자리.
+ * 나눈 이야기를 세는 자리.
  *
- * 하루 첫 NORMAL·DEEP 은 그냥 되고, **그다음부터는 광고를 본 만큼 계속 이어간다.**
- * LIGHT 는 하루 10회 소프트 상한이고, INVALID·CRISIS·SOLACE 는 세지 않는다.
- * 하루의 경계는 사용자 시간대 자정이다.
+ * **처음 한 번만 그냥 되고, 그다음부터는 늘 광고나 연꽃이다.** 하루가 지나도 다시
+ * 열리지 않는다. LIGHT 는 하루 10회 소프트 상한이고, INVALID·CRISIS·SOLACE 는 세지 않는다.
+ *
+ * ⚠ **무료는 「하루 첫 이야기」였다. 2026-09-22 에 「이 사람의 첫 이야기」로 좁혔다.**
+ * 실기기에서 「연꽃이 없는데도 답변을 받는다」는 말을 들었다. 날마다 한 번씩 열리니
+ * 연꽃을 모을 이유가 그만큼 약했고, 광고 문이 서는 날이 사실상 두 번째 이야기부터였다.
+ * 처음 한 번은 이 앱이 무엇인지 보여 주는 값이라 남긴다.
+ *
+ * 그래서 `firstUsed` 만 날짜 칸 **밖에** 산다. 자정이 지나도 안 지워진다.
  *
  * ⚠ **하루 천장이 있었다(이어가기 4회, 합쳐 5회). 2026-09-20 에 없앴다.**
  * 광고를 보는 사람을 막고 있었다. 막는 일은 이제 서버만 한다(분당 제한 · 전역 예산 문).
@@ -17,7 +23,7 @@ import type { Quota } from '../../shared/api';
 
 const KEY = 'buddha.quota.v1';
 
-/** 하루 첫 NORMAL·DEEP */
+/** 사람마다 딱 한 번. 날마다가 아니다 */
 export const FIRST_FREE = 1;
 /** LIGHT 소프트 상한 */
 export const LIGHT_SOFT_CAP = 10;
@@ -31,6 +37,7 @@ export type QuotaRoute = 'light' | 'normal' | 'deep' | 'invalid' | 'crisis' | 's
 export interface QuotaState {
   /** 사용자 시간대 자정 기준 날짜 */
   day: string;
+  /** 이 사람이 첫 이야기를 이미 썼나. **날짜와 무관하게 남는다** */
   firstUsed: boolean;
   continuesUsed: number;
   lightUsed: number;
@@ -68,17 +75,23 @@ export function emptyQuota(now: Date = new Date()): QuotaState {
   return { day: dayKey(now), firstUsed: false, continuesUsed: 0, lightUsed: 0 };
 }
 
-/** 저장된 값이 어제 것이면 새 하루로 시작한다 */
+/**
+ * 저장된 값이 어제 것이면 새 하루로 시작한다. **`firstUsed` 만 빼고.**
+ *
+ * 첫 이야기는 사람마다 한 번이라 날짜 칸이 바뀌어도 따라 지워지면 안 된다. 지워지면
+ * 자정마다 무료가 한 번씩 되살아나고, 그건 없앤 규칙이다.
+ */
 export function readQuota(now: Date = new Date()): QuotaState {
   const today = dayKey(now);
   try {
     const raw = localStorage.getItem(KEY);
     if (raw == null) return emptyQuota(now);
     const parsed = JSON.parse(raw) as Partial<QuotaState>;
-    if (parsed.day !== today) return emptyQuota(now);
+    const firstUsed = parsed.firstUsed === true;
+    if (parsed.day !== today) return { ...emptyQuota(now), firstUsed };
     return {
       day: today,
-      firstUsed: parsed.firstUsed === true,
+      firstUsed,
       continuesUsed: toCount(parsed.continuesUsed),
       lightUsed: toCount(parsed.lightUsed),
     };
@@ -95,17 +108,12 @@ export function writeQuota(state: QuotaState): void {
   }
 }
 
-/** 오늘 쓴 이야기 수 */
-export function usedToday(state: QuotaState): number {
-  return (state.firstUsed ? FIRST_FREE : 0) + state.continuesUsed;
-}
-
 /** LIGHT 가 소프트 상한에 닿았나. 막지는 않고 화면이 참고한다 */
 export function isLightCapped(state: QuotaState): boolean {
   return state.lightUsed >= LIGHT_SOFT_CAP;
 }
 
-/** 지금 NORMAL·DEEP 을 보내면 무엇을 지나야 하나. 첫 이야기 뒤는 늘 광고다 */
+/** 지금 NORMAL·DEEP 을 보내면 무엇을 지나야 하나. **평생 첫 이야기 뒤는 늘 광고다** */
 export function gateFor(state: QuotaState): Gate {
   return state.firstUsed ? 'ad_continue' : 'free';
 }
@@ -132,11 +140,21 @@ export function recordAndSave(route: QuotaRoute, now: Date = new Date()): QuotaS
   return next;
 }
 
-/** 서버가 준 값이 이긴다 */
+/**
+ * 서버가 준 값이 이긴다. **`firstUsed` 만 예외다.**
+ *
+ * ⚠ 한 번 쓴 첫 이야기는 **어느 쪽에서도 안 풀린다.** 서버의 무료 장부는 아직 프로세스
+ * 메모리(`_FREE_USED`)라 배포할 때마다 비고, 그러면 서버가 `firstUsed: false` 를 돌려준다.
+ * 그 값을 그대로 덮으면 기기 사본까지 풀려서 **배포 한 번에 사람마다 무료 한 번이
+ * 되살아난다.** 이 앱이 막으려는 바로 그 증상이다(계획 X38).
+ *
+ * 그래서 둘 중 하나라도 「썼다」면 쓴 것으로 본다. 반대 방향(서버는 썼다는데 기기는
+ * 모른다)에서는 서버 값이 그대로 들어온다. 어느 쪽으로도 무료가 늘지 않는다.
+ */
 export function fromServer(state: QuotaState, quota: Quota): QuotaState {
   return {
     ...state,
-    firstUsed: quota.firstUsed,
+    firstUsed: state.firstUsed || quota.firstUsed,
     continuesUsed: toCount(quota.continuesUsed),
   };
 }

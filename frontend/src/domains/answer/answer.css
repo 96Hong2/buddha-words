@@ -841,15 +841,24 @@
   color: var(--text-weak);
   cursor: default;
 }
+/*
+   ⚠ 「광고」 배지의 높이를 못 박지 않는다.
+
+   `--t-micro` 는 글자 크기 설정을 안 따르지만(그 자리의 목적이 작게 두는 것이다)
+   **줄 높이는 부모에서 흘러들어 온다.** 「아주 크게」에서 부모 줄 높이가 커지면 글자가
+   18px 상자를 5px 넘어섰다. CI(리눅스 글꼴)에서만 보이던 자리라 맥에서는 안 잡혔다.
+   줄 높이를 이 자리에서 못 박고 상자는 내용에 맞춰 늘어나게 둔다. (2026-09-22)
+*/
 .ans .ad-tag {
   display: inline-flex;
   align-items: center;
-  height: 18px;
+  min-height: 18px;
   padding: 0 6px;
   border-radius: 4px;
   background: var(--accent-on-deep);
   color: var(--surface-deep);
   font-size: var(--t-micro);
+  line-height: var(--lh-micro);
   font-weight: var(--w-bold);
   letter-spacing: 0.04em;
 }

@@ -503,6 +503,12 @@ test('서버가 보는 동안에는 광고 버튼이 잠긴다', async ({ page }
   // 광고를 누를 수 없다. 왜 기다리는지도 적는다
   await expect(page.getByTestId('continue-watch')).toBeDisabled();
   await expect(sheet).toContainText('살펴보고 있어요');
+  /*
+    **잠긴 버튼이 스스로 말해야 한다.** 흐려지기만 하면 사람은 앱이 멈춘 줄로 읽는다
+    (2026-09-22 사용자 지적). 버튼 안에 도는 표와 지금 무엇을 하는 중인지가 함께 선다.
+  */
+  await expect(page.getByTestId('continue-watch')).toContainText('이야기를 살펴보고 있어요');
+  await expect(page.getByTestId('continue-watch').locator('.spin')).toBeVisible();
   await shot(page, '53 광고 문 - 서버가 보는 동안은 잠긴다');
 
   // 다 보고 나면 시트를 걷고 창구로 데려간다

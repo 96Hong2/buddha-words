@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router';
 import { SessionProvider } from './shared/session';
 
 import { LeafSpentToast } from './domains/leaf';
+import { LeafFlight } from './shared/ui';
 
 import { BackHandler } from './app/BackHandler';
 import { ErrorBoundary } from './app/ErrorBoundary';
@@ -27,6 +28,11 @@ export function App() {
               알리려는 순간 함께 사라진다.
             */}
             <LeafSpentToast />
+            {/*
+              날아오는 연꽃 한 송이. 같은 이유로 라우팅 밖이다. 나는 자리는 홈 칩이고
+              닿는 자리는 시트 안 버튼이라, 둘의 공통 조상이 여기뿐이기도 하다.
+            */}
+            <LeafFlight />
           </SessionProvider>
         </BrowserRouter>
       </AppProviders>

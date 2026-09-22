@@ -23,7 +23,7 @@ import { useOverlayBackClose } from '../../app/providers';
 import { useAnalytics } from '../../shared/analytics';
 import { isArchivePassEnabled } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { LeafAltAdButton, LeafUseButton } from '../../shared/ui';
+import { LeafAltAdButton, LeafCollectCta, LeafUseButton, Spinner } from '../../shared/ui';
 
 import './archive.css';
 
@@ -51,6 +51,11 @@ export interface SaveGateProps {
    * 못 뺐으면 간직하지 않고 그대로 둔다.
    */
   onUseLeaf?: () => void;
+  /**
+   * 연꽃을 모으러 간다. 이 시트를 닫고 모으기 시트를 여는 일은 부르는 쪽이 한다.
+   * 이어가기 시트와 같은 부품·같은 자리다. 두 자리가 다르면 같은 앱으로 안 읽힌다.
+   */
+  onCollectLeaf?: () => void;
 }
 
 export function SaveGate({
@@ -62,6 +67,7 @@ export function SaveGate({
   onBuyPass,
   leaves = 0,
   onUseLeaf,
+  onCollectLeaf,
 }: SaveGateProps) {
   const analytics = useAnalytics();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -151,6 +157,9 @@ export function SaveGate({
             <LeafAltAdButton
               label="30초 보고 간직하기"
               disabled={pending}
+              busy={pending}
+              /* 여기서 도는 것은 광고다. 이야기를 살펴보는 자리는 이어가기 시트다 */
+              busyLabel="광고를 여는 중이에요"
               onClick={onWatch}
               testKey="saveGateWatch"
             />
@@ -163,7 +172,11 @@ export function SaveGate({
               {...testId(TEST_IDS.saveGateWatch)}
             >
               {pending ? (
-                '광고를 여는 중이에요'
+                <>
+                  {/* 흐려지기만 하면 멈춘 것으로 읽힌다. 도는 표를 함께 둔다 */}
+                  <Spinner className="arch-btn__spin" />
+                  광고를 여는 중이에요
+                </>
               ) : (
                 <>
                   {/* 다른 두 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
@@ -193,13 +206,27 @@ export function SaveGate({
           두었는데, 그러면 이미 아는 사람에게만 얻는 법을 알려 주는 구조가 된다.
           있는 사람에게는 광고를 여는 중인지를 말한다. 이어가기 시트와 같은 자리다.
         */}
-        <p className="pw-leaf-note" role={pending ? 'status' : undefined}>
+        {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
+        <p className="pw-leaf-note" role="status">
           {pending
             ? '광고를 불러오고 있어요'
             : hasLeaf
               ? '광고를 보면 연꽃을 아끼고 담을 수 있어요'
-              : '홈 위쪽 연꽃을 미리 모아 두면 광고 없이 담을 수 있어요'}
+              : '광고 화면에 보상을 받았다고 뜰 때까지 보면 담겨요'}
         </p>
+
+        {/*
+          연꽃을 모으러 가는 자리. 이어가기 시트와 같은 부품이다. 한때 「홈 위쪽 연꽃을
+          미리 모아 두면」이라고 글로만 적었는데, 읽어도 지금 할 수 있는 일이 아니었다.
+        */}
+        {onCollectLeaf != null && (
+          <LeafCollectCta
+            count={leaves}
+            action="담아요"
+            disabled={pending}
+            onClick={onCollectLeaf}
+          />
+        )}
 
         {/* 파는 말은 작게 아래에 둔다. 광고를 보는 쪽이 이 화면의 기본 길이다 */}
         {isArchivePassEnabled() && onBuyPass != null && (

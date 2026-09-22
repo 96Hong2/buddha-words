@@ -21,7 +21,7 @@ import {
   type SaveDoneKind,
 } from '../../domains/archive';
 import { NudgeOverlay, notifyAlreadySettled } from '../../domains/growth/NudgeOverlay';
-import { useLeafWallet } from '../../domains/leaf';
+import { LeafSheet, useLeafWallet } from '../../domains/leaf';
 import {
   countAnswer,
   markNudgeShown,
@@ -82,6 +82,8 @@ export function AnswerRoute() {
   const ad = useRewardedAd('extension');
   const saveAd = useRewardedAd('save');
   const leaf = useLeafWallet();
+  /** 간직 시트에서 열어 둔 연꽃 모으기 */
+  const [leafOpen, setLeafOpen] = useState(false);
 
   const [shareOpen, setShareOpen] = useState(false);
   /** 무엇을 보낼지. 기본은 적게 나가는 쪽이다 */
@@ -160,7 +162,10 @@ export function AnswerRoute() {
     const next = nudgeFor(total);
     if (next == null) return;
     // 알림을 못 켜는 판이거나 이미 켠 사람이다. 그 한 번을 죽은 버튼·이미 한 대답에 쓰지 않는다
-    if (next === 'notify' && (!notifyUsable(bridge.supports('notification')) || notifyAlreadySettled())) {
+    if (
+      next === 'notify' &&
+      (!notifyUsable(bridge.supports('notification')) || notifyAlreadySettled())
+    ) {
       return;
     }
     /*
@@ -191,32 +196,29 @@ export function AnswerRoute() {
       if (answer == null) return 'failed';
       const pass2 = answer.pass2;
       const before = countSaved();
-      const result = saveAnswer(
-        {
-          answerId: answer.answerId,
-          line: answer.modernBuddhaMessage,
-          tags: answer.emotionTags,
-          visualTheme: answer.visualTheme,
-          detail: {
-            scripture: answer.scriptures[0],
-            // 요청2가 오기 전에 간직하면 경전만 남는다. 없는 자리를 지어내지 않는다
-            explanation: pass2.status === 'done' ? pass2.scriptureExplanation : undefined,
-            terms:
-              pass2.status === 'done' ? (pass2.terms ?? answer.scriptures[0]?.terms) : undefined,
-            analysis: pass2.status === 'done' ? pass2.personalAnalysis : undefined,
-            actions: pass2.status === 'done' ? pass2.actions : undefined,
-            closing: pass2.status === 'done' ? pass2.closingMessage : undefined,
-            extension:
-              extension == null
-                ? undefined
-                : {
-                    scripture: extension.scripture,
-                    alternativeAnalysis: extension.alternativeAnalysis,
-                    action: extension.action,
-                  },
-          },
+      const result = saveAnswer({
+        answerId: answer.answerId,
+        line: answer.modernBuddhaMessage,
+        tags: answer.emotionTags,
+        visualTheme: answer.visualTheme,
+        detail: {
+          scripture: answer.scriptures[0],
+          // 요청2가 오기 전에 간직하면 경전만 남는다. 없는 자리를 지어내지 않는다
+          explanation: pass2.status === 'done' ? pass2.scriptureExplanation : undefined,
+          terms: pass2.status === 'done' ? (pass2.terms ?? answer.scriptures[0]?.terms) : undefined,
+          analysis: pass2.status === 'done' ? pass2.personalAnalysis : undefined,
+          actions: pass2.status === 'done' ? pass2.actions : undefined,
+          closing: pass2.status === 'done' ? pass2.closingMessage : undefined,
+          extension:
+            extension == null
+              ? undefined
+              : {
+                  scripture: extension.scripture,
+                  alternativeAnalysis: extension.alternativeAnalysis,
+                  action: extension.action,
+                },
         },
-      );
+      });
 
       if (result.status === 'already') return 'already';
       // 담았다는 답을 그대로 믿지 않는다. 저장소가 막힌 기기에서는 담겨 있지 않다
@@ -301,7 +303,16 @@ export function AnswerRoute() {
       return;
     }
     setGateOpen(true);
-  }, [afterStore, analytics, answer, answersTotal, archivePass, saveAd.ready, saveAd.supported, store]);
+  }, [
+    afterStore,
+    analytics,
+    answer,
+    answersTotal,
+    archivePass,
+    saveAd.ready,
+    saveAd.supported,
+    store,
+  ]);
 
   /**
    * 「연꽃 한 장으로 간직하기」를 눌렀다. 광고를 띄우지 않는다.
@@ -446,15 +457,20 @@ export function AnswerRoute() {
         간직 시트나 공유 시트가 열려 있는 동안에는 물러난다. 시트 둘이 겹치면
         사람이 무엇을 누르고 있는지 잃는다.
       */}
-      {nudge != null && !gateOpen && !shareOpen && done == null && paywallOpen === false && (
-        <NudgeOverlay
-          nudge={nudge}
-          answersTotal={answersTotal}
-          onSendMessage={sendMessage}
-          onAskNotify={askNotify}
-          onDone={() => setNudge(null)}
-        />
-      )}
+      {nudge != null &&
+        !gateOpen &&
+        !leafOpen &&
+        !shareOpen &&
+        done == null &&
+        paywallOpen === false && (
+          <NudgeOverlay
+            nudge={nudge}
+            answersTotal={answersTotal}
+            onSendMessage={sendMessage}
+            onAskNotify={askNotify}
+            onDone={() => setNudge(null)}
+          />
+        )}
 
       {answer != null && (
         <ShareSheet
@@ -479,6 +495,11 @@ export function AnswerRoute() {
           pending={gateBusy}
           leaves={leaf.count}
           onUseLeaf={saveWithLeaf}
+          onCollectLeaf={() => {
+            // 쌓지 않고 바꿔 끼운다. 닫으면 간직 시트로 돌아온다(홈 쪽과 같은 결)
+            setGateOpen(false);
+            setLeafOpen(true);
+          }}
           onClose={() => setGateOpen(false)}
           onWatch={() => void watchAndSave()}
           onBuyPass={() => {
@@ -487,6 +508,18 @@ export function AnswerRoute() {
           }}
         />
       )}
+
+      {/*
+        연꽃 모으기. 간직 시트에서만 열린다. 닫으면 간직 시트로 돌려놓는다. 안 돌려놓으면
+        광고를 안 보려고 연꽃을 모은 사람이 답변 화면에 혼자 서서 간직을 다시 눌러야 한다.
+      */}
+      <LeafSheet
+        open={leafOpen}
+        onClose={() => {
+          setLeafOpen(false);
+          setGateOpen(true);
+        }}
+      />
 
       {answer != null && (
         <SaveDone
