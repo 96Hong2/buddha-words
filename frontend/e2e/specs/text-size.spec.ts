@@ -12,6 +12,7 @@
  *   - 글자가 제 상자를 벗어나지 않는다 (직계 텍스트 노드의 줄 상자로 본다)
  *   - 무엇도 화면 좌우 밖으로 나가지 않는다
  *   - `overflow: hidden` 인 상자 안에서 내용이 잘리지 않는다
+ *   - 화면에 붙어 선 시트·바가 **화면 위로 잘려 나가지 않는다**
  *
  * 좁은 기기(320px)도 함께 본다. 세 칸으로 나눈 탭바는 폭이 줄면 라벨부터 넘친다.
  */
@@ -188,6 +189,20 @@ test.describe('좁은 기기', () => {
     await page.goto('/settings');
     await expect(page.getByTestId('settings')).toBeVisible();
     await everySize(page, '320px 설정');
+  });
+
+  test('320px 에서 간직 시트가 화면 위로 잘리지 않는다', async ({ page }) => {
+    /*
+      시트는 아래에 붙어 자란다. 안에 든 것이 늘고 글자까지 커지면 제목과 주 버튼이
+      있는 윗머리부터 화면 밖으로 밀리는데, 그 시트에 스크롤이 없으면 되돌릴 길이 없다.
+    */
+    await page.goto('/');
+    await askOnce(page);
+    await dismissNudge(page);
+    await revealBottomBar(page);
+    await page.getByTestId('save-button').click();
+    await expect(page.getByTestId('save-gate')).toBeVisible();
+    await everySize(page, '320px 간직 시트');
   });
 });
 

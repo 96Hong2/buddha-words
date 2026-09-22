@@ -168,7 +168,7 @@
 .leaf-sheet__badge {
   display: inline-flex;
   align-items: center;
-  height: 18px;
+  min-height: 18px;
   padding: 0 6px;
   border-radius: var(--r-xs);
   background: var(--ad-tag-bg);
@@ -313,7 +313,7 @@
 .leaf-alt__badge {
   display: inline-flex;
   align-items: center;
-  height: 17px;
+  min-height: 17px;
   padding: 0 5px;
   border-radius: var(--r-xs);
   background: var(--ad-tag-bg);
@@ -512,7 +512,8 @@
   gap: var(--s-3);
   margin-top: var(--s-3);
   padding: 12px 14px;
-  border: 1px solid var(--leaf-dim);
+  /* 면이 시트와 1.06 이라 카드 경계를 이 선이 진다. --leaf 는 그 면 위 4.17 이다 */
+  border: 1px solid var(--leaf);
   border-radius: var(--r-card);
   background: var(--leaf-soft);
   font-family: inherit;

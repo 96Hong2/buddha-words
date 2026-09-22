@@ -154,9 +154,13 @@
   display: none;
 }
 
-/* 아주 좁은 기기도 같다. 360px 이면 제목만으로 줄이 찬다 */
+/*
+   아주 좁은 기기도 같다. 360px 이면 제목만으로 줄이 찬다.
+   키보드가 올라온 줄(.hero-row)의 44px 그림도 함께 비운다. 그 줄은 제목이 짧아 넓은
+   기기에서는 자리가 남지만, 320px·「아주 크게」에서는 17px 조각으로 줄어든다.
+*/
 @media (max-width: 360px) {
-  .home-screen .lead-row .home-face {
+  .home-screen .home-face {
     display: none;
   }
 }

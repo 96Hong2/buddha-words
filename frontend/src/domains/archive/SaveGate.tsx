@@ -158,6 +158,8 @@ export function SaveGate({
               label="30초 보고 간직하기"
               disabled={pending}
               busy={pending}
+              /* 여기서 도는 것은 광고다. 이야기를 살펴보는 자리는 이어가기 시트다 */
+              busyLabel="광고를 여는 중이에요"
               onClick={onWatch}
               testKey="saveGateWatch"
             />
@@ -204,7 +206,8 @@ export function SaveGate({
           두었는데, 그러면 이미 아는 사람에게만 얻는 법을 알려 주는 구조가 된다.
           있는 사람에게는 광고를 여는 중인지를 말한다. 이어가기 시트와 같은 자리다.
         */}
-        <p className="pw-leaf-note" role={pending ? 'status' : undefined}>
+        {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
+        <p className="pw-leaf-note" role="status">
           {pending
             ? '광고를 불러오고 있어요'
             : hasLeaf

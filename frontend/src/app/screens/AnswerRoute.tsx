@@ -457,15 +457,20 @@ export function AnswerRoute() {
         간직 시트나 공유 시트가 열려 있는 동안에는 물러난다. 시트 둘이 겹치면
         사람이 무엇을 누르고 있는지 잃는다.
       */}
-      {nudge != null && !gateOpen && !shareOpen && done == null && paywallOpen === false && (
-        <NudgeOverlay
-          nudge={nudge}
-          answersTotal={answersTotal}
-          onSendMessage={sendMessage}
-          onAskNotify={askNotify}
-          onDone={() => setNudge(null)}
-        />
-      )}
+      {nudge != null &&
+        !gateOpen &&
+        !leafOpen &&
+        !shareOpen &&
+        done == null &&
+        paywallOpen === false && (
+          <NudgeOverlay
+            nudge={nudge}
+            answersTotal={answersTotal}
+            onSendMessage={sendMessage}
+            onAskNotify={askNotify}
+            onDone={() => setNudge(null)}
+          />
+        )}
 
       {answer != null && (
         <ShareSheet

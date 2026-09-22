@@ -167,6 +167,13 @@ export function HomeRoute() {
    */
   const preflightSeq = useRef(0);
   /**
+   * 지금 붙들고 있는 이야기의 번호. **새 이야기일 때만 올라간다.**
+   *
+   * 시트가 닫혔다 열리는 것(연꽃 모으러 갔다 오기)과 새 이야기를 보내는 것을 가른다.
+   * 이어가기 시트가 이 값으로 노출을 한 번만 센다.
+   */
+  const storySeq = useRef(0);
+  /**
    * 뒤에서 보낸 요청의 답을 아직 기다리는 중인가.
    *
    * 그동안 시트의 버튼을 잠근다. 잠그지 않으면 **위기 글을 쓴 사람이 30초 광고를
@@ -195,6 +202,7 @@ export function HomeRoute() {
     // 같은 자리에서 온 값은 한 번만 연다. 글을 고쳐 다시 보낼 때 옛 값이 시트를 또 열면 안 된다
     if (capped == null || handledCap.current === capped) return;
     handledCap.current = capped;
+    storySeq.current += 1;
     void navigate(ROUTES.home, { replace: true, state: null });
     setQuota(saveFromServer(capped));
     /*
@@ -333,6 +341,7 @@ export function HomeRoute() {
 
       // 여기부터는 광고 문이 설 자리다. 화면을 넘기지 않고 시트를 먼저 세운다
       preflightSeq.current += 1;
+      storySeq.current += 1;
       supersededByNewStory.current = true;
       /*
         **옛 답을 지우지 않는다.** 시트를 닫고 돌아갈 수 있는 자리라, 여기서 세션의
@@ -590,6 +599,7 @@ export function HomeRoute() {
       <ContinueSheet
         open={continueOpen}
         continuesUsed={quota.continuesUsed}
+        storySeq={storySeq.current}
         checking={gateChecking}
         onClose={closeContinue}
         onContinue={goOn}

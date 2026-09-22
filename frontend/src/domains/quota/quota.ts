@@ -140,11 +140,21 @@ export function recordAndSave(route: QuotaRoute, now: Date = new Date()): QuotaS
   return next;
 }
 
-/** 서버가 준 값이 이긴다 */
+/**
+ * 서버가 준 값이 이긴다. **`firstUsed` 만 예외다.**
+ *
+ * ⚠ 한 번 쓴 첫 이야기는 **어느 쪽에서도 안 풀린다.** 서버의 무료 장부는 아직 프로세스
+ * 메모리(`_FREE_USED`)라 배포할 때마다 비고, 그러면 서버가 `firstUsed: false` 를 돌려준다.
+ * 그 값을 그대로 덮으면 기기 사본까지 풀려서 **배포 한 번에 사람마다 무료 한 번이
+ * 되살아난다.** 이 앱이 막으려는 바로 그 증상이다(계획 X38).
+ *
+ * 그래서 둘 중 하나라도 「썼다」면 쓴 것으로 본다. 반대 방향(서버는 썼다는데 기기는
+ * 모른다)에서는 서버 값이 그대로 들어온다. 어느 쪽으로도 무료가 늘지 않는다.
+ */
 export function fromServer(state: QuotaState, quota: Quota): QuotaState {
   return {
     ...state,
-    firstUsed: quota.firstUsed,
+    firstUsed: state.firstUsed || quota.firstUsed,
     continuesUsed: toCount(quota.continuesUsed),
   };
 }

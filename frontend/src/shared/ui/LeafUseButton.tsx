@@ -86,7 +86,13 @@ export function LeafUseButton({
       ref={ref}
       type="button"
       className={`leaf-use${phase === 'landed' ? ' leaf-use--landed' : ''}`}
-      disabled={disabled || busy}
+      /*
+        ⚠ 날아가는 동안 `disabled` 로 막지 않는다. 눌린 요소가 그 자리에서 비활성화되면
+        **포커스가 body 로 빠진다.** 키보드·스위치·보이스오버로 누른 사람은 0.6초 동안
+        시트 안에 설 자리를 잃는다. 두 번 눌리는 것은 `press()` 의 busy 가드가 막는다.
+      */
+      disabled={disabled}
+      aria-disabled={busy || undefined}
       onClick={press}
       {...testId(TEST_IDS[testKey])}
     >
@@ -98,10 +104,16 @@ export function LeafUseButton({
         마지막 한 송이면 숫자 대신 그 사실을 말한다. 「0송이 남아요」보다 먼저 읽힌다.
       */}
       {/*
-        ⚠ 낭독기에는 「쓰면 N송이」로 고정해 읽힌다. 날아가는 동안 숫자가 바뀌는 것은
-        눈으로 보는 장면이고, 그 사이에 리전이 두 번 읽히면 오히려 방해다.
+        ⚠ 낭독기에는 한 가지로 고정해 읽힌다. 날아가는 동안 숫자가 바뀌는 것은 눈으로
+        보는 장면이고, 그 사이에 이름이 두 번 바뀌면 오히려 방해다.
+
+        **마지막 한 송이일 때는 보이는 글을 그대로 이름으로 쓴다.** 「쓰면 0송이 남아요」로
+        덮으면 위 주석이 정한 결정이 낭독기에서만 뒤집히고, 보이는 말로 음성 조작도 안 된다.
       */}
-      <span className="leaf-use__left" aria-label={`쓰면 ${left}송이 남아요`}>
+      <span
+        className="leaf-use__left"
+        aria-label={left === 0 ? undefined : `쓰면 ${left}송이 남아요`}
+      >
         {phase === 'landed'
           ? `(${left}송이 남았어요)`
           : left === 0
@@ -116,8 +128,14 @@ export interface LeafAltAdButtonProps {
   /** 버튼에 적는 말. 자리마다 다르다 */
   label: string;
   disabled?: boolean;
-  /** 잠긴 이유가 「지금 뭔가 돌고 있어서」인가. 그러면 그렇게 보이게 한다 */
+  /**
+   * 잠긴 이유가 「지금 뭔가 돌고 있어서」인가. 그러면 그렇게 보이게 한다.
+   * 무엇이 도는 중인지는 자리마다 다르므로 `busyLabel` 로 받는다. 한 자리 말을 여기
+   * 박아 두면 다른 자리가 거짓말을 한다(간직 시트가 「이야기를 살펴보고 있어요」라고
+   * 적은 적이 있다. 그때 돌던 것은 광고였다).
+   */
   busy?: boolean;
+  busyLabel?: string;
   onClick: () => void;
   testKey: 'continueWatch' | 'saveGateWatch';
 }
@@ -132,19 +150,10 @@ export function LeafAltAdButton({
   label,
   disabled = false,
   busy = false,
+  busyLabel = '',
   onClick,
   testKey,
 }: LeafAltAdButtonProps) {
-  if (busy) {
-    // 흐려지기만 하면 멈춘 것으로 읽힌다. 도는 표와 이유를 함께 둔다
-    return (
-      <button type="button" className="leaf-alt" disabled {...testId(TEST_IDS[testKey])}>
-        <Spinner className="leaf-alt__spin" />
-        이야기를 살펴보고 있어요
-      </button>
-    );
-  }
-
   return (
     <button
       type="button"
@@ -153,22 +162,30 @@ export function LeafAltAdButton({
       onClick={onClick}
       {...testId(TEST_IDS[testKey])}
     >
-      {/* 광고임을 라벨과 아이콘 둘로 밝힌다(계획 1.6 「광고 기술 규칙」) */}
-      <span className="leaf-alt__play" aria-hidden="true">
-        <svg
-          viewBox="0 0 24 24"
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-        >
-          <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
-          <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
-      {label}{' '}
+      {/*
+        광고임을 라벨과 아이콘 둘로 밝힌다(계획 1.6 「광고 기술 규칙」).
+        돌고 있는 동안에는 재생 아이콘 자리에 도는 표가 서고 라벨만 바뀐다.
+        **「광고」 배지는 어느 쪽에서도 지우지 않는다.** 규칙에 조건이 없다.
+      */}
+      {busy ? (
+        <Spinner className="leaf-alt__spin" />
+      ) : (
+        <span className="leaf-alt__play" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          >
+            <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
+            <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
+          </svg>
+        </span>
+      )}
+      {busy ? busyLabel : label}{' '}
       <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
         광고
       </span>

@@ -87,6 +87,14 @@ export interface ContinueSheetProps {
   /** 오늘 이미 이어간 횟수. 로그에만 쓴다 */
   continuesUsed: number;
   /**
+   * 지금 붙들고 있는 이야기의 번호. **노출 로그를 한 번만 찍으려고 받는다.**
+   *
+   * 연꽃을 모으러 갔다 오면 이 시트가 실제로 닫혔다 다시 열린다. 열림만 보고 세면
+   * 같은 이야기 하나에 노출이 둘로 찍히고, 그 값이 광고 퍼널의 분모라 **연꽃을 모은
+   * 사람일수록 전환율이 낮게 집계된다.** 새 이야기일 때만 부르는 쪽이 이 값을 올린다.
+   */
+  storySeq?: number;
+  /**
    * 이 이야기를 서버가 아직 보고 있나. **그동안 버튼을 잠근다.**
    *
    * 서버는 위기를 사용량보다 먼저 본다. 잠그지 않으면 분류기만 잡는 위기 글을 쓴
@@ -114,6 +122,7 @@ export interface ContinueSheetProps {
 export function ContinueSheet({
   open,
   continuesUsed,
+  storySeq = 0,
   checking = false,
   onClose,
   onContinue,
@@ -123,22 +132,19 @@ export function ContinueSheet({
 }: ContinueSheetProps) {
   const analytics = useAnalytics();
   const ad = useRewardedAd('continue');
-  const logged = useRef(false);
+  /** 노출을 이미 센 이야기 번호. -1 은 아직 아무것도 안 셌다는 뜻이다 */
+  const logged = useRef(-1);
 
   useOverlayBackClose(open, onClose);
 
   useEffect(() => {
-    if (!open) {
-      logged.current = false;
-      return;
-    }
-    if (logged.current) return;
-    logged.current = true;
+    if (!open || logged.current === storySeq) return;
+    logged.current = storySeq;
     analytics.log('second_question_start', {
       continues_used: continuesUsed,
       gate: 'ad_continue',
     });
-  }, [analytics, continuesUsed, open]);
+  }, [analytics, continuesUsed, open, storySeq]);
 
   // 광고를 띄울 수 없는 기기라면 시트가 길을 막고 서 있는 셈이다. 조용히 비켜 준다.
   useEffect(() => {
@@ -187,8 +193,14 @@ export function ContinueSheet({
           그 문구는 광고를 보고도 막히는 줄 알게 만들었다(2026-09-20 사용자 지적).
         */}
         <p className="continue-sheet__sub">
+          {/*
+            ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
+            「베푼 것을 세는 문장」과 한 글자도 안 겹치게 `flows.spec.ts` 가 지키는 자리다.
+            연꽃을 가진 사람이 보는 줄도 예외가 아니다(2026-09-22, 모으러 가는 길이
+            생기면서 이 분기가 두 번 탭이면 닿는 주 경로가 됐다).
+          */}
           {hasLeaf
-            ? '모아 둔 연꽃으로 광고 없이 이어갈 수 있어요'
+            ? '모아 둔 연꽃으로 바로 이어갈 수 있어요'
             : '광고를 보면 오늘도 계속 이어갈 수 있어요'}
         </p>
 
@@ -212,6 +224,8 @@ export function ContinueSheet({
               label={AD_ALT_LABEL}
               disabled={ad.showing || checking}
               busy={checking}
+              busyLabel="이야기를 살펴보고 있어요"
+
               onClick={() => {
                 void watch();
               }}
@@ -239,47 +253,47 @@ export function ContinueSheet({
                 누르는 순간 무엇이 뜨는지 라벨이 말해야 한다는 규칙은 그대로 지켜진다.
               */}
               {checking ? (
-                <>
-                  <Spinner className="continue-sheet__spin" />
-                  <span className="continue-sheet__ad-label">이야기를 살펴보고 있어요</span>
-                </>
+                <Spinner className="continue-sheet__spin" />
               ) : (
-                <>
-                  <span className="continue-sheet__play" aria-hidden="true">
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="18"
-                      height="18"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
-                      <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
-                    </svg>
-                  </span>
-                  {/*
-                    「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지
-                    라벨이 말하지 않으면 앱인토스 심사 규칙에 닿는다.
-
-                    무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
-                    「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 거짓이 된다.
-                  */}
-                  <span className="continue-sheet__ad-label">
-                    {AD_BUTTON_LABEL}{' '}
-                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                      광고
-                    </span>
-                  </span>
-                </>
+                <span className="continue-sheet__play" aria-hidden="true">
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3.2" y="5.2" width="17.6" height="13.6" rx="3" />
+                    <path d="M10.6 9.6l4.6 2.6-4.6 2.6z" fill="currentColor" stroke="none" />
+                  </svg>
+                </span>
               )}
+              {/*
+                「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지
+                라벨이 말하지 않으면 앱인토스 심사 규칙에 닿는다.
+
+                무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
+                「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 거짓이 된다.
+
+                ⚠ **배지는 잠긴 동안에도 지우지 않는다.** 규칙에 조건이 없고, 배지 수를
+                세는 검사가 그 창을 밟으면 깨진다. 잠긴 동안 바뀌는 것은 앞의 아이콘과
+                라벨뿐이다.
+              */}
+              <span className="continue-sheet__ad-label">
+                {checking ? '이야기를 살펴보고 있어요' : AD_BUTTON_LABEL}{' '}
+                <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                  광고
+                </span>
+              </span>
             </button>
           )}
-          <p
-            className="continue-sheet__note"
-            role={checking || ad.showing || bailed ? 'status' : undefined}
-          >
+          {/*
+            ⚠ `role` 을 조건으로 붙이지 않는다. 라이브 리전은 **내용이 바뀌기 전에** 이미
+            접근성 트리에 있어야 읽힌다. 역할과 글이 같은 순간에 생기면 안 읽는 기기가 있다.
+          */}
+          <p className="continue-sheet__note" role="status">
             {/*
               어디서 얻는지는 이제 아래 카드가 말한다. 이 줄은 **지금 무슨 일이
               일어나는 중인지**만 맡는다.
