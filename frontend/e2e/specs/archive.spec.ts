@@ -9,6 +9,7 @@
 import { DEEP_CONCERN, askOnce, revealBottomBar, saveAnswerFromScreen } from '../support/flow';
 import { expect, test, type Page } from '../support/fixtures';
 import { shot } from '../support/shots';
+import type { MockScenario } from '../../src/shared/toss/mockBridge';
 
 /**
  * 여백·줄바꿈을 지운 비교용 문자열.
@@ -854,12 +855,10 @@ test('간직 광고를 중간에 닫으면 시트에 남아 왜 안 담겼는지
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
   // 브릿지 시나리오는 첫 페이지가 뜨기 전에 심는다. 첫 답에는 광고가 없어 무해하다
-  await page.addInitScript(
-    (value) => {
-      window.__buddhaBridge = value;
-    },
-    { fullScreenAd: 'dismissed', fullScreenAdMs: 400 },
-  );
+  const scenario: MockScenario = { fullScreenAd: 'dismissed', fullScreenAdMs: 400 };
+  await page.addInitScript((value) => {
+    window.__buddhaBridge = value;
+  }, scenario);
   await page.goto('/');
   await askOnce(page, DEEP_CONCERN);
 
