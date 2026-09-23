@@ -27,6 +27,8 @@ import { useAnalytics } from '../../shared/analytics';
 import { isArchivePassEnabled } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { LeafAltAdButton, LeafCollectCta, LeafUseButton, Spinner } from '../../shared/ui';
+import { trapTab } from '../../shared/ui/focusTrap';
+import { useSheetDrag } from '../../shared/ui/sheetDrag';
 
 import './archive.css';
 
@@ -83,6 +85,14 @@ export function SaveGate({
 }: SaveGateProps) {
   const analytics = useAnalytics();
   const sheetRef = useRef<HTMLDivElement>(null);
+  /*
+    아래로 밀어 닫기. **공용 바텀시트와 같은 배선을 나눠 쓴다.**
+
+    「다음에」 버튼을 빼면서 눈에 보이는 닫기 표가 손잡이 하나로 줄었다. 그 손짓이 바로
+    앞뒤 시트(연꽃 모으기·이어가기)에서는 되고 여기서만 안 되면, 사람은 그것을 「이 앱은
+    가끔 안 닫힌다」로 읽는다.
+  */
+  const { drag, handlers, handleClick } = useSheetDrag(sheetRef, onClose);
 
   /** 연꽃으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
   const hasLeaf = leaves > 0 && onUseLeaf != null;
@@ -97,20 +107,31 @@ export function SaveGate({
   useEffect(() => {
     if (!open) return;
 
+    /*
+      닫고 나면 눌렀던 자리로 포커스를 돌려놓는다. 안 돌려놓으면 body 로 떨어져 낭독기가
+      화면 맨 위로 간다. 손잡이가 키보드의 **유일한** 닫기가 되면서 더 자주 밟힌다.
+    */
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     sheetRef.current?.focus();
     const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      // 시트 밖으로 포커스가 새면 딤 뒤의 간직하기 버튼을 다시 누를 수 있게 된다
+      if (event.key !== 'Tab' || sheetRef.current === null) return;
+      trapTab(sheetRef.current, event);
     }
 
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = overflow;
+      previouslyFocused?.focus();
     };
   }, [open, onClose]);
 
@@ -121,11 +142,13 @@ export function SaveGate({
       <div className="pw-dim" onClick={onClose} {...testId(TEST_IDS.sheetDim)} />
       <div
         ref={sheetRef}
-        className="pw-sheet"
+        className={drag.dragging ? 'pw-sheet pw-sheet--dragging' : 'pw-sheet'}
+        style={drag.offset > 0 ? { transform: `translateY(${drag.offset}px)` } : undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby="save-gate-title"
         tabIndex={-1}
+        {...handlers}
         {...testId(TEST_IDS.saveGate)}
       >
         {/*
@@ -137,9 +160,10 @@ export function SaveGate({
         */}
         <button
           type="button"
-          className="pw-grabber"
+          data-sheet-handle=""
+          className="pw-grabber pw-grabber--hit"
           aria-label="닫기"
-          onClick={onClose}
+          onClick={handleClick}
           {...testId(TEST_IDS.sheetClose)}
         >
           <span className="pw-grabber__grip" aria-hidden="true" />

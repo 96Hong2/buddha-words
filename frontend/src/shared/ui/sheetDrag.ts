@@ -11,6 +11,8 @@
  * 몇 픽셀 흐르면 시트가 내려가는데, 이 앱에서 그것보다 나쁜 일이 없다.
  */
 
+import { useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
+
 /** 이만큼 내려가면 닫는다. 화면 높이가 아니라 고정값이다. 시트마다 높이가 달라서다. */
 export const DISMISS_DISTANCE = 96;
 
@@ -90,3 +92,97 @@ export function shouldDismiss(offset: number, elapsedMs: number): boolean {
 }
 
 export type { Tracker };
+
+export interface SheetDragWiring {
+  /** 지금 얼마나 끌려 내려와 있나. `transform` 으로 그대로 옮긴다 */
+  drag: DragState;
+  /** 판에 그대로 펼쳐 붙이는 포인터 손잡이 넷 */
+  handlers: {
+    onPointerDown(event: ReactPointerEvent<HTMLElement>): void;
+    onPointerMove(event: ReactPointerEvent<HTMLElement>): void;
+    onPointerUp(event: ReactPointerEvent<HTMLElement>): void;
+    onPointerCancel(event: ReactPointerEvent<HTMLElement>): void;
+  };
+  /** 손잡이 버튼의 `onClick`. 끌고 나서 오는 한 번을 삼킨다 */
+  handleClick(): void;
+}
+
+/**
+ * 아래로 밀어 닫기 배선.
+ *
+ * 위의 순수 함수들이 판정을 맡고, 이 훅이 포인터 이벤트와 React 상태를 잇는다.
+ * **시트마다 다시 쓰지 않는다.** 한 곳에서만 되고 다른 곳에서는 안 되면, 사람은 그것을
+ * 「이 앱은 가끔 안 닫힌다」로 읽는다. 공용 바텀시트와 간직 시트가 함께 쓴다.
+ *
+ * 간직 시트가 공용 바텀시트를 안 쓰는 이유는 층이다. 그 시트는 답변 화면의 하단 고정
+ * 바(40) 위로 올라와야 해서 제 층(50·51)을 따로 쓴다. 거기 맞추려고 공용 시트의 층을
+ * 올리면 앱의 모든 시트가 함께 올라간다.
+ */
+export function useSheetDrag(
+  sheetRef: RefObject<HTMLElement | null>,
+  onClose: () => void,
+  dismissible = true,
+): SheetDragWiring {
+  const trackerRef = useRef<Tracker | null>(null);
+  /** 끌고 나서 손을 뗀 자리에서 클릭이 한 번 더 온다. 되돌아온 시트를 그것으로 닫지 않는다 */
+  const swallowClick = useRef(false);
+  const [drag, setDrag] = useState<DragState>(AT_REST);
+
+  function onPointerDown(event: ReactPointerEvent<HTMLElement>): void {
+    if (!dismissible || trackerRef.current != null) return;
+    const sheet = sheetRef.current;
+    if (sheet == null) return;
+    if (!canStartDrag(event.target, sheet.scrollTop)) return;
+    trackerRef.current = beginTracking(
+      event.pointerId,
+      event.clientX,
+      event.clientY,
+      event.timeStamp,
+      isHandle(event.target),
+    );
+  }
+
+  function onPointerMove(event: ReactPointerEvent<HTMLElement>): void {
+    const tracker = trackerRef.current;
+    if (tracker == null || tracker.pointerId !== event.pointerId) return;
+
+    const next = trackMove(tracker, event.clientX, event.clientY);
+    if (next == null) {
+      trackerRef.current = null;
+      setDrag(AT_REST);
+      return;
+    }
+    if (next.dragging) {
+      // 끌기로 확정된 뒤에는 포인터를 붙잡는다. 손가락이 시트 밖으로 나가도 이어진다.
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    setDrag(next);
+  }
+
+  function onPointerUp(event: ReactPointerEvent<HTMLElement>): void {
+    const tracker = trackerRef.current;
+    if (tracker == null || tracker.pointerId !== event.pointerId) return;
+    trackerRef.current = null;
+
+    const offset = drag.offset;
+    setDrag(AT_REST);
+    if (!drag.dragging) return;
+
+    swallowClick.current = true;
+    if (shouldDismiss(offset, event.timeStamp - tracker.startedAt)) onClose();
+  }
+
+  function handleClick(): void {
+    if (swallowClick.current) {
+      swallowClick.current = false;
+      return;
+    }
+    onClose();
+  }
+
+  return {
+    drag,
+    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp },
+    handleClick,
+  };
+}

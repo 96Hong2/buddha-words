@@ -1,19 +1,10 @@
-import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 import { cx } from '../lib/cx';
 
 import { trapTab } from './focusTrap';
-import {
-  AT_REST,
-  beginTracking,
-  canStartDrag,
-  isHandle,
-  shouldDismiss,
-  trackMove,
-  type DragState,
-  type Tracker,
-} from './sheetDrag';
+import { useSheetDrag } from './sheetDrag';
 
 import './sheet.css';
 import { TEST_IDS, testId } from '../testIds';
@@ -61,10 +52,8 @@ export function BottomSheet({
   className,
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
-  const trackerRef = useRef<Tracker | null>(null);
-  /** 끌고 나서 손을 뗀 자리에서 클릭이 한 번 더 온다. 되돌아온 시트를 그것으로 닫지 않는다. */
-  const swallowClick = useRef(false);
-  const [drag, setDrag] = useState<DragState>(AT_REST);
+  // 아래로 밀어 닫기. 배선은 간직 시트와 한 곳에서 나눠 쓴다
+  const { drag, handlers, handleClick } = useSheetDrag(sheetRef, onClose, dismissible);
   const titleId = useId();
 
   useEffect(() => {
@@ -97,60 +86,6 @@ export function BottomSheet({
 
   if (!open) return null;
 
-  // 끄는 동안에는 시트 안의 어떤 버튼도 눌리지 않으므로, 끌던 중에 저장이 시작될 수 없다.
-  // 그래서 `dismissible` 이 꺼지는 순간을 따로 되돌릴 필요가 없다.
-  function onPointerDown(event: PointerEvent<HTMLDivElement>): void {
-    if (!dismissible || trackerRef.current != null) return;
-    const sheet = sheetRef.current;
-    if (sheet == null) return;
-    if (!canStartDrag(event.target, sheet.scrollTop)) return;
-    trackerRef.current = beginTracking(
-      event.pointerId,
-      event.clientX,
-      event.clientY,
-      event.timeStamp,
-      isHandle(event.target),
-    );
-  }
-
-  function onPointerMove(event: PointerEvent<HTMLDivElement>): void {
-    const tracker = trackerRef.current;
-    if (tracker == null || tracker.pointerId !== event.pointerId) return;
-
-    const next = trackMove(tracker, event.clientX, event.clientY);
-    if (next == null) {
-      trackerRef.current = null;
-      setDrag(AT_REST);
-      return;
-    }
-    if (next.dragging) {
-      // 끌기로 확정된 뒤에는 포인터를 붙잡는다. 손가락이 시트 밖으로 나가도 이어진다.
-      event.currentTarget.setPointerCapture(event.pointerId);
-    }
-    setDrag(next);
-  }
-
-  function onPointerUp(event: PointerEvent<HTMLDivElement>): void {
-    const tracker = trackerRef.current;
-    if (tracker == null || tracker.pointerId !== event.pointerId) return;
-    trackerRef.current = null;
-
-    const offset = drag.offset;
-    setDrag(AT_REST);
-    if (!drag.dragging) return;
-
-    swallowClick.current = true;
-    if (shouldDismiss(offset, event.timeStamp - tracker.startedAt)) onClose();
-  }
-
-  function handleClick(): void {
-    if (swallowClick.current) {
-      swallowClick.current = false;
-      return;
-    }
-    onClose();
-  }
-
   return createPortal(
     <div className="pk-sheet-root">
       <div
@@ -172,10 +107,7 @@ export function BottomSheet({
         aria-label={title ? undefined : ariaLabel}
         aria-labelledby={title ? titleId : undefined}
         tabIndex={-1}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        {...handlers}
       >
         {dismissible ? (
           /*

@@ -90,3 +90,45 @@ test('간직 시트: 「다음에」가 없고 손잡이가 닫기다', async ({
   await gate.getByTestId('sheet-close').click();
   await expect(gate).toHaveCount(0);
 });
+
+test('간직 시트: 아래로 밀면 닫힌다', async ({ page }) => {
+  /*
+    ⚠ 「다음에」를 빼면서 눈에 보이는 닫기 표가 손잡이 하나로 줄었다. 사용자는 이 시트를
+    **창 내리듯** 닫을 수 있다고 보고 있었는데, 이 시트만 공용 바텀시트를 안 써서 그
+    손짓이 아무 반응도 없었다(2026-09-23). 바로 앞뒤 시트(연꽃 모으기·이어가기)에서는
+    되던 손짓이다. 한 곳에서만 안 되면 사람은 「이 앱은 가끔 안 닫힌다」로 읽는다.
+  */
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await askOnce(page);
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+
+  const gate = page.getByTestId('save-gate');
+  await expect(gate).toBeVisible();
+
+  /*
+    ⚠ **올라오는 애니메이션이 끝나기를 기다린다.** 시트가 올라오는 중에 재면 손잡이 자리가
+    한 프레임 만에 옛 값이 되고, 손가락이 시트 아래 허공을 누른다. 그러면 손짓이 아무
+    데도 안 닿는데 검사는 「안 닫힌다」로 읽는다(처음에 그렇게 빨갛게 나왔다).
+  */
+  await gate.evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((a) => a.finished));
+  });
+
+  const handle = gate.getByTestId('sheet-close');
+  const box = await handle.boundingBox();
+  if (box === null) throw new Error('손잡이 자리를 못 쟀어요');
+
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  // 한 번에 옮기면 끌기로 안 잡힌다. SLOP 을 넘기며 몇 걸음에 나눠 내린다
+  for (const step of [20, 60, 110, 160]) await page.mouse.move(x, y + step);
+  await page.mouse.up();
+
+  await expect(gate).toHaveCount(0);
+  // 무른 것이지 담은 것이 아니다
+  await expect(page.getByTestId('save-done')).toHaveCount(0);
+});

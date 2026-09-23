@@ -168,7 +168,12 @@ export function LeafAltAdButton({
     <button
       type="button"
       className="leaf-alt"
-      disabled={disabled}
+      /*
+        ⚠ **도는 동안에는 여기서 잠근다.** 아래에서 busy 일 때 「광고」 배지를 떼는데,
+        `busy` 와 `disabled` 가 따로 놀면 **배지 없이 누를 수 있는 버튼**이 생긴다.
+        지금 호출부 둘은 둘 다 넘기지만, 타입이 그것을 강제하지 못한다. 부품이 진다.
+      */
+      disabled={disabled || busy}
       onClick={onClick}
       {...testId(TEST_IDS[testKey])}
     >

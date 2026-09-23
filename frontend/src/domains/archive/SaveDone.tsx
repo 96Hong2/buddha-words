@@ -101,7 +101,9 @@ export function SaveDone({ open, kind, answerId, onGoArchive, onStay }: SaveDone
         tabIndex={-1}
         {...testId(TEST_IDS.saveDone)}
       >
-        <span className="pw-grabber" aria-hidden="true" />
+        <span className="pw-grabber" aria-hidden="true">
+          <span className="pw-grabber__grip" />
+        </span>
 
         <span className="save-done__mark" aria-hidden="true">
           <CheckIcon />
