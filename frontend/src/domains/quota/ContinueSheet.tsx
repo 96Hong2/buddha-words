@@ -82,10 +82,12 @@ const AD_IS_REWARDED = AD_KIND.continue === 'rewarded';
 /**
  * 연꽃이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
  *
- * 「광고」를 빼고 쓴다. 그 자리는 배지가 이미 말하고 있어서, 주 버튼과 달리 글자와 배지가
- * 나란히 서면 한 줄에 같은 말이 두 번 나온다. 간직 시트의 보조 버튼과 같은 말투다.
+ * 「광고」라는 글자는 여기서도 배지 하나가 맡는다. 라벨에 또 적으면 한 줄에 같은 말이
+ * 두 번 선다. **배지가 들어설 자리를 앞뒤로 갈라 넘긴다.** 주 버튼과 같은 모양이라야
+ * 연꽃을 가진 사람과 안 가진 사람이 같은 문장을 읽는다.
  */
-const AD_ALT_LABEL = AD_IS_REWARDED ? '30초 보고 답변 받기' : '답변 받기';
+const AD_ALT_LEAD = AD_IS_REWARDED ? '30초' : undefined;
+const AD_ALT_LABEL = '보고 답변 받기';
 
 export interface ContinueSheetProps {
   open: boolean;
@@ -226,6 +228,7 @@ export function ContinueSheet({
 
           {hasLeaf ? (
             <LeafAltAdButton
+              lead={AD_ALT_LEAD}
               label={AD_ALT_LABEL}
               disabled={ad.showing || checking}
               busy={checking}

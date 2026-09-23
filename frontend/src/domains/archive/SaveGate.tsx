@@ -164,7 +164,8 @@ export function SaveGate({
               됐다. 진행 상태는 아래 안내 줄이 맡는다. 이어가기 시트와 같은 방식이다.
             */
             <LeafAltAdButton
-              label="30초 보고 간직하기"
+              lead="30초"
+              label="보고 간직하기"
               disabled={pending}
               busy={pending}
               /* 여기서 도는 것은 광고다. 이야기를 살펴보는 자리는 이어가기 시트다 */

@@ -7,12 +7,15 @@
  *
  *   1. 탭바의 고른 칸이 48px 에 못 박혀 있어 아이콘이 알약 배경 위로 삐져나왔다
  *   2. 홈 제목이 `flex: none` 이라 줄지 않고 옆 부처 그림을 **화면 밖으로 62px 밀어냈다**
+ *   3. 그림을 비켜 준 뒤에도 **제목 자신이 화면 밖으로 나갔다**(2026-09-23). 재던 자리가
+ *      줄곧 포커스가 든 한 줄 제목이라 여기 아무도 없었다. 맨 아래 시험이 그 자리다
  *
- * 그래서 여기서 재는 것은 셋이다.
+ * 그래서 여기서 재는 것은 다섯이다.
  *   - 글자가 제 상자를 벗어나지 않는다 (직계 텍스트 노드의 줄 상자로 본다)
  *   - 무엇도 화면 좌우 밖으로 나가지 않는다
  *   - `overflow: hidden` 인 상자 안에서 내용이 잘리지 않는다
  *   - 화면에 붙어 선 시트·바가 **화면 위로 잘려 나가지 않는다**
+ *   - 두 줄 제목이 좌우 여백을 남기고 선다
  *
  * 좁은 기기(320px)도 함께 본다. 세 칸으로 나눈 탭바는 폭이 줄면 라벨부터 넘친다.
  */
@@ -203,6 +206,34 @@ test.describe('좁은 기기', () => {
     await page.getByTestId('save-button').click();
     await expect(page.getByTestId('save-gate')).toBeVisible();
     await everySize(page, '320px 간직 시트');
+  });
+
+  test('320px 에서 두 줄 제목이 화면을 넘지 않는다', async ({ page }) => {
+    /*
+      ⚠ **여기가 비어 있었다.** 홈을 열면 입력칸에 포커스가 가 있어서 제목이 한 줄로
+      접힌다(`.hero-row`). 위의 「320px 에서도 네 단이 버틴다」가 재던 것이 줄곧 그
+      한 줄짜리였다. 정작 사람이 오래 보는 화면은 답을 받고 돌아왔을 때처럼 포커스가
+      빠진 두 줄짜리(`.lead-row`)인데, 그쪽은 아무도 안 보고 있었다.
+
+      그 두 줄 제목이 안 줄어들어서 화면 밖으로 나갔다(2026-09-23 실측: 320px 에서
+      크게 28px·아주 크게 66px, 360px 에서 26px, 375px 에서 11px).
+    */
+    await page.goto('/');
+    await dismissEntry(page);
+    // 포커스를 뗀다. 빈 곳을 누르면 두 줄 제목이 선다
+    await page.locator('.home-screen .body').click({ position: { x: 4, y: 4 } });
+    await expect(page.locator('h2.hero')).toContainText('편하게 이야기해 주세요');
+
+    for (const size of SIZES) {
+      await setSize(page, size);
+      const room = await page.locator('h2.hero').evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return document.documentElement.clientWidth - box.right;
+      });
+      // 화면 안에 들기만 해서는 모자라다. 좌우 여백(--gutter 20px)만큼은 남아야 한다
+      expect(room, `제목 오른쪽 여백이 모자라다 (글자 ${size})`).toBeGreaterThanOrEqual(20 - SLACK);
+    }
+    await setSize(page, 'm');
   });
 });
 

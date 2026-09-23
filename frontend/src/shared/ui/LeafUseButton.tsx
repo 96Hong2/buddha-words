@@ -125,7 +125,16 @@ export function LeafUseButton({
 }
 
 export interface LeafAltAdButtonProps {
-  /** 버튼에 적는 말. 자리마다 다르다 */
+  /**
+   * 「광고」 배지 **앞**에 서는 말. 예: `30초`. 없으면 배지가 맨 앞에 선다.
+   *
+   * ⚠ 한때 이 버튼만 배지를 라벨 **뒤**에 붙였다. 그래서 같은 시트가 연꽃을 가진
+   * 사람에게는 「30초 보고 답변 받기 [광고]」를, 없는 사람에게는 「30초 [광고] 보고
+   * 답변 받기」를 보여 줬다. 사용자가 앞의 모양을 그대로 집어 고쳐 달라고 했다
+   * (2026-09-23). 주 버튼 셋은 이미 배지를 문장 안에 세우고 있었다.
+   */
+  lead?: string;
+  /** 배지 **뒤**에 서는 말. 예: `보고 답변 받기` */
   label: string;
   disabled?: boolean;
   /**
@@ -147,6 +156,7 @@ export interface LeafAltAdButtonProps {
  * 이유가 그 자리에서 사라진다. 「광고」라는 글자는 여기서도 배지로 남긴다.
  */
 export function LeafAltAdButton({
+  lead,
   label,
   disabled = false,
   busy = false,
@@ -185,10 +195,22 @@ export function LeafAltAdButton({
           </svg>
         </span>
       )}
-      {busy ? busyLabel : label}{' '}
-      <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
-        광고
-      </span>
+      {busy ? (
+        <>
+          {busyLabel}{' '}
+          <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
+            광고
+          </span>
+        </>
+      ) : (
+        <>
+          {lead != null && `${lead} `}
+          <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
+            광고
+          </span>{' '}
+          {label}
+        </>
+      )}
     </button>
   );
 }
