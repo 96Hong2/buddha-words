@@ -230,7 +230,10 @@ export const EVENTS = {
   notify_time_set:     { params: ['hour', 'changed'] as const },                           // hour: 0~23, changed: 기본값에서 바꿨나
   // 설정 화면. 어떤 줄을 실제로 누르는지 본다. 안 눌리는 줄은 다음 판에서 뺀다
   settings_view:       { params: ['notify_state', 'text_size'] as const },                 // notify_state: unset | on | declined | unsupported
-  settings_row_click:  { params: ['row'] as const },                                       // row: privacy | terms | contact | app_info | pass_restore
+  settings_row_click:  { params: ['row'] as const },                                       // row: privacy | terms | contact | app_info | pass_restore | app_share
+  // 설정에서 앱을 알렸다. 답변 권유·보관함 카드와 달리 **스스로 찾아와 누른 것**이라 따로 센다
+  settings_app_share_complete: { params: ['method'] as const },                            // method: system | copy
+  settings_app_share_fail:     { params: ['reason'] as const },                            // reason: copy_blocked
   // 실패
   answer_failed:       { params: ['route', 'pass', 'reason'] as const },                  // reason: timeout | offline | budget | schema | provider
 } as const;

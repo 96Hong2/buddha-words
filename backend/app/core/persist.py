@@ -9,6 +9,9 @@ SQLite 를 쓴다. 파이썬에 들어 있어 의존성이 늘지 않고, 파일
 담는 모양은 열쇠 하나에 JSON 한 덩이이고, 무엇을 담을지는 부르는 쪽이 정한다.
 
 **쓰기 실패를 삼키지 않는다.** 파일에 못 썼는데 답을 돌려주면 「재기동을 넘긴다」가 거짓이 된다.
+
+배포는 Cloud Run 이라 파일조차 인스턴스와 함께 사라진다. 그래서 아래쪽에 PostgreSQL 자리를
+함께 두고, `bind(이름)` 이 설정을 보고 둘 중 하나를 고른다. 담는 모양은 두 자리가 같다.
 """
 
 from __future__ import annotations
@@ -18,7 +21,7 @@ import re
 import sqlite3
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from app.core.config import get_settings
 
@@ -101,6 +104,14 @@ class Table:
             ).fetchone()
         return (json.loads(found[0]), found[1]) if found else None
 
+    def delete(self, key: str) -> None:
+        """한 줄만 지운다. 잡아 둔 자리를 되돌리는 쪽이 쓴다."""
+        with _LOCK:
+            conn = _connection()
+            self._ensure(conn)
+            conn.execute(f"DELETE FROM {self.name} WHERE key = ?", (key,))
+            conn.commit()
+
     def sweep(self, ttl: float, now: float) -> None:
         """TTL 이 지난 것을 지운다. 재기동 뒤에 만료분이 살아 돌아오지 않게 한다."""
         with _LOCK:
@@ -116,3 +127,155 @@ class Table:
             self._ensure(conn)
             conn.execute(f"DELETE FROM {self.name}")
             conn.commit()
+
+
+class KeyValueTable(Protocol):
+    """저장 자리가 갖춰야 하는 모양. 열쇠 하나에 JSON 한 덩이와 만든 시각.
+
+    무엇을 담을지는 부르는 쪽이 정하고, 이 자리는 담고 꺼내고 만료분을 치우는 것만 한다.
+    """
+
+    def put(self, key: str, value: dict[str, Any], created_at: float) -> None: ...
+
+    def get(self, key: str) -> tuple[dict[str, Any], float] | None: ...
+
+    def delete(self, key: str) -> None: ...
+
+    def sweep(self, ttl: float, now: float) -> None: ...
+
+    def clear(self) -> None: ...
+
+    def close(self) -> None: ...
+
+
+class SqliteTable(Table):
+    """파일 자리. 닫는 것만 더한다.
+
+    연결은 이 모듈이 하나로 들고 있어서 닫는 것도 여기다.
+    """
+
+    def close(self) -> None:
+        close()
+
+
+class PostgresTable:
+    """PostgreSQL 자리. 배포가 쓰는 쪽이다.
+
+    담는 모양을 SQLite 와 똑같이 맞춘다. 값을 JSONB 가 아니라 글자로 두어 두 자리에 적히는
+    글자가 완전히 같게 했다. 저장된 것을 훑는 시험이 어느 자리에서든 같은 것을 보게 된다.
+
+    연결은 하나를 잠금으로 감싸 쓴다. Cloud SQL 은 오래 놀던 연결을 끊는데, 담아 둔 것이
+    한참 뒤에 처음 긁힐 수도 있다. 끊긴 연결을 만나면 한 번은 다시 붙어 보고, 그래도 안
+    되면 터뜨린다. **쓰기 실패를 삼키지 않는다.** 못 썼는데 됐다고 답하면 「재기동을
+    넘긴다」가 거짓이 된다.
+    """
+
+    def __init__(self, name: str, url: str) -> None:
+        if not _NAME.match(name):
+            raise ValueError(f"테이블 이름으로 쓸 수 없어요: {name}")
+        self.name = name
+        self._url = url
+        self._lock = threading.Lock()
+        self._conn: Any = None
+
+    def _connection(self) -> Any:
+        if self._conn is not None and not self._conn.closed:
+            return self._conn
+        # SQLite 만 쓰는 개발이 이 라이브러리를 열지 않게 여기서 가져온다
+        import psycopg
+
+        conn = psycopg.connect(self._url, autocommit=True)
+        conn.execute(
+            f"CREATE TABLE IF NOT EXISTS {self.name} "
+            '("key" TEXT PRIMARY KEY, created_at DOUBLE PRECISION NOT NULL, "value" TEXT NOT NULL)'
+        )
+        self._conn = conn
+        return conn
+
+    def _drop(self) -> None:
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            except Exception:
+                # 이미 끊긴 연결을 놓는 중이다. 여기서 더 할 일이 없다
+                pass
+            self._conn = None
+
+    def _run(self, sql: str, args: tuple[Any, ...], *, fetch: bool = False) -> Any:
+        import psycopg
+
+        with self._lock:
+            for last in (False, True):
+                try:
+                    with self._connection().cursor() as cur:
+                        cur.execute(sql, args)
+                        return cur.fetchone() if fetch else None
+                except (psycopg.OperationalError, psycopg.InterfaceError):
+                    self._drop()
+                    if last:
+                        raise
+        return None
+
+    def put(self, key: str, value: dict[str, Any], created_at: float) -> None:
+        self._run(
+            f'INSERT INTO {self.name} ("key", created_at, "value") VALUES (%s, %s, %s) '
+            'ON CONFLICT ("key") DO UPDATE SET created_at = EXCLUDED.created_at, '
+            '"value" = EXCLUDED."value"',
+            (key, created_at, json.dumps(value, ensure_ascii=False)),
+        )
+
+    def get(self, key: str) -> tuple[dict[str, Any], float] | None:
+        found = self._run(
+            f'SELECT "value", created_at FROM {self.name} WHERE "key" = %s', (key,), fetch=True
+        )
+        return (json.loads(found[0]), found[1]) if found else None
+
+    def delete(self, key: str) -> None:
+        self._run(f'DELETE FROM {self.name} WHERE "key" = %s', (key,))
+
+    def sweep(self, ttl: float, now: float) -> None:
+        self._run(f"DELETE FROM {self.name} WHERE created_at <= %s", (now - ttl,))
+
+    def clear(self) -> None:
+        self._run(f"DELETE FROM {self.name}", ())
+
+    def close(self) -> None:
+        with self._lock:
+            self._drop()
+
+
+# 이름마다 지금 붙어 있는 자리. 설정 값과 함께 들고 있다가 값이 바뀌면 새로 만든다.
+# 요청은 스레드풀에서 오므로 만드는 자리를 잠근다. 잠그지 않으면 아직 아무도 안 쓴
+# 프로세스에 요청이 동시에 들어올 때 둘이 각각 연결을 열고, 진 쪽 연결이 닫히지 않는다
+_BOUND: dict[str, tuple[str | None, KeyValueTable]] = {}
+_BIND_LOCK = threading.Lock()
+
+
+def bind(name: str) -> KeyValueTable:
+    """이 이름으로 담을 자리. `DATABASE_URL` 이 있으면 PostgreSQL, 없으면 SQLite 파일이다.
+
+    Cloud Run 은 인스턴스 안 파일이 배포·유휴 종료·오토스케일마다 사라지고 인스턴스끼리
+    서로 다른 파일을 본다. 그래서 배포에서는 반드시 PostgreSQL 이다.
+    """
+    url = get_settings().database_url
+    bound = _BOUND.get(name)
+    if bound is not None and bound[0] == url:
+        return bound[1]
+    with _BIND_LOCK:
+        # 기다리는 사이에 다른 스레드가 만들어 뒀을 수 있다. 다시 본다
+        again = _BOUND.get(name)
+        if again is not None and again[0] == url:
+            return again[1]
+        if again is not None:
+            again[1].close()
+        table: KeyValueTable = PostgresTable(name, url) if url else SqliteTable(name)
+        _BOUND[name] = (url, table)
+        return table
+
+
+def unbind(name: str) -> None:
+    """붙어 있던 자리를 놓는다. 테스트가 설정을 갈아 끼울 때 부른다."""
+    with _BIND_LOCK:
+        bound = _BOUND.pop(name, None)
+    if bound is not None:
+        bound[1].close()

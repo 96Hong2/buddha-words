@@ -26,9 +26,9 @@ const SAVED = [1, 2, 3].map((n) => ({
  * 파는 것은 간직할 때 보는 짧은 광고를 건너뛰는 것 하나다. 그래서 파는 자리도 광고를 보기
  * 싫은 사람이 서 있는 곳, 곧 간직 시트 안으로 옮겼다.
  */
-const BUY_LINK = '광고 없이 간직하기';
+const BUY_LINK = '기다리지 않고 간직하기';
 /** 이용권을 가진 뒤 보관함이 하는 말 */
-const OPEN_NOTE = /광고 없이 바로 간직할 수 있어요/;
+const OPEN_NOTE = /기다리지 않고 바로 간직할 수 있어요/;
 /** 결제가 끝나지 않았을 때 사람이 읽는 문구 */
 const FAIL_NOTICE = '결제를 끝내지 못했어요. 잠시 뒤에 다시 시도해 주세요.';
 /** 주문서를 못 여는 앱 버전에서 사람이 읽는 문구 */
@@ -338,7 +338,7 @@ test('시트는 지금 실제로 되는 것만 판다', async ({ page }) => {
   const wall = page.getByTestId('paywall');
 
   // 이용권이 실제로 여는 것은 간직 자리 제한 하나다
-  await expect(wall).toContainText('간직할 때 광고를 보지 않아요');
+  await expect(wall).toContainText('기다리지 않고 바로 간직해요');
   await expect(wall).toContainText('앱을 다시 깔아도 이용권 그대로');
 
   // 이 판에 없는 기능은 적지 않는다. 지난 고민 열람·즐겨찾기·태그별 모아보기는 아직 없다
@@ -409,7 +409,7 @@ test('설정: 이용권 상태를 보고, 다시 깐 뒤에도 복원으로 되�
   // 앱을 다시 깐 기기처럼 기기 캐시를 지우고 스스로 되찾는다
   await page.evaluate((key) => localStorage.removeItem(key), PASS_CACHE_KEY);
   await page.getByTestId('archive-pass-restore').click();
-  await expect(page.getByText('이용권을 찾았어요. 광고 없이 간직할 수 있어요.')).toBeVisible();
+  await expect(page.getByText('이용권을 찾았어요. 기다리지 않고 간직할 수 있어요.')).toBeVisible();
   await expect(page.getByTestId('archive-pass')).toContainText('있음');
   await shot(page, '41-2 설정 - 구매 내역을 다시 확인했다');
 });

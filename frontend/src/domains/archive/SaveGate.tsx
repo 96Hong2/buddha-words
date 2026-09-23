@@ -128,7 +128,7 @@ export function SaveGate({
         */}
         <p className="pw-sub">
           {hasLeaf
-            ? '담아 두면 앱을 닫아도 남아요. 모아 둔 연꽃으로 광고 없이 담을 수 있어요.'
+            ? '담아 두면 앱을 닫아도 남아요. 모아 둔 연꽃으로 바로 담을 수 있어요.'
             : '담아 두면 앱을 닫아도 남아요. 몇 개를 담든 개수 제한은 없어요.'}
         </p>
 
@@ -159,7 +159,7 @@ export function SaveGate({
               disabled={pending}
               busy={pending}
               /* 여기서 도는 것은 광고다. 이야기를 살펴보는 자리는 이어가기 시트다 */
-              busyLabel="광고를 여는 중이에요"
+              busyLabel="준비하고 있어요"
               onClick={onWatch}
               testKey="saveGateWatch"
             />
@@ -175,7 +175,7 @@ export function SaveGate({
                 <>
                   {/* 흐려지기만 하면 멈춘 것으로 읽힌다. 도는 표를 함께 둔다 */}
                   <Spinner className="arch-btn__spin" />
-                  광고를 여는 중이에요
+                  준비하고 있어요
                 </>
               ) : (
                 <>
@@ -200,19 +200,15 @@ export function SaveGate({
         </div>
 
         {/*
-          한 줄 안내. 두 가지를 맡는다.
+          한 줄 안내. **지금 무슨 일이 도는 중인지**만 맡고 평소에는 비운다.
 
-          연꽃이 없는 사람에게는 **어디서 얻는지** 알려 준다. 한때 이 말을 가진 사람 쪽에만
-          두었는데, 그러면 이미 아는 사람에게만 얻는 법을 알려 주는 구조가 된다.
-          있는 사람에게는 광고를 여는 중인지를 말한다. 이어가기 시트와 같은 자리다.
+          어디서 얻는지는 아래 모으기 카드가 말한다. 한때 이 줄이 늘 서서 버튼이 이미
+          한 말을 되풀이했고, 그 탓에 한 화면에서 「광고」를 두 번 읽게 됐다
+          (2026-09-23 사용자 지적). 이어가기 시트와 같은 방식으로 맞춘다.
         */}
         {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
         <p className="pw-leaf-note" role="status">
-          {pending
-            ? '광고를 불러오고 있어요'
-            : hasLeaf
-              ? '광고를 보면 연꽃을 아끼고 담을 수 있어요'
-              : '광고 화면에 보상을 받았다고 뜰 때까지 보면 담겨요'}
+          {pending ? '잠시만 기다려 주세요' : ''}
         </p>
 
         {/*
@@ -236,7 +232,7 @@ export function SaveGate({
             onClick={onBuyPass}
             {...testId(TEST_IDS.saveGateBuy)}
           >
-            이용권으로 광고 없이 간직하기
+            이용권으로 기다리지 않고 간직하기
           </button>
         )}
       </div>

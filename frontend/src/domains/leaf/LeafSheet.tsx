@@ -134,11 +134,11 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
         <p className="leaf-sheet__sub">
           {canCollect ? (
             <>
-              미리 모아 두면 <b>광고 없이</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
+              미리 모아 두면 <b>기다리지 않고</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
             </>
           ) : (
             <>
-              가진 연꽃으로 <b>광고 없이</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
+              가진 연꽃으로 <b>기다리지 않고</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
             </>
           )}
         </p>
@@ -168,7 +168,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
               {ad.showing ? (
                 <>
                   <Spinner className="leaf-sheet__spin" />
-                  <span className="leaf-sheet__ad-label">광고를 여는 중이에요</span>
+                  <span className="leaf-sheet__ad-label">준비하고 있어요</span>
                 </>
               ) : (
                 <span className="leaf-sheet__ad-label">
@@ -183,13 +183,13 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
             {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
             <p className="leaf-sheet__note" role="status" {...testId(TEST_IDS.leafNote)}>
               {ad.showing
-                ? '광고를 불러오고 있어요'
+                ? '잠시만 기다려 주세요'
                 : failed === 'dismissed'
                   ? // 무엇이 모자랐는지 정확히 말한다. 「끝까지」는 사람마다 다르게 읽힌다
                     '보상을 받기 전에 닫아서 연꽃이 생기지 않았어요'
                   : failed === 'noFill'
-                    ? '지금은 광고가 없어요. 잠시 뒤에 다시 눌러 주세요'
-                    : '광고 화면에 보상을 받았다고 뜨면 한 송이가 생겨요'}
+                    ? '지금은 열 수 없어요. 잠시 뒤에 다시 눌러 주세요'
+                    : ''}
             </p>
           </>
         )}

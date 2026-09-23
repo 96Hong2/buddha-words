@@ -19,7 +19,7 @@ from jsonschema import Draft202012Validator
 
 from app.api import routes
 from app.domains.answer import compose
-from app.domains.quota import usage
+from app.domains.quota import free_once, usage
 from app.domains.routing.rules import (
     SOLACE_FALLBACK,
     ClassifierVerdict,
@@ -783,3 +783,37 @@ def test_free_once_comes_back_when_the_answer_failed() -> None:
     usage.release("flaky", out.gate, zone)
     assert usage.snapshot("flaky", zone)["freeUsed"] == 0
     assert usage.reserve("flaky", "normal", zone).gate == "free"
+
+
+def test_free_once_survives_a_restart() -> None:
+    """**배포를 해도 무료가 되살아나지 않는다.**
+
+    2026-09-23 실기기 신고: 「오늘 첫 사용이지만 앱 첫 사용은 아닌데 연꽃 없이 답을 받는다」.
+    무료 장부가 프로세스 메모리에 있어서 배포할 때마다 비었고, 새로 뜬 서버는 아무도 쓴
+    적이 없다고 답했다. 기기 사본이 단조라 대부분은 막지만, 저장소를 지웠거나 기기를 바꾼
+    사람에게는 서버가 정본이고 그 정본이 비어 있었다.
+
+    `free_once.forget_binding()` 이 프로세스가 새로 뜬 것을 흉내 낸다. 저장 자리 객체와
+    메모리 캐시를 둘 다 버려야 한다. 캐시만 남으면 저장이 메모리로 되돌아가도 초록이 된다.
+    """
+    zone = usage.resolve_zone("Asia/Seoul")
+    assert usage.reserve("deployed", "normal", zone).gate == "free"
+
+    free_once.forget_binding()
+
+    assert usage.reserve("deployed", "normal", zone).gate == "ad_continue"
+    assert usage.snapshot("deployed", zone)["freeUsed"] == 1
+
+
+def test_the_free_ledger_never_writes_the_anon_key() -> None:
+    """무료 장부에도 사람을 가리키는 값을 적지 않는다.
+
+    열쇠가 필요한 것은 「전에 본 적 있나」 하나뿐이라 되돌릴 수 있는 값일 이유가 없다.
+    공유 카드 저장이 지키는 약속과 같은 줄에 선다(`test_persistence.py`).
+    """
+    zone = usage.resolve_zone("Asia/Seoul")
+    usage.reserve("anon-secret-0001", "normal", zone)
+
+    row = free_once._table().get(free_once._row_key("anon-secret-0001"))
+    assert row is not None, "적히긴 해야 해요. 안 적히면 위 시험이 거짓으로 통과해요."
+    assert free_once._row_key("anon-secret-0001") != "anon-secret-0001"

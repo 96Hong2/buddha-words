@@ -20,6 +20,7 @@ import {
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { LotusIcon } from '../../shared/ui';
 import { useAnalytics } from '../../shared/analytics';
+import { appShareMessage, appShareUrl } from '../share/shareText';
 import {
   readTextSize,
   TEXT_SIZE_LABEL,
@@ -42,14 +43,14 @@ const CONTACT_EMAIL = 'pocket.app.official@gmail.com';
 
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
-  owned: { value: '있음', desc: '광고 없이 바로 간직할 수 있어요' },
-  none: { value: '없음', desc: '지금은 30초 광고를 보면 간직할 수 있어요' },
+  owned: { value: '있음', desc: '기다리지 않고 바로 간직할 수 있어요' },
+  none: { value: '없음', desc: '지금은 30초를 기다리면 간직할 수 있어요' },
   unknown: { value: '확인 중', desc: '토스에 남은 구매 내역을 읽고 있어요' },
 };
 
 /** 구매 내역을 다시 읽고 나서 하는 말 */
 const RESTORE_NOTICE: Record<ArchivePassState, string> = {
-  owned: '이용권을 찾았어요. 광고 없이 간직할 수 있어요.',
+  owned: '이용권을 찾았어요. 기다리지 않고 간직할 수 있어요.',
   none: '이 토스 계정으로 산 이용권이 없어요.',
   unknown: '구매 내역을 확인하지 못했어요. 잠시 뒤에 다시 눌러 주세요.',
 };
@@ -132,6 +133,10 @@ export function SettingsScreen({
   const [notifyNotice, setNotifyNotice] = useState<string | null>(null);
   /** 홈 추가 경로 안내를 펼쳤나. 시트를 열 만한 내용이 아니라 한 줄로 편다 */
   const [homeAddOpen, setHomeAddOpen] = useState(false);
+  /** 앱을 알리는 중. 두 번 누르면 시트가 두 번 뜬다 */
+  const [sharing, setSharing] = useState(false);
+  /** 보내고 나서 하는 말. 버튼 라벨이 아니라 따로 둔다. 라벨 변화는 보조기기에 상태로 안 읽힌다 */
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
 
   /**
    * 지금 토스에 동의를 물을 수 있나.
@@ -208,6 +213,62 @@ export function SettingsScreen({
   }, [analytics, api, asking, bridge]);
 
   /**
+   * 앱을 친구에게 알린다.
+   *
+   * ── 왜 설정에도 두나 ────────────────────────────────────────────────
+   *
+   * 알릴 길이 둘 있었는데 둘 다 **스스로 찾아갈 수 없는 자리**였다. 답변 화면 권유는
+   * 두 번째 답에서 한 번 뜨고 지나가고, 보관함 카드는 첫 간직 직후에만 뜬다. 지나친
+   * 사람이 나중에 알리고 싶어져도 갈 곳이 없었다. 설정은 늘 같은 자리에 있다.
+   *
+   * 여기서 보내는 것은 토스가 만든 앱 주소와 한 줄 소개뿐이다. 적은 이야기도 받은 답도
+   * 함께 가지 않는다(`appShareMessage`).
+   *
+   * 권유 시간표(`markNudgeShown`)는 **건드리지 않는다.** 스스로 찾아와 누른 일이라
+   * 부탁한 적이 없고, 그걸로 나중에 뜰 권유를 닫으면 누른 사람만 손해를 본다.
+   */
+  const shareApp = useCallback(() => {
+    if (sharing) return;
+    setSharing(true);
+    setShareNotice(null);
+    analytics.log('settings_row_click', { row: 'app_share' }, { kind: 'click' });
+
+    void (async () => {
+      const message = appShareMessage(await appShareUrl(bridge));
+      let sent: 'sent' | 'dismissed' | 'unsupported' = 'unsupported';
+      try {
+        sent = await bridge.share.sendMessage(message);
+      } catch {
+        sent = 'unsupported';
+      }
+
+      // 스스로 닫은 것은 실패가 아니다. 아무 말도 하지 않는다
+      if (sent === 'dismissed') {
+        setSharing(false);
+        return;
+      }
+      if (sent === 'sent') {
+        analytics.log('settings_app_share_complete', { method: 'system' });
+        setSharing(false);
+        return;
+      }
+
+      // 시트를 못 열면 글을 복사하고 **복사했다고 말한다.** 말없이 복사하지 않는다
+      try {
+        await navigator.clipboard.writeText(message);
+      } catch {
+        analytics.log('settings_app_share_fail', { reason: 'copy_blocked' });
+        setShareNotice('지금은 보내지 못했어요');
+        setSharing(false);
+        return;
+      }
+      analytics.log('settings_app_share_complete', { method: 'copy' });
+      setShareNotice('보낼 글을 복사했어요');
+      setSharing(false);
+    })();
+  }, [analytics, bridge, sharing]);
+
+  /**
    * 안내·문의 줄로 넘어간다. 어떤 줄이 실제로 눌리는지 남긴다.
    * 안 눌리는 줄은 다음 판에서 뺀다. 설정은 줄이 늘기만 하고 줄지 않는 자리다.
    */
@@ -277,7 +338,11 @@ export function SettingsScreen({
         <p className="set-sub">홈에 추가하고, 알림과 글자 크기도 여기서 정할 수 있어요</p>
 
         {/*
-          토스 홈에 추가하기.
+          홈 화면에 추가하기.
+
+          ⚠ 이름을 토스가 쓰는 말과 맞춘다. 실제로 누르는 메뉴가 「홈 화면에 추가하기」라
+          우리가 「토스 홈」이라고 부르면 안내를 따라간 사람이 다른 이름을 만난다
+          (2026-09-23 사용자 지적).
 
           ── 왜 맨 위이고 왜 강조하나 ────────────────────────────────────
 
@@ -311,9 +376,9 @@ export function SettingsScreen({
               </svg>
             </span>
             <span className="set-text">
-              <span className="set-item-title set-item-title--hero">토스 홈에 추가하기</span>
+              <span className="set-item-title set-item-title--hero">홈 화면에 추가하기</span>
               {/* 한 줄에 들어가는 길이로 둔다. 두 줄로 넘어가면 끝 낱말만 남아 어수선하다 */}
-              <span className="set-item-desc">토스 홈에서 바로 열 수 있어요</span>
+              <span className="set-item-desc">찾지 않고 한 번에 열 수 있어요</span>
             </span>
             <Chevron />
           </button>
@@ -333,6 +398,51 @@ export function SettingsScreen({
               <i />
             </span>{' '}
             를 누르고 <b>홈 화면에 추가하기</b>를 고르세요
+          </p>
+        )}
+
+        {/*
+          앱 알리기. **홈 추가 바로 아래다**(2026-09-23 사용자 지시).
+
+          둘은 같은 일을 한다: 이 앱으로 다시 오는 길을 만드는 것. 하나는 자기 홈에,
+          하나는 남의 대화방에 만든다. 자리는 붙이되 이름은 따로 준다. 「바로 열기」는
+          홈 추가를 가리키는 말이라, 그 아래 공유를 넣으면 같은 뜻으로 읽힌다.
+        */}
+        <p className="set-group">알리기</p>
+        <div className="set-list">
+          <button
+            type="button"
+            className="set-item"
+            onClick={shareApp}
+            disabled={sharing}
+            {...testId(TEST_IDS.settingsAppShare)}
+          >
+            <span className="set-icon" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="17.5" cy="6" r="2.6" />
+                <circle cx="6.5" cy="12" r="2.6" />
+                <circle cx="17.5" cy="18" r="2.6" />
+                <path d="M8.9 10.8 15.1 7.3M8.9 13.2l6.2 3.5" />
+              </svg>
+            </span>
+            <span className="set-text">
+              <span className="set-item-title">친구에게 앱 알리기</span>
+              {/* 무엇이 가는지 먼저 말한다. 적은 이야기가 갈까 봐 안 누르는 쪽이 더 흔하다 */}
+              <span className="set-item-desc">적으신 이야기는 함께 가지 않아요</span>
+            </span>
+            <Chevron />
+          </button>
+        </div>
+        {shareNotice != null && (
+          <p className="set-hint" role="status">
+            {shareNotice}
           </p>
         )}
 
@@ -363,9 +473,8 @@ export function SettingsScreen({
                 <span className="set-text">
                   <span className="set-item-title">연꽃 모으기</span>
                   <span className="set-item-desc">
-                    {leafCollectable
-                      ? '광고를 보면 연꽃을 한 송이씩 모아둘 수 있어요'
-                      : '지금은 모을 수 없어요. 가진 연꽃은 그대로 쓸 수 있어요'}
+                    {/* 오른쪽 값 칸(N송이)이 자리를 먹는다. 한 줄에 드는 길이로 둔다 */}
+                    {leafCollectable ? '30초 광고로 한 송이씩 모아요' : '지금은 모을 수 없어요'}
                   </span>
                 </span>
                 <span className="set-value">{leafCount}송이</span>

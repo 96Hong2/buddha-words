@@ -176,9 +176,10 @@ test('공유하기: 네이티브 시트로 나가고, 그 글에 고민 원문�
   expect(message.replace(/\s+/g, ' ')).toContain(scripture.replace(/\s+/g, ' '));
 
   // 오늘 받은 한마디도, 적은 글도 나가지 않는다
-  const line = (
-    await page.getByTestId('buddha-message').locator('blockquote').innerText()
-  ).replace(/\s+/g, ' ');
+  const line = (await page.getByTestId('buddha-message').locator('blockquote').innerText()).replace(
+    /\s+/g,
+    ' ',
+  );
   expect(message).not.toContain(line.slice(0, 12));
   expect(message).not.toContain('팀장님');
   expect(message).not.toContain('그만둘까');
@@ -316,7 +317,7 @@ test('오늘 많이 이어간 사람도 광고를 보면 계속 이어간다', a
   await expect(sheet).toBeVisible();
   // 남은 횟수를 세어 보여 주지 않는다. 셀 것이 없다
   await expect(sheet).not.toContainText('번 더');
-  await expect(sheet).toContainText('계속 이어갈 수 있어요');
+  await expect(sheet).toContainText('이야기를 이어갈 수 있어요');
   await shot(page, '26 이어가기 - 오늘 많이 쓴 뒤에도 열린다');
 
   // 광고를 끝까지 보면 답이 온다

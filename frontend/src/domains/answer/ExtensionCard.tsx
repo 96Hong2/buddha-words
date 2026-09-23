@@ -207,7 +207,7 @@ export function ExtensionCard({
             </div>
           ) : phase === 'failed' ? (
             <div style={{ marginTop: 'var(--s-4)' }}>
-              <p role="status">{failure} 광고는 다시 보지 않아도 되니 아래를 눌러 주세요.</p>
+              <p role="status">{failure} 아래를 누르면 바로 다시 받아요.</p>
               <button type="button" className="ad-btn" onClick={() => void build()}>
                 다시 받아보기
               </button>
@@ -230,7 +230,7 @@ export function ExtensionCard({
                   보고 다른 관점 하나 더 보기
                 </>
               ) : (
-                '광고 준비 중'
+                '준비하고 있어요'
               )}
             </button>
           )}
