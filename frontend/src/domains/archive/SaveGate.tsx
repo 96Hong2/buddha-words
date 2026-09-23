@@ -15,6 +15,9 @@
  *
  * 연꽃이 있으면 그 버튼이 주 버튼이고 광고가 아래로 내려간다. 이어가기 시트와 같은
  * 부품·같은 순서를 쓴다. 두 자리가 다르게 생기면 같은 앱으로 안 읽힌다.
+ *
+ * **나가는 버튼을 따로 두지 않는다.** 손잡이를 누르거나 바깥을 누르거나 뒤로가면 닫힌다.
+ * 이어가기 시트가 이미 그렇게 생겼고, 공용 바텀시트도 같은 규칙이다.
  */
 
 import { useEffect, useRef } from 'react';
@@ -125,7 +128,22 @@ export function SaveGate({
         tabIndex={-1}
         {...testId(TEST_IDS.saveGate)}
       >
-        <span className="pw-grabber" aria-hidden="true" />
+        {/*
+          ⚠ **손잡이가 곧 닫기다.** 아래에 「다음에」 버튼이 따로 서 있었는데, 나가는 길이
+          이미 셋(손잡이·바깥·뒤로가기)인 자리에 넷째를 세운 것이라 눌러야 할 버튼 하나가
+          둘 중 하나로 보였다. 그 버튼이 차지하던 높이가 그대로 간직 버튼과 모으기 카드
+          사이의 빈칸이기도 했다(2026-09-23 사용자 지적). 공용 바텀시트가 쓰는 규칙과
+          같은 규칙이다(`BottomSheet` 머리말).
+        */}
+        <button
+          type="button"
+          className="pw-grabber"
+          aria-label="닫기"
+          onClick={onClose}
+          {...testId(TEST_IDS.sheetClose)}
+        >
+          <span className="pw-grabber__grip" aria-hidden="true" />
+        </button>
 
         {/* 「30초 광고」는 버튼 한 곳에서만 말한다. 제목까지 같은 말을 하면 광고 안내가 두 겹이다 */}
         <h2 className="pw-title" id="save-gate-title">
@@ -199,14 +217,6 @@ export function SaveGate({
               )}
             </button>
           )}
-          <button
-            type="button"
-            className="arch-btn arch-btn--plain"
-            onClick={onClose}
-            {...testId(TEST_IDS.sheetClose)}
-          >
-            다음에
-          </button>
         </div>
 
         {/*

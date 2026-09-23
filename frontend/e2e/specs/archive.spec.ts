@@ -237,7 +237,7 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
   /*
    * 개수 제한 대신 들어온 문지기다. 여기서 보는 것 셋:
    *   1. 누르자마자 광고가 뜨지 않는다. 무엇을 하려는지 한 장 물어본다
-   *   2. 「다음에」로 물러서면 담기지 않는다
+   *   2. 손잡이로 물러서면 담기지 않는다
    *   3. 보고 나면 담긴다
    */
   test.setTimeout(90_000);
@@ -259,7 +259,14 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
   await expect(gate).toContainText('개수 제한은 없어요');
   await shot(page, '28-5 간직 - 광고를 보면 간직할 수 있어요');
 
-  // 물러서면 아무 일도 없다. 담겼다는 말이 뜨지 않는다
+  /*
+    물러서면 아무 일도 없다. 담겼다는 말이 뜨지 않는다.
+
+    ⚠ 무르는 자리는 **손잡이**다. 아래에 있던 「다음에」 버튼은 뺐다. 나가는 길이 이미
+    셋(손잡이·바깥·뒤로가기)인데 넷째를 세우면 눌러야 할 버튼 하나가 둘 중 하나로
+    보이고, 그 버튼이 차지하던 높이가 그대로 빈칸이 됐다(2026-09-23 사용자 지적).
+  */
+  await expect(gate.getByText('다음에', { exact: true })).toHaveCount(0);
   await page.getByTestId('sheet-close').click();
   await expect(gate).toHaveCount(0);
   await expect(page.getByTestId('save-done')).toHaveCount(0);
