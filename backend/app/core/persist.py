@@ -28,6 +28,9 @@ from app.core.config import get_settings
 # 테이블 이름은 SQL 문자열에 그대로 박힌다. 부르는 쪽이 상수로만 쓰지만 한 번 걸러 둔다
 _NAME = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
 
+# PostgreSQL 에 붙는 데 기다리는 상한(초). 페일오버로 끊긴 주소를 오래 붙들지 않는다
+CONNECT_TIMEOUT = 5
+
 # 요청은 스레드풀에서 온다. 연결 하나를 이 잠금으로 감싸 쓴다
 _LOCK = threading.Lock()
 _CONN: sqlite3.Connection | None = None
@@ -104,6 +107,22 @@ class Table:
             ).fetchone()
         return (json.loads(found[0]), found[1]) if found else None
 
+    def claim(self, key: str, value: dict[str, Any], created_at: float) -> bool:
+        """이 열쇠를 **처음 넣는 사람만 True** 를 받는다. 이미 있으면 안 덮고 False.
+
+        `put` 과 달리 「먼저 확인하고 그다음 쓴다」를 한 문장으로 만든다. 둘로 나누면 그
+        사이에 다른 요청이 같은 확인을 통과한다. 한 번뿐인 것을 나눠 줄 때 쓴다.
+        """
+        with _LOCK:
+            conn = _connection()
+            self._ensure(conn)
+            cur = conn.execute(
+                f"INSERT OR IGNORE INTO {self.name} (key, created_at, value) VALUES (?, ?, ?)",
+                (key, created_at, json.dumps(value, ensure_ascii=False)),
+            )
+            conn.commit()
+            return cur.rowcount > 0
+
     def delete(self, key: str) -> None:
         """한 줄만 지운다. 잡아 둔 자리를 되돌리는 쪽이 쓴다."""
         with _LOCK:
@@ -138,6 +157,8 @@ class KeyValueTable(Protocol):
     def put(self, key: str, value: dict[str, Any], created_at: float) -> None: ...
 
     def get(self, key: str) -> tuple[dict[str, Any], float] | None: ...
+
+    def claim(self, key: str, value: dict[str, Any], created_at: float) -> bool: ...
 
     def delete(self, key: str) -> None: ...
 
@@ -184,7 +205,10 @@ class PostgresTable:
         # SQLite 만 쓰는 개발이 이 라이브러리를 열지 않게 여기서 가져온다
         import psycopg
 
-        conn = psycopg.connect(self._url, autocommit=True)
+        # ⚠ **기다리는 시간에 상한을 둔다.** 이 자리는 답을 만드는 길목이기도 해서
+        # (`quota/free_once.py`), 붙는 데 오래 걸리면 그 인스턴스의 다른 요청까지 함께
+        # 멈춘다. 리눅스 기본 TCP 타임아웃은 2분이 넘는다.
+        conn = psycopg.connect(self._url, autocommit=True, connect_timeout=CONNECT_TIMEOUT)
         conn.execute(
             f"CREATE TABLE IF NOT EXISTS {self.name} "
             '("key" TEXT PRIMARY KEY, created_at DOUBLE PRECISION NOT NULL, "value" TEXT NOT NULL)'
@@ -229,6 +253,15 @@ class PostgresTable:
             f'SELECT "value", created_at FROM {self.name} WHERE "key" = %s', (key,), fetch=True
         )
         return (json.loads(found[0]), found[1]) if found else None
+
+    def claim(self, key: str, value: dict[str, Any], created_at: float) -> bool:
+        found = self._run(
+            f'INSERT INTO {self.name} ("key", created_at, "value") VALUES (%s, %s, %s) '
+            'ON CONFLICT ("key") DO NOTHING RETURNING "key"',
+            (key, created_at, json.dumps(value, ensure_ascii=False)),
+            fetch=True,
+        )
+        return found is not None
 
     def delete(self, key: str) -> None:
         self._run(f'DELETE FROM {self.name} WHERE "key" = %s', (key,))

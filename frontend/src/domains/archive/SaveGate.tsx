@@ -37,6 +37,14 @@ export interface SaveGateProps {
   /** 광고가 도는 중. 버튼을 두 번 누르지 못하게 한다 */
   pending?: boolean;
   /**
+   * 보상을 받기 전에 광고를 닫았다. **그러면 시트를 닫지 않고 왜 안 담겼는지 말한다.**
+   *
+   * 한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
+   * 담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다. 이어가기 시트가 같은 자리에서
+   * 같은 방식으로 말한다(`ContinueSheet` 의 bailed).
+   */
+  bailed?: boolean;
+  /**
    * 「광고 없이 간직하기」를 눌렀다. 이용권 시트를 여는 일은 부르는 쪽이 한다.
    *
    * 이 자리에 두는 이유: 광고를 보기 싫은 사람이 지금 정확히 여기 서 있다. 개수 제한이
@@ -64,6 +72,7 @@ export function SaveGate({
   onClose,
   onWatch,
   pending = false,
+  bailed = false,
   onBuyPass,
   leaves = 0,
   onUseLeaf,
@@ -208,7 +217,12 @@ export function SaveGate({
         */}
         {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
         <p className="pw-leaf-note" role="status">
-          {pending ? '잠시만 기다려 주세요' : ''}
+          {pending
+            ? '불러오고 있어요'
+            : bailed
+              ? // 무엇이 모자랐는지만 말한다. 「끝까지」는 사람마다 다르게 읽힌다
+                '보상을 받기 전에 닫아서 담기지 않았어요'
+              : ''}
         </p>
 
         {/*

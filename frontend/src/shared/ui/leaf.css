@@ -186,6 +186,8 @@
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   color: var(--text-muted);
+  /* 이어가기·간직 시트의 같은 줄과 같은 이유로 빈 줄도 자리를 지킨다 */
+  min-height: calc(var(--t-caption) * var(--lh-caption));
 }
 
 /* 어디에 쓰나. 파는 말이 아니라 쓰임새라 작게 아래에 둔다 */

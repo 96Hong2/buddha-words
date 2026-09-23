@@ -85,4 +85,8 @@
   font-size: var(--t-caption);
   line-height: var(--lh-caption);
   color: var(--text-muted);
+  /* ⚠ **빈 줄도 자리를 지킨다.** 이 줄은 평소 비어 있다가 광고를 부르는 순간 한 줄이
+     찬다. 높이를 안 잡아 두면 그때 아래 것들이 위로 뛰고, 바텀시트라 **누르고 있는
+     버튼이 손가락 밑에서 밀린다.** 두 줄까지 늘 수 있어 상한은 두지 않는다 */
+  min-height: calc(var(--t-caption) * var(--lh-caption));
 }

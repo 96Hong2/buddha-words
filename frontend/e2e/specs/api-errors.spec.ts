@@ -259,7 +259,7 @@ test('한 번 더 보기를 서버가 못 주면, 광고를 다시 보라고 하
   await expect(card.getByRole('button', { name: '다시 받아보기' })).toBeVisible({
     timeout: 30_000,
   });
-  await expect(card).toContainText('아래를 누르면 바로 다시 받아요');
+  await expect(card).toContainText('광고를 다시 보지 않아도 돼요');
   await expect(page.getByTestId('extension-cta')).toHaveCount(0);
   await shot(page, '50 한 번 더 보기 - 서버가 다른 관점을 못 줬을 때');
 });
@@ -325,7 +325,7 @@ test('광고 문은 서버가 연다. 보고 나면 이어서 답이 온다', as
 
   const sheet = page.getByTestId('continue-sheet');
   await expect(sheet).toBeVisible({ timeout: 30_000 });
-  await expect(sheet).toContainText('이야기를 이어갈 수 있어요');
+  await expect(sheet).toContainText('짧은 영상이 끝나면 바로 이어 드릴게요');
   // 남은 횟수를 세어 보여 주지 않는다. 천장이 없어 셀 것이 없다
   await expect(sheet).not.toContainText('번 더');
 

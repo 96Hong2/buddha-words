@@ -817,3 +817,83 @@ def test_the_free_ledger_never_writes_the_anon_key() -> None:
     row = free_once._table().get(free_once._row_key("anon-secret-0001"))
     assert row is not None, "적히긴 해야 해요. 안 적히면 위 시험이 거짓으로 통과해요."
     assert free_once._row_key("anon-secret-0001") != "anon-secret-0001"
+
+
+def test_the_free_ledger_never_overwrites_a_claim_that_is_already_there() -> None:
+    """무료 한 번을 잡는 일은 **저장 자리가 혼자 가른다.** 두 번째 사람은 이기지 못한다.
+
+    한때 「빈 자리인지 보고, 그다음 적는다」로 두 문장이었다. 그 사이가 저장 자리를 두 번
+    오가는 만큼 벌어져 있어서, 같은 익명키로 몇 밀리초 안에 들어온 요청들이 다 같이 빈
+    자리를 읽고 다 같이 무료로 나갔다. 분당 제한이 6이라 여섯 번까지 열렸다.
+    그래서 가르는 일을 저장 자리에 맡겼다(`INSERT OR IGNORE` · `ON CONFLICT DO NOTHING`).
+
+    ⚠ **이 시험이 보는 것은 「덮지 않는다」까지다.** 진짜 경쟁은 서버가 여럿일 때 나는데,
+    여기서는 한 프로세스라 파일 잠금이 어차피 순서를 세워 준다. 그 잠금은 **인스턴스마다
+    따로**라 운영에서는 아무것도 막지 못한다. 막는 것은 아래 성질 하나뿐이고, 「먼저 보고
+    그다음 적기」로 돌아가면 이 시험이 깨진다.
+    """
+    table = free_once._table()
+    key = free_once._row_key("two-racers")
+    table.delete(key)
+
+    assert table.claim(key, {"used": True, "who": "first"}, 1.0) is True
+    assert table.claim(key, {"used": True, "who": "second"}, 2.0) is False
+
+    row = table.get(key)
+    assert row is not None
+    assert row[0]["who"] == "first", "나중 사람이 먼저 잡은 자리를 덮었어요."
+    assert row[1] == 1.0, "만든 시각까지 덮었어요."
+
+
+def test_free_once_keeps_gate_and_quota_saying_the_same_thing_when_the_store_fails() -> None:
+    """저장 자리가 막혀 있어도 **문과 사용량 표가 같은 말을 한다.**
+
+    못 적었으면 무료를 주지 않는다. 그런데 그때 사용량 표가 「무료 아직 안 썼음」이라고
+    하면, 같은 응답 안에서 광고 문을 세우면서 무료가 남았다고 말하는 꼴이 된다. 그 표는
+    429 본문에 그대로 실려 화면으로 간다.
+    """
+    zone = usage.resolve_zone("Asia/Seoul")
+    table = free_once._table()
+    original = table.claim
+
+    def broken(*args: object, **kwargs: object) -> bool:
+        raise RuntimeError("저장 자리가 막혔어요")
+
+    free_once._CACHE.clear()
+    table.claim = broken  # type: ignore[method-assign]
+    try:
+        out = usage.reserve("blocked-store", "normal", zone)
+    finally:
+        table.claim = original  # type: ignore[method-assign]
+
+    assert out.gate == "ad_continue", "못 적었는데 무료를 내줬어요."
+    assert out.quota["freeUsed"] == 1, "문은 닫았는데 표는 무료가 남았다고 말해요."
+
+
+def test_free_once_rests_after_the_store_falls_over() -> None:
+    """저장 자리가 넘어지면 **한동안 다시 두드리지 않는다.**
+
+    답을 만드는 길은 `async` 인데 이 호출은 동기다. 끊긴 주소에 붙느라 기다리면 그
+    인스턴스의 진행 중인 다른 요청까지 함께 멈춘다. 연결 상한이 한 번의 기다림을 묶어
+    주지만, 장애가 이어지면 새 익명키가 올 때마다 그만큼 다시 낸다.
+    """
+    table = free_once._table()
+    original = table.get
+    tries = 0
+
+    def broken(key: str):  # type: ignore[no-untyped-def]
+        nonlocal tries
+        tries += 1
+        raise RuntimeError("저장 자리가 넘어졌어요")
+
+    free_once.reset_all()
+    table.get = broken  # type: ignore[method-assign]
+    try:
+        assert free_once.used("first-after-fall") is True, "못 읽었으면 「썼다」로 봐야 해요."
+        assert free_once.used("second-after-fall") is True
+        assert free_once.used("third-after-fall") is True
+    finally:
+        table.get = original  # type: ignore[method-assign]
+        free_once._stood_up()
+
+    assert tries == 1, f"넘어진 뒤에도 계속 두드렸어요({tries}번)."

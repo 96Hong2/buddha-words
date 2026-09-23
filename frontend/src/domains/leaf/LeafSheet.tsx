@@ -183,7 +183,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
             {/* 리전은 늘 서 있는다. 이유는 ContinueSheet 의 같은 자리 주석 */}
             <p className="leaf-sheet__note" role="status" {...testId(TEST_IDS.leafNote)}>
               {ad.showing
-                ? '잠시만 기다려 주세요'
+                ? '불러오고 있어요'
                 : failed === 'dismissed'
                   ? // 무엇이 모자랐는지 정확히 말한다. 「끝까지」는 사람마다 다르게 읽힌다
                     '보상을 받기 전에 닫아서 연꽃이 생기지 않았어요'

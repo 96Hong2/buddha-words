@@ -17,6 +17,12 @@ Cloud Run 은 배포·유휴 종료·오토스케일마다 인스턴스를 갈�
 Cloud SQL 이 잠깐 끊기는 동안 앱 전체가 죽는다. 그렇다고 실패를 「안 썼다」로 읽으면 못
 적은 채로 무료를 내주게 되고, 그 사람은 다음에도 또 무료다. 그래서 **실패하면 무료를 주지
 않는 쪽으로 기운다.** 그 사람은 광고를 한 편 보고 답을 받는다. 못 적은 것은 로그로 남긴다.
+기다리는 시간에도 상한이 있다(`persist.CONNECT_TIMEOUT`). 끊긴 주소를 오래 붙들면
+그 인스턴스의 다른 요청까지 함께 멈춘다.
+
+**무료를 잡는 일은 한 문장이다**(`claim`). 확인과 적기를 나누면 그 사이에 다른 요청이
+같은 확인을 통과한다. `used` 는 그 앞에 서는 빠른 길일 뿐이고, 한 번뿐인 것을 가르는
+것은 언제나 `claim` 이다.
 
 ⚠ **익명키를 그대로 적지 않는다.** 저장 자리에 사람을 가리키는 값을 남기지 않기로 했고
 (`tests/test_persistence.py` 가 파일을 훑어 그것을 지킨다), 여기서 필요한 것은 「이 열쇠를
@@ -28,6 +34,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import threading
+import time
 
 from app.core import persist
 
@@ -50,6 +57,31 @@ _MARK = {"used": True}
 _CACHE: dict[str, bool] = {}
 _LOCK = threading.Lock()
 
+# ── 저장 자리가 넘어졌을 때 얼마나 쉬나 ─────────────────────────────────────
+#
+# ⚠ **답을 만드는 길이 `async` 인데 여기 호출은 동기다.** 붙는 데 오래 걸리면 그 인스턴스의
+# **진행 중인 다른 요청까지 함께 멈춘다.** 연결 상한(`persist.CONNECT_TIMEOUT`)이 한 번의
+# 기다림을 5초로 묶어 주지만, 장애가 이어지면 새 익명키가 올 때마다 5초씩 다시 낸다.
+#
+# 그래서 한 번 넘어지면 이만큼 쉰다. 쉬는 동안 「썼다」로 답해서 사람은 광고 문을 만나고
+# 답은 그대로 받는다. 잃는 것은 그 창 안에 처음 온 사람의 무료 한 번뿐이다.
+_REST_SECONDS = 30.0
+_rest_until = 0.0
+
+
+def _resting(now: float) -> bool:
+    return now < _rest_until
+
+
+def _fell(now: float) -> None:
+    global _rest_until
+    _rest_until = now + _REST_SECONDS
+
+
+def _stood_up() -> None:
+    global _rest_until
+    _rest_until = 0.0
+
 
 def _table() -> persist.KeyValueTable:
     return persist.bind(TABLE_NAME)
@@ -71,30 +103,51 @@ def used(anon_key: str) -> bool:
         known = _CACHE.get(anon_key)
     if known is not None:
         return known
+    now = time.monotonic()
+    if _resting(now):
+        return True
     try:
         found = _table().get(_row_key(anon_key)) is not None
     except Exception:
         log.warning("free_once_read_failed", exc_info=True)
+        _fell(now)
         return True
+    _stood_up()
     with _LOCK:
         # 기다리는 사이에 `mark` 가 True 로 적어 뒀을 수 있다. 그 값을 덮지 않는다
         return _CACHE.setdefault(anon_key, found)
 
 
-def mark(anon_key: str) -> bool:
-    """무료 한 번을 지금 썼다고 적는다. **적었으면 True 다.**
+def claim(anon_key: str) -> bool:
+    """무료 한 번을 지금 잡는다. **내가 처음 잡은 사람이면 True.**
 
-    못 적었으면 부르는 쪽이 무료를 내주지 않는다(`usage.reserve`). 적히지도 않은 무료를
-    내주면 그 사람은 다음에도, 그다음에도 무료다.
+    ⚠ **확인과 적기를 나누지 않는다.** 한때 `used()` 로 보고 그다음에 적었는데, 둘 사이가
+    DB 왕복 두 번만큼 벌어져 있었다. 같은 익명키로 몇 밀리초 안에 두 번 보내면 둘 다 빈
+    자리를 읽고 둘 다 무료로 나갔다(분당 제한이 6이라 여섯 번까지). 지금은 저장 자리가
+    「처음 넣는 사람」을 한 문장으로 가른다.
+
+    **못 적었으면 무료를 주지 않는다.** 적히지도 않은 무료를 내주면 그 사람은 다음에도,
+    그다음에도 무료다. 그때는 캐시에도 「썼다」로 적는다. 그래야 같은 요청이 내는
+    사용량 표(`snapshot`)가 문(gate)과 같은 말을 한다. 저장 자리가 도로 살아나면
+    그 사람은 다음 프로세스에서 무료를 제대로 받는다.
     """
+    now = time.monotonic()
+    if _resting(now):
+        with _LOCK:
+            _CACHE[anon_key] = True
+        return False
     try:
-        _table().put(_row_key(anon_key), _MARK, 0.0)
+        first = _table().claim(_row_key(anon_key), _MARK, 0.0)
     except Exception:
         log.error("free_once_write_failed", exc_info=True)
+        _fell(now)
+        with _LOCK:
+            _CACHE[anon_key] = True
         return False
+    _stood_up()
     with _LOCK:
         _CACHE[anon_key] = True
-    return True
+    return first
 
 
 def unmark(anon_key: str) -> None:
@@ -116,6 +169,7 @@ def unmark(anon_key: str) -> None:
 def reset_all() -> None:
     """테스트가 격리하려고 부른다. 저장 자리와 캐시를 둘 다 비운다."""
     _table().clear()
+    _stood_up()
     with _LOCK:
         _CACHE.clear()
 
@@ -127,5 +181,6 @@ def forget_binding() -> None:
     저장이 메모리로 되돌아가도 시험이 초록으로 남는다.
     """
     persist.unbind(TABLE_NAME)
+    _stood_up()
     with _LOCK:
         _CACHE.clear()

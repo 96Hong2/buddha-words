@@ -92,6 +92,8 @@ export function AnswerRoute() {
   /** 간직 앞에 서는 광고 안내 시트 */
   const [gateOpen, setGateOpen] = useState(false);
   const [gateBusy, setGateBusy] = useState(false);
+  /** 보상을 받기 전에 광고를 닫았다. 시트에 남아 왜 안 담겼는지 말한다 */
+  const [gateBailed, setGateBailed] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   /** 간직하고 나서 뜨는 한 장. 담긴 경우에만 연다 */
   const [done, setDone] = useState<SaveDoneKind | null>(null);
@@ -348,6 +350,7 @@ export function AnswerRoute() {
   const watchAndSave = useCallback(async () => {
     if (answer == null || gateBusy) return;
     analytics.log('save_gate_accept', { answer_id: answer.answerId }, { kind: 'click' });
+    setGateBailed(false);
     setGateBusy(true);
     let watched = false;
     try {
@@ -356,14 +359,25 @@ export function AnswerRoute() {
       watched = false;
     }
     setGateBusy(false);
-    setGateOpen(false);
-    // 스스로 닫은 사람에게는 아무 말도 하지 않는다. 실패라고 말할 일이 아니다.
-    // 다만 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
     if (watched) {
+      setGateOpen(false);
       afterStore(store('ad'));
       return;
     }
-    if (!saveAd.supported) afterStore(store('free'));
+    // 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
+    if (!saveAd.supported) {
+      setGateOpen(false);
+      afterStore(store('free'));
+      return;
+    }
+    /*
+      보상을 받기 전에 닫았다. **시트를 닫지 않고 그 자리에서 말한다.**
+
+      한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
+      담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다. 이어가기 시트가 같은 자리에서
+      같은 방식으로 말한다(2026-09-23 리뷰).
+    */
+    setGateBailed(true);
   }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
   const watchAd = useCallback(
@@ -493,6 +507,7 @@ export function AnswerRoute() {
           open={gateOpen}
           answerId={answer.answerId}
           pending={gateBusy}
+          bailed={gateBailed}
           leaves={leaf.count}
           onUseLeaf={saveWithLeaf}
           onCollectLeaf={() => {
@@ -500,7 +515,10 @@ export function AnswerRoute() {
             setGateOpen(false);
             setLeafOpen(true);
           }}
-          onClose={() => setGateOpen(false)}
+          onClose={() => {
+            setGateOpen(false);
+            setGateBailed(false);
+          }}
           onWatch={() => void watchAndSave()}
           onBuyPass={() => {
             setGateOpen(false);

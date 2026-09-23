@@ -157,3 +157,16 @@ test('설정에서 앱을 알리면 적은 이야기가 함께 가지 않는다'
   // 앱을 알리는 자리다. 그 사람의 이야기도 받은 답도 여기에 실리지 않는다
   expect(sent[0]).not.toContain('회사에서 실수');
 });
+
+test('앱 정보 화면에서 「광고」는 끄기 줄 하나까지다', async ({ page }) => {
+  /*
+   * 설정 > 안내 > 앱 정보. 누구나 들어갈 수 있는 자리인데 한때 제목과 설명이 각각
+   * 말해서 둘이었다. 「이 기기에서 광고 끄기」는 기능 이름이라 그 말이 꼭 있어야 하고,
+   * 그러면 설명은 다른 말을 해야 한다.
+   */
+  await page.goto('/settings/app');
+
+  const screen = page.getByTestId('app-info');
+  await expect(screen).toBeVisible();
+  expect(await adWordCount(page, 'app-info'), '앱 정보가 광고를 여러 번 말한다').toBe(1);
+});

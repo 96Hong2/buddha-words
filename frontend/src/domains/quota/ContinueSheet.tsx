@@ -69,12 +69,15 @@ const TITLE = '이야기를 이어가 볼까요?';
  * 전면형은 닫아도 답이 나오고 길이도 문서에 없어 초를 적지 않는다. 근거 없는 수치를
  * 화면이 말하게 두지 않는다.
  *
- * ⚠ **「광고」라는 글자는 라벨에 넣지 않는다.** 바로 뒤에 배지가 그 말을 하고 있어서,
- * 넣으면 버튼 한 줄에 같은 말이 두 번 선다. 한 화면에서 이 단어를 몇 번이나 읽게
- * 되는지가 이 앱의 인상을 정한다(2026-09-23 사용자 지적). 규칙이 요구하는 「무엇이
- * 뜨는지 밝히기」는 배지 하나로 충분하고, 전면형처럼 초를 못 적는 판에서도 그렇다.
+ * ⚠ **「광고」라는 글자는 배지 하나로 끝낸다.** 라벨에 또 적으면 버튼 한 줄에 같은 말이
+ * 두 번 선다. 한 화면에서 이 단어를 몇 번이나 읽게 되는지가 이 앱의 인상을 정한다
+ * (2026-09-23 사용자 지적). 규칙이 요구하는 「무엇이 뜨는지 밝히기」는 배지로 충분하다.
+ *
+ * **배지는 문장 안에 선다**(「30초 [광고] 보고 답변 받기」). 끝에 붙이면 「30초 보고」의
+ * 목적어가 문장 끝에 가서야 나오고, 낭독기는 그 순서 그대로 읽는다. 다른 세 자리
+ * (간직·모으기·관점)가 이미 이 모양이다.
  */
-const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 보고 답변 받기' : '답변 받기';
+const AD_IS_REWARDED = AD_KIND.continue === 'rewarded';
 
 /**
  * 연꽃이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
@@ -82,7 +85,7 @@ const AD_BUTTON_LABEL = AD_KIND.continue === 'rewarded' ? '30초 보고 답변 �
  * 「광고」를 빼고 쓴다. 그 자리는 배지가 이미 말하고 있어서, 주 버튼과 달리 글자와 배지가
  * 나란히 서면 한 줄에 같은 말이 두 번 나온다. 간직 시트의 보조 버튼과 같은 말투다.
  */
-const AD_ALT_LABEL = AD_KIND.continue === 'rewarded' ? '30초 보고 답변 받기' : '답변 받기';
+const AD_ALT_LABEL = AD_IS_REWARDED ? '30초 보고 답변 받기' : '답변 받기';
 
 export interface ContinueSheetProps {
   open: boolean;
@@ -203,7 +206,7 @@ export function ContinueSheet({
           */}
           {hasLeaf
             ? '모아 둔 연꽃으로 바로 이어갈 수 있어요'
-            : '잠깐만 기다리면 이야기를 이어갈 수 있어요'}
+            : '짧은 영상이 끝나면 바로 이어 드릴게요'}
         </p>
 
         <div className="continue-sheet__actions">
@@ -274,20 +277,39 @@ export function ContinueSheet({
               )}
               {/*
                 「광고」라는 글자가 버튼 안에 있어야 한다. 누르는 순간 무엇이 뜨는지
-                라벨이 말하지 않으면 앱인토스 심사 규칙에 닿는다.
+                밝히지 않으면 앱인토스 심사 규칙에 닿는다. 그 말은 **배지 하나가** 맡고,
+                배지는 문장 안에 선다(「30초 [광고] 보고 답변 받기」).
 
-                무슨 말을 적을지는 종류가 정한다(`AD_BUTTON_LABEL`). 보상형에만
-                「광고 보고 ~받기」를 쓴다. 전면형은 닫아도 답이 나오므로 거짓이 된다.
+                보상형에만 초를 적는다. 전면형은 길이가 문서에 없고 닫아도 답이 나온다.
 
                 ⚠ **배지는 잠긴 동안에도 지우지 않는다.** 규칙에 조건이 없고, 배지 수를
                 세는 검사가 그 창을 밟으면 깨진다. 잠긴 동안 바뀌는 것은 앞의 아이콘과
                 라벨뿐이다.
               */}
               <span className="continue-sheet__ad-label">
-                {checking ? '이야기를 살펴보고 있어요' : AD_BUTTON_LABEL}{' '}
-                <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                  광고
-                </span>
+                {checking ? (
+                  <>
+                    이야기를 살펴보고 있어요{' '}
+                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                      광고
+                    </span>
+                  </>
+                ) : AD_IS_REWARDED ? (
+                  <>
+                    30초{' '}
+                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                      광고
+                    </span>{' '}
+                    보고 답변 받기
+                  </>
+                ) : (
+                  <>
+                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
+                      광고
+                    </span>{' '}
+                    보고 답변 받기
+                  </>
+                )}
               </span>
             </button>
           )}
@@ -309,7 +331,7 @@ export function ContinueSheet({
             {checking
               ? '보내신 이야기를 살펴보는 중이에요. 곧 열려요'
               : ad.showing
-                ? '잠시만 기다려 주세요'
+                ? '불러오고 있어요'
                 : bailed
                   ? // 무엇이 모자랐는지만 말한다. 「끝까지」는 사람마다 다르게 읽힌다
                     '보상을 받기 전에 닫아서 이어지지 않았어요'

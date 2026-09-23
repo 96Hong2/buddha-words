@@ -128,7 +128,7 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 끝까지 봐야 이�
 
   // 누르면 광고가 뜬다는 것과 얼마나 참아야 하는지를 버튼이 말한다
   const cta = page.getByTestId('continue-watch');
-  await expect(cta).toContainText('30초 보고 답변 받기');
+  await expect(cta).toContainText('30초 광고 보고 답변 받기');
   await expect(cta).toContainText('광고');
   await expect(cta, '얼마나 참아야 하는지 안 적혀 있어요').toContainText('30초');
   // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
@@ -246,7 +246,7 @@ test('광고를 불러오는 동안은 시트에 머물고, 광고가 뜬 뒤에
 
   // 불러오는 동안: 시트에 그대로 있고, 무엇을 기다리는지 말한다. 답은 아직 만들지 않는다
   const sheet = page.getByTestId('continue-sheet');
-  await expect(sheet).toContainText('잠시만 기다려 주세요');
+  await expect(sheet).toContainText('불러오고 있어요');
   await page.waitForTimeout(1500);
   await expect(sheet).toBeVisible();
   expect(new URL(page.url()).pathname).toBe('/');

@@ -85,16 +85,17 @@ export function AppInfoScreen() {
           <div className="set-kv">
             <span className="set-kv-k">오늘 받은 답변</span>
             <span className="set-kv-v">
-              {quota == null ? '아직 없어요' : `${(quota.firstUsed ? 1 : 0) + quota.continuesUsed}번`}
+              {quota == null
+                ? '아직 없어요'
+                : `${(quota.firstUsed ? 1 : 0) + quota.continuesUsed}번`}
             </span>
           </div>
 
           <div className="set-switch-row">
             <span className="set-text" id="ad-opt-out-label">
               <span className="set-item-title">이 기기에서 광고 끄기</span>
-              <span className="set-item-desc">
-                만든 사람과 테스터가 자기 광고를 만나지 않게 해요
-              </span>
+              {/* 제목이 이미 「광고」를 말했다. 여기서 한 번 더 쓰면 이 화면만 두 번이 된다 */}
+              <span className="set-item-desc">만든 사람과 테스터가 쓰는 자리예요</span>
             </span>
             <button
               type="button"

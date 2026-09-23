@@ -44,7 +44,7 @@ const CONTACT_EMAIL = 'pocket.app.official@gmail.com';
 /** 이용권 자리에 지금 무엇이 적히나. 모르는 것은 모른다고 적는다 */
 const PASS_ROW: Record<ArchivePassState, { value: string; desc: string }> = {
   owned: { value: '있음', desc: '기다리지 않고 바로 간직할 수 있어요' },
-  none: { value: '없음', desc: '지금은 30초를 기다리면 간직할 수 있어요' },
+  none: { value: '없음', desc: '지금은 짧은 영상을 보면 간직할 수 있어요' },
   unknown: { value: '확인 중', desc: '토스에 남은 구매 내역을 읽고 있어요' },
 };
 
@@ -378,7 +378,7 @@ export function SettingsScreen({
             <span className="set-text">
               <span className="set-item-title set-item-title--hero">홈 화면에 추가하기</span>
               {/* 한 줄에 들어가는 길이로 둔다. 두 줄로 넘어가면 끝 낱말만 남아 어수선하다 */}
-              <span className="set-item-desc">찾지 않고 한 번에 열 수 있어요</span>
+              <span className="set-item-desc">휴대폰 홈에서 바로 열 수 있어요</span>
             </span>
             <Chevron />
           </button>
@@ -414,7 +414,12 @@ export function SettingsScreen({
             type="button"
             className="set-item"
             onClick={shareApp}
-            disabled={sharing}
+            /*
+              ⚠ 누른 자리에서 `disabled` 로 막지 않는다. 눌린 요소가 비활성화되면 포커스가
+              body 로 빠져서, 공유 시트를 닫고 돌아온 사람은 설정 목록에서 자리를 잃는다.
+              두 번 눌리는 것은 `shareApp` 안의 `sharing` 가드가 막는다.
+            */
+            aria-disabled={sharing || undefined}
             {...testId(TEST_IDS.settingsAppShare)}
           >
             <span className="set-icon" aria-hidden="true">
@@ -440,11 +445,14 @@ export function SettingsScreen({
             <Chevron />
           </button>
         </div>
-        {shareNotice != null && (
-          <p className="set-hint" role="status">
-            {shareNotice}
-          </p>
-        )}
+        {/*
+          ⚠ `role` 을 조건으로 붙이지 않는다. 라이브 리전은 **내용이 바뀌기 전에** 이미
+          접근성 트리에 있어야 읽힌다. 공유 시트를 못 여는 기기에서는 「복사했어요」가
+          이 길의 유일한 알림이다.
+        */}
+        <p className="set-hint" role="status">
+          {shareNotice ?? ''}
+        </p>
 
         {/*
           연꽃 모으기.

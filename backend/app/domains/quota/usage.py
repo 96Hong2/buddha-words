@@ -201,9 +201,11 @@ def reserve(
         gate = "light_soft_cap" if day.light_used >= LIGHT_SOFT_CAP else "light"
         day.light_used += 1
         allowed = True
-    elif not free_once.used(anon_key) and free_once.mark(anon_key):
+    elif not free_once.used(anon_key) and free_once.claim(anon_key):
         # 평생 한 번이다. 날짜 바구니가 아니라 저장 자리에 적어 배포를 넘긴다.
-        # **적히지 않으면 안 준다.** 적지 못한 무료는 그 사람에게 매번 다시 열린다
+        #
+        # 가르는 것은 `claim` 하나다. 앞의 `used` 는 이미 쓴 사람이 DB 를 안 긁게 하는
+        # 빠른 길일 뿐이라, 둘 사이에 다른 요청이 끼어도 `claim` 에서 한 사람만 이긴다
         gate = "free"
         allowed = True
     else:
