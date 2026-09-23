@@ -509,6 +509,13 @@ test('서버가 보는 동안에는 광고 버튼이 잠긴다', async ({ page }
   */
   await expect(page.getByTestId('continue-watch')).toContainText('이야기를 살펴보고 있어요');
   await expect(page.getByTestId('continue-watch').locator('.spin')).toBeVisible();
+  /*
+    ⚠ **그 말 옆에 「광고」 배지를 세우지 않는다.** 「이야기를 살펴보고 있어요 [광고]」는
+    지금 광고가 도는 중이라는 말로 읽힌다. 그때 도는 것은 서버 쪽 확인이다
+    (2026-09-23 사용자 지적). 규칙이 요구하는 「누르면 무엇이 뜨는지 밝히기」는 그대로다.
+    이 버튼은 잠겨 있어 눌리지 않고, 풀리는 순간 배지가 돌아온다.
+  */
+  await expect(page.getByTestId('continue-watch').getByTestId('ad-badge')).toHaveCount(0);
   await shot(page, '53 광고 문 - 서버가 보는 동안은 잠긴다');
 
   // 다 보고 나면 시트를 걷고 창구로 데려간다

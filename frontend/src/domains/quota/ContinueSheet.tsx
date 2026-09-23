@@ -82,10 +82,12 @@ const AD_IS_REWARDED = AD_KIND.continue === 'rewarded';
 /**
  * 연꽃이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
  *
- * 「광고」를 빼고 쓴다. 그 자리는 배지가 이미 말하고 있어서, 주 버튼과 달리 글자와 배지가
- * 나란히 서면 한 줄에 같은 말이 두 번 나온다. 간직 시트의 보조 버튼과 같은 말투다.
+ * 「광고」라는 글자는 여기서도 배지 하나가 맡는다. 라벨에 또 적으면 한 줄에 같은 말이
+ * 두 번 선다. **배지가 들어설 자리를 앞뒤로 갈라 넘긴다.** 주 버튼과 같은 모양이라야
+ * 연꽃을 가진 사람과 안 가진 사람이 같은 문장을 읽는다.
  */
-const AD_ALT_LABEL = AD_IS_REWARDED ? '30초 보고 답변 받기' : '답변 받기';
+const AD_ALT_LEAD = AD_IS_REWARDED ? '30초' : undefined;
+const AD_ALT_LABEL = '보고 답변 받기';
 
 export interface ContinueSheetProps {
   open: boolean;
@@ -226,6 +228,7 @@ export function ContinueSheet({
 
           {hasLeaf ? (
             <LeafAltAdButton
+              lead={AD_ALT_LEAD}
               label={AD_ALT_LABEL}
               disabled={ad.showing || checking}
               busy={checking}
@@ -282,18 +285,13 @@ export function ContinueSheet({
 
                 보상형에만 초를 적는다. 전면형은 길이가 문서에 없고 닫아도 답이 나온다.
 
-                ⚠ **배지는 잠긴 동안에도 지우지 않는다.** 규칙에 조건이 없고, 배지 수를
-                세는 검사가 그 창을 밟으면 깨진다. 잠긴 동안 바뀌는 것은 앞의 아이콘과
-                라벨뿐이다.
+                ⚠ **잠긴 동안에는 배지를 떼어 둔다.** 「이야기를 살펴보고 있어요 [광고]」는
+                지금 광고가 도는 중이라는 말로 읽힌다(2026-09-23 사용자 지적). 그때 도는
+                것은 서버 쪽 확인이고 광고는 눌리지도 않았다. 위 주석이 말한 그대로다.
               */}
               <span className="continue-sheet__ad-label">
                 {checking ? (
-                  <>
-                    이야기를 살펴보고 있어요{' '}
-                    <span className="continue-sheet__badge" {...testId(TEST_IDS.adBadge)}>
-                      광고
-                    </span>
-                  </>
+                  '이야기를 살펴보고 있어요'
                 ) : AD_IS_REWARDED ? (
                   <>
                     30초{' '}
@@ -313,45 +311,46 @@ export function ContinueSheet({
               </span>
             </button>
           )}
-          {/*
-            ⚠ `role` 을 조건으로 붙이지 않는다. 라이브 리전은 **내용이 바뀌기 전에** 이미
-            접근성 트리에 있어야 읽힌다. 역할과 글이 같은 순간에 생기면 안 읽는 기기가 있다.
-          */}
-          <p className="continue-sheet__note" role="status">
-            {/*
-              이 줄은 **지금 무슨 일이 일어나는 중인지**만 맡는다. 평소에는 비운다.
-
-              한때 여기에 「광고를 끝까지 보면 바로 이어져요」 같은 안내가 늘 서 있었다.
-              버튼이 이미 하는 말을 한 번 더 하는 줄이었고, 그 한 화면에서 「광고」를
-              세 번 읽게 만들던 주범이다(2026-09-23 사용자 지적).
-
-              ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
-              「베푼 것을 세는 문장」과 한 글자도 안 겹치게 `flows.spec.ts` 가 지킨다.
-            */}
-            {checking
-              ? '보내신 이야기를 살펴보는 중이에요. 곧 열려요'
-              : ad.showing
-                ? '불러오고 있어요'
-                : bailed
-                  ? // 무엇이 모자랐는지만 말한다. 「끝까지」는 사람마다 다르게 읽힌다
-                    '보상을 받기 전에 닫아서 이어지지 않았어요'
-                  : ''}
-          </p>
-
-          {/*
-            연꽃을 모으러 가는 자리. 광고 버튼 **아래**다. 지금 답을 받으러 온 사람에게
-            먼저 권할 일이 아니고, 「이번에는 광고를 보고 다음부터는 안 봐도 된다」는
-            순서로 읽히는 것이 맞다.
-          */}
-          {onCollectLeaf != null && (
-            <LeafCollectCta
-              count={leaves}
-              action="이어가요"
-              disabled={ad.showing || checking}
-              onClick={onCollectLeaf}
-            />
-          )}
         </div>
+
+        {/*
+          ⚠ `role` 을 조건으로 붙이지 않는다. 라이브 리전은 **내용이 바뀌기 전에** 이미
+          접근성 트리에 있어야 읽힌다. 역할과 글이 같은 순간에 생기면 안 읽는 기기가 있다.
+        */}
+        <p className="continue-sheet__note" role="status">
+          {/*
+            이 줄은 **지금 무슨 일이 일어나는 중인지**만 맡는다. 평소에는 비운다.
+
+            한때 여기에 「광고를 끝까지 보면 바로 이어져요」 같은 안내가 늘 서 있었다.
+            버튼이 이미 하는 말을 한 번 더 하는 줄이었고, 그 한 화면에서 「광고」를
+            세 번 읽게 만들던 주범이다(2026-09-23 사용자 지적).
+
+            ⚠ 이 시트에서는 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는
+            「베푼 것을 세는 문장」과 한 글자도 안 겹치게 `flows.spec.ts` 가 지킨다.
+          */}
+          {checking
+            ? '보내신 이야기를 살펴보는 중이에요. 곧 열려요'
+            : ad.showing
+              ? '불러오고 있어요'
+              : bailed
+                ? // 무엇이 모자랐는지만 말한다. 「끝까지」는 사람마다 다르게 읽힌다
+                  '보상을 받기 전에 닫아서 이어지지 않았어요'
+                : ''}
+        </p>
+
+        {/*
+          연꽃을 모으러 가는 자리. 광고 버튼 **아래**다. 지금 답을 받으러 온 사람에게
+          먼저 권할 일이 아니고, 「이번에는 광고를 보고 다음부터는 안 봐도 된다」는
+          순서로 읽히는 것이 맞다.
+        */}
+        {onCollectLeaf != null && (
+          <LeafCollectCta
+            count={leaves}
+            action="이어가요"
+            disabled={ad.showing || checking}
+            onClick={onCollectLeaf}
+          />
+        )}
       </div>
     </BottomSheet>
   );

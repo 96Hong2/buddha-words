@@ -160,7 +160,9 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
         tabIndex={-1}
         {...testId(TEST_IDS.paywall)}
       >
-        <span className="pw-grabber" aria-hidden="true" />
+        <span className="pw-grabber" aria-hidden="true">
+          <span className="pw-grabber__grip" />
+        </span>
 
         {/* 플래그가 꺼져 있으면 파는 화면을 아예 그리지 않는다. 자리가 찼다는 안내만 남는다 */}
         {!enabled ? (

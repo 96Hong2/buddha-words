@@ -184,22 +184,44 @@ class TossAdsBridge implements AdsBridge {
 
       /** 광고가 뜬 뒤 화면이 다시 보이는지 듣는 자리. 닫힘 신호가 안 오는 버전을 위한 것이다 */
       let onVisible: (() => void) | undefined;
+      /** 노출 구독을 끊는 함수. 끝난 뒤에도 남아 있으면 다음 광고의 신호를 여기서 받는다 */
+      let cancelShow: (() => void) | undefined;
+      /** 이미 한 편을 띄웠나. **두 번째 `loaded` 로 또 띄우지 않는다** */
+      let shown = false;
 
       const finish = (result: FullScreenAdResult) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         stopLoading();
+        cancelShow?.();
         if (onVisible) document.removeEventListener('visibilitychange', onVisible);
         resolve(result);
       };
       const timer = setTimeout(() => finish('noFill'), FULL_SCREEN_LOAD_TIMEOUT_MS);
 
       const show = () => {
+        /*
+          ⚠ **광고는 한 번만 띄운다.**
+
+          이 함수는 로드 구독의 `loaded` 에서 불린다. 그 구독은 한 번 불렀다고 끊기지
+          않아서, 뒤이어 `loaded` 가 한 번 더 오면 여기가 다시 돌고 광고가 또 떠올랐다.
+          첫 광고가 `failedToShow` 로 접혀 화면이 「지금은 열 수 없어요」를 띄운 **뒤에**
+          둘째 광고가 나오는 장면이 실기기에서 실제로 나왔다(2026-09-23 사용자 신고).
+          `noFill` 은 하던 일을 막지 않는 쪽이라, 사람은 이미 다음 화면으로 가 있고
+          광고만 뒤늦게 튀어나온다.
+
+          `settled` 도 함께 본다. 시간이 다 돼 접은 뒤에 오는 신호로 광고를 띄우지 않는다.
+
+          로드 구독 자체는 여기서 끊지 않는다. 끊는 일은 `finish` 가 맡는다. 불러 둔 광고를
+          쥔 쪽이 그 구독이라, 띄우는 도중에 끊으면 무엇을 놓게 되는지 확인할 길이 없다.
+        */
+        if (settled || shown) return;
+        shown = true;
         // 시간 제한은 불러오는 데까지만이다. 광고가 떴는데 8초가 지났다고 실패로 접으면,
         // 끝까지 본 사람이 보상을 못 받는다.
         clearTimeout(timer);
-        showFullScreenAd({
+        cancelShow = showFullScreenAd({
           options: { adGroupId },
           onEvent: (event) => {
             // 보상은 `userEarnedReward` 하나에서만 나온다. 떴다·노출됐다·눌렸다는 보상이 아니다.

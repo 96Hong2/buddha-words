@@ -15,6 +15,9 @@
  *
  * 연꽃이 있으면 그 버튼이 주 버튼이고 광고가 아래로 내려간다. 이어가기 시트와 같은
  * 부품·같은 순서를 쓴다. 두 자리가 다르게 생기면 같은 앱으로 안 읽힌다.
+ *
+ * **나가는 버튼을 따로 두지 않는다.** 손잡이를 누르거나 바깥을 누르거나 뒤로가면 닫힌다.
+ * 이어가기 시트가 이미 그렇게 생겼고, 공용 바텀시트도 같은 규칙이다.
  */
 
 import { useEffect, useRef } from 'react';
@@ -24,6 +27,8 @@ import { useAnalytics } from '../../shared/analytics';
 import { isArchivePassEnabled } from '../../shared/session/session';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { LeafAltAdButton, LeafCollectCta, LeafUseButton, Spinner } from '../../shared/ui';
+import { trapTab } from '../../shared/ui/focusTrap';
+import { useSheetDrag } from '../../shared/ui/sheetDrag';
 
 import './archive.css';
 
@@ -80,6 +85,14 @@ export function SaveGate({
 }: SaveGateProps) {
   const analytics = useAnalytics();
   const sheetRef = useRef<HTMLDivElement>(null);
+  /*
+    아래로 밀어 닫기. **공용 바텀시트와 같은 배선을 나눠 쓴다.**
+
+    「다음에」 버튼을 빼면서 눈에 보이는 닫기 표가 손잡이 하나로 줄었다. 그 손짓이 바로
+    앞뒤 시트(연꽃 모으기·이어가기)에서는 되고 여기서만 안 되면, 사람은 그것을 「이 앱은
+    가끔 안 닫힌다」로 읽는다.
+  */
+  const { drag, handlers, handleClick } = useSheetDrag(sheetRef, onClose);
 
   /** 연꽃으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
   const hasLeaf = leaves > 0 && onUseLeaf != null;
@@ -94,20 +107,31 @@ export function SaveGate({
   useEffect(() => {
     if (!open) return;
 
+    /*
+      닫고 나면 눌렀던 자리로 포커스를 돌려놓는다. 안 돌려놓으면 body 로 떨어져 낭독기가
+      화면 맨 위로 간다. 손잡이가 키보드의 **유일한** 닫기가 되면서 더 자주 밟힌다.
+    */
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     sheetRef.current?.focus();
     const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      // 시트 밖으로 포커스가 새면 딤 뒤의 간직하기 버튼을 다시 누를 수 있게 된다
+      if (event.key !== 'Tab' || sheetRef.current === null) return;
+      trapTab(sheetRef.current, event);
     }
 
     document.addEventListener('keydown', onKeyDown);
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = overflow;
+      previouslyFocused?.focus();
     };
   }, [open, onClose]);
 
@@ -118,14 +142,32 @@ export function SaveGate({
       <div className="pw-dim" onClick={onClose} {...testId(TEST_IDS.sheetDim)} />
       <div
         ref={sheetRef}
-        className="pw-sheet"
+        className={drag.dragging ? 'pw-sheet pw-sheet--dragging' : 'pw-sheet'}
+        style={drag.offset > 0 ? { transform: `translateY(${drag.offset}px)` } : undefined}
         role="dialog"
         aria-modal="true"
         aria-labelledby="save-gate-title"
         tabIndex={-1}
+        {...handlers}
         {...testId(TEST_IDS.saveGate)}
       >
-        <span className="pw-grabber" aria-hidden="true" />
+        {/*
+          ⚠ **손잡이가 곧 닫기다.** 아래에 「다음에」 버튼이 따로 서 있었는데, 나가는 길이
+          이미 셋(손잡이·바깥·뒤로가기)인 자리에 넷째를 세운 것이라 눌러야 할 버튼 하나가
+          둘 중 하나로 보였다. 그 버튼이 차지하던 높이가 그대로 간직 버튼과 모으기 카드
+          사이의 빈칸이기도 했다(2026-09-23 사용자 지적). 공용 바텀시트가 쓰는 규칙과
+          같은 규칙이다(`BottomSheet` 머리말).
+        */}
+        <button
+          type="button"
+          data-sheet-handle=""
+          className="pw-grabber pw-grabber--hit"
+          aria-label="닫기"
+          onClick={handleClick}
+          {...testId(TEST_IDS.sheetClose)}
+        >
+          <span className="pw-grabber__grip" aria-hidden="true" />
+        </button>
 
         {/* 「30초 광고」는 버튼 한 곳에서만 말한다. 제목까지 같은 말을 하면 광고 안내가 두 겹이다 */}
         <h2 className="pw-title" id="save-gate-title">
@@ -164,7 +206,8 @@ export function SaveGate({
               됐다. 진행 상태는 아래 안내 줄이 맡는다. 이어가기 시트와 같은 방식이다.
             */
             <LeafAltAdButton
-              label="30초 보고 간직하기"
+              lead="30초"
+              label="보고 간직하기"
               disabled={pending}
               busy={pending}
               /* 여기서 도는 것은 광고다. 이야기를 살펴보는 자리는 이어가기 시트다 */
@@ -198,14 +241,6 @@ export function SaveGate({
               )}
             </button>
           )}
-          <button
-            type="button"
-            className="arch-btn arch-btn--plain"
-            onClick={onClose}
-            {...testId(TEST_IDS.sheetClose)}
-          >
-            다음에
-          </button>
         </div>
 
         {/*

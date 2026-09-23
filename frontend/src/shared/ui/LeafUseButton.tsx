@@ -125,7 +125,16 @@ export function LeafUseButton({
 }
 
 export interface LeafAltAdButtonProps {
-  /** 버튼에 적는 말. 자리마다 다르다 */
+  /**
+   * 「광고」 배지 **앞**에 서는 말. 예: `30초`. 없으면 배지가 맨 앞에 선다.
+   *
+   * ⚠ 한때 이 버튼만 배지를 라벨 **뒤**에 붙였다. 그래서 같은 시트가 연꽃을 가진
+   * 사람에게는 「30초 보고 답변 받기 [광고]」를, 없는 사람에게는 「30초 [광고] 보고
+   * 답변 받기」를 보여 줬다. 사용자가 앞의 모양을 그대로 집어 고쳐 달라고 했다
+   * (2026-09-23). 주 버튼 셋은 이미 배지를 문장 안에 세우고 있었다.
+   */
+  lead?: string;
+  /** 배지 **뒤**에 서는 말. 예: `보고 답변 받기` */
   label: string;
   disabled?: boolean;
   /**
@@ -147,6 +156,7 @@ export interface LeafAltAdButtonProps {
  * 이유가 그 자리에서 사라진다. 「광고」라는 글자는 여기서도 배지로 남긴다.
  */
 export function LeafAltAdButton({
+  lead,
   label,
   disabled = false,
   busy = false,
@@ -158,14 +168,18 @@ export function LeafAltAdButton({
     <button
       type="button"
       className="leaf-alt"
-      disabled={disabled}
+      /*
+        ⚠ **도는 동안에는 여기서 잠근다.** 아래에서 busy 일 때 「광고」 배지를 떼는데,
+        `busy` 와 `disabled` 가 따로 놀면 **배지 없이 누를 수 있는 버튼**이 생긴다.
+        지금 호출부 둘은 둘 다 넘기지만, 타입이 그것을 강제하지 못한다. 부품이 진다.
+      */
+      disabled={disabled || busy}
       onClick={onClick}
       {...testId(TEST_IDS[testKey])}
     >
       {/*
         광고임을 라벨과 아이콘 둘로 밝힌다(계획 1.6 「광고 기술 규칙」).
         돌고 있는 동안에는 재생 아이콘 자리에 도는 표가 서고 라벨만 바뀐다.
-        **「광고」 배지는 어느 쪽에서도 지우지 않는다.** 규칙에 조건이 없다.
       */}
       {busy ? (
         <Spinner className="leaf-alt__spin" />
@@ -185,10 +199,26 @@ export function LeafAltAdButton({
           </svg>
         </span>
       )}
-      {busy ? busyLabel : label}{' '}
-      <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
-        광고
-      </span>
+      {/*
+        ⚠ **도는 동안에는 배지를 떼어 둔다.** 「이야기를 살펴보고 있어요 [광고]」는
+        지금 광고가 도는 중이라는 말로 읽힌다. 그때 도는 것은 서버 쪽 확인이고 광고는
+        아직 뜨지도 않았다(2026-09-23 사용자 지적).
+
+        규칙이 요구하는 「누르면 무엇이 뜨는지 밝히기」는 그대로 지켜진다. 도는 동안
+        버튼은 잠겨 있어 눌리지 않고, 풀리는 순간 라벨이 「30초 [광고] 보고 …」로
+        돌아온다. 누를 수 있는 모든 순간에 배지가 서 있다.
+      */}
+      {busy ? (
+        busyLabel
+      ) : (
+        <>
+          {lead != null && `${lead} `}
+          <span className="leaf-alt__badge" {...testId(TEST_IDS.adBadge)}>
+            광고
+          </span>{' '}
+          {label}
+        </>
+      )}
     </button>
   );
 }
