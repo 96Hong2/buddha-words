@@ -39,7 +39,7 @@ export function LeafFlight() {
         } as React.CSSProperties
       }
     >
-      <LotusIcon size={26} className="leaf-fly__icon" />
+      <LotusIcon size={44} className="leaf-fly__icon" />
     </span>,
     document.body,
   );

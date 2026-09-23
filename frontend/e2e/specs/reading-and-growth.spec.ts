@@ -128,7 +128,7 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 끝까지 봐야 이�
 
   // 누르면 광고가 뜬다는 것과 얼마나 참아야 하는지를 버튼이 말한다
   const cta = page.getByTestId('continue-watch');
-  await expect(cta).toContainText('광고 보고 답변 받기');
+  await expect(cta).toContainText('30초 광고 보고 답변 받기');
   await expect(cta).toContainText('광고');
   await expect(cta, '얼마나 참아야 하는지 안 적혀 있어요').toContainText('30초');
   // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
@@ -223,7 +223,7 @@ test('광고를 중간에 닫으면 답을 주지 않고 시트에 남는다', a
   await page.getByTestId('continue-watch').click();
 
   const sheet = page.getByTestId('continue-sheet');
-  await expect(sheet).toContainText('보상을 받았다고 뜰 때까지 봐야 이어갈 수 있어요');
+  await expect(sheet).toContainText('보상을 받기 전에 닫아서 이어지지 않았어요');
   await expect(page.getByTestId('answer')).toHaveCount(0);
   expect(new URL(page.url()).pathname).toBe('/');
 
@@ -246,7 +246,7 @@ test('광고를 불러오는 동안은 시트에 머물고, 광고가 뜬 뒤에
 
   // 불러오는 동안: 시트에 그대로 있고, 무엇을 기다리는지 말한다. 답은 아직 만들지 않는다
   const sheet = page.getByTestId('continue-sheet');
-  await expect(sheet).toContainText('광고를 불러오고 있어요');
+  await expect(sheet).toContainText('불러오고 있어요');
   await page.waitForTimeout(1500);
   await expect(sheet).toBeVisible();
   expect(new URL(page.url()).pathname).toBe('/');
@@ -385,8 +385,9 @@ test('설정에서도 알림과 홈 추가를 찾을 수 있다', async ({ page 
   const homeAdd = page.getByTestId('settings-home-add');
   await expect(homeAdd).toBeVisible();
   await homeAdd.click();
-  // API 가 없어 사람이 직접 눌러야 한다. 되지도 않는 버튼 대신 어디를 누르는지 가리킨다
-  await expect(page.getByText('홈 화면에 추가하기')).toBeVisible();
+  // API 가 없어 사람이 직접 눌러야 한다. 되지도 않는 버튼 대신 어디를 누르는지 가리킨다.
+  // 항목 제목도 같은 말이 됐으므로(토스가 쓰는 이름으로 맞췄다) 펼쳐진 안내 쪽을 집는다
+  await expect(page.locator('.set-hint--how')).toContainText('홈 화면에 추가하기');
 
   const notify = page.getByTestId('settings-notify');
   await expect(notify).toBeVisible();
@@ -401,7 +402,7 @@ test('설정에서도 알림과 홈 추가를 찾을 수 있다', async ({ page 
   await shot(page, '47 설정 - 알림과 홈 추가');
 });
 
-test('설정 맨 위가 토스 홈에 추가하기다', async ({ page }) => {
+test('설정 맨 위가 홈 화면에 추가하기다', async ({ page }) => {
   /*
    * 이 앱은 토스 안에 있어서, 홈에 두지 않으면 다시 오려면 미니앱 목록을 뒤져야 한다.
    * 다시 오는 길을 만드는 유일한 줄이라 가장 먼저 보여야 하고, 다른 줄과 같은 모양이면
@@ -421,8 +422,9 @@ test('설정 맨 위가 토스 홈에 추가하기다', async ({ page }) => {
   expect(homeAdd!.y).toBeLessThan(textSize!.y);
 
   /*
-    연꽃이 홈 추가 **바로 아래**다(2026-09-22 사용자 지시). 알림은 아직 못 켜는 자리라
-    「준비 중」으로 서 있는데, 그 아래에 두면 지금 쓸 수 있는 것이 못 쓰는 것 뒤에 가린다.
+    연꽃이 홈 추가 아래이고 알림보다 위다(2026-09-22 사용자 지시). 알림은 아직 못 켜는
+    자리라 「준비 중」으로 서 있는데, 그 아래에 두면 지금 쓸 수 있는 것이 못 쓰는 것 뒤에
+    가린다. 둘 사이에는 앱 알리기가 있다(2026-09-23, X47). 차례는 `ad-wording.spec.ts` 가 잰다.
   */
   const leaf = await page.getByTestId('settings-leaf').boundingBox();
   const notify = await page.getByTestId('settings-notify').boundingBox();

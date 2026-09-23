@@ -21,8 +21,14 @@ export function prefersStill(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** 꽃이 날아가는 시간 */
-export const LEAF_FLIGHT_MS = 420;
+/**
+ * 꽃이 날아가는 시간.
+ *
+ * ⚠ 0.42초였다. **너무 빨라서 못 봤다**(2026-09-23 실기기). 눈이 움직임을 알아채고
+ * 따라가기 시작하는 데만 0.2초쯤 걸리니, 그 안에 끝나면 장면이 아니라 깜빡임이 된다.
+ * 대신 이만큼 버튼이 더 늦게 눌리므로 무작정 늘리지도 않는다.
+ */
+export const LEAF_FLIGHT_MS = 620;
 
 /**
  * 꽃이 닿은 뒤 **줄어든 숫자를 보여 주는 시간.**
@@ -31,7 +37,7 @@ export const LEAF_FLIGHT_MS = 420;
  * 없는 셈이라 「하나씩 쓰인다」가 안 남는다. 버튼을 누른 뒤 실제 동작은
  * `LEAF_FLIGHT_MS + LEAF_LAND_HOLD_MS` 만큼 늦는다.
  */
-export const LEAF_LAND_HOLD_MS = 160;
+export const LEAF_LAND_HOLD_MS = 220;
 
 export interface LeafFlight {
   fromX: number;

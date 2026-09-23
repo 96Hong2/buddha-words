@@ -90,6 +90,7 @@ export const TEST_IDS = {
   leafSpendSave: 'leaf-spend-save',
   leafSpentToast: 'leaf-spent-toast',
   settingsLeaf: 'settings-leaf',
+  settingsAppShare: 'settings-app-share',
   continueSheet: 'continue-sheet',
   continueWatch: 'continue-watch',
 

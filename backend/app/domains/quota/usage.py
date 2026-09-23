@@ -6,7 +6,8 @@ INVALID·CRISIS·SOLACE 는 세지 않는다.
 
 ⚠ **무료는 「하루 한 번」이었다. 2026-09-22 에 「익명키마다 평생 한 번」으로 좁혔다.**
 날마다 열리니 광고도 연꽃도 없이 답을 받는 날이 매일 있었다. 그래서 무료 칸만 날짜
-바구니 밖(`_FREE_USED`)에 둔다. 나머지(이어가기 수·LIGHT)는 그대로 날짜별이다.
+바구니 밖에 둔다(`free_once`, 저장 자리에 남아 배포를 넘는다). 나머지(이어가기 수·LIGHT)는
+그대로 날짜별이고 아직 프로세스 메모리다.
 
 ⚠ **하루 천장이 있었다(이어가기 4회, 합쳐 5회). 2026-09-20 에 없앴다.**
 광고를 보는 사람을 막고 있었기 때문이다. 한 편이 벌어 오는 값이 답 한 건 원가보다 크므로
@@ -29,6 +30,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from app.domains.quota import free_once
 
 # 사람마다 한 번. 이름의 PER_DAY 는 2026-09-22 에 사라졌다
 FREE_ONCE = 1
@@ -60,7 +63,7 @@ class Seen:
 
 @dataclass
 class DayUsage:
-    # 무료 한 번은 날짜와 무관해서 여기 없다. `_FREE_USED` 가 들고 있다
+    # 무료 한 번은 날짜와 무관해서 여기 없다. `free_once` 가 들고 있다
     ad_continues_used: int = 0
     light_used: int = 0
     # 멱등키 → 그 키가 잡은 자리와 만들어 둔 답
@@ -85,11 +88,9 @@ _USAGE: dict[tuple[str, str], DayUsage] = {}
 # 익명키 → 하루 칸을 세는 시간대 이름. DB 가 붙으면 users.timezone 컬럼이 이 자리다.
 _ZONES: dict[str, str] = {}
 
-# 첫 이야기를 이미 쓴 익명키. **날짜 바구니 밖이라 자정에 안 비워진다.**
-# DB 가 붙으면 users.first_used 컬럼이 이 자리다. 지금은 프로세스 메모리라 서버를 다시
-# 띄우면 비고, 그러면 그 사람에게 무료가 한 번 더 열린다. 기기 사본도 같은 값을 들고
-# 있어서(`frontend/.../quota.ts`) 화면은 광고 문을 세우지만, 장부는 서버가 정본이다.
-_FREE_USED: set[str] = set()
+# 첫 이야기를 이미 쓴 사람은 `free_once` 가 들고 있다. **날짜 바구니 밖이고 저장 자리에
+# 남아 배포를 넘긴다.** 프로세스 메모리였을 때는 배포마다 비어서, 기기 값이 없는 사람에게
+# 무료가 다시 열렸다(2026-09-23 실기기 신고).
 
 # 사람마다 최근 1분의 요청 시각. 날짜 칸과 따로 둔다. 자정이 걸쳐도 창이 끊기면 안 된다
 _RECENT: dict[str, list[datetime]] = {}
@@ -159,7 +160,7 @@ def snapshot(anon_key: str, zone: ZoneInfo, now: datetime | None = None) -> dict
     zone = counting_zone(anon_key, zone)
     day = _day(anon_key, zone, now)
     return {
-        "freeUsed": FREE_ONCE if anon_key in _FREE_USED else 0,
+        "freeUsed": FREE_ONCE if free_once.used(anon_key) else 0,
         "adContinuesUsed": day.ad_continues_used,
         "adContinuesMax": AD_CONTINUES_MAX,
         "resetsAt": resets_at(zone, now),
@@ -200,9 +201,11 @@ def reserve(
         gate = "light_soft_cap" if day.light_used >= LIGHT_SOFT_CAP else "light"
         day.light_used += 1
         allowed = True
-    elif anon_key not in _FREE_USED:
-        # 평생 한 번이다. 날짜 바구니가 아니라 익명키 집합에 적는다
-        _FREE_USED.add(anon_key)
+    elif not free_once.used(anon_key) and free_once.claim(anon_key):
+        # 평생 한 번이다. 날짜 바구니가 아니라 저장 자리에 적어 배포를 넘긴다.
+        #
+        # 가르는 것은 `claim` 하나다. 앞의 `used` 는 이미 쓴 사람이 DB 를 안 긁게 하는
+        # 빠른 길일 뿐이라, 둘 사이에 다른 요청이 끼어도 `claim` 에서 한 사람만 이긴다
         gate = "free"
         allowed = True
     else:
@@ -248,7 +251,7 @@ def release(
     day = _day(anon_key, zone, now)
     if gate == "free":
         # 생성이 실패했으면 그 한 번은 안 쓴 것이다
-        _FREE_USED.discard(anon_key)
+        free_once.unmark(anon_key)
     elif gate == "ad_continue" and day.ad_continues_used > 0:
         day.ad_continues_used -= 1
     elif gate in ("light", "light_soft_cap") and day.light_used > 0:
@@ -263,4 +266,4 @@ def reset_all() -> None:
     _USAGE.clear()
     _ZONES.clear()
     _RECENT.clear()
-    _FREE_USED.clear()
+    free_once.reset_all()

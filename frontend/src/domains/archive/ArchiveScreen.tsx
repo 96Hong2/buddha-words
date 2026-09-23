@@ -15,12 +15,7 @@ import { appShareUrl } from '../share/shareText';
 import { ArchiveAppShare, archiveShareDone } from './ArchiveAppShare';
 import { ArchiveDetail } from './ArchiveDetail';
 import { ArchiveItem } from './ArchiveItem';
-import {
-  listSaved,
-  removeSaved,
-  toggleFavorite,
-  type SavedAnswer,
-} from './archiveStore';
+import { listSaved, removeSaved, toggleFavorite, type SavedAnswer } from './archiveStore';
 
 import './archive.css';
 
@@ -180,19 +175,16 @@ export function ArchiveScreen() {
    *
    * 그래서 보관함에서는 전체 칸을 잠그고 왜 잠겼는지 적는다. 시트는 그대로 연다.
    */
-  const makeShareLink = useCallback(
-    async () => {
-      setShareLink({ status: 'making' });
-      /*
+  const makeShareLink = useCallback(async () => {
+    setShareLink({ status: 'making' });
+    /*
         **주소는 덤이다.** 못 만들었다고 보내기를 막지 않는다. 옛 토스 앱에서는 링크를
         못 만드는데, 그 사람에게 구절조차 못 보내게 하면 보관함 공유가 통째로 막힌다.
         빈 값이면 메시지에서 그 줄이 빠진다(`shareText.shareMessage`).
       */
-      const url = await appShareUrl(bridge);
-      setShareLink({ status: 'ready', url: url ?? '' });
-    },
-    [bridge],
-  );
+    const url = await appShareUrl(bridge);
+    setShareLink({ status: 'ready', url: url ?? '' });
+  }, [bridge]);
 
   /**
    * 공유 시트를 연다. **무엇을 보낼지는 답변 화면과 똑같이 사람이 고른다.**
@@ -222,8 +214,6 @@ export function ArchiveScreen() {
     },
     [analytics, makeShareLink],
   );
-
-
 
   /** 시트가 만든 글을 실제로 내보낸다. 못 열면 복사하고 복사했다고 말한다 */
   const shareSend = useCallback(
@@ -335,10 +325,7 @@ export function ArchiveScreen() {
 
             {/* 첫 말씀을 간직한 직후 한 번. 목록보다 앞에 서지만 덮지는 않는다 */}
             {appShareOpen && (
-              <ArchiveAppShare
-                onSendMessage={sendMessage}
-                onDone={() => setShareCardDone(true)}
-              />
+              <ArchiveAppShare onSendMessage={sendMessage} onDone={() => setShareCardDone(true)} />
             )}
 
             {saved.length > 0 && (
@@ -356,7 +343,9 @@ export function ArchiveScreen() {
                     필터 칩이 서면 숫자를 지운다. 칩이 「전체 23 · 즐겨찾기 1」을 이미 말하는데
                     제목 옆에 23 이 남아 있으면, 한 장만 보이는 즐겨찾기 탭에서 23 개라고 적힌다
                   */}
-                  {favorites.length === 0 && <span className="arch-sec-count">{saved.length}개</span>}
+                  {favorites.length === 0 && (
+                    <span className="arch-sec-count">{saved.length}개</span>
+                  )}
                 </div>
 
                 {/*
@@ -422,7 +411,7 @@ export function ArchiveScreen() {
                 </span>
                 <span className="arch-past-texts">
                   <span className="arch-past-title">이용권이 있어요</span>
-                  <span className="arch-past-note">광고 없이 바로 간직할 수 있어요</span>
+                  <span className="arch-past-note">기다리지 않고 바로 간직할 수 있어요</span>
                 </span>
               </div>
             )}
@@ -518,7 +507,6 @@ export function ArchiveScreen() {
           onCopyBlocked={() => analytics.log('archive_share_fail', { reason: 'copy_blocked' })}
         />
       )}
-
     </div>
   );
 }

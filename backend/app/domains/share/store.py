@@ -16,18 +16,14 @@ TTL 이 30일인데 그때까지 사는 것은 그 인스턴스가 살아 있는
 
 from __future__ import annotations
 
-import json
 import logging
-import re
 import secrets
-import threading
 import time
 from collections.abc import Callable
 from dataclasses import asdict
 from typing import Any, Protocol
 
 from app.core import persist
-from app.core.config import get_settings
 from app.domains.share.card import ShareCardData, ShareFullData, one_line_gloss
 
 log = logging.getLogger(__name__)
@@ -37,9 +33,6 @@ TTL_SECONDS = 30 * 24 * 60 * 60
 
 # 저장 자리가 쓰는 테이블 이름. SQLite 든 PostgreSQL 이든 같은 이름을 쓴다
 TABLE_NAME = "share_cards"
-
-# 이름이 SQL 문자열에 그대로 박힌다. 상수 하나뿐이지만 한 번 걸러 둔다
-_NAME = re.compile(r"^[a-z][a-z0-9_]{0,40}$")
 
 
 class AnswerRow(Protocol):
@@ -54,140 +47,14 @@ class AnswerRow(Protocol):
 ROW_FIELDS_READ = ("scripture_ids", "pass2")
 
 
-class CardTable(Protocol):
-    """저장 자리가 갖춰야 하는 모양. `persist.Table` 이 이미 이대로다.
-
-    열쇠 하나에 JSON 한 덩이와 만든 시각. 무엇을 담을지는 부르는 쪽이 정하고, 이 자리는
-    담고 꺼내고 만료분을 치우는 것만 한다.
-    """
-
-    def put(self, key: str, value: dict[str, Any], created_at: float) -> None: ...
-
-    def get(self, key: str) -> tuple[dict[str, Any], float] | None: ...
-
-    def sweep(self, ttl: float, now: float) -> None: ...
-
-    def clear(self) -> None: ...
-
-    def close(self) -> None: ...
-
-
-class SqliteTable(persist.Table):
-    """파일 자리. 닫는 것만 더한다.
-
-    연결은 `persist` 가 모듈 하나로 들고 있어서 닫는 것도 거기다.
-    """
-
-    def close(self) -> None:
-        persist.close()
-
-
-class PostgresTable:
-    """PostgreSQL 자리. 배포가 쓰는 쪽이다.
-
-    담는 모양을 SQLite 와 똑같이 맞춘다. 값을 JSONB 가 아니라 글자로 두어 두 자리에 적히는
-    글자가 완전히 같게 했다. 「파일에 고민 원문이 없다」를 보는 시험이 어느 자리에서든 같은
-    것을 훑어야 하기 때문이다.
-
-    연결은 하나를 잠금으로 감싸 쓴다. Cloud SQL 은 오래 놀던 연결을 끊고, 카드는 30일 뒤에
-    처음 긁힐 수도 있다. 끊긴 연결을 만나면 한 번은 다시 붙어 보고, 그래도 안 되면 터뜨린다.
-    쓰기 실패를 삼키고 링크를 돌려주면 「30일 산다」가 거짓이 된다.
-    """
-
-    def __init__(self, name: str, url: str) -> None:
-        if not _NAME.match(name):
-            raise ValueError(f"테이블 이름으로 쓸 수 없어요: {name}")
-        self.name = name
-        self._url = url
-        self._lock = threading.Lock()
-        self._conn: Any = None
-
-    def _connection(self) -> Any:
-        if self._conn is not None and not self._conn.closed:
-            return self._conn
-        # SQLite 만 쓰는 개발이 이 라이브러리를 열지 않게 여기서 가져온다
-        import psycopg
-
-        conn = psycopg.connect(self._url, autocommit=True)
-        conn.execute(
-            f"CREATE TABLE IF NOT EXISTS {self.name} "
-            '("key" TEXT PRIMARY KEY, created_at DOUBLE PRECISION NOT NULL, "value" TEXT NOT NULL)'
-        )
-        self._conn = conn
-        return conn
-
-    def _drop(self) -> None:
-        if self._conn is not None:
-            try:
-                self._conn.close()
-            except Exception:
-                # 이미 끊긴 연결을 놓는 중이다. 여기서 더 할 일이 없다
-                pass
-            self._conn = None
-
-    def _run(self, sql: str, args: tuple[Any, ...], *, fetch: bool = False) -> Any:
-        import psycopg
-
-        with self._lock:
-            for last in (False, True):
-                try:
-                    with self._connection().cursor() as cur:
-                        cur.execute(sql, args)
-                        return cur.fetchone() if fetch else None
-                except (psycopg.OperationalError, psycopg.InterfaceError):
-                    self._drop()
-                    if last:
-                        raise
-        return None
-
-    def put(self, key: str, value: dict[str, Any], created_at: float) -> None:
-        self._run(
-            f'INSERT INTO {self.name} ("key", created_at, "value") VALUES (%s, %s, %s) '
-            'ON CONFLICT ("key") DO UPDATE SET created_at = EXCLUDED.created_at, '
-            '"value" = EXCLUDED."value"',
-            (key, created_at, json.dumps(value, ensure_ascii=False)),
-        )
-
-    def get(self, key: str) -> tuple[dict[str, Any], float] | None:
-        found = self._run(
-            f'SELECT "value", created_at FROM {self.name} WHERE "key" = %s', (key,), fetch=True
-        )
-        return (json.loads(found[0]), found[1]) if found else None
-
-    def sweep(self, ttl: float, now: float) -> None:
-        self._run(f"DELETE FROM {self.name} WHERE created_at <= %s", (now - ttl,))
-
-    def clear(self) -> None:
-        self._run(f"DELETE FROM {self.name}", ())
-
-    def close(self) -> None:
-        with self._lock:
-            self._drop()
-
-
-# 지금 붙어 있는 자리. 설정 값과 함께 들고 있다가 값이 바뀌면 새로 만든다.
-# 요청은 스레드풀에서 오므로 만드는 자리를 잠근다. 잠그지 않으면 아직 아무도 안 쓴 프로세스에
-# 요청이 동시에 들어올 때 둘이 각각 연결을 열고, 진 쪽 연결이 닫히지 않은 채 남는다
-_BOUND: tuple[str | None, CardTable] | None = None
-_BIND_LOCK = threading.Lock()
+# 담는 자리의 모양과 두 구현(SQLite · PostgreSQL)은 `core/persist.py` 에 있다.
+# 예약(reminder)·무료 장부(quota)도 같은 것을 쓴다.
+CardTable = persist.KeyValueTable
 
 
 def _table() -> CardTable:
-    """설정이 가리키는 저장 자리. 값 하나로 갈린다."""
-    global _BOUND
-    url = get_settings().database_url
-    bound = _BOUND
-    if bound is not None and bound[0] == url:
-        return bound[1]
-    with _BIND_LOCK:
-        # 기다리는 사이에 다른 스레드가 만들어 뒀을 수 있다. 다시 본다
-        if _BOUND is not None and _BOUND[0] == url:
-            return _BOUND[1]
-        if _BOUND is not None:
-            _BOUND[1].close()
-        table: CardTable = PostgresTable(TABLE_NAME, url) if url else SqliteTable(TABLE_NAME)
-        _BOUND = (url, table)
-        return table
+    """설정이 가리키는 저장 자리. `DATABASE_URL` 하나로 갈린다."""
+    return persist.bind(TABLE_NAME)
 
 
 # 그려 둔 PNG. **저장 자리가 아니라 프로세스 메모리에 둔다.**
@@ -203,10 +70,7 @@ def close() -> None:
     재기동 시험이 부른다. **저장 자리 객체까지 버려야** 한다. 캐시만 비우면 저장이 프로세스
     메모리로 되돌아가도 시험이 초록으로 남는다. 실제로 그런 적이 있다.
     """
-    global _BOUND
-    if _BOUND is not None:
-        _BOUND[1].close()
-        _BOUND = None
+    persist.unbind(TABLE_NAME)
     _RENDERED.clear()
 
 

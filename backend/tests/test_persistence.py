@@ -33,6 +33,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core import persist
 from app.core.config import get_settings
 from app.domains.answer import compose
 from app.domains.quota import usage
@@ -374,10 +375,10 @@ def test_the_backend_under_test_is_the_one_the_settings_point_at() -> None:
     url = get_settings().database_url
     table = store._table()
     if url:
-        assert isinstance(table, store.PostgresTable)
+        assert isinstance(table, persist.PostgresTable)
         assert url.startswith("postgres")
     else:
-        assert isinstance(table, store.SqliteTable)
+        assert isinstance(table, persist.SqliteTable)
 
 
 # ────────────────────────────────────────────────────────────────────────────

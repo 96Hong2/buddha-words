@@ -9,6 +9,7 @@
 import { DEEP_CONCERN, askOnce, revealBottomBar, saveAnswerFromScreen } from '../support/flow';
 import { expect, test, type Page } from '../support/fixtures';
 import { shot } from '../support/shots';
+import type { MockScenario } from '../../src/shared/toss/mockBridge';
 
 /**
  * 여백·줄바꿈을 지운 비교용 문자열.
@@ -843,4 +844,32 @@ test('앱 알리기를 닫으면 답변 화면에서도 같은 부탁을 다시 
 
   await page.reload();
   await expect(page.getByTestId('archive-app-share')).toHaveCount(0);
+});
+
+test('간직 광고를 중간에 닫으면 시트에 남아 왜 안 담겼는지 말한다', async ({ page, stub }) => {
+  /*
+    한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
+    **담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다.** 이어가기 시트가 같은 자리에서
+    같은 방식으로 말한다(2026-09-23 리뷰).
+  */
+  test.setTimeout(120_000);
+  await stub({ pass1Ms: 100, pass2Ms: 150 });
+  // 브릿지 시나리오는 첫 페이지가 뜨기 전에 심는다. 첫 답에는 광고가 없어 무해하다
+  const scenario: MockScenario = { fullScreenAd: 'dismissed', fullScreenAdMs: 400 };
+  await page.addInitScript((value) => {
+    window.__buddhaBridge = value;
+  }, scenario);
+  await page.goto('/');
+  await askOnce(page, DEEP_CONCERN);
+
+  await revealBottomBar(page);
+  await page.getByTestId('save-button').click();
+  await page.getByTestId('save-gate-watch').click();
+
+  const gate = page.getByTestId('save-gate');
+  await expect(gate).toBeVisible();
+  await expect(gate).toContainText('보상을 받기 전에 닫아서 담기지 않았어요');
+
+  // 다시 누를 수 있어야 한다. 한 번 닫았다고 길이 막히면 막다른 구조가 된다
+  await expect(page.getByTestId('save-gate-watch')).toBeEnabled();
 });

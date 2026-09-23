@@ -207,7 +207,11 @@ export function ExtensionCard({
             </div>
           ) : phase === 'failed' ? (
             <div style={{ marginTop: 'var(--s-4)' }}>
-              <p role="status">{failure} 광고는 다시 보지 않아도 되니 아래를 눌러 주세요.</p>
+              {/*
+                이 분기에는 광고 버튼이 없어 배지도 없다. 그래서 여기서 「광고」를 한 번
+                쓸 수 있고, 30초를 이미 치른 사람이 가장 먼저 하는 걱정이 그것이다.
+              */}
+              <p role="status">{failure} 광고를 다시 보지 않아도 돼요.</p>
               <button type="button" className="ad-btn" onClick={() => void build()}>
                 다시 받아보기
               </button>
@@ -230,7 +234,7 @@ export function ExtensionCard({
                   보고 다른 관점 하나 더 보기
                 </>
               ) : (
-                '광고 준비 중'
+                '준비하고 있어요'
               )}
             </button>
           )}

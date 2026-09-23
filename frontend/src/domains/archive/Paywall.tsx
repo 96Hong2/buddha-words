@@ -175,12 +175,12 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
             <h2 className="pw-title" id="pw-title">
               이미 이용권이 있어요
             </h2>
-            <p className="pw-sub">광고 없이 바로 간직할 수 있어요.</p>
+            <p className="pw-sub">기다리지 않고 바로 간직할 수 있어요.</p>
           </>
         ) : (
           <>
             <h2 className="pw-title" id="pw-title">
-              광고 없이 간직할까요?
+              기다리지 않고 간직할까요?
             </h2>
             <p className="pw-sub">
               간직할 때마다 보는 30초 광고가 없어져요. 개수 제한은 원래 없어요.
@@ -191,7 +191,7 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
               지난 고민 열람·즐겨찾기·태그별 모아보기는 아직 없어서 적지 않는다.
             */}
             <ul className="pw-benefits">
-              <li>간직할 때 광고를 보지 않아요</li>
+              <li>기다리지 않고 바로 간직해요</li>
               <li>앱을 다시 깔아도 이용권 그대로</li>
             </ul>
 

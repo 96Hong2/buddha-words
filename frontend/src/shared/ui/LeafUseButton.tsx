@@ -243,10 +243,14 @@ export function LeafCollectCta({ count, action, onClick, disabled = false }: Lea
         </span>
         {/*
           ⚠ 여기서 「무료」·「광고 없이 드려요」를 쓰지 않는다. 계획 X25 가 막는
-          「베푼 것을 세는 문장」과 겹치지 않게, 얻는 방법과 지금 가진 수만 적는다.
+          「베푼 것을 세는 문장」과 겹치지 않게 한다.
+
+          **지금 가진 수만 적는다.** 얻는 방법은 눌러서 들어가면 그 화면의 버튼이
+          한 줄로 말한다. 여기까지 적으면 같은 화면에서 「광고」를 한 번 더 읽게 되고,
+          가운뎃점으로 두 문장을 이어 붙인 모양도 읽기 나쁘다(2026-09-23 사용자 지적).
         */}
         <span className="leaf-get__desc">
-          광고 한 편에 한 송이 · 지금 <b>{count}송이</b>
+          지금 <b>{count}송이</b>
         </span>
       </span>
       <span className="leaf-get__go">
