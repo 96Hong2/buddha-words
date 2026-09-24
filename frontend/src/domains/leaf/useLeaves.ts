@@ -10,7 +10,7 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
 import { useAnalytics } from '../../shared/analytics';
 import {
-  earnLeaf,
+  earnLeaves,
   grantWelcome,
   leafCount,
   spendLeaf,
@@ -46,8 +46,8 @@ export function useWelcomeLeaf(): void {
 export interface LeafWallet {
   /** 지금 가진 연꽃 */
   count: number;
-  /** 광고를 끝까지 봤다. 한 송이 늘리고 새 잔액을 돌려준다 */
-  earn: () => number;
+  /** 광고를 끝까지 봤다. 그만큼 늘리고 새 잔액을 돌려준다 */
+  earn: (amount: number) => number;
   /**
    * 한 송이 쓴다. 없으면 false 이고 잔액은 그대로다.
    * **부르는 쪽이 반드시 돌려받은 값을 본다.** 있다고 믿고 진행하면 없는 연꽃으로 지나간다.
@@ -59,11 +59,15 @@ export function useLeafWallet(): LeafWallet {
   const analytics = useAnalytics();
   const count = useLeafCount();
 
-  const earn = useCallback(() => {
-    const balance = earnLeaf();
-    analytics.log('leaf_earn', { balance });
-    return balance;
-  }, [analytics]);
+  const earn = useCallback(
+    (amount: number) => {
+      const balance = earnLeaves(amount);
+      // 몇 송이가 한 번에 들어왔는지 함께 남긴다. 교환비를 바꾼 뒤 잔액만 보면 갈리지 않는다
+      analytics.log('leaf_earn', { balance, amount });
+      return balance;
+    },
+    [analytics],
+  );
 
   const spend = useCallback(
     (placement: LeafSpend) => {

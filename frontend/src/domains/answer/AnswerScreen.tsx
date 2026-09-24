@@ -44,8 +44,12 @@ export interface AnswerScreenProps {
   onShare?: () => void;
   /** 간직한다. 자리가 찼으면 부르는 쪽이 이용권 시트를 연다 */
   onSave?: () => void;
-  /** 보상형 광고를 띄운다. 끝까지 봤으면 true */
+  /** 광고를 띄운다. 통과했으면 true. 통과 조건은 광고 종류가 정한다 */
   onWatchAd?: () => Promise<boolean>;
+  /** 연꽃 한 송이로 다른 관점을 본다. 잔액이 모자라면 false */
+  onUseLeaf?: () => boolean;
+  /** 지금 가진 연꽃 */
+  leaves?: number;
   /** 광고 지원 여부 판정이 끝났나 */
   adReady?: boolean;
   /** 이 기기에서 광고를 띄울 수 있나 */
@@ -74,11 +78,7 @@ function FullAnswer({ answer, ...wires }: { answer: ApiAnswer } & AnswerScreenPr
   const deepest = useRef(0);
 
   // 블록별 도달과 이탈. 화면에 아무것도 더하지 않고 보기만 한다
-  const consumption = useAnswerConsumption(
-    answer.answerId,
-    answer.route,
-    () => deepest.current,
-  );
+  const consumption = useAnswerConsumption(answer.answerId, answer.route, () => deepest.current);
 
   useEffect(() => {
     function sync() {

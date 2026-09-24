@@ -818,6 +818,15 @@
   line-height: var(--lh-body);
   color: var(--text-muted);
 }
+/*
+   연꽃 버튼과 그 아래 광고 버튼. 이어가기 · 간직 시트의 같은 짝과 간격을 맞춘다.
+   세 자리가 같은 부품을 쓰는데 간격만 다르면 같은 앱으로 안 읽힌다.
+*/
+.ans .ext-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
 .ans .ad-btn {
   width: 100%;
   min-height: 48px;

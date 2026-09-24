@@ -12,11 +12,11 @@
  * 쓰는 법: node tools/check_bundle.mjs [번들 디렉터리]
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { gzipSync } from "node:zlib";
 
-const root = resolve(process.argv[2] ?? 'frontend/dist');
+const root = resolve(process.argv[2] ?? "frontend/dist");
 
 /** dist 아래 텍스트 산출물을 전부 모은다. 청크가 갈릴 수 있어 한 파일만 보지 않는다 */
 function textFiles(dir) {
@@ -37,7 +37,7 @@ try {
   files = textFiles(root);
 } catch {
   console.error(`✗ 번들 디렉터리를 열 수 없다: ${root}`);
-  console.error('  먼저 npm run build:web 으로 만든다.');
+  console.error("  먼저 npm run build:web 으로 만든다.");
   process.exit(1);
 }
 
@@ -46,7 +46,7 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const blob = files.map((f) => readFileSync(f, 'utf8')).join('\n');
+const blob = files.map((f) => readFileSync(f, "utf8")).join("\n");
 const problems = [];
 
 // ── 1. 테스트 광고 그룹 id ────────────────────────────────────────────────
@@ -54,8 +54,8 @@ const problems = [];
 const testAds = [...new Set(blob.match(/ait-ad-test-[a-z-]+/g) ?? [])];
 if (testAds.length > 0) {
   problems.push(
-    `테스트 광고 그룹 id 가 번들에 들었다: ${testAds.join(', ')}\n` +
-      '    콘솔 검토가 이걸로 반려한다(1호 제품 2026-09-16 실제 반려).\n' +
+    `테스트 광고 그룹 id 가 번들에 들었다: ${testAds.join(", ")}\n` +
+      "    콘솔 검토가 이걸로 반려한다(1호 제품 2026-09-16 실제 반려).\n" +
       "    실행할 때 가르지 말고 `import.meta.env.DEV ? '...' : null` 로 빌드 때 가른다.",
   );
 }
@@ -64,8 +64,8 @@ if (testAds.length > 0) {
 // 스텁은 경전 문장과 풀이를 앱 안에서 지어낸다. 심사 번들에 그게 있으면 안 된다.
 if (/__buddhaStub/.test(blob)) {
   problems.push(
-    '스텁 백엔드가 번들에 실렸다(`__buddhaStub`).\n' +
-      '    운영 빌드에는 지어낸 경전 문장이 아예 없어야 한다.',
+    "스텁 백엔드가 번들에 실렸다(`__buddhaStub`).\n" +
+      "    운영 빌드에는 지어낸 경전 문장이 아예 없어야 한다.",
   );
 }
 
@@ -76,12 +76,14 @@ if (/__buddhaStub/.test(blob)) {
 // 세면 VITE_API_BASE_URL 을 빠뜨린 빌드도 이 검사를 통과해 버린다.
 const code = files
   .filter((f) => /\.(js|mjs|css)$/.test(f))
-  .map((f) => readFileSync(f, 'utf8'))
-  .join('\n');
-const apiUrls = [...new Set(code.match(/https:\/\/[a-z0-9.-]*run\.app/g) ?? [])];
+  .map((f) => readFileSync(f, "utf8"))
+  .join("\n");
+const apiUrls = [
+  ...new Set(code.match(/https:\/\/[a-z0-9.-]*run\.app/g) ?? []),
+];
 if (apiUrls.length === 0) {
   problems.push(
-    '백엔드 주소가 번들에 없다.\n' +
+    "백엔드 주소가 번들에 없다.\n" +
       "    VITE_API_MODE=http VITE_API_BASE_URL='https://...' 를 주고 다시 빌드한다.",
   );
 }
@@ -89,11 +91,12 @@ if (apiUrls.length === 0) {
 // ── 4. 준 값이 실제로 박혔나 ──────────────────────────────────────────────
 // 빌드가 성공했다고 값이 들어간 것은 아니다. 환경변수 이름을 틀리면 조용히 빠진다.
 const AD_GROUP_VARS = [
-  'VITE_AD_GROUP_DEFAULT',
-  'VITE_AD_GROUP_EXTENSION',
-  'VITE_AD_GROUP_CONTINUE',
-  'VITE_AD_GROUP_SAVE',
-  'VITE_AD_GROUP_CONTINUE_INTERSTITIAL',
+  "VITE_AD_GROUP_DEFAULT",
+  "VITE_AD_GROUP_EXTENSION",
+  "VITE_AD_GROUP_CONTINUE",
+  "VITE_AD_GROUP_SAVE",
+  "VITE_AD_GROUP_COLLECT",
+  "VITE_AD_GROUP_INTERSTITIAL",
 ];
 
 for (const name of AD_GROUP_VARS) {
@@ -102,37 +105,50 @@ for (const name of AD_GROUP_VARS) {
   if (!blob.includes(given)) {
     problems.push(
       `${name} 를 줬는데 번들에 없다.\n` +
-        '    vite 는 빌드 시점 환경변수만 갈아 끼운다. 빌드 명령 앞에 붙였는지 본다.',
+        "    vite 는 빌드 시점 환경변수만 갈아 끼운다. 빌드 명령 앞에 붙였는지 본다.",
     );
   }
 }
 
 const adsGiven = AD_GROUP_VARS.filter((name) => process.env[name]?.trim());
 
-// 이어가기를 전면형으로 돌리는 판에서만 전용 그룹이 있어야 한다. 그 판에서 값을 빠뜨리면
-// 두 번째 이야기부터 광고 없이 조용히 지나간다. 공용 그룹은 보상형이라 대신 쓸 수 없다.
-const continueKind = process.env.VITE_AD_CONTINUE_KIND?.trim() === 'interstitial'
-  ? 'interstitial'
-  : 'rewarded';
+/*
+  길목 셋(extension · continue · save)은 2026-09-24 부터 전면형이다. 전면형 그룹을
+  빠뜨리면 그 셋이 통째로 광고 없이 지나가는데, 빌드는 성공하고 화면도 멀쩡해 보인다.
+  공용 그룹은 보상형이라 대신 쓸 수 없다. 종류는 그룹 id 에 박혀 있다.
+*/
+const gateKind =
+  process.env.VITE_AD_GATE_KIND?.trim() === "rewarded"
+    ? "rewarded"
+    : "interstitial";
 
-if (continueKind === 'interstitial' && !process.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL?.trim()) {
-  problems.push(
-    'VITE_AD_CONTINUE_KIND=interstitial 인데 VITE_AD_GROUP_CONTINUE_INTERSTITIAL 이 없다.\n' +
-      '    전면형으로 돌리려면 전면형 그룹 id 가 있어야 한다. 공용 그룹은 보상형이라 못 쓴다.',
-  );
-}
+if (adsGiven.length > 0) {
+  if (
+    gateKind === "interstitial" &&
+    !process.env.VITE_AD_GROUP_INTERSTITIAL?.trim()
+  ) {
+    problems.push(
+      "길목 셋이 전면형인데 VITE_AD_GROUP_INTERSTITIAL 이 없다.\n" +
+        "    전면형 그룹 id 를 함께 준다. 공용 그룹은 보상형이라 못 쓴다.\n" +
+        "    보상형으로 되돌리려면 VITE_AD_GATE_KIND=rewarded 를 준다.",
+    );
+  }
 
-// 보상형 자리는 전용 값이 없으면 공용 그룹으로 떨어진다. 둘 다 없으면 그 자리는 조용히
-// 광고 없이 지나가는데, 화면에도 로그에도 이유가 안 보인다. 그 빌드를 여기서 막는다.
-if (continueKind === 'rewarded' && adsGiven.length > 0) {
-  const missing = ['extension', 'continue', 'save'].filter((slot) => {
+  // 보상형 자리는 전용 값이 없으면 공용 그룹으로 떨어진다. 둘 다 없으면 그 자리는 조용히
+  // 광고 없이 지나가는데, 화면에도 로그에도 이유가 안 보인다. 그 빌드를 여기서 막는다.
+  const rewardedSlots =
+    gateKind === "rewarded"
+      ? ["extension", "continue", "save", "collect"]
+      : ["collect"];
+  const missing = rewardedSlots.filter((slot) => {
     const own = process.env[`VITE_AD_GROUP_${slot.toUpperCase()}`]?.trim();
     return !own && !process.env.VITE_AD_GROUP_DEFAULT?.trim();
   });
   if (missing.length > 0) {
     problems.push(
-      `광고 그룹을 줬는데 ${missing.join(' · ')} 자리가 쓸 그룹이 없다.\n` +
-        '    자리마다 값을 주거나 VITE_AD_GROUP_DEFAULT 를 함께 준다.',
+      `광고 그룹을 줬는데 ${missing.join(" · ")} 자리가 쓸 보상형 그룹이 없다.\n` +
+        "    자리마다 값을 주거나 VITE_AD_GROUP_DEFAULT 를 함께 준다.\n" +
+        "    연꽃 모으기(collect)는 유일한 보상형 자리라 빠지면 연꽃을 모을 길이 없어진다.",
     );
   }
 }
@@ -167,11 +183,11 @@ const weightKb = Math.round(weigh(root) / 1024);
 if (weightKb > BUNDLE_BUDGET_KB) {
   problems.push(
     `번들이 ${weightKb}KB 다. 상한은 ${BUNDLE_BUDGET_KB}KB.\n` +
-      '    번들은 앱을 켤 때 통째로 내려받는다. 화면이 안 쓰는 파일도 최초 접속을 늦춘다.\n' +
-      '    2026-09-20 에 최초 접속 20초 초과로 심사 반려됐다. 큰 것부터 본다:\n' +
-      '      · 화면이 안 부르는 그림은 번들이 아니라 백엔드에 둔다(OG 그림이 그랬다)\n' +
-      '      · 그림은 표시 크기에 맞춰 줄인다(가로 폭 × 화면 배율이 기준이다)\n' +
-      '      · 글꼴은 상용 한글만 남긴다(tools/build_fonts.py)',
+      "    번들은 앱을 켤 때 통째로 내려받는다. 화면이 안 쓰는 파일도 최초 접속을 늦춘다.\n" +
+      "    2026-09-20 에 최초 접속 20초 초과로 심사 반려됐다. 큰 것부터 본다:\n" +
+      "      · 화면이 안 부르는 그림은 번들이 아니라 백엔드에 둔다(OG 그림이 그랬다)\n" +
+      "      · 그림은 표시 크기에 맞춰 줄인다(가로 폭 × 화면 배율이 기준이다)\n" +
+      "      · 글꼴은 상용 한글만 남긴다(tools/build_fonts.py)",
   );
 }
 
@@ -197,8 +213,8 @@ const outside = [
 ];
 if (outside.length > 0) {
   problems.push(
-    `번들이 바깥 주소에서 받아 온다:\n      ${outside.join('\n      ')}\n` +
-      '    글꼴·스크립트는 번들 안에 둔다. 최초 접속 시간에 그대로 더해진다.',
+    `번들이 바깥 주소에서 받아 온다:\n      ${outside.join("\n      ")}\n` +
+      "    글꼴·스크립트는 번들 안에 둔다. 최초 접속 시간에 그대로 더해진다.",
   );
 }
 
@@ -210,16 +226,16 @@ if (problems.length > 0) {
 
 console.log(`✓ 번들 검사 통과 (${files.length}개 파일, ${root})`);
 console.log(`  번들 무게: 약 ${weightKb}KB (상한 ${BUNDLE_BUDGET_KB}KB)`);
-console.log(`  백엔드 주소: ${apiUrls.join(', ')}`);
+console.log(`  백엔드 주소: ${apiUrls.join(", ")}`);
 console.log(
   adsGiven.length > 0
-    ? `  광고 그룹 id: 들어 있다 (${adsGiven.join(', ')})`
-    : '  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다',
+    ? `  광고 그룹 id: 들어 있다 (${adsGiven.join(", ")})`
+    : "  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다",
 );
 console.log(
-  continueKind === 'interstitial'
-    ? '  이어가기: 전면형. 전용 그룹 id 가 들어 있다'
+  continueKind === "interstitial"
+    ? "  이어가기: 전면형. 전용 그룹 id 가 들어 있다"
     : `  이어가기: 보상형(30초, 끝까지 봐야 이어감). 그룹 ${
-        process.env.VITE_AD_GROUP_CONTINUE?.trim() ? '전용' : '공용'
+        process.env.VITE_AD_GROUP_CONTINUE?.trim() ? "전용" : "공용"
       }`,
 );

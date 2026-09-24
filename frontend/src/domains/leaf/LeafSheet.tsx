@@ -23,6 +23,12 @@
  * 그래서 화면도 초로 약속하지 않는다. **「보상을 받았다고 뜰 때까지」**라고 적는다.
  * 버튼에 적는 「30초」는 얼마나 걸리는지의 안내이지 지급 조건이 아니다.
  * (2026-09-22 사용자 질문: 「몇 초까지 보면 모을 수 있어?」)
+ *
+ * ── 여기만 30초가 남은 이유 ───────────────────────────────────────────
+ *
+ * 길목 셋은 2026-09-24 에 짧은 전면형으로 내렸다. 이 자리만 보상형 30초로 남고, 대신
+ * 한 편에 **두 송이**를 준다(`LEAVES_PER_REWARDED_AD`). 길목에서 30초를 걷어 내면
+ * 광고를 참고 볼 이유도 함께 사라지는데, 그 이유가 이 자리로 옮겨 온 것이다.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -31,6 +37,7 @@ import { useAnalytics } from '../../shared/analytics';
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { BottomSheet, LotusIcon, Spinner } from '../../shared/ui';
 import '../../shared/ui/leaf.css';
+import { LEAVES_PER_REWARDED_AD } from '../ads/placement';
 import { useRewardedAd } from '../ads/useRewardedAd';
 
 import { useLeafWallet } from './useLeaves';
@@ -100,7 +107,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
       return;
     }
     // 잔액은 시트가 닫혀 있어도 늘려야 한다. 광고를 끝까지 본 것은 사실이다
-    earn();
+    earn(LEAVES_PER_REWARDED_AD);
     setJustEarned(true);
   }, [ad, earn]);
 
@@ -122,7 +129,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
             마운트했는데, 리전 자체가 새로 생기는 것이라 안 읽는 기기가 있었다. 껍데기를 늘 둔다.
           */}
           <p className="leaf-sheet__earned" role="status" {...testId(TEST_IDS.leafEarned)}>
-            {justEarned ? '연꽃 한 송이가 늘었어요' : ''}
+            {justEarned ? `연꽃 ${LEAVES_PER_REWARDED_AD}송이가 늘었어요` : ''}
           </p>
         </div>
 
@@ -176,7 +183,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
                   <span className="leaf-sheet__badge" {...testId(TEST_IDS.adBadge)}>
                     광고
                   </span>{' '}
-                  보고 연꽃 한 송이 모으기
+                  보고 연꽃 {LEAVES_PER_REWARDED_AD}송이 모으기
                 </span>
               )}
             </button>

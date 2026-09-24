@@ -3,8 +3,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
+import { LeafAltAdButton, LeafUseButton } from '../../shared/ui';
+import { adLead } from '../ads/placement';
 
 type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
+
+/** 「광고」 배지 앞에 서는 말. 보상형일 때만 초를 적는다 */
+const AD_LEAD = adLead('extension');
 
 /**
  * 받은 「다른 관점」을 카드 밖에 둔다.
@@ -58,6 +63,21 @@ export interface ExtensionCardProps {
   onWatchAd?: () => Promise<boolean>;
   /** 광고 로드가 끝났나. 훅이 붙기 전에는 스텁이라 준비된 것으로 본다 */
   adReady?: boolean;
+  /**
+   * 연꽃 한 송이로 지나간다. 돌려주는 값이 false 면 잔액이 모자라 아무 일도 안 일어났다.
+   *
+   * 없으면 연꽃 버튼을 아예 그리지 않는다. 다른 두 자리(이어가기 · 간직)와 같은 규칙이다.
+   */
+  onUseLeaf?: () => boolean;
+  /** 지금 가진 연꽃. 한 송이 이상이면 광고 대신 이것을 먼저 권한다 */
+  leaves?: number;
+  /**
+   * 이 기기에서 광고를 띄울 수 있나.
+   *
+   * 못 띄우는데 연꽃만 있는 사람에게는 **연꽃 버튼 하나만** 그린다. 눌러도 아무 일이
+   * 없는 광고 버튼을 세우면 그 자리가 고장으로 읽힌다.
+   */
+  adSupported?: boolean;
 }
 
 /**
@@ -73,6 +93,9 @@ export function ExtensionCard({
   usedIds,
   onWatchAd,
   adReady = true,
+  onUseLeaf,
+  leaves = 0,
+  adSupported = true,
 }: ExtensionCardProps) {
   const client = useApiClient();
   const analytics = useAnalytics();
@@ -160,6 +183,31 @@ export function ExtensionCard({
     await build();
   }
 
+  /**
+   * 연꽃으로 지나간다. 광고를 띄우지 않는다.
+   *
+   * 빼는 일은 부르는 쪽이 한다. 여기서 빼면 이 카드가 다시 그려질 때마다 셈이 흐트러지고,
+   * 잔액을 쥔 쪽과 쓰는 쪽이 갈라진다.
+   */
+  function payWithLeaf() {
+    if (onUseLeaf == null || phase !== 'idle') return;
+    if (!onUseLeaf()) return;
+    void build();
+  }
+
+  /** 연꽃으로 지나갈 수 있나. 부르는 쪽이 길을 안 줬으면 없는 것으로 본다 */
+  const hasLeaf = leaves > 0 && onUseLeaf != null;
+
+  /*
+    지나갈 길이 하나도 없으면 자리를 아예 두지 않는다. 눌러 봐야 안 되는 버튼을 세우면
+    그 자리가 고장으로 읽힌다.
+
+    ⚠ **이미 시작했거나 받아 둔 것이 있으면 유지한다.** 연꽃을 쓰면 잔액이 0 이 되는데,
+    그때 이 자리가 사라지면 방금 치른 값으로 받던 것까지 화면에서 없어진다. 부르는 쪽에서
+    이 판정을 하다가 실제로 그렇게 됐다.
+  */
+  if (!adSupported && !hasLeaf && result == null && phase === 'idle') return null;
+
   return (
     <div className="ext-card" ref={cardRef} {...testId(TEST_IDS.extensionCard)}>
       <p className="eyebrow">조금 더 깊게 보고 싶다면</p>
@@ -216,6 +264,33 @@ export function ExtensionCard({
                 다시 받아보기
               </button>
             </div>
+          ) : hasLeaf ? (
+            /*
+              연꽃이 있으면 이쪽이 주 버튼이고 광고는 아래 보조로 내려간다. 이어가기 ·
+              간직 시트와 같은 순서다. 뒤집으면 이미 값을 치러 둔 사람 앞에 광고를 또
+              세우는 셈이고, 그러면 연꽃을 미리 모을 이유가 그 자리에서 사라진다.
+            */
+            <div className="ext-choices">
+              <LeafUseButton
+                count={leaves}
+                action="다른 관점 보기"
+                disabled={phase === 'watching'}
+                onClick={payWithLeaf}
+                testKey="leafSpendExtension"
+              />
+              {/* 광고를 못 띄우는 기기에서는 이 줄을 아예 그리지 않는다 */}
+              {adSupported && (
+                <LeafAltAdButton
+                  lead={AD_LEAD}
+                  label="보고 다른 관점 보기"
+                  disabled={!adReady}
+                  busy={phase === 'watching'}
+                  busyLabel="준비하고 있어요"
+                  onClick={() => void watch()}
+                  testKey="extensionCta"
+                />
+              )}
+            </div>
           ) : (
             <button
               type="button"
@@ -226,8 +301,8 @@ export function ExtensionCard({
             >
               {adReady ? (
                 <>
-                  {/* 보상형 두 자리는 같은 말투다: 몇 초짜리인지와 무엇을 얻는지를 한 줄에 */}
-                  30초{' '}
+                  {/* 광고 자리 넷이 같은 말투다: 얼마나 걸리는지와 무엇을 얻는지를 한 줄에 */}
+                  {AD_LEAD != null && `${AD_LEAD} `}
                   <span className="ad-tag" {...testId(TEST_IDS.adBadge)}>
                     광고
                   </span>{' '}

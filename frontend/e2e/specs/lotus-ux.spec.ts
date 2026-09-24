@@ -129,7 +129,7 @@ test('설정에서도 연꽃을 모을 수 있다', async ({ page }) => {
   await row.scrollIntoViewIfNeeded();
   await expect(row).toBeVisible();
   await expect(row).toContainText('연꽃 모으기');
-  await expect(row).toContainText('30초 광고로 한 송이씩 모아요');
+  await expect(row).toContainText('30초 광고로 2송이씩 모아요');
   // 지금 몇 송이인지도 그 줄에서 읽힌다
   await expect(row).toContainText('3송이');
   await shot(page, '13 설정 - 연꽃 모으기');

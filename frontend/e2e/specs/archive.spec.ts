@@ -250,10 +250,11 @@ test('간직 앞에 짧은 광고가 선다. 보고 나면 담긴다', async ({ 
 
   const gate = page.getByTestId('save-gate');
   await expect(gate).toBeVisible();
-  // 몇 초짜리인지 적는다. 모르면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다
   await expect(gate).toContainText('보관함에 간직할까요?');
-  await expect(page.getByTestId('save-gate-watch')).toContainText('30초 광고 보고 간직하기');
-  // 세 자리가 같은 모양이다. 「광고」는 글자이면서 배지다(토스 SSP 「Ad 표기 유지」)
+  await expect(page.getByTestId('save-gate-watch')).toContainText('광고 보고 간직하기');
+  // 전면형이라 길이를 보증할 수 없다. 근거 없는 수치를 화면이 말하면 그것이 거짓말이 된다
+  await expect(page.getByTestId('save-gate-watch')).not.toContainText('30초');
+  // 네 자리가 같은 모양이다. 「광고」는 글자이면서 배지다(토스 SSP 「Ad 표기 유지」)
   await expect(page.getByTestId('save-gate-watch').getByTestId('ad-badge')).toBeVisible();
   // 광고를 강조하지 않는다. 개수 제한이 없다는 말이 함께 있어야 무엇을 잃는지가 분명하다
   await expect(gate).toContainText('개수 제한은 없어요');
@@ -853,11 +854,11 @@ test('앱 알리기를 닫으면 답변 화면에서도 같은 부탁을 다시 
   await expect(page.getByTestId('archive-app-share')).toHaveCount(0);
 });
 
-test('간직 광고를 중간에 닫으면 시트에 남아 왜 안 담겼는지 말한다', async ({ page, stub }) => {
+test('전면형이라 간직 광고를 중간에 닫아도 담긴다', async ({ page, stub }) => {
   /*
-    한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
-    **담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다.** 이어가기 시트가 같은 자리에서
-    같은 방식으로 말한다(2026-09-23 리뷰).
+    **판이 뒤집힌 자리다.** 보상형이던 때는 닫으면 시트에 남아 왜 안 담겼는지 말했다.
+    전면형에는 보상 이벤트가 없어 닫는 것이 정상 종료라, 그때도 안 담으면 아무도 못
+    담는다. 「보상을 받기 전에 닫아서」 문구는 보상형 자리(연꽃 모으기)에만 남는다.
   */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -873,10 +874,8 @@ test('간직 광고를 중간에 닫으면 시트에 남아 왜 안 담겼는지
   await page.getByTestId('save-button').click();
   await page.getByTestId('save-gate-watch').click();
 
-  const gate = page.getByTestId('save-gate');
-  await expect(gate).toBeVisible();
-  await expect(gate).toContainText('보상을 받기 전에 닫아서 담기지 않았어요');
-
-  // 다시 누를 수 있어야 한다. 한 번 닫았다고 길이 막히면 막다른 구조가 된다
-  await expect(page.getByTestId('save-gate-watch')).toBeEnabled();
+  // 담긴다. 시트는 닫히고 담겼다는 말이 뜬다
+  await expect(page.getByTestId('save-gate')).toHaveCount(0, { timeout: 15_000 });
+  await expect(page.getByTestId('save-done')).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('보상을 받기 전에 닫아서');
 });

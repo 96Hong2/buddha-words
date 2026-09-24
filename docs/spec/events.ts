@@ -109,7 +109,7 @@ export const EVENTS = {
     둘 다 늘면 이긴 것이다. `rewarded_ad_complete(placement='collect')` 와 짝으로 읽는다.
   */
   leaf_welcome:        { params: [] as const },                                          // 첫 한 장을 그냥 받았다. 사람당 한 번
-  leaf_earn:           { params: ['balance'] as const },                                 // 광고를 끝까지 보고 한 장 모았다
+  leaf_earn:           { params: ['balance', 'amount'] as const },                       // 광고를 끝까지 보고 모았다. amount 는 이번에 들어온 송이 수
   leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연꽃으로 지났다
   leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연꽃 칩으로 모으기 시트를 열었다
   /**

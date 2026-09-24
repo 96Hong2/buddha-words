@@ -137,6 +137,13 @@ export type FullScreenAdResult = 'watched' | 'dismissed' | 'noFill';
 
 export interface FullScreenAdHooks {
   onShown?: () => void;
+  /**
+   * 광고가 떴는데 끝 신호가 한 번도 안 와서 시간 제한으로 접었다.
+   *
+   * 결과는 `noFill` 로 돌려준다. 못 띄운 것과 결말이 같아서 로그에서도 한 덩어리가 되는데,
+   * 이 둘은 원인이 아주 다르다. **이 사고가 실제로 도는지 세려고** 갈라 알린다.
+   */
+  onStalled?: () => void;
 }
 
 export interface AdsBridge {

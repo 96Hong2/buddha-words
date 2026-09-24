@@ -346,20 +346,25 @@ export function AnswerRoute() {
     afterStore(outcome);
   }, [afterStore, analytics, answer, leaf, store]);
 
-  /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
+  /**
+   * 「보고 간직하기」를 눌렀다.
+   *
+   * 통과 조건은 종류가 정한다: 보상형은 끝까지 본 사람만, 전면형은 닫아도 담긴다.
+   * 그 판정은 `pass` 가 하고 여기서는 되묻지 않는다.
+   */
   const watchAndSave = useCallback(async () => {
     if (answer == null || gateBusy) return;
     analytics.log('save_gate_accept', { answer_id: answer.answerId }, { kind: 'click' });
     setGateBailed(false);
     setGateBusy(true);
-    let watched = false;
+    let passed = false;
     try {
-      watched = (await saveAd.show(answer.answerId)) === 'watched';
+      passed = (await saveAd.pass(answer.answerId)) === 'passed';
     } catch {
-      watched = false;
+      passed = false;
     }
     setGateBusy(false);
-    if (watched) {
+    if (passed) {
       setGateOpen(false);
       afterStore(store('ad'));
       return;
@@ -381,9 +386,30 @@ export function AnswerRoute() {
   }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
   const watchAd = useCallback(
-    async () => (await ad.show(answer?.answerId)) === 'watched',
+    async () => (await ad.pass(answer?.answerId)) === 'passed',
     [ad, answer],
   );
+
+  /**
+   * 「연꽃 한 송이로 다른 관점 보기」를 눌렀다. 광고를 띄우지 않는다.
+   *
+   * ⚠ **먼저 뺀다. 간직하기와 순서가 반대다.**
+   *
+   * 간직하기는 저장이 막히면 담기지도 않은 채 연꽃만 잃으므로 담고 나서 뺀다. 여기는
+   * 다르다: 뒤에 오는 일이 서버 왕복이라 실패가 잦고, 실패해도 **다시 받기는 공짜다**
+   * (`ExtensionCard` 의 다시 받기 버튼은 광고도 연꽃도 다시 청하지 않는다). 나중에
+   * 빼려 하면 그 사이에 한 송이로 두 번 지나갈 수 있다.
+   *
+   * 돌려주는 값이 false 면 잔액이 모자란 것이다. 부르는 쪽이 아무것도 하지 않는다.
+   */
+  const spendLeafForExtension = useCallback(() => {
+    if (!leaf.spend('extension')) {
+      analytics.log('leaf_spend_missed', { placement: 'extension' });
+      return false;
+    }
+    analytics.log('ad_skipped', { placement: 'extension', reason: 'leaf' });
+    return true;
+  }, [analytics, leaf]);
 
   /**
    * 링크가 가리킬 카드를 먼저 만들어 둔다. 링크만 있고 내용이 없으면 받은 사람은 만료 화면을 본다.
@@ -462,6 +488,8 @@ export function AnswerRoute() {
         onShare={openShare}
         onSave={save}
         onWatchAd={watchAd}
+        onUseLeaf={spendLeafForExtension}
+        leaves={leaf.count}
         adReady={ad.ready}
         adSupported={ad.ready && ad.supported}
       />
