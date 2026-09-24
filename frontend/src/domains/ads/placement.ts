@@ -1,12 +1,12 @@
 /**
- * 광고를 놓는 자리. 셋이다.
+ * 광고를 놓는 자리. 넷이다.
  *
  * 고민 작성 중 · 위기 · 위로 · 진입 카드 · INVALID 에는 광고가 없다.
  * 자리를 늘리려면 `docs/plan/00-통합-개발-계획.md` 1.6 절을 먼저 고친다.
  *
- * ── **세 자리 모두 사람이 버튼을 눌러야 뜬다** ─────────────────────────
+ * ── **네 자리 모두 사람이 버튼을 눌러야 뜬다** ─────────────────────────
  *
- * 넷째 자리였던 `generation`(답을 만드는 동안 저절로 덮던 광고)은 없앴다. 실기기에서
+ * 다섯째 자리였던 `generation`(답을 만드는 동안 저절로 덮던 광고)은 없앴다. 실기기에서
  * 「이야기 보내기」만 눌렀는데 광고가 튀어나왔고, 그 광고를 다 본 사람에게 이어가기 시트가
  * **광고를 한 번 더** 청했다. 누르지 않은 광고는 심사에서도 걸리고 사람도 잃는다.
  *
@@ -34,39 +34,71 @@ export const AD_PLACEMENT = {
 export type AdPlacement = (typeof AD_PLACEMENT)[keyof typeof AD_PLACEMENT];
 
 /**
- * 이어가기 자리를 어떤 광고로 돌리나. **기본은 보상형이다.**
+ * 길목 셋(`extension` · `continue` · `save`)에 서는 광고. **짧은 전면형이다.**
  *
- * 공식 문서가 보상형의 대표 쓰임으로 「이어하기」를 든다. 조건은 하나, `userEarnedReward`
- * 가 왔을 때만 주는 것이다. 정책이 막는 「광고 소비를 보상과 직접 연결」은 **누르면 즉시
- * 보상** 같은 부당한 연결이지, 끝까지 본 사람에게 주는 정식 보상형 구조가 아니다.
+ * ── 왜 보상형 30초를 길목에서 내렸나 ────────────────────────────────────
  *
- * 한때 이 자리를 전면형으로 바꿨다. 30초가 길다는 실기기 반응 때문이었는데, 전면형에는
- * 보상 이벤트가 없어 답을 광고와 떼어 놓아야 했고 그만큼 광고를 볼 이유도 사라졌다.
- * 단가도 전면형이 「중간」, 보상형이 「가장 높음」이다. 그래서 보상형으로 되돌린다.
+ * 한때 네 자리가 다 보상형 30초였다. 사용자가 실기기에서 겪고 「30초 광고는 너무 긴 것
+ * 같다」고 했다(2026-09-24). 답을 받으려던 사람 앞에 30초가 서면, 그 30초는 언제나 방해다.
  *
- * **전면형은 버리지 않고 스위치로 남긴다.** 콘솔에 전면형 그룹을 등록해 두고, 이 값만
- * 바꿔 빌드하면 자리 하나가 통째로 전면형으로 돈다. 어느 쪽이 나은지는 지표로 가른다.
+ * 2026-09-20 에도 같은 이유로 이어가기 하나를 전면형으로 바꿨다가 같은 날 되돌렸다.
+ * 되돌린 이유는 **광고를 볼 이유가 함께 사라진다**는 것이었다: 닫아도 답이 나오면 사람은
+ * 뜨자마자 닫고, 노출은 남아도 시청이 없다.
+ *
+ * **이번에는 그 이유를 다른 자리로 옮긴다.** 연꽃(`collect`)이 그 자리다. 길목에서는 짧은
+ * 광고로 지나가고, 30초를 참을 뜻이 있는 사람은 연꽃 모으기에서 한 편에 두 송이를 받는다.
+ * 그때 되돌린 판에는 연꽃이 아예 없었다. 그래서 전면형이 곧 「볼 이유 없음」이었다.
+ *
+ * 되돌릴 통로를 남긴다. `VITE_AD_GATE_KIND=rewarded` 를 주면 길목 셋이 보상형으로 돌아간다.
+ * 지우면 비교하려 할 때 다시 만들어야 한다.
  */
 type AdKind = 'rewarded' | 'interstitial';
 
-function continueKind(): AdKind {
-  const raw = import.meta.env.VITE_AD_CONTINUE_KIND;
-  return typeof raw === 'string' && raw.trim() === 'interstitial' ? 'interstitial' : 'rewarded';
+function gateKind(): AdKind {
+  const raw = import.meta.env.VITE_AD_GATE_KIND;
+  return typeof raw === 'string' && raw.trim() === 'rewarded' ? 'rewarded' : 'interstitial';
 }
+
+const GATE_KIND = gateKind();
 
 /**
  * 자리마다 광고 종류.
  *
- * 간직하기 · 다른 관점은 끝까지 본 사람에게만 주므로 언제나 보상형이다.
- * 이어가기만 빌드 환경변수로 갈린다.
+ * 연꽃 모으기만 언제나 보상형이다. 끝까지 본 사람에게만 주므로 보상 이벤트가 있어야 한다.
+ * 전면형에는 그 이벤트가 없다.
  */
 export const AD_KIND: Record<AdPlacement, AdKind> = {
-  extension: 'rewarded',
-  continue: continueKind(),
-  save: 'rewarded',
-  // 끝까지 본 사람에게만 연꽃을 준다. 전면형에는 보상 이벤트가 없어 쓸 수 없다
+  extension: GATE_KIND,
+  continue: GATE_KIND,
+  save: GATE_KIND,
   collect: 'rewarded',
 };
+
+export function adIsRewarded(placement: AdPlacement): boolean {
+  return AD_KIND[placement] === 'rewarded';
+}
+
+/**
+ * 버튼에서 「광고」 배지 **앞**에 서는 말.
+ *
+ * 보상형은 끝까지 봐야 하므로 얼마나 참아야 하는지 적는다(실기기 실측 30초). 전면형은
+ * 길이가 문서에 없어 적지 않는다. **근거 없는 수치를 화면이 말하게 두지 않는다.**
+ */
+export function adLead(placement: AdPlacement): string | undefined {
+  return adIsRewarded(placement) ? '30초' : undefined;
+}
+
+/**
+ * 보상형 광고 한 편에 주는 연꽃.
+ *
+ * 연꽃 한 송이가 길목 한 번이다. 그래서 이 값이 곧 **교환비**다: 30초 한 편이 짧은 광고
+ * 두 편을 대신한다.
+ *
+ * 왜 둘인가. 토스 공식 가이드의 단가 등급이 보상형 「가장 높음」, 전면형 「중간」이다.
+ * 두 배 안쪽으로 보는 것이 안전하다. 셋으로 올리면 사람이 길목 광고를 아예 안 보게 되어
+ * **노출 횟수 자체가 준다.** 버는 것은 단가가 아니라 노출 × 단가다.
+ */
+export const LEAVES_PER_REWARDED_AD = 2;
 
 /**
  * 개발에서 쓰는 공식 테스트 광고 그룹. 종류마다 하나다.
@@ -81,25 +113,11 @@ export const AD_KIND: Record<AdPlacement, AdKind> = {
 const TEST_REWARDED = import.meta.env.DEV ? 'ait-ad-test-rewarded-id' : null;
 const TEST_INTERSTITIAL = import.meta.env.DEV ? 'ait-ad-test-interstitial-id' : null;
 
-/** 빌드 때 넣는 환경변수 이름. 값은 `frontend/.env.example` 을 본다 */
-export const AD_GROUP_ENV: Record<AdPlacement, string> = {
-  extension: 'VITE_AD_GROUP_EXTENSION',
-  continue: 'VITE_AD_GROUP_CONTINUE',
-  save: 'VITE_AD_GROUP_SAVE',
-  collect: 'VITE_AD_GROUP_COLLECT',
-};
-
-/**
- * 전면형으로 돌릴 때만 쓰는 이어가기 그룹. **이름을 따로 둔다.**
- *
- * 한 이름에 두 종류를 담으면, 보상형 판에서 그 값을 주고도 아무 데도 안 쓰이는 일이 생긴다.
- * 실제로 그럴 뻔했다: 보상형 판에서 `VITE_AD_GROUP_CONTINUE` 만 주고 공용 그룹을 빠뜨리면
- * 이어가기가 광고 없이 지나가는데 번들 검사는 통과했다.
- */
-export const AD_GROUP_CONTINUE_INTERSTITIAL_ENV = 'VITE_AD_GROUP_CONTINUE_INTERSTITIAL';
-
-/** 자리마다 따로 안 줬을 때 보상형 자리가 함께 쓰는 그룹. 전면형 판의 이어가기만 예외다 */
-export const AD_GROUP_FALLBACK_ENV = 'VITE_AD_GROUP_DEFAULT';
+/*
+  환경변수 이름을 표로 내보내던 것(`AD_GROUP_ENV` 등 셋)은 걷었다. 부르는 곳이 한 군데도
+  없으면서, 길목 셋을 아직 보상형 변수에 매핑하고 있어 **다음 사람이 그 표를 믿는다.**
+  실제로 읽는 자리는 아래 `adGroupId` 하나뿐이다(2026-09-24 리뷰).
+*/
 
 function trimmed(raw: unknown): string | null {
   return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : null;
@@ -112,24 +130,28 @@ function trimmed(raw: unknown): string | null {
  * 콘솔이 발급하기 전까지는 운영 번들에도 값이 없고, 그 동안은 광고를 본 사람이 0 명이다.
  * 그 상태로 수익 로그를 읽으면 안 된다.
  *
- * 자리마다 그룹을 따로 두면 어느 자리가 버는지 콘솔에서 바로 갈리지만, 셋을 다 만들어야
- * 쓸 수 있으면 하나만 발급된 동안 나머지 둘이 통째로 죽는다. 그래서 자리 전용 값이 없으면
- * 공용 그룹으로 떨어진다(보상형 자리만). 자리별 수익은 그때 `placement` 를 실은 우리 로그로 가른다.
+ * 자리마다 그룹을 따로 두면 어느 자리가 버는지 콘솔에서 바로 갈리지만, 넷을 다 만들어야
+ * 쓸 수 있으면 하나만 발급된 동안 나머지가 통째로 죽는다. 그래서 자리 전용 값이 없으면
+ * 공용 그룹으로 떨어진다. 자리별 수익은 그때 `placement` 를 실은 우리 로그로 가른다.
  *
  * `import.meta.env.VITE_...` 는 vite 가 빌드 때 값으로 갈아 끼운다. 키를 변수로 꺼내면
- * 그 치환이 안 걸려 운영 빌드에서 값이 사라진다. 그래서 네 줄을 여기서 직접 적는다.
+ * 그 치환이 안 걸려 운영 빌드에서 값이 사라진다. 그래서 줄마다 여기서 직접 적는다.
  */
 export function adGroupId(placement: AdPlacement): string | null {
   /*
-    전면형으로 돌리는 판만 전용 그룹을 쓴다. 공용 그룹은 보상형이라 거기로 떨어지면 종류가
-    어긋난다. 값이 없으면 광고 없이 지나가고 `ad_skipped(reason='no_group')` 으로 남는다.
-    번들 검사가 그 빌드를 막는다.
+    전면형 자리는 전면형 그룹만 쓴다. 보상형 공용 그룹으로 떨어지면 종류가 어긋나
+    광고가 아예 안 뜨거나 30초짜리가 나온다. 값이 없으면 광고 없이 지나가고
+    `ad_skipped(reason='no_group')` 으로 남는다.
+
+    번들 검사는 **광고 그룹을 하나라도 준 빌드에서만** 이것을 막는다. 하나도 안 준 빌드는
+    개발·검증용이라 그냥 통과시킨다. 운영 빌드에서 그룹을 통째로 빠뜨리면 검사도 못 잡으니,
+    빌드 끝에 찍히는 요약 줄(「전면형 그룹 없음」)을 눈으로 본다.
   */
-  if (placement === 'continue' && AD_KIND.continue === 'interstitial') {
-    return trimmed(import.meta.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL) ?? TEST_INTERSTITIAL;
+  if (AD_KIND[placement] === 'interstitial') {
+    return trimmed(import.meta.env.VITE_AD_GROUP_INTERSTITIAL) ?? TEST_INTERSTITIAL;
   }
 
-  // 보상형 네 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
+  // 보상형 자리는 모양이 같다. 자리 전용 값이 없으면 공용 그룹으로 간다
   const own =
     placement === 'extension'
       ? trimmed(import.meta.env.VITE_AD_GROUP_EXTENSION)

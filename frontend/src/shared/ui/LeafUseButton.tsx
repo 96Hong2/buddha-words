@@ -1,7 +1,7 @@
 /**
  * 연꽃을 쓰는 버튼과 그 아래 서는 광고 버튼.
  *
- * 이어가기 시트와 간직 시트가 **함께 쓴다.** 두 자리에 같은 선택지가 서는데 모양이나
+ * 이어가기 시트 · 간직 시트 · 답변 끝 다른 관점이 **함께 쓴다.** 세 자리에 같은 선택지가 서는데 모양이나
  * 말투가 다르면 같은 앱으로 안 읽힌다. 광고 버튼 셋을 한 말투로 맞춰 둔 것과 같은
  * 이유로, 이쪽도 부품 하나를 나눠 쓴다. 도메인 둘이 쓰므로 자리는 `shared/ui` 다.
  */
@@ -22,7 +22,7 @@ export interface LeafUseButtonProps {
   disabled?: boolean;
   onClick: () => void;
   /** 자리마다 다른 셀렉터. e2e 가 둘을 갈라 본다 */
-  testKey: 'leafSpendContinue' | 'leafSpendSave';
+  testKey: 'leafSpendContinue' | 'leafSpendExtension' | 'leafSpendSave';
 }
 
 /**
@@ -146,7 +146,7 @@ export interface LeafAltAdButtonProps {
   busy?: boolean;
   busyLabel?: string;
   onClick: () => void;
-  testKey: 'continueWatch' | 'saveGateWatch';
+  testKey: 'continueWatch' | 'extensionCta' | 'saveGateWatch';
 }
 
 /**

@@ -26,9 +26,17 @@ import { clearLeafSpend, readLeafSpend, subscribeLeafSpend } from './spentNotice
 /** 얼마나 떠 있나. 권유 토스트(1.8초)보다 길다. 잔액까지 읽어야 하는 두 마디라서다 */
 const SHOW_MS = 2600;
 
+/**
+ * 자리마다 무엇을 했다고 말하나.
+ *
+ * ⚠ **`LeafSpend` 에 자리를 늘리면 여기도 늘린다.** 타입이 강제하지 못한다(키가 `string`
+ * 이라야 알 수 없는 값도 받아 넘길 수 있다). 빠뜨리면 아래 기본값 「지나갔어요」가 떠서,
+ * 무엇을 했는지 말하라고 만든 부품이 정작 그 자리에서만 그걸 안 한다(2026-09-24 리뷰).
+ */
 const ACTION: Record<string, string> = {
   continue: '이어갔어요',
   save: '간직했어요',
+  extension: '다른 관점을 봤어요',
 };
 
 export function LeafSpentToast() {

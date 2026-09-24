@@ -30,7 +30,7 @@ const KEY = 'buddha.leaves.v1';
 export const WELCOME_LEAVES = 1;
 
 /** 연꽃을 쓰는 자리 */
-export type LeafSpend = 'continue' | 'save';
+export type LeafSpend = 'continue' | 'save' | 'extension';
 
 /** 연꽃이 들어온 길 */
 export type LeafEarn = 'welcome' | 'ad';
@@ -125,10 +125,17 @@ export function grantWelcome(): boolean {
   return true;
 }
 
-/** 광고를 끝까지 봤다. 한 송이 늘린다 */
-export function earnLeaf(): number {
+/**
+ * 광고를 끝까지 봤다. 그만큼 늘린다.
+ *
+ * 몇 송이인지는 부르는 쪽이 정한다(`LEAVES_PER_REWARDED_AD`). 여기에 박아 두면 교환비를
+ * 바꿀 때 저장소까지 고쳐야 하고, 그 값이 화면이 적은 말과 어긋나도 알 길이 없다.
+ */
+export function earnLeaves(amount: number): number {
+  const add = toCount(amount);
+  if (add === 0) return read().count;
   const now = read();
-  const next = { ...now, count: now.count + 1, earned: now.earned + 1 };
+  const next = { ...now, count: now.count + add, earned: now.earned + add };
   write(next);
   return next.count;
 }

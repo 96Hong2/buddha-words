@@ -93,7 +93,8 @@ const AD_GROUP_VARS = [
   'VITE_AD_GROUP_EXTENSION',
   'VITE_AD_GROUP_CONTINUE',
   'VITE_AD_GROUP_SAVE',
-  'VITE_AD_GROUP_CONTINUE_INTERSTITIAL',
+  'VITE_AD_GROUP_COLLECT',
+  'VITE_AD_GROUP_INTERSTITIAL',
 ];
 
 for (const name of AD_GROUP_VARS) {
@@ -109,30 +110,51 @@ for (const name of AD_GROUP_VARS) {
 
 const adsGiven = AD_GROUP_VARS.filter((name) => process.env[name]?.trim());
 
-// 이어가기를 전면형으로 돌리는 판에서만 전용 그룹이 있어야 한다. 그 판에서 값을 빠뜨리면
-// 두 번째 이야기부터 광고 없이 조용히 지나간다. 공용 그룹은 보상형이라 대신 쓸 수 없다.
-const continueKind = process.env.VITE_AD_CONTINUE_KIND?.trim() === 'interstitial'
-  ? 'interstitial'
-  : 'rewarded';
+/*
+  길목 셋(extension · continue · save)은 2026-09-24 부터 전면형이다. 전면형 그룹을
+  빠뜨리면 그 셋이 통째로 광고 없이 지나가는데, 빌드는 성공하고 화면도 멀쩡해 보인다.
+  공용 그룹은 보상형이라 대신 쓸 수 없다. 종류는 그룹 id 에 박혀 있다.
+*/
+const gateKind = process.env.VITE_AD_GATE_KIND?.trim() === 'rewarded' ? 'rewarded' : 'interstitial';
 
-if (continueKind === 'interstitial' && !process.env.VITE_AD_GROUP_CONTINUE_INTERSTITIAL?.trim()) {
-  problems.push(
-    'VITE_AD_CONTINUE_KIND=interstitial 인데 VITE_AD_GROUP_CONTINUE_INTERSTITIAL 이 없다.\n' +
-      '    전면형으로 돌리려면 전면형 그룹 id 가 있어야 한다. 공용 그룹은 보상형이라 못 쓴다.',
-  );
-}
+if (adsGiven.length > 0) {
+  if (gateKind === 'interstitial' && !process.env.VITE_AD_GROUP_INTERSTITIAL?.trim()) {
+    problems.push(
+      '길목 셋이 전면형인데 VITE_AD_GROUP_INTERSTITIAL 이 없다.\n' +
+        '    전면형 그룹 id 를 함께 준다. 공용 그룹은 보상형이라 못 쓴다.\n' +
+        '    보상형으로 되돌리려면 VITE_AD_GATE_KIND=rewarded 를 준다.',
+    );
+  }
 
-// 보상형 자리는 전용 값이 없으면 공용 그룹으로 떨어진다. 둘 다 없으면 그 자리는 조용히
-// 광고 없이 지나가는데, 화면에도 로그에도 이유가 안 보인다. 그 빌드를 여기서 막는다.
-if (continueKind === 'rewarded' && adsGiven.length > 0) {
-  const missing = ['extension', 'continue', 'save'].filter((slot) => {
+  /*
+    공용 그룹과 전면형 그룹이 같은 값이면 둘 중 하나는 종류가 어긋난다. 그룹 id 문자열에
+    종류가 안 적혀 있어 이것 말고는 검사할 길이 없는데, 이 실수는 결과가 조용하다:
+    연꽃 모으기가 전면형을 띄우면 `userEarnedReward` 가 영영 안 와서 **연꽃을 한 송이도
+    못 모으고**, 화면은 「보상을 받기 전에 닫아서」라며 사람을 탓한다.
+  */
+  const fallback = process.env.VITE_AD_GROUP_DEFAULT?.trim();
+  const interstitial = process.env.VITE_AD_GROUP_INTERSTITIAL?.trim();
+  if (fallback && interstitial && fallback === interstitial) {
+    problems.push(
+      'VITE_AD_GROUP_DEFAULT 와 VITE_AD_GROUP_INTERSTITIAL 이 같은 값이다.\n' +
+        '    둘 중 하나는 종류가 어긋난다. 공용은 보상형, 전면형은 전면형 그룹이어야 한다.\n' +
+        '    연꽃 모으기가 전면형을 띄우면 연꽃을 한 송이도 못 모은다.',
+    );
+  }
+
+  // 보상형 자리는 전용 값이 없으면 공용 그룹으로 떨어진다. 둘 다 없으면 그 자리는 조용히
+  // 광고 없이 지나가는데, 화면에도 로그에도 이유가 안 보인다. 그 빌드를 여기서 막는다.
+  const rewardedSlots =
+    gateKind === 'rewarded' ? ['extension', 'continue', 'save', 'collect'] : ['collect'];
+  const missing = rewardedSlots.filter((slot) => {
     const own = process.env[`VITE_AD_GROUP_${slot.toUpperCase()}`]?.trim();
     return !own && !process.env.VITE_AD_GROUP_DEFAULT?.trim();
   });
   if (missing.length > 0) {
     problems.push(
-      `광고 그룹을 줬는데 ${missing.join(' · ')} 자리가 쓸 그룹이 없다.\n` +
-        '    자리마다 값을 주거나 VITE_AD_GROUP_DEFAULT 를 함께 준다.',
+      `광고 그룹을 줬는데 ${missing.join(' · ')} 자리가 쓸 보상형 그룹이 없다.\n` +
+        '    자리마다 값을 주거나 VITE_AD_GROUP_DEFAULT 를 함께 준다.\n' +
+        '    연꽃 모으기(collect)는 유일한 보상형 자리라 빠지면 연꽃을 모을 길이 없어진다.',
     );
   }
 }
@@ -156,9 +178,7 @@ function weigh(dir) {
       continue;
     }
     const raw = readFileSync(path);
-    total += /\.(js|mjs|css|html|json|map|svg|txt)$/.test(name)
-      ? gzipSync(raw).length
-      : raw.length;
+    total += /\.(js|mjs|css|html|json|map|svg|txt)$/.test(name) ? gzipSync(raw).length : raw.length;
   }
   return total;
 }
@@ -217,9 +237,18 @@ console.log(
     : '  광고 그룹 id: 없다. 이 번들에서는 보상형 광고 자리가 광고 없이 지나간다',
 );
 console.log(
-  continueKind === 'interstitial'
-    ? '  이어가기: 전면형. 전용 그룹 id 가 들어 있다'
-    : `  이어가기: 보상형(30초, 끝까지 봐야 이어감). 그룹 ${
-        process.env.VITE_AD_GROUP_CONTINUE?.trim() ? '전용' : '공용'
-      }`,
+  gateKind === 'interstitial'
+    ? `  길목 셋(관점·이어가기·간직): 전면형. 전면형 그룹 ${
+        process.env.VITE_AD_GROUP_INTERSTITIAL?.trim() ? '있음' : '없음(광고 없이 지나간다)'
+      }`
+    : '  길목 셋(관점·이어가기·간직): 보상형(30초, 끝까지 봐야 지나감)',
+);
+console.log(
+  `  연꽃 모으기: 보상형 30초. 그룹 ${
+    process.env.VITE_AD_GROUP_COLLECT?.trim()
+      ? '전용'
+      : process.env.VITE_AD_GROUP_DEFAULT?.trim()
+        ? '공용'
+        : '없음(연꽃을 모을 수 없다)'
+  }`,
 );

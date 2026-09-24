@@ -29,8 +29,12 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 import { LeafAltAdButton, LeafCollectCta, LeafUseButton, Spinner } from '../../shared/ui';
 import { trapTab } from '../../shared/ui/focusTrap';
 import { useSheetDrag } from '../../shared/ui/sheetDrag';
+import { adLead } from '../ads/placement';
 
 import './archive.css';
+
+/** 「광고」 배지 앞에 서는 말. 보상형일 때만 초를 적는다 */
+const AD_LEAD = adLead('save');
 
 export interface SaveGateProps {
   open: boolean;
@@ -169,7 +173,7 @@ export function SaveGate({
           <span className="pw-grabber__grip" aria-hidden="true" />
         </button>
 
-        {/* 「30초 광고」는 버튼 한 곳에서만 말한다. 제목까지 같은 말을 하면 광고 안내가 두 겹이다 */}
+        {/* 광고 이야기는 버튼 한 곳에서만 한다. 제목까지 같은 말을 하면 광고 안내가 두 겹이다 */}
         <h2 className="pw-title" id="save-gate-title">
           보관함에 간직할까요?
         </h2>
@@ -196,8 +200,9 @@ export function SaveGate({
           )}
 
           {/*
-            이어가기 시트와 같은 말투다. **초를 적는다.** 얼마나 참아야 하는지 모르는 채로
-            전면 광고를 만나면 사람은 중간에 닫고, 그러면 간직도 안 된 채로 끝난다.
+            이어가기 시트와 같은 말투다. **보상형일 때만 초를 적는다.** 얼마나 참아야
+            하는지 모르는 채로 30초를 만나면 사람은 중간에 닫고, 그러면 간직도 안 된 채로
+            끝난다. 전면형은 길이가 문서에 없어 적지 않는다.
           */}
           {hasLeaf ? (
             /*
@@ -206,7 +211,7 @@ export function SaveGate({
               됐다. 진행 상태는 아래 안내 줄이 맡는다. 이어가기 시트와 같은 방식이다.
             */
             <LeafAltAdButton
-              lead="30초"
+              lead={AD_LEAD}
               label="보고 간직하기"
               disabled={pending}
               busy={pending}
@@ -231,8 +236,8 @@ export function SaveGate({
                 </>
               ) : (
                 <>
-                  {/* 다른 두 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
-                  30초{' '}
+                  {/* 다른 세 자리와 같은 모양이다. 「광고」는 글자이자 배지다 */}
+                  {AD_LEAD != null && `${AD_LEAD} `}
                   <span className="arch-ad-tag" {...testId(TEST_IDS.adBadge)}>
                     광고
                   </span>{' '}

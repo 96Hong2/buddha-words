@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useRewardedAd } from '../../domains/ads/useRewardedAd';
+import { useRewardedAd, type AdPass } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
 import {
@@ -346,44 +346,87 @@ export function AnswerRoute() {
     afterStore(outcome);
   }, [afterStore, analytics, answer, leaf, store]);
 
-  /** 「보고 간직하기」를 눌렀다. 끝까지 본 사람만 담긴다 */
+  /**
+   * 「보고 간직하기」를 눌렀다.
+   *
+   * 통과 조건은 종류가 정한다: 보상형은 끝까지 본 사람만, 전면형은 닫아도 담긴다.
+   * 그 판정은 `pass` 가 하고 여기서는 되묻지 않는다.
+   */
   const watchAndSave = useCallback(async () => {
     if (answer == null || gateBusy) return;
     analytics.log('save_gate_accept', { answer_id: answer.answerId }, { kind: 'click' });
     setGateBailed(false);
     setGateBusy(true);
-    let watched = false;
+    let outcome: AdPass = 'noFill';
     try {
-      watched = (await saveAd.show(answer.answerId)) === 'watched';
+      outcome = await saveAd.pass(answer.answerId);
     } catch {
-      watched = false;
+      outcome = 'noFill';
     }
     setGateBusy(false);
-    if (watched) {
+    if (outcome === 'passed') {
       setGateOpen(false);
       afterStore(store('ad'));
       return;
     }
-    // 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
-    if (!saveAd.supported) {
+    /*
+      광고가 **한 장도 안 온** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다.
+      이어가기 시트가 같은 자리에서 같은 판정을 한다. 한때 이 갈래가 `supported` 만 보고
+      있어서, 띄울 수는 있는데 광고가 안 오는 기기에서는 막힌 채 **「보상을 받기 전에
+      닫아서」라고 사람을 탓했다**(2026-09-24 리뷰).
+    */
+    if (outcome === 'noFill') {
+      analytics.log('ad_skipped', { placement: 'save', reason: 'no_fill' });
       setGateOpen(false);
       afterStore(store('free'));
       return;
     }
     /*
       보상을 받기 전에 닫았다. **시트를 닫지 않고 그 자리에서 말한다.**
+      보상형 판에서만 닿는 갈래다. 전면형에는 닫는 것이 정상 종료라 이 결말이 없다.
 
       한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
-      담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다. 이어가기 시트가 같은 자리에서
-      같은 방식으로 말한다(2026-09-23 리뷰).
+      담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다(2026-09-23 리뷰).
     */
     setGateBailed(true);
   }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
-  const watchAd = useCallback(
-    async () => (await ad.show(answer?.answerId)) === 'watched',
-    [ad, answer],
-  );
+  /**
+   * 다른 관점 광고를 띄운다. 돌려주는 값이 true 면 본문을 가져가도 된다.
+   *
+   * **광고가 한 장도 안 오면 막지 않는다.** 다른 두 자리와 같은 규칙이다. 한때 이 자리만
+   * `passed` 아닌 것을 전부 「스스로 닫았다」로 읽어서, 광고가 안 오는 기기에서는 아무 말
+   * 없이 원래 버튼으로 돌아갔다. 연꽃이 없으면 그 자리가 영영 안 열린다(2026-09-24 리뷰).
+   */
+  const watchAd = useCallback(async () => {
+    const outcome = await ad.pass(answer?.answerId);
+    if (outcome === 'noFill') {
+      analytics.log('ad_skipped', { placement: 'extension', reason: 'no_fill' });
+      return true;
+    }
+    return outcome === 'passed';
+  }, [ad, analytics, answer]);
+
+  /**
+   * 「연꽃 한 송이로 다른 관점 보기」를 눌렀다. 광고를 띄우지 않는다.
+   *
+   * ⚠ **먼저 뺀다. 간직하기와 순서가 반대다.**
+   *
+   * 간직하기는 저장이 막히면 담기지도 않은 채 연꽃만 잃으므로 담고 나서 뺀다. 여기는
+   * 다르다: 뒤에 오는 일이 서버 왕복이라 실패가 잦고, 실패해도 **다시 받기는 공짜다**
+   * (`ExtensionCard` 의 다시 받기 버튼은 광고도 연꽃도 다시 청하지 않는다). 나중에
+   * 빼려 하면 그 사이에 한 송이로 두 번 지나갈 수 있다.
+   *
+   * 돌려주는 값이 false 면 잔액이 모자란 것이다. 부르는 쪽이 아무것도 하지 않는다.
+   */
+  const spendLeafForExtension = useCallback(() => {
+    if (!leaf.spend('extension')) {
+      analytics.log('leaf_spend_missed', { placement: 'extension' });
+      return false;
+    }
+    analytics.log('ad_skipped', { placement: 'extension', reason: 'leaf' });
+    return true;
+  }, [analytics, leaf]);
 
   /**
    * 링크가 가리킬 카드를 먼저 만들어 둔다. 링크만 있고 내용이 없으면 받은 사람은 만료 화면을 본다.
@@ -462,6 +505,8 @@ export function AnswerRoute() {
         onShare={openShare}
         onSave={save}
         onWatchAd={watchAd}
+        onUseLeaf={spendLeafForExtension}
+        leaves={leaf.count}
         adReady={ad.ready}
         adSupported={ad.ready && ad.supported}
       />

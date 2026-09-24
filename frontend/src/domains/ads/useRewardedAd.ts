@@ -1,5 +1,6 @@
 /**
- * 전면을 덮는 광고 한 번. 종류는 자리가 정한다(`AD_KIND`). 이어가기만 전면형이고 나머지는 보상형이다.
+ * 전면을 덮는 광고 한 번. 종류는 자리가 정한다(`AD_KIND`).
+ * 길목 셋은 짧은 전면형이고 연꽃 모으기만 보상형 30초다.
  *
  * 광고를 못 띄우는 기기(구버전 · SDK 없음 · 이 기기 광고 끄기)에서는 `supported` 가 false 다.
  * 그때 화면은 CTA 를 감추거나 시트 없이 그냥 진행한다. **광고 때문에 기능을 막지 않는다.**
@@ -78,6 +79,16 @@ function listenForExit(log: (since: number, placement: AdPlacement, answerId?: s
  */
 export type AdOutcome = 'watched' | 'dismissed' | 'noFill';
 
+/**
+ * 광고를 치르고 **하려던 일로 넘어가도 되나.**
+ *
+ * `AdOutcome` 과 따로 두는 이유는 종류마다 통과 조건이 다르기 때문이다. 보상형은
+ * `watched` 여야 하고 전면형은 닫아도 통과다. 부르는 쪽이 매번 `AD_KIND` 를 다시 보면
+ * 한 자리를 빠뜨렸을 때 **전면형인데 아무도 못 지나가는** 화면이 생긴다. 실제로 그 모양이
+ * 될 뻔했다: 호출부 넷이 전부 `=== 'watched'` 로 판정하고 있었다.
+ */
+export type AdPass = 'passed' | 'bailed' | 'noFill';
+
 export interface RewardedAd {
   /** 이 기기에서 이 자리 광고를 띄울 수 있나 */
   supported: boolean;
@@ -90,6 +101,12 @@ export interface RewardedAd {
    * `onShown` 은 광고가 실제로 화면에 뜬 순간이다. 누른 순간과 다르다.
    */
   show(answerId?: string, hooks?: FullScreenAdHooks): Promise<AdOutcome>;
+  /**
+   * 광고를 띄우고 **통과 여부**를 돌려준다. 길목 셋이 이것을 쓴다.
+   *
+   * `bailed` 는 보상형에서 사람이 중간에 닫은 것 하나뿐이다. 전면형에는 그 결말이 없다.
+   */
+  pass(answerId?: string, hooks?: FullScreenAdHooks): Promise<AdPass>;
 }
 
 export function useRewardedAd(placement: AdPlacement): RewardedAd {
@@ -192,11 +209,21 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       covering += 1;
       let outcome: AdOutcome = 'noFill';
       let shownAt = 0;
+      let stalled = false;
       try {
         outcome = await bridge.ads.showFullScreen(group, {
           onShown: () => {
             shownAt = Date.now();
             hooks?.onShown?.();
+          },
+          /*
+            광고는 떴는데 끝 신호가 안 왔다. 결과는 `noFill` 과 같지만 원인이 반대다:
+            저쪽은 광고가 한 장도 안 온 것이고 이쪽은 이미 본 것이다. 갈라 세지 않으면
+            「광고가 안 온다」로 읽고 엉뚱한 데를 고친다.
+          */
+          onStalled: () => {
+            stalled = true;
+            hooks?.onStalled?.();
           },
         });
       } catch {
@@ -225,6 +252,8 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       */
       if (AD_KIND[placement] === 'interstitial' && outcome === 'dismissed') {
         markWatched(placement, answerId);
+        // 보상은 없지만 하던 일은 이어간다. 퍼널의 이 칸이 비면 전면형 자리가 통째로 안 보인다
+        analytics.log('post_ad_continue', { placement, answer_id: answerId });
         return 'dismissed';
       }
 
@@ -232,7 +261,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
         // 사람이 닫은 것과 광고가 안 온 것을 가른다. 대책이 서로 다르다
         analytics.log('rewarded_ad_fail', {
           placement,
-          reason: outcome === 'dismissed' ? 'dismissed' : 'no_fill',
+          reason: outcome === 'dismissed' ? 'dismissed' : stalled ? 'show_timeout' : 'no_fill',
         });
         return outcome;
       }
@@ -250,5 +279,16 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
     [analytics, bridge, placement, supported],
   );
 
-  return { supported, ready, showing, show };
+  const pass = useCallback(
+    async (answerId?: string, hooks?: FullScreenAdHooks): Promise<AdPass> => {
+      const outcome = await show(answerId, hooks);
+      if (outcome === 'noFill') return 'noFill';
+      if (outcome === 'watched') return 'passed';
+      // 남은 것은 `dismissed` 하나다. 전면형은 닫는 것이 정상 종료라 그대로 통과시킨다
+      return AD_KIND[placement] === 'interstitial' ? 'passed' : 'bailed';
+    },
+    [placement, show],
+  );
+
+  return { supported, ready, showing, show, pass };
 }

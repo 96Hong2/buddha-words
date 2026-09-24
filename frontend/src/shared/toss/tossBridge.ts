@@ -20,6 +20,13 @@ import {
 } from '@apps-in-toss/web-framework';
 
 import {
+  adEventResult,
+  DISMISS_FALLBACK_MS,
+  FULL_SCREEN_LOAD_TIMEOUT_MS,
+  FULL_SCREEN_SHOW_TIMEOUT_MS,
+  marksAdOnScreen,
+} from './fullScreenAdFlow';
+import {
   BridgeError,
   recordLog,
   type AdsBridge,
@@ -103,21 +110,6 @@ class TossAnalyticsBridge implements AnalyticsBridge {
   }
 }
 
-/**
- * 전면 광고를 불러오는 데 주는 시간.
- *
- * 개발자 커뮤니티에 `loaded` 도 `onError` 도 없이 90초를 기다린 사례가 여럿이다.
- * 그동안 버튼이 죽어 있으면 사람은 앱이 멈춘 줄 안다. 이 시간이 지나면 못 띄운 것으로 치고
- * 부르는 쪽이 광고 없이 지나가게 둔다.
- */
-const FULL_SCREEN_LOAD_TIMEOUT_MS = 8_000;
-
-/**
- * 광고가 닫혀 화면이 다시 보인 뒤, 닫힘 신호를 이만큼 더 기다린다.
- * 보상 이벤트가 화면 복귀보다 조금 늦게 오는 기기가 있어 바로 끊지 않는다.
- */
-const DISMISS_FALLBACK_MS = 2_000;
-
 class TossAdsBridge implements AdsBridge {
   private initialized: Promise<void> | null = null;
 
@@ -188,11 +180,19 @@ class TossAdsBridge implements AdsBridge {
       let cancelShow: (() => void) | undefined;
       /** 이미 한 편을 띄웠나. **두 번째 `loaded` 로 또 띄우지 않는다** */
       let shown = false;
+      /** 화면이 돌아온 뒤 닫힘으로 접기까지 기다리는 타이머. 다시 숨으면 걷는다 */
+      let dismissTimer: ReturnType<typeof setTimeout> | undefined;
+      /** 광고가 뜬 뒤 끝 신호를 기다리는 시간 제한. 이것이 없으면 화면이 영영 멈춘다 */
+      let showTimer: ReturnType<typeof setTimeout> | undefined;
+      /** 「떴다」를 이미 알렸나. 뜬 것으로 읽는 이벤트가 셋이라 두 번 알릴 수 있다 */
+      let announced = false;
 
       const finish = (result: FullScreenAdResult) => {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
+        clearTimeout(showTimer);
+        clearTimeout(dismissTimer);
         stopLoading();
         cancelShow?.();
         if (onVisible) document.removeEventListener('visibilitychange', onVisible);
@@ -218,16 +218,27 @@ class TossAdsBridge implements AdsBridge {
         */
         if (settled || shown) return;
         shown = true;
-        // 시간 제한은 불러오는 데까지만이다. 광고가 떴는데 8초가 지났다고 실패로 접으면,
-        // 끝까지 본 사람이 보상을 못 받는다.
+        /*
+          불러오기 제한은 여기서 푼다. 광고가 떴는데 8초가 지났다고 실패로 접으면 끝까지
+          본 사람이 보상을 못 받는다. **대신 훨씬 긴 제한을 새로 건다.** 풀기만 하고 안
+          걸었더니, 끝 신호가 한 번도 안 오는 기기에서 화면이 영영 멈췄다.
+        */
         clearTimeout(timer);
+        showTimer = setTimeout(() => {
+          hooks?.onStalled?.();
+          finish('noFill');
+        }, FULL_SCREEN_SHOW_TIMEOUT_MS);
         cancelShow = showFullScreenAd({
           options: { adGroupId },
           onEvent: (event) => {
-            // 보상은 `userEarnedReward` 하나에서만 나온다. 떴다·노출됐다·눌렸다는 보상이 아니다.
-            // 닫힘은 언제나 취소다. 뜨자마자 닫은 사람에게 보상을 주면 무효 트래픽으로 잡혀
-            // 광고 계정이 막힌다. 샌드박스 목이 보상 이벤트를 안 준다고 여기서 타협하지 않는다.
-            if (event.type === 'show') {
+            /*
+              끝난 뒤에 오는 신호는 버린다. 없으면 `finish` 가 떼고 간 자리에 리스너를
+              새로 달게 되고, 그것을 떼어 줄 사람이 아무도 없다.
+            */
+            if (settled) return;
+            // 무엇이 끝이고 무엇이 보상인지는 `fullScreenAdFlow` 가 정한다. 여기는 배선이다
+            if (marksAdOnScreen(event.type) && !announced) {
+              announced = true;
               hooks?.onShown?.();
               /*
                 Android 토스앱 5.255.0 은 `dismissed` 를 주지 않는다(공식 FAQ). 그러면 광고가
@@ -236,19 +247,34 @@ class TossAdsBridge implements AdsBridge {
               */
               if (onVisible == null) {
                 onVisible = () => {
-                  if (document.visibilityState !== 'visible') return;
-                  setTimeout(() => finish('dismissed'), DISMISS_FALLBACK_MS);
+                  /*
+                    ⚠ **다시 숨으면 걷는다.** 광고를 눌러 광고주 페이지로 나갔다 오는 길에
+                    화면이 잠깐 보이는 순간이 있다. 그때 건 타이머를 안 걷으면, 사람이
+                    돌아와 끝까지 봐도 2초 뒤에 이미 닫힘으로 접혀 보상을 못 받는다.
+                    **광고를 눌러 준 사람이 가장 손해를 본다.**
+                  */
+                  if (document.visibilityState !== 'visible') {
+                    clearTimeout(dismissTimer);
+                    dismissTimer = undefined;
+                    return;
+                  }
+                  if (dismissTimer != null) return;
+                  dismissTimer = setTimeout(() => {
+                    // 접기 직전에 한 번 더 본다. 그 사이에 다시 숨었으면 아직 광고 중이다
+                    if (document.visibilityState !== 'visible') return;
+                    finish('dismissed');
+                  }, DISMISS_FALLBACK_MS);
                 };
                 document.addEventListener('visibilitychange', onVisible);
               }
             }
-            if (event.type === 'userEarnedReward') finish('watched');
-            // 닫힘은 언제나 취소다. 못 띄운 것과는 갈라서 돌려준다
-            if (event.type === 'dismissed') finish('dismissed');
-            if (event.type === 'failedToShow') finish('noFill');
+            const result = adEventResult(event.type);
+            if (result != null) finish(result);
           },
           onError: () => finish('noFill'),
         });
+        // 콜백이 먼저 끝났으면 위 구독 값이 아직 없었다. 로드 쪽과 같은 이유로 한 번 더 끊는다
+        if (settled) cancelShow();
       };
 
       cancelLoad = loadFullScreenAd({

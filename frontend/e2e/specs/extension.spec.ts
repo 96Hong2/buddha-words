@@ -1,15 +1,16 @@
 /**
  * 「조금 더 깊게 보고 싶다면」. 광고를 끝까지 본 사람에게만 붙는 한 덩이.
  *
- * 여기서 지키는 것 넷이다.
+ * 여기서 지키는 것 다섯이다.
  *   1. 누르기 전에는 아무 광고도 없고, 「광고」라는 글자는 버튼 안 배지 하나까지다
- *   2. 끝까지 보면 새 경전 · 다른 관점 · 행동 하나가 붙고, 앞에 쓴 경전이 다시 나오지 않는다
- *   3. 중간에 닫으면 아무것도 붙지 않고, 안 본 사람에게 실패라고 말하지 않는다
+ *   2. 보고 나면 새 경전 · 다른 관점 · 행동 하나가 붙고, 앞에 쓴 경전이 다시 나오지 않는다
+ *   3. 전면형이라 중간에 닫아도 붙는다. 안 본 사람에게 실패라고 말하지 않는다
  *   4. 광고를 띄울 수 없는 기기에서는 카드 자체가 없다. 눌러 봐야 안 되는 버튼을 두지 않는다
+ *   5. **연꽃 한 송이로도 지나간다.** 광고를 못 띄우는 기기에서도 그 길은 열려 있다
  */
 
 import { test, expect, type Page } from '../support/fixtures';
-import { askOnce } from '../support/flow';
+import { askOnce, withLeaves } from '../support/flow';
 import { shot } from '../support/shots';
 import type { MockScenario } from '../../src/shared/toss/mockBridge';
 
@@ -80,8 +81,11 @@ test('광고를 끝까지 보면 다른 경전과 다른 관점이 붙는다', a
   await shot(page, '17 한 번 더 보기 - 다른 관점이 붙은 뒤');
 });
 
-test('광고를 중간에 닫으면 아무 일도 일어나지 않는다', async ({ page }) => {
-  // 광고가 뜨다 말았다. 사용자가 스스로 닫은 것과 같은 자리다
+test('전면형이라 광고를 중간에 닫아도 다른 관점이 붙는다', async ({ page }) => {
+  /*
+    **판이 뒤집힌 자리다.** 보상형이던 때는 닫으면 아무것도 붙지 않았다. 전면형에는 보상
+    이벤트가 없어 닫는 것이 정상 종료라, 그때도 안 주면 아무도 못 받는다.
+  */
   await withBridge(page, { fullScreenAd: 'dismissed' });
   await page.goto('/');
   await askOnce(page);
@@ -89,13 +93,11 @@ test('광고를 중간에 닫으면 아무 일도 일어나지 않는다', async
   await scrollToExtension(page);
   await page.getByTestId('extension-cta').click();
 
-  // 붙지 않는다. 그러나 안 본 사람을 탓하지도 않는다
-  await expect(page.getByTestId('extension-result')).toHaveCount(0);
-  await expect(page.getByTestId('extension-cta')).toBeEnabled();
-  await expect(page.getByTestId('extension-card')).not.toContainText('못 가져왔어요');
-  await expect(page.getByTestId('extension-card')).not.toContainText('실패');
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
+  // 닫은 사람을 탓하지 않는다. 그 문구는 보상형 자리(연꽃 모으기)에만 남는다
+  await expect(page.getByTestId('extension-card')).not.toContainText('보상을 받기 전에');
 
-  await shot(page, '18 한 번 더 보기 - 광고를 끝까지 보지 않았을 때');
+  await shot(page, '18 한 번 더 보기 - 짧은 광고를 닫아도 붙는다');
 });
 
 test('광고를 띄울 수 없는 기기에는 카드를 아예 두지 않는다', async ({ page }) => {
@@ -127,4 +129,62 @@ test('설정에서 이 기기 광고를 끄면 답변에 광고 자리가 사라
 
   await expect(page.getByTestId('extension-card')).toHaveCount(0);
   await expect(page.getByTestId('ad-badge')).toHaveCount(0);
+});
+
+test('연꽃 한 송이로도 다른 관점을 본다. 광고는 아래로 내려간다', async ({ page }) => {
+  /*
+    이어가기 · 간직과 같은 규칙을 이 자리에도 뒀다(2026-09-24 사용자 지시). 연꽃 한 송이는
+    미리 치러 둔 광고 한 편이라, 가진 사람 앞에 광고를 또 세우면 미리 모을 이유가 사라진다.
+    그래서 **순서가 검증 대상이다**: 연꽃이 주 버튼이고 광고가 아래 보조다.
+  */
+  await withLeaves(page, 2);
+  await page.goto('/');
+  await askOnce(page);
+
+  await scrollToExtension(page);
+
+  const leafCta = page.getByTestId('leaf-spend-extension');
+  const adCta = page.getByTestId('extension-cta');
+  await expect(leafCta).toBeVisible();
+  await expect(adCta).toBeVisible();
+
+  // 연꽃이 위, 광고가 아래다. 뒤집히면 이미 값을 치른 사람 앞에 광고가 먼저 선다
+  const leafTop = (await leafCta.boundingBox())?.y ?? 0;
+  const adTop = (await adCta.boundingBox())?.y ?? 0;
+  expect(leafTop, '광고 버튼이 연꽃 버튼보다 위에 있어요').toBeLessThan(adTop);
+
+  // 쓰기 전에 몇 송이 남는지 적는다. 마지막 한 송이를 모른 채 누르지 않게 한다
+  await expect(leafCta).toContainText('쓰면 1송이 남아요');
+  await shot(page, '18-2 한 번 더 보기 - 연꽃으로도 볼 수 있다');
+
+  await leafCta.click();
+
+  // 광고 없이 붙는다
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
+
+  const balance = await page.evaluate(() => {
+    const raw = localStorage.getItem('buddha.leaves.v1');
+    return raw == null ? null : (JSON.parse(raw) as { count: number }).count;
+  });
+  expect(balance, '한 번에 한 송이만 나가야 해요').toBe(1);
+});
+
+test('광고를 못 띄워도 연꽃이 있으면 다른 관점을 볼 수 있다', async ({ page }) => {
+  /*
+    한때 이 카드는 `adSupported` 가 false 면 통째로 사라졌다. 연꽃은 **이미 치러 둔**
+    광고라, 지금 광고를 못 띄우는 것과 상관없이 쓸 수 있어야 한다. 그때 광고 버튼까지
+    함께 세우면 눌러도 아무 일이 없는 버튼이 되므로, 그 줄만 빠진다.
+  */
+  await withBridge(page, { fullScreenAd: 'unsupported' });
+  await withLeaves(page, 1);
+  await page.goto('/');
+  await askOnce(page);
+
+  await scrollToExtension(page);
+  await expect(page.getByTestId('leaf-spend-extension')).toBeVisible();
+  await expect(page.getByTestId('extension-cta')).toHaveCount(0);
+
+  await page.getByTestId('leaf-spend-extension').click();
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
 });

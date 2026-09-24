@@ -205,11 +205,20 @@ export interface AnswerBodyProps {
   closingRef?: RefObject<HTMLDivElement | null>;
   onShare?: () => void;
   onSave?: () => void;
-  /** 보상형 광고를 띄운다. 끝까지 봤으면 true */
+  /** 광고를 띄운다. 통과했으면 true. 통과 조건은 광고 종류가 정한다 */
   onWatchAd?: () => Promise<boolean>;
+  /** 연꽃 한 송이로 다른 관점을 본다. 잔액이 모자라면 false */
+  onUseLeaf?: () => boolean;
+  /** 지금 가진 연꽃 */
+  leaves?: number;
   /** 광고 지원 여부 판정이 끝났나 */
   adReady?: boolean;
-  /** 이 기기에서 광고를 띄울 수 있나. 못 띄우면 Extension 자리를 아예 두지 않는다 */
+  /**
+   * 이 기기에서 광고를 띄울 수 있나.
+   *
+   * 자리를 둘지 말지는 **카드가 스스로 정한다.** 여기서 정하면, 연꽃을 써서 잔액이 0 이
+   * 되는 순간 카드가 통째로 사라진다(받고 있던 결과까지 함께). 실제로 그렇게 됐다.
+   */
   adSupported?: boolean;
   /** 하단 고정 바가 떠 있나. 떠 있으면 문서 흐름의 같은 버튼을 감춘다 */
   barOn?: boolean;
@@ -223,6 +232,8 @@ export function AnswerBody({
   onShare,
   onSave,
   onWatchAd,
+  onUseLeaf,
+  leaves = 0,
   adReady,
   adSupported = true,
 }: AnswerBodyProps) {
@@ -244,7 +255,10 @@ export function AnswerBody({
     answer.modernBuddhaMessage.length +
     (pass2.status === 'done'
       ? pass2.scriptureExplanation.length +
-        pass2.personalAnalysis.reduce((sum, part) => sum + part.heading.length + part.body.length, 0) +
+        pass2.personalAnalysis.reduce(
+          (sum, part) => sum + part.heading.length + part.body.length,
+          0,
+        ) +
         pass2.actions.reduce((sum, act) => sum + act.title.length + (act.why?.length ?? 0), 0) +
         pass2.closingMessage.length
       : 0);
@@ -398,7 +412,11 @@ export function AnswerBody({
       {pass2.status === 'done' && (
         <>
           {/* 묶음 C · ⑤ 당신의 이야기를 보면 */}
-          <section className="block card" data-answer-section="analysis" {...testId(TEST_IDS.analysis)}>
+          <section
+            className="block card"
+            data-answer-section="analysis"
+            {...testId(TEST_IDS.analysis)}
+          >
             <div className="sec-head">
               <span className="ico">
                 <svg
@@ -475,16 +493,18 @@ export function AnswerBody({
             */}
             {FLAGS.actionCommit && pass2.actions.length > 0 && (
               <div className="act-commit">
-                <TomorrowReminder
-                  answerId={answer.answerId}
-                  actionTitle={pass2.actions[0].title}
-                />
+                <TomorrowReminder answerId={answer.answerId} actionTitle={pass2.actions[0].title} />
               </div>
             )}
 
             <div className="pattern-band" aria-hidden="true" />
 
-            <div className="closing" data-answer-section="closing" ref={closingRef} {...testId(TEST_IDS.closing)}>
+            <div
+              className="closing"
+              data-answer-section="closing"
+              ref={closingRef}
+              {...testId(TEST_IDS.closing)}
+            >
               <span className="ico">
                 <LotusMark size={22} />
               </span>
@@ -493,14 +513,17 @@ export function AnswerBody({
           </section>
 
           {/* 답변 밖 · Deep Extension. 누르지 않으면 아무 광고도 없다 */}
-          {answer.extensionAvailable && adSupported && (
+          {answer.extensionAvailable && (
             <ExtensionCard
               answerId={answer.answerId}
               route={answer.route}
               text={sent}
               usedIds={answer.scriptures.map((item) => item.id)}
               onWatchAd={onWatchAd}
+              onUseLeaf={onUseLeaf}
+              leaves={leaves}
               adReady={adReady}
+              adSupported={adSupported}
             />
           )}
 

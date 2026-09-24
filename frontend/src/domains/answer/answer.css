@@ -818,6 +818,16 @@
   line-height: var(--lh-body);
   color: var(--text-muted);
 }
+/*
+   연꽃 버튼과 그 아래 광고 버튼. **이어가기 시트와 같은 8px 이다**(`.continue-sheet__actions`).
+   간직 시트(`.pw-actions`)만 12px 인데, 그쪽은 같은 클래스를 이용권·간직완료 화면과
+   나눠 쓰고 있어 혼자 좁히면 그 두 화면 버튼 간격까지 번진다. 실제로 한 번 번졌다.
+*/
+.ans .ext-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
 .ans .ad-btn {
   width: 100%;
   min-height: 48px;

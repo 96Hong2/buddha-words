@@ -101,11 +101,11 @@ test('이야기를 보내도 광고가 저절로 뜨지 않는다', async ({ pag
   expect(milestone?.params).toMatchObject({ answers_total: 1, is_first: true });
 });
 
-test('두 번째 이야기는 눌러야 광고가 돌고, 끝까지 봐야 이어간다', async ({ page, stub }) => {
+test('두 번째 이야기는 눌러야 광고가 돌고, 짧은 광고가 끝나면 이어간다', async ({ page, stub }) => {
   /*
-   * 이 자리는 보상형이다. 공식 문서가 보상형의 대표 쓰임으로 「이어하기」를 들고, 지급은
-   * `userEarnedReward` 때만 하라고 못 박는다. 한때 전면형으로 바꿔 답을 떼어 놓았는데
-   * 광고를 볼 이유가 함께 사라져 되돌렸다.
+   * 이 자리는 **전면형**이다(2026-09-24). 보상형 30초가 길다는 실기기 반응이 근거다.
+   * 전면형에는 보상 이벤트가 없어 길이를 보증할 수 없으므로 **버튼이 초를 적지 않는다.**
+   * 30초를 참을 뜻이 있는 사람이 갈 자리는 연꽃 모으기로 옮겼다(`leaves.spec.ts`).
    */
   test.setTimeout(120_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -126,11 +126,12 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 끝까지 봐야 이�
   expect(await logNames(page)).not.toContain('rewarded_ad_start');
   await expect(page.getByTestId('mock-fullscreen-ad')).toHaveCount(0);
 
-  // 누르면 광고가 뜬다는 것과 얼마나 참아야 하는지를 버튼이 말한다
+  // 누르면 광고가 뜬다는 것을 버튼이 말한다
   const cta = page.getByTestId('continue-watch');
-  await expect(cta).toContainText('30초 광고 보고 답변 받기');
+  await expect(cta).toContainText('광고 보고 답변 받기');
   await expect(cta).toContainText('광고');
-  await expect(cta, '얼마나 참아야 하는지 안 적혀 있어요').toContainText('30초');
+  // 전면형은 길이가 문서에 없다. 근거 없는 수치를 화면이 말하면 그것이 곧 거짓말이다
+  await expect(cta, '전면형인데 초가 적혀 있어요').not.toContainText('30초');
   // 닫기·오늘 답변 다시 보기는 없앴다. 바깥을 누르면 닫히는 시트에 닫기 버튼을 또 두지 않는다
   await expect(sheet).not.toContainText('오늘 답변 다시 보기');
   await expect(sheet).not.toContainText('닫아도 적은 글은');
@@ -145,15 +146,20 @@ test('두 번째 이야기는 눌러야 광고가 돌고, 끝까지 봐야 이�
   );
   expect(started, '눌렀는데 이어가기 광고가 안 돌았어요').toContain('continue');
 
-  // 끝까지 본 것으로 기록된다. 이 기록이 없으면 보상형인데 보상 없이 답이 나간 것이다
-  const completed = await page.evaluate(() =>
+  /*
+    광고를 보고 이어갔다는 기록이 남는다. **전면형이라 완주(`rewarded_ad_complete`)는
+    없다.** 보상 이벤트가 아예 없는 종류라, 그것이 찍히면 닫힘에 완주를 찍고 있다는 뜻이다.
+  */
+  const names = await logNames(page);
+  expect(names, '전면형인데 보상형 완주가 찍혔어요').not.toContain('rewarded_ad_complete');
+  const continued = await page.evaluate(() =>
     (window.__pocketLogs ?? [])
-      .filter((log) => log.name === 'rewarded_ad_complete')
+      .filter((log) => log.name === 'post_ad_continue')
       .map((log) => (log.params as Record<string, unknown>).placement),
   );
-  expect(completed, '이어가기가 보상형 완주로 안 잡혔어요').toContain('continue');
+  expect(continued, '광고를 보고 이어간 기록이 없어요').toContain('continue');
 
-  // 떠 있던 시간도 남는다. 버튼에 적은 30초가 실제와 맞는지 이 값으로 본다
+  // 떠 있던 시간도 남는다. 광고가 실제로 몇 초였는지는 이 값으로 본다
   const closes = await page.evaluate(() =>
     (window.__pocketLogs ?? [])
       .filter((log) => log.name === 'ad_close')
@@ -208,11 +214,14 @@ test('광고가 끝나기 전에는 답을 만들지 않는다', async ({ page, 
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
 });
 
-test('광고를 중간에 닫으면 답을 주지 않고 시트에 남는다', async ({ page, stub }) => {
+test('전면형이라 광고를 중간에 닫아도 이야기는 이어진다', async ({ page, stub }) => {
   /*
-    보상형 SDK 가이드가 못 박는 자리다: **`dismissed` 만으로는 지급하지 않는다.**
-    한때 5초만 보면 답을 주었는데 그것이 이 규칙 위반이었다. 닫은 사람은 답을 못 받고,
-    왜 안 넘어가는지 그 자리에서 읽을 수 있어야 한다. 말 없이 멈추면 고장으로 보인다.
+    **판이 뒤집힌 자리다.** 보상형이던 때는 닫으면 답을 주지 않고 시트에 남았다. 전면형에는
+    보상 이벤트가 아예 없어 닫는 것이 정상 종료다. 그때도 못 지나가게 두면 아무도 지나갈 수
+    없는 문이 된다.
+
+    닫아도 준다고 광고를 볼 이유가 사라지지는 않는다. 그 이유는 연꽃으로 옮겼다:
+    30초를 참으면 두 송이가 남아 다음 두 번을 광고 없이 지나간다.
   */
   test.setTimeout(150_000);
   await stub({ pass1Ms: 100, pass2Ms: 150 });
@@ -222,13 +231,9 @@ test('광고를 중간에 닫으면 답을 주지 않고 시트에 남는다', a
   await openContinueSheet(page);
   await page.getByTestId('continue-watch').click();
 
-  const sheet = page.getByTestId('continue-sheet');
-  await expect(sheet).toContainText('보상을 받기 전에 닫아서 이어지지 않았어요');
-  await expect(page.getByTestId('answer')).toHaveCount(0);
-  expect(new URL(page.url()).pathname).toBe('/');
-
-  // 다시 누를 수 있어야 한다. 한 번 닫았다고 길이 막히면 막다른 구조가 된다
-  await expect(page.getByTestId('continue-watch')).toBeEnabled();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+  // 닫은 사람을 탓하지 않는다. 그 문구는 보상형 자리(연꽃 모으기)에만 남는다
+  await expect(page.getByTestId('continue-sheet')).toHaveCount(0);
 });
 
 test('광고를 불러오는 동안은 시트에 머물고, 광고가 뜬 뒤에 넘어간다', async ({ page, stub }) => {

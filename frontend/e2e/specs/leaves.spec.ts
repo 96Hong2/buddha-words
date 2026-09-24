@@ -92,26 +92,35 @@ test('연꽃이 없어도 칩은 0 으로 서 있는다', async ({ page }) => {
   await shot(page, '11 연꽃 - 잔액이 0 인 홈', { fullPage: true });
 });
 
-test('광고를 끝까지 보면 연꽃이 한 송이 는다', async ({ page }) => {
+test('30초 광고를 끝까지 보면 연꽃이 두 송이 는다', async ({ page }) => {
+  /*
+    **길목 셋이 짧은 전면형으로 내려간 뒤 30초가 남은 유일한 자리다**(2026-09-24).
+    한 편에 두 송이라, 30초를 참은 사람은 다음 두 번을 광고 없이 지나간다. 이 교환비가
+    곧 「그래도 30초를 볼 이유」다. 버튼에 적힌 수와 실제로 늘어나는 수가 같아야 한다.
+  */
   await withBridge(page, { fullScreenAd: 'ok', fullScreenAdMs: 60 });
   await page.goto('/');
   await openLeafSheet(page);
 
   await expect(page.getByTestId('leaf-sheet-count')).toHaveText('0송이');
+  await expect(page.getByTestId('leaf-watch')).toContainText('보고 연꽃 2송이 모으기');
+  // 이 자리만 보상형이라 초를 적을 수 있다. 끝까지 봐야 주는 구조가 그 근거다
+  await expect(page.getByTestId('leaf-watch')).toContainText('30초');
   await shot(page, '11 연꽃 - 모으기 시트');
 
   await page.getByTestId('leaf-watch').click();
 
   await expect(page.getByTestId('leaf-earned')).toBeVisible();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('1송이');
-  expect(await leafBalance(page)).toBe(1);
-  await shot(page, '11 연꽃 - 한 장 모았다');
+  await expect(page.getByTestId('leaf-earned')).toHaveText('연꽃 2송이가 늘었어요');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2송이');
+  expect(await leafBalance(page)).toBe(2);
+  await shot(page, '11 연꽃 - 두 송이 모았다');
 
   // 시트는 닫히지 않는다. 여러 장 쌓으려는 사람이 칩을 매번 다시 누르지 않게 한다
   await expect(page.getByTestId('leaf-sheet')).toBeVisible();
   await page.getByTestId('leaf-watch').click();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2송이');
-  expect(await leafBalance(page)).toBe(2);
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('4송이');
+  expect(await leafBalance(page)).toBe(4);
 });
 
 test('광고를 중간에 닫으면 연꽃이 늘지 않고 그 이유를 적는다', async ({ page }) => {
@@ -372,18 +381,18 @@ test('이어가기 시트에서 연꽃을 모으러 갔다가 그대로 돌아�
   await expect(sheet).toHaveCount(0);
 
   await page.getByTestId('leaf-watch').click();
-  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('1송이');
+  await expect(page.getByTestId('leaf-sheet-count')).toHaveText('2송이');
 
   // 닫으면 쓰던 이야기가 그대로 있는 이어가기 시트로 돌아온다
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('leaf-sheet')).toHaveCount(0);
   await expect(sheet).toBeVisible();
 
-  // 방금 모은 한 송이로 바로 이어간다
+  // 방금 모은 것으로 바로 이어간다. 한 번에 한 송이만 나간다
   await expect(page.getByTestId('leaf-spend-continue')).toBeVisible();
   await page.getByTestId('leaf-spend-continue').click();
   await expect(page.getByTestId('answer')).toBeVisible({ timeout: 20_000 });
-  expect(await leafBalance(page)).toBe(0);
+  expect(await leafBalance(page)).toBe(1);
 });
 
 test('연꽃을 쓰면 꽃 한 송이가 버튼으로 날아오고 숫자가 준다', async ({ page }) => {

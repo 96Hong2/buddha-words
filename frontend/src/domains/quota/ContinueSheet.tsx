@@ -22,8 +22,9 @@
  * `noFill` 은 **우리 쪽 사정**이라 막지 않고 그냥 이어간다. 광고를 못 받는 기기에서
  * 기능이 통째로 막히면 막다른 구조가 된다.
  *
- * 전면형으로 돌리는 빌드(`VITE_AD_CONTINUE_KIND=interstitial`)에서는 보상 이벤트가 없어
- * `dismissed` 로 끝나므로, 그 판에서는 닫아도 이어간다. 어느 쪽이 나은지는 지표로 가른다.
+ * **2026-09-24 부터 기본이 전면형이다.** 전면형에는 보상 이벤트가 없어 `dismissed` 로
+ * 끝나므로 닫아도 이어간다. 보상형으로 되돌리려면 `VITE_AD_GATE_KIND=rewarded` 를 준다.
+ * 통과 조건이 종류마다 다른 것은 `useRewardedAd` 의 `pass` 가 안다.
  *
  * ── 연꽃이 있으면 광고를 안 본다 ─────────────────────────────────────
  *
@@ -55,8 +56,8 @@ import {
   LeafUseButton,
   Spinner,
 } from '../../shared/ui';
-import { AD_KIND } from '../ads/placement';
-import { useRewardedAd, type AdOutcome } from '../ads/useRewardedAd';
+import { adIsRewarded, adLead } from '../ads/placement';
+import { useRewardedAd } from '../ads/useRewardedAd';
 
 import './quota.css';
 
@@ -77,7 +78,7 @@ const TITLE = '이야기를 이어가 볼까요?';
  * 목적어가 문장 끝에 가서야 나오고, 낭독기는 그 순서 그대로 읽는다. 다른 세 자리
  * (간직·모으기·관점)가 이미 이 모양이다.
  */
-const AD_IS_REWARDED = AD_KIND.continue === 'rewarded';
+const AD_IS_REWARDED = adIsRewarded('continue');
 
 /**
  * 연꽃이 있을 때 **아래로 내려가는** 광고 버튼에 적는 말.
@@ -86,7 +87,7 @@ const AD_IS_REWARDED = AD_KIND.continue === 'rewarded';
  * 두 번 선다. **배지가 들어설 자리를 앞뒤로 갈라 넘긴다.** 주 버튼과 같은 모양이라야
  * 연꽃을 가진 사람과 안 가진 사람이 같은 문장을 읽는다.
  */
-const AD_ALT_LEAD = AD_IS_REWARDED ? '30초' : undefined;
+const AD_ALT_LEAD = adLead('continue');
 const AD_ALT_LABEL = '보고 답변 받기';
 
 export interface ContinueSheetProps {
@@ -169,7 +170,7 @@ export function ContinueSheet({
 
   const watch = useCallback(async (): Promise<void> => {
     setBailed(false);
-    const outcome: AdOutcome = await ad.show();
+    const outcome = await ad.pass();
 
     // 광고가 안 온 것은 우리 쪽 사정이다. 막지 않고 그냥 보낸다
     if (outcome === 'noFill') {
@@ -179,11 +180,10 @@ export function ContinueSheet({
     }
 
     /*
-      보상형은 끝까지 본 사람만 `watched` 다. 닫은 사람에게 답을 주면 `dismissed` 지급이라
-      SDK 가이드에 어긋난다. 전면형으로 돌리는 판에는 보상 이벤트가 없어 `dismissed` 가
-      정상 종료이므로 그때는 이어간다.
+      통과 조건은 종류마다 다르고 그 판정은 `pass` 가 한다. 보상형은 끝까지 본 사람만,
+      전면형은 닫아도 통과다. 여기서 종류를 다시 보면 한쪽을 빠뜨렸을 때 아무도 못 지나간다.
     */
-    if (outcome === 'watched' || AD_KIND.continue === 'interstitial') {
+    if (outcome === 'passed') {
       onContinue();
       return;
     }
@@ -208,7 +208,8 @@ export function ContinueSheet({
           */}
           {hasLeaf
             ? '모아 둔 연꽃으로 바로 이어갈 수 있어요'
-            : '짧은 영상이 끝나면 바로 이어 드릴게요'}
+            : /* 전면형은 닫아도 이어진다. 「끝나면」은 끝까지 봐야 한다는 말로 읽힌다 */
+              '짧은 영상이 지나가면 바로 이어 드릴게요'}
         </p>
 
         <div className="continue-sheet__actions">

@@ -21,6 +21,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 import { LotusIcon } from '../../shared/ui';
 import { useAnalytics } from '../../shared/analytics';
 import { appShareMessage, appShareUrl } from '../share/shareText';
+import { LEAVES_PER_REWARDED_AD } from '../ads/placement';
 import {
   readTextSize,
   TEXT_SIZE_LABEL,
@@ -482,7 +483,9 @@ export function SettingsScreen({
                   <span className="set-item-title">연꽃 모으기</span>
                   <span className="set-item-desc">
                     {/* 오른쪽 값 칸(N송이)이 자리를 먹는다. 한 줄에 드는 길이로 둔다 */}
-                    {leafCollectable ? '30초 광고로 한 송이씩 모아요' : '지금은 모을 수 없어요'}
+                    {leafCollectable
+                      ? `30초 광고로 ${LEAVES_PER_REWARDED_AD}송이씩 모아요`
+                      : '지금은 모을 수 없어요'}
                   </span>
                 </span>
                 <span className="set-value">{leafCount}송이</span>

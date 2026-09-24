@@ -71,7 +71,9 @@ test('고민 원문이 행동 로그에 실리지 않는다', async ({ page }) =
   await answerOnce(page);
 
   const rows = await logs(page);
-  expect(rows.length, '로그가 하나도 안 찍혔으면 이 검사가 아무것도 막지 못한다').toBeGreaterThan(5);
+  expect(rows.length, '로그가 하나도 안 찍혔으면 이 검사가 아무것도 막지 못한다').toBeGreaterThan(
+    5,
+  );
 
   const dump = JSON.stringify(rows);
   for (const piece of SECRETS) {
@@ -84,7 +86,9 @@ test('고민 원문이 행동 로그에 실리지 않는다', async ({ page }) =
       if (typeof value !== 'string') continue;
       // variants 는 JSON 이라 길 수 있다. 그 밖의 값은 id·열거값·구간뿐이라 짧다
       if (key === 'variants') continue;
-      expect(value.length, `${row.name}.${key} 가 너무 길다. 본문이 실렸는지 본다`).toBeLessThan(80);
+      expect(value.length, `${row.name}.${key} 가 너무 길다. 본문이 실렸는지 본다`).toBeLessThan(
+        80,
+      );
     }
   }
 });
@@ -155,7 +159,9 @@ test('같은 블록을 여러 번 지나가도 도달은 한 번만 센다', asy
   const sections = rows.filter((row) => row.name === 'answer_section_view');
   expect(sections.length, '블록 도달이 하나도 안 찍혔다').toBeGreaterThan(0);
 
-  const seen = sections.map((row) => `${String(row.params.answer_id)}:${String(row.params.section)}`);
+  const seen = sections.map(
+    (row) => `${String(row.params.answer_id)}:${String(row.params.section)}`,
+  );
   expect(new Set(seen).size, '같은 블록이 두 번 세어졌다').toBe(seen.length);
 
   // 읽은 비율도 마찬가지다
@@ -184,7 +190,10 @@ test('도움이 됐는지 누르면 그 값이 남고 한 번만 센다', async 
   expect(rows[0].params).toHaveProperty('answer_length_bucket');
 
   // 두 번 눌러도 늘지 않는다
-  await page.getByTestId('feedback-down').click({ force: true }).catch(() => {});
+  await page
+    .getByTestId('feedback-down')
+    .click({ force: true })
+    .catch(() => {});
   const after = (await logs(page)).filter((row) => row.name === 'answer_feedback');
   expect(after.length).toBe(1);
 });
@@ -268,9 +277,9 @@ test('갈래가 정해진 순간이 로그에 남는다', async ({ page }) => {
 
 test('광고 한 편이 세션 집계에 한 번만 잡힌다', async ({ page }) => {
   /*
-   * 이어가기가 보상형으로 돌아온 뒤에도 세는 자리가 전면형 시절 그대로였다.
-   * 완주 한 편이 `rewarded_ad_complete` 와 `ad_close` 양쪽에 걸려 두 번 세어졌다.
-   * 세는 열쇠는 `ad_close` 하나다. 여기서 그 규칙을 잡아 둔다.
+   * 세는 열쇠는 `ad_close` 하나다. 한때 완주 한 편이 `rewarded_ad_complete` 와 양쪽에
+   * 걸려 두 번 세어졌다. **종류가 바뀌어도 이 규칙은 그대로다**: 간직은 전면형이라
+   * 완주 이벤트가 아예 없고, 그래도 광고 한 편은 정확히 한 번 세어져야 한다.
    */
   await page.goto('/');
   await answerOnce(page);
@@ -284,11 +293,14 @@ test('광고 한 편이 세션 집계에 한 번만 잡힌다', async ({ page })
   const rows = await logs(page);
   const closes = rows.filter((row) => row.name === 'ad_close');
   const completes = rows.filter((row) => row.name === 'rewarded_ad_complete');
+  const continued = rows.filter((row) => row.name === 'post_ad_continue');
   expect(closes.length, '광고가 한 편 떴는데 닫힘이 한 번이 아니다').toBe(1);
-  expect(completes.length, '완주가 한 번이 아니다').toBe(1);
-  // 둘이 같은 한 편이다. 세는 자리가 둘이면 이 광고가 둘로 세어진다
   expect(closes[0].params.placement).toBe('save');
-  expect(completes[0].params.placement).toBe('save');
+  // 전면형에는 보상 이벤트가 없다. 있으면 `dismissed` 에 완주를 찍고 있다는 뜻이다
+  expect(completes.length, '전면형인데 완주가 찍혔다').toBe(0);
+  // 퍼널의 이 칸은 종류와 무관하게 선다. 비면 전면형 자리가 집계에서 통째로 사라진다
+  expect(continued.length, '광고를 보고 이어간 기록이 한 번이 아니다').toBe(1);
+  expect(continued[0].params.placement).toBe('save');
 });
 
 test('공유는 무엇을 보내기로 골랐는지 남긴다', async ({ page }) => {

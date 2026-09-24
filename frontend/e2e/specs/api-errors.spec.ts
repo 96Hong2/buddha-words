@@ -51,6 +51,15 @@ const ANSWER = {
   pass2: { status: 'pending' },
 };
 
+/** 「다른 관점」 한 벌. 모양이 어긋나면 클라이언트가 답변인 척 넘기지 않고 던진다 */
+const EXTENSION = {
+  responseType: 'extension',
+  answerId: ANSWER.answerId,
+  scripture: SCRIPTURE,
+  alternativeAnalysis: { heading: '다르게 보면', body: '이렇게도 읽힙니다.' },
+  action: { title: '오늘 한 가지', why: null },
+};
+
 const PASS2 = {
   pass2: {
     status: 'done',
@@ -264,6 +273,135 @@ test('한 번 더 보기를 서버가 못 주면, 광고를 다시 보라고 하
   await shot(page, '50 한 번 더 보기 - 서버가 다른 관점을 못 줬을 때');
 });
 
+test('연꽃으로 치르고 서버가 못 주면, 화면을 떠났다 와도 연꽃을 또 내지 않는다', async ({
+  page,
+}) => {
+  /*
+    **연꽃을 먼저 뺀다.** 뒤에 오는 일이 서버 왕복이라 실패가 잦고, 실패해도 다시 받기는
+    공짜라는 전제였다. 그런데 그 「공짜」가 컴포넌트 state 에만 있었다. 보관함에 갔다 오면
+    카드가 다시 만들어지면서 처음 화면으로 돌아가고, **연꽃은 이미 빠졌는데 값을 또 내야
+    한다**(2026-09-24 리뷰). 치른 사실을 카드 밖에 둬서 막는다.
+  */
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem(
+        'buddha.leaves.v1',
+        JSON.stringify({ count: 1, welcomed: true, earned: 1, spent: 0 }),
+      );
+    } catch {
+      /* 못 심으면 아래 단언이 실패로 알려 준다 */
+    }
+  });
+  await page.route(
+    (url) => url.pathname === '/daily',
+    (route) => route.fulfill(json(DAILY)),
+  );
+  await page.route(
+    (url) => url.pathname === '/concern',
+    (route) => route.fulfill(json(ANSWER)),
+  );
+  await page.route(
+    (url) => url.pathname === '/concern/pass2',
+    (route) => route.fulfill(json({ ...ANSWER, ...PASS2 })),
+  );
+
+  /** 본문 가져오기를 몇 번이나 불렀나. 연꽃을 두 번 내지 않았는지 이 수로도 본다 */
+  let extensionCalls = 0;
+  let extensionFails = true;
+  await page.route(
+    (url) => url.pathname === '/concern/extension',
+    (route) => {
+      extensionCalls += 1;
+      if (extensionFails) {
+        void route.fulfill({ status: 500, contentType: 'application/json', body: '{}' });
+        return;
+      }
+      void route.fulfill(json(EXTENSION));
+    },
+  );
+
+  await page.goto('/');
+  await send(page);
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+
+  const card = page.getByTestId('extension-card');
+  await card.scrollIntoViewIfNeeded();
+  await page.getByTestId('leaf-spend-extension').click();
+
+  // 치렀고, 서버가 못 줬다. 연꽃으로 온 사람에게는 광고 이야기를 하지 않는다
+  await expect(card.getByRole('button', { name: '다시 받아보기' })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(card).toContainText('연꽃을 다시 쓰지 않아도 돼요');
+  await expect(card).not.toContainText('광고를 다시 보지 않아도 돼요');
+
+  const spent = async () =>
+    page.evaluate(() => {
+      const raw = localStorage.getItem('buddha.leaves.v1');
+      return raw == null ? null : (JSON.parse(raw) as { count: number }).count;
+    });
+  expect(await spent(), '한 송이만 나가야 해요').toBe(0);
+
+  /*
+    답변 화면을 떠났다 온다. **카드가 통째로 다시 만들어지는 길이다.**
+    앱 안에서 오가야 한다. 주소로 다시 들어가면 전체를 새로 읽어 답 자체가 사라진다.
+  */
+  extensionFails = false;
+  await page.goBack();
+  await expect(page.getByTestId('concern-field')).toBeVisible({ timeout: 15_000 });
+  await page.goForward();
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+
+  await card.scrollIntoViewIfNeeded();
+  /*
+    치른 흔적이 남아 있으니 곧바로 다시 가져온다. **값을 또 청하지 않는다.**
+    연꽃 버튼이 다시 서 있으면 잔액 0 인 사람 앞에 낼 수 없는 값이 서는 것이고,
+    광고 버튼이 서 있으면 이미 치른 사람에게 값을 두 번 받는 것이다.
+  */
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('leaf-spend-extension')).toHaveCount(0);
+  await expect(page.getByTestId('extension-cta')).toHaveCount(0);
+  expect(await spent(), '연꽃이 또 나갔어요').toBe(0);
+  expect(extensionCalls, '가져오기를 부른 횟수가 맞지 않아요').toBe(2);
+});
+
+test('광고가 한 장도 안 오면 간직과 다른 관점을 막지 않는다', async ({ page }) => {
+  /*
+    `noFill` 은 **우리 쪽 사정**이다. 사람은 누르기까지 했는데 광고가 오지 않았다.
+    이어가기는 처음부터 그냥 보냈는데, 간직은 「보상을 받기 전에 닫아서」라며 막고 사람을
+    탓했고 다른 관점은 아무 말 없이 버튼으로 돌아갔다. 셋이 같은 규칙을 쓴다(2026-09-24 리뷰).
+  */
+  await page.addInitScript(() => {
+    window.__buddhaBridge = { fullScreenAd: 'noFill' };
+  });
+  await page.route(
+    (url) => url.pathname === '/daily',
+    (route) => route.fulfill(json(DAILY)),
+  );
+  await page.route(
+    (url) => url.pathname === '/concern',
+    (route) => route.fulfill(json(ANSWER)),
+  );
+  await page.route(
+    (url) => url.pathname === '/concern/pass2',
+    (route) => route.fulfill(json({ ...ANSWER, ...PASS2 })),
+  );
+  await page.route(
+    (url) => url.pathname === '/concern/extension',
+    (route) => route.fulfill(json(EXTENSION)),
+  );
+
+  await page.goto('/');
+  await send(page);
+  await expect(page.getByTestId('answer')).toBeVisible({ timeout: 30_000 });
+
+  // 다른 관점: 광고가 안 와도 붙는다
+  await page.getByTestId('extension-card').scrollIntoViewIfNeeded();
+  await page.getByTestId('extension-cta').click();
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId('extension-card')).not.toContainText('보상을 받기 전에');
+});
+
 /**
  * 사용량은 서버가 센다.
  *
@@ -325,7 +463,7 @@ test('광고 문은 서버가 연다. 보고 나면 이어서 답이 온다', as
 
   const sheet = page.getByTestId('continue-sheet');
   await expect(sheet).toBeVisible({ timeout: 30_000 });
-  await expect(sheet).toContainText('짧은 영상이 끝나면 바로 이어 드릴게요');
+  await expect(sheet).toContainText('짧은 영상이 지나가면 바로 이어 드릴게요');
   // 남은 횟수를 세어 보여 주지 않는다. 천장이 없어 셀 것이 없다
   await expect(sheet).not.toContainText('번 더');
 

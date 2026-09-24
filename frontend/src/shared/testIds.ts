@@ -87,6 +87,7 @@ export const TEST_IDS = {
   leafNote: 'leaf-note',
   leafCollectCta: 'leaf-collect-cta',
   leafSpendContinue: 'leaf-spend-continue',
+  leafSpendExtension: 'leaf-spend-extension',
   leafSpendSave: 'leaf-spend-save',
   leafSpentToast: 'leaf-spent-toast',
   settingsLeaf: 'settings-leaf',
