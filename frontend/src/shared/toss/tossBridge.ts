@@ -180,6 +180,8 @@ class TossAdsBridge implements AdsBridge {
       let cancelShow: (() => void) | undefined;
       /** 이미 한 편을 띄웠나. **두 번째 `loaded` 로 또 띄우지 않는다** */
       let shown = false;
+      /** 화면이 돌아온 뒤 닫힘으로 접기까지 기다리는 타이머. 다시 숨으면 걷는다 */
+      let dismissTimer: ReturnType<typeof setTimeout> | undefined;
       /** 광고가 뜬 뒤 끝 신호를 기다리는 시간 제한. 이것이 없으면 화면이 영영 멈춘다 */
       let showTimer: ReturnType<typeof setTimeout> | undefined;
       /** 「떴다」를 이미 알렸나. 뜬 것으로 읽는 이벤트가 셋이라 두 번 알릴 수 있다 */
@@ -190,6 +192,7 @@ class TossAdsBridge implements AdsBridge {
         settled = true;
         clearTimeout(timer);
         clearTimeout(showTimer);
+        clearTimeout(dismissTimer);
         stopLoading();
         cancelShow?.();
         if (onVisible) document.removeEventListener('visibilitychange', onVisible);
@@ -228,6 +231,11 @@ class TossAdsBridge implements AdsBridge {
         cancelShow = showFullScreenAd({
           options: { adGroupId },
           onEvent: (event) => {
+            /*
+              끝난 뒤에 오는 신호는 버린다. 없으면 `finish` 가 떼고 간 자리에 리스너를
+              새로 달게 되고, 그것을 떼어 줄 사람이 아무도 없다.
+            */
+            if (settled) return;
             // 무엇이 끝이고 무엇이 보상인지는 `fullScreenAdFlow` 가 정한다. 여기는 배선이다
             if (marksAdOnScreen(event.type) && !announced) {
               announced = true;
@@ -239,8 +247,23 @@ class TossAdsBridge implements AdsBridge {
               */
               if (onVisible == null) {
                 onVisible = () => {
-                  if (document.visibilityState !== 'visible') return;
-                  setTimeout(() => finish('dismissed'), DISMISS_FALLBACK_MS);
+                  /*
+                    ⚠ **다시 숨으면 걷는다.** 광고를 눌러 광고주 페이지로 나갔다 오는 길에
+                    화면이 잠깐 보이는 순간이 있다. 그때 건 타이머를 안 걷으면, 사람이
+                    돌아와 끝까지 봐도 2초 뒤에 이미 닫힘으로 접혀 보상을 못 받는다.
+                    **광고를 눌러 준 사람이 가장 손해를 본다.**
+                  */
+                  if (document.visibilityState !== 'visible') {
+                    clearTimeout(dismissTimer);
+                    dismissTimer = undefined;
+                    return;
+                  }
+                  if (dismissTimer != null) return;
+                  dismissTimer = setTimeout(() => {
+                    // 접기 직전에 한 번 더 본다. 그 사이에 다시 숨었으면 아직 광고 중이다
+                    if (document.visibilityState !== 'visible') return;
+                    finish('dismissed');
+                  }, DISMISS_FALLBACK_MS);
                 };
                 document.addEventListener('visibilitychange', onVisible);
               }
@@ -250,6 +273,8 @@ class TossAdsBridge implements AdsBridge {
           },
           onError: () => finish('noFill'),
         });
+        // 콜백이 먼저 끝났으면 위 구독 값이 아직 없었다. 로드 쪽과 같은 이유로 한 번 더 끊는다
+        if (settled) cancelShow();
       };
 
       cancelLoad = loadFullScreenAd({

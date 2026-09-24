@@ -74,9 +74,9 @@ export const EVENTS = {
   action_view:         { params: ['answer_id', 'action_index'] as const },
   // Deep Extension (보상형 광고 · 답변 끝)
   deep_extension_view: { params: ['answer_id', 'route', 'ad_supported'] as const },      // CTA 가 화면에 들어옴
-  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save. 셋 다 사람이 버튼을 눌러야 뜬다. continue 는 전면형이라 complete 가 오지 않고 답과도 무관하다
+  rewarded_ad_start:   { params: ['placement', 'answer_id'] as const },                   // placement: extension | continue | save | collect. 넷 다 사람이 버튼을 눌러야 뜬다. 길목 셋은 전면형이라 complete 가 오지 않는다(2026-09-24)
   rewarded_ad_complete:{ params: ['placement', 'answer_id', 'reward_granted'] as const },
-  rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | unsupported | dismissed | error
+  rewarded_ad_fail:    { params: ['placement', 'reason'] as const },                     // reason: no_fill | no_group | unsupported | dismissed | show_timeout. show_timeout 은 광고가 떴는데 끝 신호가 안 와 90초로 접은 것이라 no_fill 과 원인이 반대다
   extension_generated: { params: ['answer_id', 'elapsed_bucket_ms'] as const },
   ad_eligible:         { params: ['placement', 'answer_id'] as const },                   // 띄울 수 있는 상태가 됐다. 제안을 본 것(deep_extension_view)보다 앞이다
   /**
@@ -96,9 +96,9 @@ export const EVENTS = {
    * 전면을 덮던 광고가 닫혔다. 광고가 **화면에 뜬 순간부터** 몇 초였나(불러오는 시간 제외).
    * 자리를 가리지 않고 찍힌다.
    *
-   * 세 자리가 모두 보상형인 지금은 **보상을 받은 순간까지**라 광고 길이에 가깝고,
-   * 버튼에 적는 「30초」의 근거다. 중간에 닫은 사람은 닫은 순간까지다.
-   * 이어가기를 전면형으로 돌리는 빌드에서만 보상 이벤트가 없어 이것이 유일한 완료 신호가 된다.
+   * **길목 셋이 전면형인 지금은(2026-09-24) 이것이 유일한 완료 신호다.** 광고 편수를 세는
+   * 열쇠도 이것 하나다. 보상형인 연꽃 모으기에서만 보상을 받은 순간까지라 광고 길이에
+   * 가깝고, 버튼에 적는 「30초」의 근거다. 중간에 닫은 사람은 닫은 순간까지다.
    */
   ad_close:            { params: ['placement', 'shown_bucket_ms'] as const },
   /*
@@ -110,7 +110,7 @@ export const EVENTS = {
   */
   leaf_welcome:        { params: [] as const },                                          // 첫 한 장을 그냥 받았다. 사람당 한 번
   leaf_earn:           { params: ['balance', 'amount'] as const },                       // 광고를 끝까지 보고 모았다. amount 는 이번에 들어온 송이 수
-  leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save. 광고 대신 연꽃으로 지났다
+  leaf_spend:          { params: ['placement', 'balance'] as const },                    // placement: continue | save | extension. 광고 대신 연꽃으로 지났다
   leaf_sheet_view:     { params: ['balance'] as const },                                 // 홈 연꽃 칩으로 모으기 시트를 열었다
   /**
    * 쓰려고 했는데 잔액이 없었다. **평소에는 한 건도 안 나와야 한다.**
@@ -266,14 +266,14 @@ export const BUCKETS = {
 export const KPI = {
   activation:       { name: '첫 입력 → 첫 답변 도달',   num: 'answer_generated(pass=1|light, first)', den: 'input_type_* (first)', target: '≥ 90%' },
   quality:          { name: '답변 70% 완독률',         num: 'answer_read_70', den: 'answer_generated(pass=2|light)', target: 'normal·deep 따로 본다' },
-  deep_engagement:  { name: 'Deep Extension 클릭률',   num: 'rewarded_ad_start(placement=extension)', den: 'deep_extension_view', target: '실측 후 정한다' },
+  deep_engagement:  { name: 'Deep Extension 클릭률',   num: 'rewarded_ad_start(placement=extension) + leaf_spend(placement=extension)', den: 'deep_extension_view', target: '실측 후 정한다. **연꽃으로 지나간 사람을 분자에 함께 센다**: 첫 한 송이를 그냥 주므로 신규 사용자의 첫 다른 관점은 거의 다 연꽃이다. 광고만 세면 이 지표가 바닥으로 읽힌다(2026-09-24)' },
   ad_optin:         { name: '광고 opt-in',             num: 'rewarded_ad_start', den: 'deep_extension_view + second_question_start(gate=ad_continue)', target: '' },
   save_gate_conv:   { name: '간직 광고 수락률',          num: 'save_gate_accept', den: 'save_gate_view', target: '낮으면 간직을 막고 선 것이다' },
   save_conv:        { name: '누른 뒤 실제로 담김',        num: 'save_complete', den: 'save_click', target: '광고가 중간에서 얼마나 떨구는지 본다' },
   save_done_conv:   { name: '담고 나서 보러 감',          num: 'save_done_action(action=archive)', den: 'save_done_view', target: '낮으면 보관함이 다시 안 읽히는 자리다' },
   favorite_rate:    { name: '즐겨찾기 비율',             num: 'archive_favorite(on=true)', den: 'save_complete', target: '간직과 즐겨찾기가 갈리는지 본다' },
   gen_wait_drop:    { name: '답을 기다리다 나감',         num: 'friction_generation_abandon', den: 'concern_submit', target: '답 만드는 자리에 광고를 두지 않는 지금이 기준선이다' },
-  ad_early_bail:    { name: '이어가기 광고를 끝까지 못 봄', num: 'rewarded_ad_fail(placement=continue, reason=dismissed)', den: 'rewarded_ad_start(placement=continue)', target: '**30초가 긴지 재는 자리다.** 이어가기는 완주해야 답이 나오므로 여기 걸린 사람은 빈손으로 돌아간다. 높으면 전면형 스위치를 켜 볼 근거가 된다' },
+  ad_early_bail:    { name: '연꽃 광고를 끝까지 못 봄',    num: 'rewarded_ad_fail(placement=collect, reason=dismissed)', den: 'rewarded_ad_start(placement=collect)', target: '**보상형 30초가 긴지 재는 자리다.** 길목 셋이 전면형으로 내려간 뒤(2026-09-24) 이 지표가 남은 자리는 연꽃 모으기 하나다. 높으면 한 편에 주는 송이를 올려 볼 근거가 된다' },
   // ── 첫 사용 무료의 본전. 이 셋이 없으면 「광고를 언제부터 띄울까」를 숫자로 못 정한다 ──
   /**
    * 첫 답을 받은 사람 중 몇 %가 두 번째 답까지 오는가.
@@ -288,10 +288,10 @@ export const KPI = {
    */
   second_use_conv:  { name: '두 번째 사용 전환율',        num: 'answer_milestone(answers_total=2)', den: 'answer_milestone(answers_total=1)', target: 'p = C / (R − C). eCPM $8 기준 33%' },
   ad_skip_reason:   { name: '광고를 건너뛴 이유',         num: 'ad_skipped(reason=X)', den: 'ad_skipped', target: 'no_group 이 남아 있으면 콘솔에서 그룹을 아직 안 준 것이다' },
-  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'rewarded_ad_complete', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다' },
-  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start', target: 'placement 별로 본다. 세 자리가 다 보상형이라 이어가기도 여기 든다' },
-  continue_ad_length:{ name: '이어가기 광고 길이',        num: 'ad_close(placement=continue, shown_bucket_ms=X)', den: 'ad_close(placement=continue)', target: '완주분은 실제 광고 길이다. 버튼에 적은 「30초」의 근거이고, 중앙값이 그것과 멀어지면 문구를 고친다' },
-  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'rewarded_ad_complete', den: 'answer_generated(pass=2|light)', target: '' },
+  ads_per_paid_use: { name: '두 번째부터의 광고 노출',    num: 'ad_close', den: 'answer_milestone(answers_total≥2)', target: '1 에 가까울수록 첫 사용 손실을 빨리 갚는다. **분자가 `ad_close` 다**: 길목 셋이 전면형이라 완주 이벤트가 없고, 그것으로 세면 실제 노출의 1/4 만 잡힌다' },
+  ad_complete:      { name: '광고 완료율',              num: 'rewarded_ad_complete', den: 'rewarded_ad_start(placement=collect)', target: '**연꽃 모으기만 보는 지표다.** 길목 셋은 전면형이라 완주 이벤트 자체가 없다. 그 셋을 분모에 넣으면 완료율이 구조적으로 1/4 로 보인다' },
+  ad_length:        { name: '자리별 광고 길이',          num: 'ad_close(placement=X, shown_bucket_ms=Y)', den: 'ad_close(placement=X)', target: '**전면형이 정말 짧은지 재는 자리다.** 길목 셋과 연꽃 모으기를 나란히 놓고, 길목 쪽 중앙값이 연꽃 쪽에 가까우면 짧게 만든 뜻이 없어진 것이다. 연꽃 쪽 중앙값은 버튼에 적은 「30초」의 근거다' },
+  ads_per_answer:   { name: 'Answer 당 광고 노출',       num: 'ad_close', den: 'answer_generated(pass=2|light)', target: '완주가 아니라 노출로 센다. 전면형에는 완주가 없다' },
   arpdau:           { name: 'ARPDAU',                  num: '콘솔 광고 수익 + 결제', den: 'DAU', target: '' },
   llm_cost_per_dau: { name: 'LLM cost / DAU',          num: 'Σ model_cost_estimate', den: 'DAU', target: '광고매출 / LLM비용 ≥ 1.5' },
   paywall_conv:     { name: 'Paywall 전환',            num: 'purchase_complete', den: 'paywall_view', target: '' },
@@ -318,9 +318,9 @@ export const KPI = {
   action_reach:     { name: 'Action 도달률',           num: 'action_view', den: 'answer_generated(pass=2)', target: '' },
   feedback_pos:     { name: '도움됐다 비율',            num: 'answer_feedback(value=positive)', den: 'answer_feedback', target: 'route·model_tier 별로 본다' },
   // ── 광고 CX 가드레일. 수익만 보지 않는다 ──
-  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'rewarded_ad_complete', target: 'placement 별로 본다. 높은 자리는 옮긴다' },
-  ad_post_continue: { name: '광고 뒤 이어감',           num: 'post_ad_continue', den: 'rewarded_ad_complete', target: '' },
-  ad_next_day:      { name: '광고 본 사람의 D1',        num: 'app_open(days_since_last_open=1) ∩ 전날 rewarded_ad_complete', den: '전날 rewarded_ad_complete unique users', target: '안 본 사람과 비교한다' },
+  ad_post_exit:     { name: '광고 뒤 곧바로 이탈',       num: 'post_ad_exit(within_bucket_s=<2s|2-10s)', den: 'post_ad_continue', target: 'placement 별로 본다. 높은 자리는 옮긴다. 분모가 `post_ad_continue` 인 이유는 분자와 같은 모수(광고를 치르고 하던 일로 간 사람)여야 하기 때문이다. 완주로 재면 전면형 셋이 분모에서 빠져 이탈이 네 배로 보인다' },
+  ad_post_continue: { name: '광고 뒤 이어감',           num: 'post_ad_continue', den: 'ad_close', target: '광고를 치르고 실제로 하던 일로 간 비율. 1 에서 멀어지면 광고와 그다음 사이에서 사람을 잃고 있다' },
+  ad_next_day:      { name: '광고 본 사람의 D1',        num: 'app_open(days_since_last_open=1) ∩ 전날 ad_close', den: '전날 ad_close unique users', target: '안 본 사람과 비교한다' },
   // ── Carrying Capacity. 새 사용자를 계속 받아도 유지되는가 ──
   retention_dn:     { name: 'D1·D3·D7·D14·D30',       num: 'app_open(days_since_first_open=N)', den: 'app_open(is_first_open) N일 전 코호트', target: '' },
   resurrection:     { name: '되돌아옴',                num: 'app_open(days_since_last_open≥7)', den: 'app_open', target: '' },

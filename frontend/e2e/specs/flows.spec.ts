@@ -317,7 +317,7 @@ test('오늘 많이 이어간 사람도 광고를 보면 계속 이어간다', a
   await expect(sheet).toBeVisible();
   // 남은 횟수를 세어 보여 주지 않는다. 셀 것이 없다
   await expect(sheet).not.toContainText('번 더');
-  await expect(sheet).toContainText('짧은 영상이 끝나면 바로 이어 드릴게요');
+  await expect(sheet).toContainText('짧은 영상이 지나가면 바로 이어 드릴게요');
   await shot(page, '26 이어가기 - 오늘 많이 쓴 뒤에도 열린다');
 
   // 광고를 끝까지 보면 답이 온다

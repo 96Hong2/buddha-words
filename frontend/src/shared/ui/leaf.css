@@ -659,6 +659,7 @@
 .leaf-alt__spin,
 .leaf-sheet__spin,
 .continue-sheet__spin,
-.arch-btn__spin {
+.arch-btn__spin,
+.ad-btn__spin {
   margin-right: 2px;
 }

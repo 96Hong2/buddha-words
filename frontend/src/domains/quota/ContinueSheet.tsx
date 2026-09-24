@@ -208,7 +208,8 @@ export function ContinueSheet({
           */}
           {hasLeaf
             ? '모아 둔 연꽃으로 바로 이어갈 수 있어요'
-            : '짧은 영상이 끝나면 바로 이어 드릴게요'}
+            : /* 전면형은 닫아도 이어진다. 「끝나면」은 끝까지 봐야 한다는 말로 읽힌다 */
+              '짧은 영상이 지나가면 바로 이어 드릴게요'}
         </p>
 
         <div className="continue-sheet__actions">

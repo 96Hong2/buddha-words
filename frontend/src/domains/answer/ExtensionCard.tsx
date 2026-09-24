@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { LeafAltAdButton, LeafUseButton } from '../../shared/ui';
+import { LeafAltAdButton, LeafUseButton, Spinner } from '../../shared/ui';
 import { adLead } from '../ads/placement';
 
 type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
@@ -20,6 +20,18 @@ const AD_LEAD = adLead('extension');
  */
 const received = new Map<string, ApiExtension>();
 const listeners = new Set<() => void>();
+
+/**
+ * 값을 이미 치른 답변. **연꽃이든 광고든 한 번 낸 것은 여기 남는다.**
+ *
+ * 받아 온 결과와 따로 두는 이유는, 치르고 나서 **가져오기가 실패할 수 있기** 때문이다.
+ * 그때 「다시 받아보기」는 컴포넌트 state(`phase`)에만 있었다. 보관함에 갔다 오면 카드가
+ * 다시 만들어지면서 그 state 가 사라지고, 처음 화면(연꽃·광고 버튼)으로 돌아간다.
+ * **연꽃은 이미 빠졌는데 값을 또 내야 한다**(2026-09-24 리뷰).
+ *
+ * 저장소에 적지 않는다. 답 하나에 매인 값이고 앱을 다시 열면 그 답도 화면에 없다.
+ */
+const paidFor = new Set<string>();
 
 function keep(answerId: string, extension: ApiExtension): void {
   received.set(answerId, extension);
@@ -102,6 +114,8 @@ export function ExtensionCard({
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [failure, setFailure] = useState('');
+  /** 무엇으로 치렀나. 실패 문구가 「다시 치르지 않아도 된다」를 말할 때 쓴다 */
+  const [paidWith, setPaidWith] = useState<'ad' | 'leaf'>('ad');
   /**
    * 받은 결과는 카드 밖에 둔 것을 그대로 읽는다.
    *
@@ -110,7 +124,50 @@ export function ExtensionCard({
    */
   const result = useExtensionResult(answerId);
   const cardRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
   const viewLogged = useRef(false);
+  /**
+   * 지금 단계를 **클로저 밖에서** 본다.
+   *
+   * 연꽃 버튼은 꽃이 날아가는 0.84초 뒤에 `onClick` 을 부르는데, 그 함수는 눌린 순간의
+   * 렌더에 묶여 있다. 그 사이에 아래 광고 버튼을 누르면 `phase` 는 `watching` 이 되지만
+   * 예약된 쪽은 옛 `idle` 을 보고 가드를 그냥 지나간다. 연꽃과 광고가 둘 다 나간다.
+   */
+  const phaseRef = useRef<Phase>('idle');
+  phaseRef.current = phase;
+  /** 되살리기를 이미 걸었나. 마운트 한 번에 한 번이면 된다 */
+  const revived = useRef<string | null>(null);
+
+  /*
+    이미 치렀는데 결과가 없는 채로 다시 그려졌다. **값을 또 받지 않고 곧바로 가져온다.**
+    치르고 나서 가져오기가 실패한 뒤 보관함에 갔다 온 사람이 이 길로 온다.
+  */
+  useEffect(() => {
+    if (result != null || phase !== 'idle' || !paidFor.has(answerId)) return;
+    /*
+      마운트당 한 번만 건다. 개발 판의 StrictMode 는 효과를 두 번 돌리는데, 그때 `phase` 가
+      아직 `idle` 이라 가져오기가 두 번 나갔다. 서버에는 같은 요청이 겹쳐 들어간다.
+    */
+    if (revived.current === answerId) return;
+    revived.current = answerId;
+    void build();
+    // build 는 매 렌더 새로 만들어지는 함수라 의존성에 넣으면 무한히 돈다.
+    // 여기서 보는 것은 「이 답변을 이미 치렀나」 하나다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answerId, phase, result]);
+
+  /*
+    받아 온 자리로 포커스를 옮긴다.
+    누른 버튼이 사라지면서 포커스가 문서 맨 위로 떨어지는데, 이 카드는 긴 답변 맨 아래에
+    있어서 키보드·보이스오버로 온 사람은 결과를 다시 찾으려면 처음부터 훑어 내려와야 한다.
+
+    `phase` 가 `done` 일 때만 옮긴다. 보관함에 갔다 오면 카드가 다시 그려지는데 그때는
+    `idle` 이라, 아무것도 안 눌렀는데 화면이 아래로 튀는 일이 없다.
+  */
+  useEffect(() => {
+    if (phase !== 'done') return;
+    resultRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -122,7 +179,7 @@ export function ExtensionCard({
           viewLogged.current = true;
           analytics.log(
             'deep_extension_view',
-            { answer_id: answerId, route, ad_supported: adReady },
+            { answer_id: answerId, route, ad_supported: adSupported },
             { kind: 'impression' },
           );
           observer.disconnect();
@@ -132,7 +189,7 @@ export function ExtensionCard({
     );
     observer.observe(card);
     return () => observer.disconnect();
-  }, [adReady, analytics, answerId, route]);
+  }, [adSupported, analytics, answerId, route]);
 
   /**
    * 보상을 받은 뒤 본문을 가져온다. 광고는 여기 없다.
@@ -165,6 +222,7 @@ export function ExtensionCard({
 
   // 광고 자체의 로그(start · complete · fail)는 광고를 띄운 쪽이 남긴다. 여기서 또 찍지 않는다
   async function watch() {
+    setPaidWith('ad');
     setPhase('watching');
 
     let granted = true;
@@ -180,6 +238,7 @@ export function ExtensionCard({
       return;
     }
 
+    paidFor.add(answerId);
     await build();
   }
 
@@ -190,8 +249,10 @@ export function ExtensionCard({
    * 잔액을 쥔 쪽과 쓰는 쪽이 갈라진다.
    */
   function payWithLeaf() {
-    if (onUseLeaf == null || phase !== 'idle') return;
+    if (onUseLeaf == null || phaseRef.current !== 'idle') return;
     if (!onUseLeaf()) return;
+    paidFor.add(answerId);
+    setPaidWith('leaf');
     void build();
   }
 
@@ -213,7 +274,12 @@ export function ExtensionCard({
       <p className="eyebrow">조금 더 깊게 보고 싶다면</p>
 
       {result != null ? (
-        <div className="ext-result" {...testId(TEST_IDS.extensionResult)}>
+        <div
+          ref={resultRef}
+          tabIndex={-1}
+          className="ext-result"
+          {...testId(TEST_IDS.extensionResult)}
+        >
           <div className="scripture">
             <p className="text">{result.scripture.text}</p>
             <p className="cite">{attributionLine(result.scripture)}</p>
@@ -240,7 +306,12 @@ export function ExtensionCard({
           </p>
 
           {phase === 'building' ? (
-            <div className="pending" style={{ marginTop: 'var(--s-4)' }}>
+            /*
+              ⚠ 버튼이 사라지고 이 블록이 들어선다. 시트 둘은 `BottomSheet` 가 포커스를
+              가두고 돌려주지만 이 카드는 문서 흐름에 그냥 놓여 있어 그 보호가 없다.
+              최소한 **지금 무슨 일이 도는지는 읽히게** 한다(2026-09-24 리뷰).
+            */
+            <div className="pending" role="status" style={{ marginTop: 'var(--s-4)' }}>
               <p className="pending__line">{'다른 관점으로\n한 번 더 보고 있어요'}</p>
               <span className="dots" aria-hidden="true">
                 <i />
@@ -257,9 +328,16 @@ export function ExtensionCard({
             <div style={{ marginTop: 'var(--s-4)' }}>
               {/*
                 이 분기에는 광고 버튼이 없어 배지도 없다. 그래서 여기서 「광고」를 한 번
-                쓸 수 있고, 30초를 이미 치른 사람이 가장 먼저 하는 걱정이 그것이다.
+                쓸 수 있고, 값을 이미 치른 사람이 가장 먼저 하는 걱정이 그것이다.
+
+                ⚠ **무엇으로 치렀는지에 맞춰 말한다.** 연꽃으로 온 사람에게 「광고를 다시
+                보지 않아도 돼요」라고 하면, 광고를 본 적도 없는데 광고 이야기를 듣고
+                정작 궁금한 것(연꽃을 또 써야 하나)에는 답을 못 듣는다(2026-09-24 리뷰).
               */}
-              <p role="status">{failure} 광고를 다시 보지 않아도 돼요.</p>
+              <p role="status">
+                {failure}{' '}
+                {paidWith === 'leaf' ? '연꽃을 다시 쓰지 않아도 돼요.' : '광고를 다시 보지 않아도 돼요.'}
+              </p>
               <button type="button" className="ad-btn" onClick={() => void build()}>
                 다시 받아보기
               </button>
@@ -273,7 +351,7 @@ export function ExtensionCard({
             <div className="ext-choices">
               <LeafUseButton
                 count={leaves}
-                action="다른 관점 보기"
+                action="다른 관점 하나 더 보기"
                 disabled={phase === 'watching'}
                 onClick={payWithLeaf}
                 testKey="leafSpendExtension"
@@ -282,7 +360,7 @@ export function ExtensionCard({
               {adSupported && (
                 <LeafAltAdButton
                   lead={AD_LEAD}
-                  label="보고 다른 관점 보기"
+                  label="보고 다른 관점 하나 더 보기"
                   disabled={!adReady}
                   busy={phase === 'watching'}
                   busyLabel="준비하고 있어요"
@@ -299,7 +377,13 @@ export function ExtensionCard({
               onClick={() => void watch()}
               {...testId(TEST_IDS.extensionCta)}
             >
-              {adReady ? (
+              {phase === 'watching' || !adReady ? (
+                <>
+                  {/* 흐려지기만 하면 멈춘 것으로 읽힌다. 다른 광고 버튼 넷과 같이 도는 표를 둔다 */}
+                  <Spinner className="ad-btn__spin" />
+                  준비하고 있어요
+                </>
+              ) : (
                 <>
                   {/* 광고 자리 넷이 같은 말투다: 얼마나 걸리는지와 무엇을 얻는지를 한 줄에 */}
                   {AD_LEAD != null && `${AD_LEAD} `}
@@ -308,8 +392,6 @@ export function ExtensionCard({
                   </span>{' '}
                   보고 다른 관점 하나 더 보기
                 </>
-              ) : (
-                '준비하고 있어요'
               )}
             </button>
           )}

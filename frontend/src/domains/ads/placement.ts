@@ -113,24 +113,11 @@ export const LEAVES_PER_REWARDED_AD = 2;
 const TEST_REWARDED = import.meta.env.DEV ? 'ait-ad-test-rewarded-id' : null;
 const TEST_INTERSTITIAL = import.meta.env.DEV ? 'ait-ad-test-interstitial-id' : null;
 
-/** 빌드 때 넣는 환경변수 이름. 값은 `frontend/.env.example` 을 본다 */
-export const AD_GROUP_ENV: Record<AdPlacement, string> = {
-  extension: 'VITE_AD_GROUP_EXTENSION',
-  continue: 'VITE_AD_GROUP_CONTINUE',
-  save: 'VITE_AD_GROUP_SAVE',
-  collect: 'VITE_AD_GROUP_COLLECT',
-};
-
-/**
- * 전면형 자리가 함께 쓰는 그룹. **보상형 그룹과 이름을 따로 둔다.**
- *
- * 한 이름에 두 종류를 담으면, 종류가 어긋난 그룹으로 광고를 부르게 된다. 콘솔이 발급한
- * 그룹 하나에는 종류가 박혀 있고 그것을 코드가 고를 수 없다.
- */
-export const AD_GROUP_INTERSTITIAL_ENV = 'VITE_AD_GROUP_INTERSTITIAL';
-
-/** 자리마다 따로 안 줬을 때 보상형 자리가 함께 쓰는 그룹 */
-export const AD_GROUP_FALLBACK_ENV = 'VITE_AD_GROUP_DEFAULT';
+/*
+  환경변수 이름을 표로 내보내던 것(`AD_GROUP_ENV` 등 셋)은 걷었다. 부르는 곳이 한 군데도
+  없으면서, 길목 셋을 아직 보상형 변수에 매핑하고 있어 **다음 사람이 그 표를 믿는다.**
+  실제로 읽는 자리는 아래 `adGroupId` 하나뿐이다(2026-09-24 리뷰).
+*/
 
 function trimmed(raw: unknown): string | null {
   return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : null;
@@ -154,7 +141,11 @@ export function adGroupId(placement: AdPlacement): string | null {
   /*
     전면형 자리는 전면형 그룹만 쓴다. 보상형 공용 그룹으로 떨어지면 종류가 어긋나
     광고가 아예 안 뜨거나 30초짜리가 나온다. 값이 없으면 광고 없이 지나가고
-    `ad_skipped(reason='no_group')` 으로 남는다. 번들 검사가 그 빌드를 막는다.
+    `ad_skipped(reason='no_group')` 으로 남는다.
+
+    번들 검사는 **광고 그룹을 하나라도 준 빌드에서만** 이것을 막는다. 하나도 안 준 빌드는
+    개발·검증용이라 그냥 통과시킨다. 운영 빌드에서 그룹을 통째로 빠뜨리면 검사도 못 잡으니,
+    빌드 끝에 찍히는 요약 줄(「전면형 그룹 없음」)을 눈으로 본다.
   */
   if (AD_KIND[placement] === 'interstitial') {
     return trimmed(import.meta.env.VITE_AD_GROUP_INTERSTITIAL) ?? TEST_INTERSTITIAL;

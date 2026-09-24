@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { useRewardedAd } from '../../domains/ads/useRewardedAd';
+import { useRewardedAd, type AdPass } from '../../domains/ads/useRewardedAd';
 import { AnswerScreen } from '../../domains/answer/AnswerScreen';
 import { useExtensionResult } from '../../domains/answer/ExtensionCard';
 import {
@@ -357,38 +357,55 @@ export function AnswerRoute() {
     analytics.log('save_gate_accept', { answer_id: answer.answerId }, { kind: 'click' });
     setGateBailed(false);
     setGateBusy(true);
-    let passed = false;
+    let outcome: AdPass = 'noFill';
     try {
-      passed = (await saveAd.pass(answer.answerId)) === 'passed';
+      outcome = await saveAd.pass(answer.answerId);
     } catch {
-      passed = false;
+      outcome = 'noFill';
     }
     setGateBusy(false);
-    if (passed) {
+    if (outcome === 'passed') {
       setGateOpen(false);
       afterStore(store('ad'));
       return;
     }
-    // 광고가 **뜨지도 못한** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다
-    if (!saveAd.supported) {
+    /*
+      광고가 **한 장도 안 온** 판이면 간직을 막지 않는다. 광고 사정으로 기능이 죽는다.
+      이어가기 시트가 같은 자리에서 같은 판정을 한다. 한때 이 갈래가 `supported` 만 보고
+      있어서, 띄울 수는 있는데 광고가 안 오는 기기에서는 막힌 채 **「보상을 받기 전에
+      닫아서」라고 사람을 탓했다**(2026-09-24 리뷰).
+    */
+    if (outcome === 'noFill') {
+      analytics.log('ad_skipped', { placement: 'save', reason: 'no_fill' });
       setGateOpen(false);
       afterStore(store('free'));
       return;
     }
     /*
       보상을 받기 전에 닫았다. **시트를 닫지 않고 그 자리에서 말한다.**
+      보상형 판에서만 닿는 갈래다. 전면형에는 닫는 것이 정상 종료라 이 결말이 없다.
 
       한때 조용히 닫았다. 스스로 닫은 것을 실패라고 말할 일은 아니지만, 아무 말도 없으면
-      담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다. 이어가기 시트가 같은 자리에서
-      같은 방식으로 말한다(2026-09-23 리뷰).
+      담긴 줄 알고 보관함에 갔다가 없는 것을 발견한다(2026-09-23 리뷰).
     */
     setGateBailed(true);
   }, [afterStore, analytics, answer, gateBusy, saveAd, store]);
 
-  const watchAd = useCallback(
-    async () => (await ad.pass(answer?.answerId)) === 'passed',
-    [ad, answer],
-  );
+  /**
+   * 다른 관점 광고를 띄운다. 돌려주는 값이 true 면 본문을 가져가도 된다.
+   *
+   * **광고가 한 장도 안 오면 막지 않는다.** 다른 두 자리와 같은 규칙이다. 한때 이 자리만
+   * `passed` 아닌 것을 전부 「스스로 닫았다」로 읽어서, 광고가 안 오는 기기에서는 아무 말
+   * 없이 원래 버튼으로 돌아갔다. 연꽃이 없으면 그 자리가 영영 안 열린다(2026-09-24 리뷰).
+   */
+  const watchAd = useCallback(async () => {
+    const outcome = await ad.pass(answer?.answerId);
+    if (outcome === 'noFill') {
+      analytics.log('ad_skipped', { placement: 'extension', reason: 'no_fill' });
+      return true;
+    }
+    return outcome === 'passed';
+  }, [ad, analytics, answer]);
 
   /**
    * 「연꽃 한 송이로 다른 관점 보기」를 눌렀다. 광고를 띄우지 않는다.

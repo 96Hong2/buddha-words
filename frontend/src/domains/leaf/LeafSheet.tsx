@@ -63,8 +63,12 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
    * `dismissed` 는 사람이 닫은 것이고 `noFill` 은 **우리 쪽 사정**이다. 둘을 한 말로
    * 뭉치면 광고가 안 온 사람에게 「끝까지 봐야」라고 탓하게 된다. 한때 `noFill` 을 아무
    * 말 없이 지나쳤는데, 8초를 기다린 사람 앞에 잔액도 그대로이고 설명도 없었다.
+   *
+   * `stalled` 는 셋째다. **광고는 떴는데 끝 신호가 안 와서** 시간 제한으로 접은 경우다.
+   * 결과값은 `noFill` 과 같아서 갈라 두지 않으면 「지금은 열 수 없어요」가 뜨는데,
+   * 그 사람은 광고를 이미 다 봤다. 사실과 정반대다(2026-09-24 리뷰).
    */
-  const [failed, setFailed] = useState<'dismissed' | 'noFill' | null>(null);
+  const [failed, setFailed] = useState<'dismissed' | 'noFill' | 'stalled' | null>(null);
   const logged = useRef(false);
 
   /**
@@ -100,10 +104,15 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
   const watch = useCallback(async () => {
     setFailed(null);
     setJustEarned(false);
-    const outcome = await ad.show();
+    let stalled = false;
+    const outcome = await ad.show(undefined, {
+      onStalled: () => {
+        stalled = true;
+      },
+    });
     // 보상을 받은 사람에게만 준다. 닫은 사람에게 주면 보상형 규칙에 어긋난다
     if (outcome !== 'watched') {
-      setFailed(outcome === 'dismissed' ? 'dismissed' : 'noFill');
+      setFailed(outcome === 'dismissed' ? 'dismissed' : stalled ? 'stalled' : 'noFill');
       return;
     }
     // 잔액은 시트가 닫혀 있어도 늘려야 한다. 광고를 끝까지 본 것은 사실이다
@@ -141,11 +150,13 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
         <p className="leaf-sheet__sub">
           {canCollect ? (
             <>
-              미리 모아 두면 <b>기다리지 않고</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
+              미리 모아 두면 <b>기다리지 않고</b> 이야기를 이어가거나, 말씀을 간직하거나,
+              다른 관점을 볼 수 있어요.
             </>
           ) : (
             <>
-              가진 연꽃으로 <b>기다리지 않고</b> 이야기를 이어가거나 말씀을 간직할 수 있어요.
+              가진 연꽃으로 <b>기다리지 않고</b> 이야기를 이어가거나, 말씀을 간직하거나,
+              다른 관점을 볼 수 있어요.
             </>
           )}
         </p>
@@ -194,9 +205,12 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
                 : failed === 'dismissed'
                   ? // 무엇이 모자랐는지 정확히 말한다. 「끝까지」는 사람마다 다르게 읽힌다
                     '보상을 받기 전에 닫아서 연꽃이 생기지 않았어요'
-                  : failed === 'noFill'
-                    ? '지금은 열 수 없어요. 잠시 뒤에 다시 눌러 주세요'
-                    : ''}
+                  : failed === 'stalled'
+                    ? // 광고는 떴고 다 봤다. 신호를 못 받은 것은 우리 쪽 사정이다
+                      '광고는 끝났는데 결과를 못 받았어요. 다시 한 번 눌러 주세요'
+                    : failed === 'noFill'
+                      ? '지금은 열 수 없어요. 잠시 뒤에 다시 눌러 주세요'
+                      : ''}
             </p>
           </>
         )}
@@ -208,6 +222,7 @@ export function LeafSheet({ open, onClose }: LeafSheetProps) {
         <ul className="leaf-sheet__uses" aria-labelledby="leaf-uses-title">
           <li>이야기를 이어갈 때 한 송이</li>
           <li>말씀을 보관함에 간직할 때 한 송이</li>
+          <li>답변 끝에서 다른 관점을 볼 때 한 송이</li>
           {/* 쌓아 둘 수 있다는 사실. 한 송이만 모을 수 있는 줄 아는 사람이 있다 */}
           <li>몇 송이든 모아 둘 수 있어요</li>
         </ul>

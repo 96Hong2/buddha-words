@@ -168,7 +168,7 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
         {!enabled ? (
           <>
             <h2 className="pw-title" id="pw-title">
-              30초 광고를 보면 간직할 수 있어요
+              광고를 보면 간직할 수 있어요
             </h2>
             <p className="pw-sub">간직할 수 있는 개수에는 제한이 없어요.</p>
           </>
@@ -185,7 +185,7 @@ export function Paywall({ open, trigger, onClose, onPurchase, onPurchased }: Pay
               기다리지 않고 간직할까요?
             </h2>
             <p className="pw-sub">
-              간직할 때마다 보는 30초 광고가 없어져요. 개수 제한은 원래 없어요.
+              간직할 때마다 보는 광고가 없어져요. 개수 제한은 원래 없어요.
             </p>
 
             {/*

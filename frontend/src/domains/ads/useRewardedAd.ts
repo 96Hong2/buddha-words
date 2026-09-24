@@ -223,6 +223,7 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
           */
           onStalled: () => {
             stalled = true;
+            hooks?.onStalled?.();
           },
         });
       } catch {
