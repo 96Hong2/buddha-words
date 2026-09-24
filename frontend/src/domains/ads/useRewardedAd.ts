@@ -15,11 +15,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useBridge } from '../../app/providers';
 import { elapsedBucket, immediateBucket, useAnalytics } from '../../shared/analytics';
 import { readAdOptOut } from '../../shared/lib/adOptOut';
+import { clearAdOnScreen, markAdOnScreen } from '../../shared/lib/stuckAd';
 import type { FullScreenAdHooks } from '../../shared/toss';
-import {
-  FULL_SCREEN_SHOW_TIMEOUT_MS,
-  INTERSTITIAL_SHOW_TIMEOUT_MS,
-} from '../../shared/toss/fullScreenAdFlow';
 
 import { AD_KIND, adGroupId, type AdPlacement } from './placement';
 
@@ -215,37 +212,34 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       let shownAt = 0;
       let stalled = false;
       try {
-        outcome = await bridge.ads.showFullScreen(
-          group,
-          {
-            onShown: () => {
-              shownAt = Date.now();
-              hooks?.onShown?.();
-            },
+        outcome = await bridge.ads.showFullScreen(group, {
+          onShown: () => {
+            shownAt = Date.now();
             /*
-              광고는 떴는데 끝 신호가 안 왔다. 결과는 `noFill` 과 같지만 원인이 반대다:
-              저쪽은 광고가 한 장도 안 온 것이고 이쪽은 이미 본 것이다. 갈라 세지 않으면
-              「광고가 안 온다」로 읽고 엉뚱한 데를 고친다.
+              **광고가 떠 있다고 저장소에 적는다.** 여기서 갇힌 사람은 앱을 끄고 나가므로
+              살아 있는 동안 아무 로그도 못 남긴다. 다음에 앱을 열 때 이 표로 센다.
             */
-            onStalled: () => {
-              stalled = true;
-              hooks?.onStalled?.();
-            },
+            void markAdOnScreen(bridge.storage, placement);
+            hooks?.onShown?.();
           },
           /*
-            전면형은 일찍 접는다. 닫는 것이 정상 종료라 끊어도 잃는 사람이 없고,
-            멈춘 광고에 사람이 갇혀 있는 동안 우리 쪽까지 같이 멈춰 있을 이유가 없다.
+            광고는 떴는데 끝 신호가 안 왔다. 결과는 `noFill` 과 같지만 원인이 반대다:
+            저쪽은 광고가 한 장도 안 온 것이고 이쪽은 이미 본 것이다. 갈라 세지 않으면
+            「광고가 안 온다」로 읽고 엉뚱한 데를 고친다.
           */
-          AD_KIND[placement] === 'interstitial'
-            ? INTERSTITIAL_SHOW_TIMEOUT_MS
-            : FULL_SCREEN_SHOW_TIMEOUT_MS,
-        );
+          onStalled: () => {
+            stalled = true;
+            hooks?.onStalled?.();
+          },
+        });
       } catch {
         // 브릿지가 던져도 여기서 끝낸다. 부르는 쪽이 광고 하나 때문에 멈추면 안 된다
         outcome = 'noFill';
       } finally {
         covering -= 1;
         setShowing(false);
+        // 어떤 결말이든 여기까지 왔으면 앱이 살아 있었다. 갇힌 판이 아니다
+        void clearAdOnScreen(bridge.storage);
       }
 
       /*

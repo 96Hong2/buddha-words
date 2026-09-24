@@ -525,7 +525,7 @@ export function AnswerRoute() {
       */}
       {nudge != null &&
         !gateOpen &&
-        !leafOpen &&
+        leafOpen == null &&
         !shareOpen &&
         done == null &&
         paywallOpen === false && (

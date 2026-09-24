@@ -245,3 +245,36 @@ test('여기서 연 연꽃 모으기를 닫으면 간직 시트가 따라 열리
   await card.getByTestId('leaf-collect-extension').click();
   await expect(page.getByTestId('leaf-sheet')).toBeVisible();
 });
+
+test('연꽃이 날아가는 동안에는 모으러 가는 길이 잠긴다', async ({ page }) => {
+  /*
+    연꽃 버튼은 꽃이 날아가는 **0.84초 뒤에** 실제 차감을 시작한다. 그 사이에 바로 아래
+    모으기 카드를 누르면 연꽃 시트가 열리고, 예약돼 있던 차감이 그 시트 뒤에서 터진다.
+    시트는 「0송이」를 보여 주고, 치른 값으로 받은 관점은 시트에 가려 안 보인다.
+
+    시트 둘(이어가기 · 간직)에는 이 구멍이 없다. 모으기를 누르면 그 시트가 통째로
+    사라지면서 예약된 타이머까지 걷힌다. **이 카드는 답변 본문에 놓여 있어 살아남는다.**
+    모으기 길을 여기 내면서 처음 생긴 조합이라 그 자리를 잰다.
+  */
+  await withLeaves(page, 1);
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = await scrollToExtension(page);
+  const collect = card.getByTestId('leaf-collect-extension');
+  await expect(collect).toBeEnabled();
+
+  await page.getByTestId('leaf-spend-extension').click();
+  // 꽃이 아직 날고 있다. 이 순간 다른 길로 빠져나가면 안 된다
+  await expect(collect).toBeDisabled();
+
+  // 꽃이 닿으면 하던 일이 시작되고, 카드는 결과 자리로 넘어간다
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('leaf-sheet')).toHaveCount(0);
+
+  const balance = await page.evaluate(() => {
+    const raw = localStorage.getItem('buddha.leaves.v1');
+    return raw == null ? null : (JSON.parse(raw) as { count: number }).count;
+  });
+  expect(balance, '한 번에 한 송이만 나가야 해요').toBe(0);
+});

@@ -21,6 +21,14 @@ export interface LeafUseButtonProps {
   action: string;
   disabled?: boolean;
   onClick: () => void;
+  /**
+   * 꽃이 **날아가기 시작했다.** 실제 동작은 아직 0.84초 뒤다.
+   *
+   * 그 사이에 같은 화면의 다른 길로 빠져나갈 수 있으면, 예약된 동작이 엉뚱한 자리에서
+   * 터진다. 시트 안에서는 시트가 통째로 사라지면서 타이머도 걷히지만, 문서 흐름에 놓인
+   * 카드는 살아남아 그대로 돈다. 부르는 쪽이 그동안 다른 길을 잠그라고 알린다.
+   */
+  onFlyStart?: () => void;
   /** 자리마다 다른 셀렉터. e2e 가 둘을 갈라 본다 */
   testKey: 'leafSpendContinue' | 'leafSpendExtension' | 'leafSpendSave';
 }
@@ -43,6 +51,7 @@ export function LeafUseButton({
   action,
   disabled = false,
   onClick,
+  onFlyStart,
   testKey,
 }: LeafUseButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -70,6 +79,7 @@ export function LeafUseButton({
       return;
     }
     setPhase('flying');
+    onFlyStart?.();
     timers.current = [
       // 꽃이 **닿는 순간** 숫자가 준다. 누르자마자 줄면 날아오는 그림과 따로 논다
       window.setTimeout(() => setPhase('landed'), LEAF_FLIGHT_MS - 60),

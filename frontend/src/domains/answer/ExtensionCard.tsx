@@ -144,6 +144,17 @@ export function ExtensionCard({
    */
   const phaseRef = useRef<Phase>('idle');
   phaseRef.current = phase;
+  /**
+   * 연꽃 한 송이가 버튼으로 날아가는 중인가.
+   *
+   * 그 버튼은 **0.84초 뒤에** 실제 동작을 시작한다. 그 사이에 바로 아래 모으기 카드를
+   * 누르면 연꽃 시트가 열리고, 예약돼 있던 차감이 그 시트 뒤에서 터진다. 시트는
+   * 「0송이」를 보여 주고 치른 값으로 받은 관점은 시트에 가려 안 보인다.
+   *
+   * 시트 둘(이어가기 · 간직)에는 이 구멍이 없다. 모으기를 누르면 그 시트가 통째로
+   * 사라지면서 예약된 타이머까지 걷힌다. 이 카드는 답변 본문에 놓여 있어 살아남는다.
+   */
+  const [leafFlying, setLeafFlying] = useState(false);
   /** 되살리기를 이미 걸었나. 마운트 한 번에 한 번이면 된다 */
   const revived = useRef<string | null>(null);
 
@@ -258,6 +269,8 @@ export function ExtensionCard({
    * 잔액을 쥔 쪽과 쓰는 쪽이 갈라진다.
    */
   function payWithLeaf() {
+    // 꽃이 닿았다. 잔액이 모자라 아무 일도 안 일어나는 길도 여기서 함께 푼다
+    setLeafFlying(false);
     if (onUseLeaf == null || phaseRef.current !== 'idle') return;
     if (!onUseLeaf()) return;
     paidFor.add(answerId);
@@ -363,6 +376,7 @@ export function ExtensionCard({
                 action="다른 관점 하나 더 보기"
                 disabled={phase === 'watching'}
                 onClick={payWithLeaf}
+                onFlyStart={() => setLeafFlying(true)}
                 testKey="leafSpendExtension"
               />
               {/* 광고를 못 띄우는 기기에서는 이 줄을 아예 그리지 않는다 */}
@@ -416,8 +430,8 @@ export function ExtensionCard({
           {onCollectLeaf != null && phase !== 'building' && phase !== 'failed' && (
             <LeafCollectCta
               count={leaves}
-              action="봐요"
-              disabled={phase === 'watching'}
+              action="한 번 더 봐요"
+              disabled={phase === 'watching' || leafFlying}
               onClick={onCollectLeaf}
               testKey="leafCollectExtension"
             />

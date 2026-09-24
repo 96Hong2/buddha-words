@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 
 import { useWelcomeLeaf } from '../domains/leaf';
 import { useAnalytics } from '../shared/analytics';
+import { takeStuckAd } from '../shared/lib/stuckAd';
 import { recordVisit } from '../shared/lib/visitLog';
 
 import { useBridge } from './providers';
@@ -47,6 +48,20 @@ export function SessionTracker() {
   useEffect(() => {
     if (opened.current) return;
     opened.current = true;
+
+    /*
+      지난번에 광고가 뜬 채로 앱이 끝났나. **그 판은 살아 있는 동안 로그를 못 남긴다.**
+      광고가 멈춰 닫기도 안 먹으면 사람은 앱을 끄고 나가고, 우리 시간 제한(90초)이
+      `show_timeout` 을 찍기 전에 웹뷰가 죽는다. 그래서 여기서 뒤늦게 센다.
+
+      광고를 닫는 길은 우리에게 없다(SDK 에 그 함수가 없다). 이 수는 고치기 위한 것이
+      아니라 **얼마나 자주 나는지 알기 위한 것**이고, 콘솔에 신고할 근거이자 광고 자리를
+      줄일지 정하는 근거다.
+    */
+    void takeStuckAd(bridge.storage).then((placement) => {
+      if (placement == null) return;
+      analytics.log('ad_stuck_exit', { placement });
+    });
 
     const entry = entryOf(window.location.pathname);
     void recordVisit(bridge.storage, Date.now()).then((visit) => {
