@@ -83,6 +83,25 @@ interface HomeNavState {
   gatedQuota?: Quota;
 }
 
+/**
+ * 「오늘의 말씀 보기」로 들어온 뒤 시트를 펼쳐 줄 시간.
+ *
+ * 이 안에 구절이 안 닿으면 포기한다. 열어 두면 한참 뒤 재연결로 구절이 닿았을 때
+ * 엉뚱한 화면 위로 시트가 튀어오른다.
+ */
+const DAILY_DEEPLINK_WINDOW_MS = 10_000;
+
+/** 그려지는 순간 한 번만 알린다. 렌더 함수 안에서 효과를 낼 자리가 여기뿐이다 */
+function OpenOnce({ onFire }: { onFire: () => void }) {
+  const fired = useRef(false);
+  useEffect(() => {
+    if (fired.current) return;
+    fired.current = true;
+    onFire();
+  }, [onFire]);
+  return null;
+}
+
 export function HomeRoute() {
   const navigate = useNavigate();
   const { state, pathname } = useLocation();
@@ -103,28 +122,42 @@ export function HomeRoute() {
   );
 
   /**
-   * 미니앱 상세의 「주요 기능」에서 들어왔다.
+   * 미니앱 상세의 「주요 기능」으로 들어온 길.
    *
-   * 마운트에 한 번만 센다. 시트를 닫아도 경로는 `/today` 로 남아 있어서, ref 없이 두면
-   * 다시 그릴 때마다 같은 한 사람이 여러 번 센다.
+   * 두 가지를 한 자리에서 한다: 한 번만 세는 것과, 구절이 닿으면 시트를 펼칠 **창**을
+   * 여는 것이다.
+   *
+   * ⚠ **창에 시간 제한을 둔다.** 구절 조회가 실패하면 시트를 못 열고, 깃발만 켜진 채
+   * 남는다. 그 사람이 뒤로 나와 홈에서 글을 쓰는 동안 연결이 돌아와 구절이 늦게 닿으면,
+   * **쓰던 화면 위로 시트가 튀어오르고 포커스를 뺏는다.** 그래서 창이 닫히면 포기한다.
+   *
+   * ⚠ **온보딩 중에는 세지 않는다.** 훅은 온보딩 화면보다 먼저 돌아서, 첫 실행인 사람은
+   * 두 장을 넘기는 동안 이미 「오늘의 말씀을 봤다」로 찍힌다.
    */
   const mainFeatureLogged = useRef(false);
+  const dailyDeepLink = useRef(false);
   useEffect(() => {
-    if (pathname !== ROUTES.today || mainFeatureLogged.current) return;
-    mainFeatureLogged.current = true;
-    analytics.log('main_feature_open', { feature: 'today' }, { kind: 'screen' });
-  }, [analytics, pathname]);
+    if (pathname !== ROUTES.today || onboarding) return;
+    dailyDeepLink.current = true;
+    const give = setTimeout(() => {
+      dailyDeepLink.current = false;
+    }, DAILY_DEEPLINK_WINDOW_MS);
+    if (!mainFeatureLogged.current) {
+      mainFeatureLogged.current = true;
+      analytics.log('main_feature_open', { feature: 'today' }, { kind: 'screen' });
+    }
+    return () => clearTimeout(give);
+  }, [analytics, onboarding, pathname]);
 
   const [quota, setQuota] = useState<QuotaState>(readQuota);
   const [continueOpen, setContinueOpen] = useState(false);
   /**
-   * 오늘의 한마디 시트.
+   * 오늘의 한마디 시트. `/today` 로 들어왔으면 구절이 닿는 순간 펼쳐진다.
    *
-   * `/today` 로 들어왔으면 펼친 채로 시작한다. 콘솔 「주요 기능」에서 이름을 보고 누른
-   * 사람이라, 홈에 내려놓고 카드를 한 번 더 찾게 하면 그 이름이 거짓이 된다.
-   * 구절이 아직 안 왔으면 시트 자체가 안 그려지고, 도착하는 순간 열린 채로 올라온다.
+   * 콘솔 「주요 기능」에서 이름을 보고 누른 사람이라, 홈에 내려놓고 카드를 한 번 더 찾게
+   * 하면 그 이름이 거짓이 된다.
    */
-  const [dailyOpen, setDailyOpen] = useState(pathname === ROUTES.today);
+  const [dailyOpen, setDailyOpen] = useState(false);
   /**
    * 「어제 적어 드린 그거 해 보셨나요?」로 물어볼 것.
    *
@@ -530,20 +563,49 @@ export function HomeRoute() {
     countReviewShown();
   }, [reviewShowing]);
 
+  /**
+   * 딥링크로 들어온 사람에게 시트를 펼친다. **구절이 닿은 뒤 딱 한 번이다.**
+   *
+   * 카드를 누른 것이 아니므로 `DailyQuoteCard` 의 클릭 로그가 안 나간다. 여기서 대신
+   * 찍는다. 이 이벤트는 콘솔 핵심 지표의 전환 하나이기도 해서, 빠뜨리면 주요 기능으로
+   * 들어온 사람이 전환에서 통째로 사라진다.
+   */
+  const openDailyFromDeepLink = useCallback(
+    (quoteId: string) => {
+      dailyDeepLink.current = false;
+      setDailyOpen(true);
+      analytics.log(
+        'daily_quote_open',
+        { quote_id: quoteId, surface: 'deeplink' },
+        { kind: 'screen' },
+      );
+    },
+    [analytics],
+  );
+
+  /** 시트를 닫으면 경로도 홈으로 되돌린다. 안 되돌리면 뒤로가기 한 번이 허공에 쓰인다 */
+  const closeDaily = useCallback(() => {
+    setDailyOpen(false);
+    if (pathname === ROUTES.today) navigate(ROUTES.home, { replace: true });
+  }, [navigate, pathname]);
+
   const renderCards = useCallback(
     ({ quote, focusField }: HomeCardSlot): ReactNode =>
       quote != null ? (
         <>
+          {dailyDeepLink.current ? (
+            <OpenOnce onFire={() => openDailyFromDeepLink(quote.quoteId)} />
+          ) : null}
           <DailyQuoteCard quote={quote} onOpen={() => setDailyOpen(true)} />
           <DailyQuoteSheet
             open={dailyOpen}
             quote={quote}
-            onClose={() => setDailyOpen(false)}
+            onClose={closeDaily}
             onStart={focusField}
           />
         </>
       ) : null,
-    [dailyOpen],
+    [closeDaily, dailyOpen, openDailyFromDeepLink],
   );
 
   /**
@@ -590,6 +652,8 @@ export function HomeRoute() {
       <HomeScreen
         onSubmit={submit}
         renderCards={renderCards}
+        // 시트가 같은 구절을 펼쳐 놓는 길이다. 카드가 그 뒤에 겹치면 같은 말이 두 번 선다
+        skipEntryCard={pathname === ROUTES.today}
         leafChip={<LeafChip onOpen={() => setLeafOpen(true)} />}
         /*
           맨 앞 자리. **되짚기가 있으면 리뷰는 그날 물러난다.**

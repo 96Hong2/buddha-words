@@ -67,6 +67,14 @@ export interface HomeScreenProps {
   leadCard?: (slot: HomeCardSlot) => ReactNode;
   /** 서비스 줄 오른쪽, 설정 아이콘 옆에 서는 연꽃 잔액 칩 */
   leafChip?: ReactNode;
+  /**
+   * 하루 첫 진입 카드를 띄우지 않는다.
+   *
+   * 「오늘의 말씀 보기」로 들어온 사람에게 쓴다. 그 길로 오면 시트가 이미 같은 구절을
+   * 펼쳐 놓는데, 카드가 그 뒤에 겹쳐 서면 **같은 말을 두 번** 하게 되고 뒤로가기가
+   * 보이지도 않는 카드를 먼저 닫는다. 오늘 몫은 시트가 보여 준 것으로 친다.
+   */
+  skipEntryCard?: boolean;
 }
 
 export function HomeScreen({
@@ -76,6 +84,7 @@ export function HomeScreen({
   topCard,
   leadCard,
   leafChip,
+  skipEntryCard = false,
 }: HomeScreenProps = {}) {
   const navigate = useNavigate();
   const analytics = useAnalytics();
@@ -128,6 +137,11 @@ export function HomeScreen({
     if (quote == null || greeted.current) return;
     greeted.current = true;
     if (!entryTurn) return;
+    // 시트가 이미 같은 구절을 펼쳐 놓았다. 오늘 몫은 쓴 것으로 적고 카드는 띄우지 않는다
+    if (skipEntryCard) {
+      markEntryCardSeen(dateISO);
+      return;
+    }
     markEntryCardSeen(dateISO);
     setEntryOpen(true);
     analytics.log(
@@ -135,7 +149,7 @@ export function HomeScreen({
       { quote_id: quote.quoteId, surface: 'entry_card' },
       { kind: 'impression' },
     );
-  }, [analytics, dateISO, entryTurn, quote]);
+  }, [analytics, dateISO, entryTurn, quote, skipEntryCard]);
 
   const dismissQuote = useCallback(
     (how: EntryCardDismiss) => {

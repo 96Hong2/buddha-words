@@ -13,7 +13,7 @@
 
 export const EVENTS = {
   // 진입
-  app_open:            { params: ['is_first_open', 'open_bucket', 'entry', 'days_since_first_open', 'days_since_last_open'] as const },   // entry: home | share_link | archive | other. 어느 화면으로 들어왔든 한 번 찍힌다
+  app_open:            { params: ['is_first_open', 'open_bucket', 'entry', 'days_since_first_open', 'days_since_last_open'] as const },   // entry: home | share_link | archive | today | other. today 는 주요 기능 「오늘의 말씀 보기」. 어느 화면으로 들어왔든 한 번 찍힌다
   session_start:       { params: ['reason', 'is_first_open', 'days_since_last_open'] as const },   // reason: open | resume. 마지막 활동에서 30분 지나면 새 세션이다
   session_end:         { params: ['reason', 'duration_bucket_s', 'answers', 'ads'] as const },     // reason: background | timeout. ads 는 이 세션에서 화면을 덮은 광고 편수(`ad_close` 로 센다). 완주 여부는 rewarded_ad_complete 가 따로 진다
   // 온보딩 (두 장. variant=none 이면 안 띄우고 바로 입력으로 간다)
@@ -178,7 +178,7 @@ export const EVENTS = {
   main_feature_open:   { params: ['feature'] as const },                                  // feature: today. 주요 기능 전용 경로로 들어온 것만 센다
   // 리텐션
   daily_quote_impression:{ params: ['quote_id', 'surface'] as const },                     // surface: entry_card | home_card
-  daily_quote_open:    { params: ['quote_id', 'surface'] as const },
+  daily_quote_open:    { params: ['quote_id', 'surface'] as const },                     // surface: entry_card | home_card | deeplink. deeplink 는 주요 기능으로 들어와 저절로 펼쳐진 것이다
   entry_card_dismiss:  { params: ['quote_id', 'how'] as const },                           // how: cta | close | backdrop | back
   // 내일 되짚기. **사람이 「내일 물어봐 주세요」를 누른 경우에만** 다음 날 한 번 묻는다
   tomorrow_ask_view:   { params: ['answer_id', 'surface'] as const },                      // 행동 아래 그 버튼이 화면에 들어왔다. surface: answer | archive

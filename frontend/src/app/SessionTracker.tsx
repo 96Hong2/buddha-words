@@ -26,6 +26,7 @@ function entryOf(path: string): string {
   if (path.startsWith('/s/')) return 'share_link';
   if (path === ROUTES.home) return 'home';
   if (path === ROUTES.archive) return 'archive';
+  if (path === ROUTES.today) return 'today';
   return 'other';
 }
 

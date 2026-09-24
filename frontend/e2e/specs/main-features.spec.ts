@@ -11,6 +11,13 @@
  *   고민 상담하기   `/`         입력칸
  *   오늘의 말씀 보기 `/today`   오늘의 한마디 시트가 **펼쳐진 채로**
  *   저장한 말씀 보기 `/archive` 보관함
+ *
+ * ── 이 파일이 조심하는 것 ───────────────────────────────────────────────
+ *
+ * **하루 첫 진입 카드가 덮은 화면도 `toBeVisible()` 은 초록이다.** Playwright 는 가려짐을
+ * 보지 않는다. 이 저장소의 다른 스펙이 전부 `dismissEntry` 로 카드를 치우고 시작하는데
+ * 여기만 안 치우면, 카드가 화면을 덮은 채로 다섯 건이 다 통과한다. 그래서 「눌러서 닫는다」로
+ * 잰다. 가려져 있으면 클릭이 가로채여 실패한다.
  */
 
 import { test, expect } from '../support/fixtures';
@@ -27,8 +34,23 @@ test('오늘의 말씀 보기로 들어오면 한마디가 펼쳐진 채로 선�
   await expect(page.getByTestId('daily-sheet')).toContainText('경전 원문');
 });
 
+test('시트가 같은 구절을 펼쳤으면 진입 카드는 겹쳐 서지 않는다', async ({ page }) => {
+  await page.goto('/today');
+  await expect(page.getByTestId('daily-sheet')).toBeVisible();
+
+  /*
+    하루 첫 진입 카드도 오늘의 한마디를 보여 준다. 시트 뒤에 같이 서면 **같은 말이 두 번**
+    이고, 오버레이 스택에 늦게 들어간 카드를 뒤로가기가 먼저 닫아서 첫 뒤로가기가 화면에서
+    아무 일도 안 하게 된다.
+  */
+  await expect(page.getByTestId('entry-card')).toHaveCount(0);
+});
+
 test('홈으로 들어오면 한마디는 카드로만 있고 저절로 펼쳐지지 않는다', async ({ page }) => {
   await page.goto('/');
+  // 하루 첫 진입이라 카드가 먼저 뜬다. 눌러서 치운다. 가려져 있으면 이 클릭이 실패한다
+  await page.getByTestId('entry-card-cta').click();
+  await expect(page.getByTestId('entry-card')).toHaveCount(0);
 
   /*
     이 짝이 없으면 위 시험은 「시트가 원래 늘 떠 있다」로도 통과한다. 그러면 주요 기능
@@ -38,13 +60,23 @@ test('홈으로 들어오면 한마디는 카드로만 있고 저절로 펼쳐�
   await expect(page.getByTestId('daily-sheet')).toHaveCount(0);
 });
 
-test('펼쳐진 한마디를 닫으면 그 자리가 홈이다', async ({ page }) => {
+test('펼쳐진 한마디를 닫으면 그 자리가 진짜 홈이다', async ({ page }) => {
   await page.goto('/today');
   await expect(page.getByTestId('daily-sheet')).toBeVisible();
 
-  // 닫고 나서 아무것도 없는 화면에 남으면, 바로 들어온 사람은 나갈 길을 잃는다
   await page.getByTestId('daily-sheet').press('Escape');
+  await expect(page.getByTestId('daily-sheet')).toBeHidden();
+
+  /*
+    입력칸이 보이는 것만으로는 모자라다. 경로가 `/today` 로 남아 있으면 그 다음 뒤로가기
+    한 번이 **화면에서 아무 일도 안 하는 데** 쓰인다. 홈과 `/today` 가 같은 화면을 그려서
+    눈으로는 그 이동이 안 보이기 때문이다. 주소까지 홈이어야 한다.
+  */
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByTestId('concern-field')).toBeVisible();
+  // 카드를 눌러서 다시 펼 수 있다. 딥링크로 한 번 열었다고 카드가 죽으면 안 된다
+  await page.getByTestId('daily-card').click();
+  await expect(page.getByTestId('daily-sheet')).toBeVisible();
 });
 
 test('저장한 말씀 보기로 들어오면 보관함이 선다', async ({ page }) => {
@@ -57,6 +89,7 @@ test('저장한 말씀 보기로 들어오면 보관함이 선다', async ({ pag
 
 test('고민 상담하기로 들어오면 입력칸이 선다', async ({ page }) => {
   await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
 
   await expect(page.getByTestId('concern-field')).toBeVisible();
 });
