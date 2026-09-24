@@ -7,6 +7,7 @@
  *   3. 전면형이라 중간에 닫아도 붙는다. 안 본 사람에게 실패라고 말하지 않는다
  *   4. 광고를 띄울 수 없는 기기에서는 카드 자체가 없다. 눌러 봐야 안 되는 버튼을 두지 않는다
  *   5. **연꽃 한 송이로도 지나간다.** 광고를 못 띄우는 기기에서도 그 길은 열려 있다
+ *   6. 연꽃이 없는 사람에게는 **모으러 가는 길**이 광고 버튼 아래에 선다
  */
 
 import { test, expect, type Page } from '../support/fixtures';
@@ -187,4 +188,93 @@ test('광고를 못 띄워도 연꽃이 있으면 다른 관점을 볼 수 있�
 
   await page.getByTestId('leaf-spend-extension').click();
   await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
+});
+
+test('연꽃이 없어도 이 자리에서 모으러 갈 수 있다', async ({ page }) => {
+  /*
+    연꽃을 쓰는 자리는 셋인데 **모으러 가는 길은 시트 둘에만 있었다**(이어가기 · 간직).
+    그래서 연꽃이 없는 사람이 이 카드에서 보는 것은 광고 버튼 하나뿐이었고, 연꽃이라는
+    것이 있는 줄도 모른 채 매번 광고를 봤다 (2026-09-25 사용자 지시).
+  */
+  await withLeaves(page, 0);
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = await scrollToExtension(page);
+  const collect = card.getByTestId('leaf-collect-extension');
+  await expect(collect).toBeVisible();
+  // 연꽃이 없으니 쓰는 버튼은 없다. 모으러 가는 길만 있다
+  await expect(page.getByTestId('leaf-spend-extension')).toHaveCount(0);
+
+  /*
+    광고 버튼 **아래**다. 지금 답을 읽고 있는 사람에게 먼저 권할 일이 아니라
+    「이번엔 광고를 보고 다음부터는 안 봐도 된다」로 읽혀야 한다.
+  */
+  const adTop = (await page.getByTestId('extension-cta').boundingBox())?.y ?? 0;
+  const collectTop = (await collect.boundingBox())?.y ?? 0;
+  expect(collectTop, '모으기 카드가 광고 버튼보다 위에 있어요').toBeGreaterThan(adTop);
+
+  await shot(page, '18-3 한 번 더 보기 - 연꽃이 없으면 모으러 가는 길');
+
+  await collect.click();
+  await expect(page.getByTestId('leaf-sheet')).toBeVisible();
+});
+
+test('여기서 연 연꽃 모으기를 닫으면 간직 시트가 따라 열리지 않는다', async ({ page }) => {
+  /*
+    연꽃 모으기는 간직 시트에서도 열린다. 그쪽에서 온 사람은 닫을 때 그 시트로 돌아가야
+    하던 일을 잇는다. 그 배선이 **어디서 왔는지 보지 않고** 늘 간직 시트를 열고 있었다.
+    답변 본문에서 연 사람에게는 열지도 않은 시트가 튀어나온다.
+
+    ⚠ 「보이지 않는다」로 재지 않는다. `toBeVisible()` 은 가려짐을 보지 않아서, 시트가
+    덮고 있어도 아래 카드가 초록으로 잡힌다. **눌러서** 잰다.
+  */
+  await withLeaves(page, 0);
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = await scrollToExtension(page);
+  await card.getByTestId('leaf-collect-extension').click();
+  await expect(page.getByTestId('leaf-sheet')).toBeVisible();
+
+  await page.getByTestId('leaf-sheet').press('Escape');
+  await expect(page.getByTestId('leaf-sheet')).toBeHidden();
+
+  await expect(page.getByTestId('save-gate')).toHaveCount(0);
+  // 덮고 있는 것이 없어야 이 클릭이 닿는다. 가려져 있으면 여기서 실패한다
+  await card.getByTestId('leaf-collect-extension').click();
+  await expect(page.getByTestId('leaf-sheet')).toBeVisible();
+});
+
+test('연꽃이 날아가는 동안에는 모으러 가는 길이 잠긴다', async ({ page }) => {
+  /*
+    연꽃 버튼은 꽃이 날아가는 **0.84초 뒤에** 실제 차감을 시작한다. 그 사이에 바로 아래
+    모으기 카드를 누르면 연꽃 시트가 열리고, 예약돼 있던 차감이 그 시트 뒤에서 터진다.
+    시트는 「0송이」를 보여 주고, 치른 값으로 받은 관점은 시트에 가려 안 보인다.
+
+    시트 둘(이어가기 · 간직)에는 이 구멍이 없다. 모으기를 누르면 그 시트가 통째로
+    사라지면서 예약된 타이머까지 걷힌다. **이 카드는 답변 본문에 놓여 있어 살아남는다.**
+    모으기 길을 여기 내면서 처음 생긴 조합이라 그 자리를 잰다.
+  */
+  await withLeaves(page, 1);
+  await page.goto('/');
+  await askOnce(page);
+
+  const card = await scrollToExtension(page);
+  const collect = card.getByTestId('leaf-collect-extension');
+  await expect(collect).toBeEnabled();
+
+  await page.getByTestId('leaf-spend-extension').click();
+  // 꽃이 아직 날고 있다. 이 순간 다른 길로 빠져나가면 안 된다
+  await expect(collect).toBeDisabled();
+
+  // 꽃이 닿으면 하던 일이 시작되고, 카드는 결과 자리로 넘어간다
+  await expect(page.getByTestId('extension-result')).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('leaf-sheet')).toHaveCount(0);
+
+  const balance = await page.evaluate(() => {
+    const raw = localStorage.getItem('buddha.leaves.v1');
+    return raw == null ? null : (JSON.parse(raw) as { count: number }).count;
+  });
+  expect(balance, '한 번에 한 송이만 나가야 해요').toBe(0);
 });

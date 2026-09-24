@@ -209,6 +209,8 @@ export interface AnswerBodyProps {
   onWatchAd?: () => Promise<boolean>;
   /** 연꽃 한 송이로 다른 관점을 본다. 잔액이 모자라면 false */
   onUseLeaf?: () => boolean;
+  /** 연꽃 모으기를 연다 */
+  onCollectLeaf?: () => void;
   /** 지금 가진 연꽃 */
   leaves?: number;
   /** 광고 지원 여부 판정이 끝났나 */
@@ -233,6 +235,7 @@ export function AnswerBody({
   onSave,
   onWatchAd,
   onUseLeaf,
+  onCollectLeaf,
   leaves = 0,
   adReady,
   adSupported = true,
@@ -521,6 +524,7 @@ export function AnswerBody({
               usedIds={answer.scriptures.map((item) => item.id)}
               onWatchAd={onWatchAd}
               onUseLeaf={onUseLeaf}
+              onCollectLeaf={onCollectLeaf}
               leaves={leaves}
               adReady={adReady}
               adSupported={adSupported}

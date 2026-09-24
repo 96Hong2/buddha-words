@@ -48,6 +48,8 @@ export interface AnswerScreenProps {
   onWatchAd?: () => Promise<boolean>;
   /** 연꽃 한 송이로 다른 관점을 본다. 잔액이 모자라면 false */
   onUseLeaf?: () => boolean;
+  /** 연꽃 모으기를 연다. 다른 관점 카드가 광고 버튼 아래에 그 길을 놓는다 */
+  onCollectLeaf?: () => void;
   /** 지금 가진 연꽃 */
   leaves?: number;
   /** 광고 지원 여부 판정이 끝났나 */

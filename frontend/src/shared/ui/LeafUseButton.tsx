@@ -21,6 +21,14 @@ export interface LeafUseButtonProps {
   action: string;
   disabled?: boolean;
   onClick: () => void;
+  /**
+   * 꽃이 **날아가기 시작했다.** 실제 동작은 아직 0.84초 뒤다.
+   *
+   * 그 사이에 같은 화면의 다른 길로 빠져나갈 수 있으면, 예약된 동작이 엉뚱한 자리에서
+   * 터진다. 시트 안에서는 시트가 통째로 사라지면서 타이머도 걷히지만, 문서 흐름에 놓인
+   * 카드는 살아남아 그대로 돈다. 부르는 쪽이 그동안 다른 길을 잠그라고 알린다.
+   */
+  onFlyStart?: () => void;
   /** 자리마다 다른 셀렉터. e2e 가 둘을 갈라 본다 */
   testKey: 'leafSpendContinue' | 'leafSpendExtension' | 'leafSpendSave';
 }
@@ -43,6 +51,7 @@ export function LeafUseButton({
   action,
   disabled = false,
   onClick,
+  onFlyStart,
   testKey,
 }: LeafUseButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -70,6 +79,7 @@ export function LeafUseButton({
       return;
     }
     setPhase('flying');
+    onFlyStart?.();
     timers.current = [
       // 꽃이 **닿는 순간** 숫자가 준다. 누르자마자 줄면 날아오는 그림과 따로 논다
       window.setTimeout(() => setPhase('landed'), LEAF_FLIGHT_MS - 60),
@@ -237,6 +247,14 @@ export interface LeafCollectCtaProps {
   /** 연꽃 모으기로 간다 */
   onClick: () => void;
   disabled?: boolean;
+  /**
+   * 자리별 셀렉터. 시트 둘은 기본값을 함께 쓴다.
+   *
+   * 답변 본문의 다른 관점 카드만 가른다. 그 카드는 시트가 아니라 문서 흐름에 놓여 있어
+   * **간직 시트가 열려 있는 동안에도 페이지에 남는다.** 같은 이름이면 한 화면에 둘이
+   * 잡혀서 시트를 재던 spec 이 무엇을 보고 있는지 알 수 없게 된다.
+   */
+  testKey?: 'leafCollectCta' | 'leafCollectExtension';
 }
 
 /**
@@ -253,7 +271,13 @@ export interface LeafCollectCtaProps {
  * 광고 버튼보다 아래, 그리고 테두리 한 겹으로만 세운다. 주 버튼과 같은 무게로 두면
  * 지금 답을 받으러 온 사람 앞에 갈림길을 하나 더 세우는 셈이다.
  */
-export function LeafCollectCta({ count, action, onClick, disabled = false }: LeafCollectCtaProps) {
+export function LeafCollectCta({
+  count,
+  action,
+  onClick,
+  disabled = false,
+  testKey = 'leafCollectCta',
+}: LeafCollectCtaProps) {
   const has = count > 0;
 
   return (
@@ -262,7 +286,7 @@ export function LeafCollectCta({ count, action, onClick, disabled = false }: Lea
       className="leaf-get"
       disabled={disabled}
       onClick={onClick}
-      {...testId(TEST_IDS.leafCollectCta)}
+      {...testId(TEST_IDS[testKey])}
     >
       <span className="leaf-get__art" aria-hidden="true">
         <LotusIcon size={26} className="leaf-get__icon" />

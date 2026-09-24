@@ -27,6 +27,7 @@ import {
   FULL_SCREEN_SHOW_TIMEOUT_MS,
   marksAdOnScreen,
 } from '../../src/shared/toss/fullScreenAdFlow';
+import { clearAdOnScreen, markAdOnScreen, takeStuckAd } from '../../src/shared/lib/stuckAd';
 
 test('광고가 떴다는 신호를 셋 다 받는다', () => {
   /*
@@ -74,4 +75,78 @@ test('광고가 뜬 뒤에도 시간 제한이 있고, 불러오기보다 훨씬
   expect(FULL_SCREEN_SHOW_TIMEOUT_MS).toBeGreaterThanOrEqual(60_000);
   // 닫힘 폴백은 화면이 돌아온 뒤 잠깐이다. 길면 닫고 나서 멍하니 기다리게 된다
   expect(DISMISS_FALLBACK_MS).toBeLessThan(FULL_SCREEN_LOAD_TIMEOUT_MS);
+});
+
+/*
+  ── 광고가 뜬 채로 앱이 끝난 것을 다음 실행에서 센다 ──────────────────────
+
+  2026-09-25 신고: 직접 눌러서 하는 광고가 멈췄고 닫기 X 도 안 먹어 **앱을 껐다.**
+  그 광고를 닫는 길은 우리에게 없다(토스 앱이 띄운 화면이고 SDK 에 닫는 함수가 없다).
+  우리가 할 수 있는 것은 얼마나 자주 나는지 세는 것뿐인데, 그마저도 못 세고 있었다:
+  갇힌 사람은 우리 시간 제한(90초)이 `show_timeout` 을 찍기 전에 앱을 끈다.
+
+  그래서 광고가 뜰 때 미리 적고 끝나면 지운다. 다음 실행에 표가 남아 있으면 그 판이다.
+
+  ⚠ **실제 「앱이 죽었다 다시 열림」은 여기서 못 잰다.** 목 브릿지의 저장소가 메모리라
+  다시 열면 함께 사라진다. 그 한 겹은 실기기 확인 항목으로 남는다. 여기서 재는 것은
+  표를 적고 지우고 꺼내는 규칙이다.
+*/
+
+/** 실기기 저장소를 흉내 낸다. `broken` 이면 모든 호출이 던진다 */
+function fakeStore(broken = false) {
+  const box = new Map<string, string>();
+  return {
+    box,
+    get: (key: string) =>
+      broken ? Promise.reject(new Error('막힘')) : Promise.resolve(box.get(key) ?? null),
+    set: (key: string, value: string) => {
+      if (broken) return Promise.reject(new Error('막힘'));
+      box.set(key, value);
+      return Promise.resolve();
+    },
+    remove: (key: string) => {
+      if (broken) return Promise.reject(new Error('막힘'));
+      box.delete(key);
+      return Promise.resolve();
+    },
+  };
+}
+
+test('정상적으로 끝난 광고는 다음 실행에 표를 안 남긴다', async () => {
+  const store = fakeStore();
+  await markAdOnScreen(store, 'save');
+  await clearAdOnScreen(store);
+
+  expect(await takeStuckAd(store)).toBeNull();
+});
+
+test('광고가 뜬 채로 끝나면 그 자리 이름이 다음 실행에 남는다', async () => {
+  const store = fakeStore();
+  await markAdOnScreen(store, 'extension');
+  // `clearAdOnScreen` 이 안 돈다. 앱이 죽어 `finally` 까지 못 간 판이다
+
+  expect(await takeStuckAd(store)).toBe('extension');
+});
+
+test('한 번 꺼내면 두 번째는 없다. 한 사고가 여러 번으로 세어지지 않는다', async () => {
+  const store = fakeStore();
+  await markAdOnScreen(store, 'continue');
+
+  expect(await takeStuckAd(store)).toBe('continue');
+  /*
+    꺼내면서 지우지 않으면 그 뒤 앱을 열 때마다 계속 찍힌다. 한 사람의 한 번이
+    열 번으로 불어나면 이 수로는 아무것도 못 정한다.
+  */
+  expect(await takeStuckAd(store)).toBeNull();
+});
+
+test('저장소가 막힌 기기에서도 광고를 막지 않는다', async () => {
+  const broken = fakeStore(true);
+  /*
+    계측 하나 때문에 사람이 하려던 일이 멈추면 안 된다. 셋 다 던지지 않고 조용히 넘어간다.
+    그 기기의 판은 못 세는 것으로 둔다.
+  */
+  await markAdOnScreen(broken, 'collect');
+  await clearAdOnScreen(broken);
+  expect(await takeStuckAd(broken)).toBeNull();
 });

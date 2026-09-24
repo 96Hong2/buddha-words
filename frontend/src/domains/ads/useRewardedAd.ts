@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useBridge } from '../../app/providers';
 import { elapsedBucket, immediateBucket, useAnalytics } from '../../shared/analytics';
 import { readAdOptOut } from '../../shared/lib/adOptOut';
+import { clearAdOnScreen, markAdOnScreen } from '../../shared/lib/stuckAd';
 import type { FullScreenAdHooks } from '../../shared/toss';
 
 import { AD_KIND, adGroupId, type AdPlacement } from './placement';
@@ -214,6 +215,11 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
         outcome = await bridge.ads.showFullScreen(group, {
           onShown: () => {
             shownAt = Date.now();
+            /*
+              **광고가 떠 있다고 저장소에 적는다.** 여기서 갇힌 사람은 앱을 끄고 나가므로
+              살아 있는 동안 아무 로그도 못 남긴다. 다음에 앱을 열 때 이 표로 센다.
+            */
+            void markAdOnScreen(bridge.storage, placement);
             hooks?.onShown?.();
           },
           /*
@@ -232,6 +238,8 @@ export function useRewardedAd(placement: AdPlacement): RewardedAd {
       } finally {
         covering -= 1;
         setShowing(false);
+        // 어떤 결말이든 여기까지 왔으면 앱이 살아 있었다. 갇힌 판이 아니다
+        void clearAdOnScreen(bridge.storage);
       }
 
       /*
