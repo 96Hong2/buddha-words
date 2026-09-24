@@ -6,6 +6,13 @@ export const ROUTES = {
   crisis: '/crisis',
   solace: '/solace',
   archive: '/archive',
+  /**
+   * 오늘의 한마디를 펼친 채로 여는 자리. 홈과 같은 화면이고 시트만 먼저 열려 있다.
+   *
+   * 콘솔 「주요 기능」이 미니앱 상세에서 이리로 바로 보낸다. 그 목록은 이름만 보고 누르는
+   * 자리라, 누른 뒤에 한 번 더 찾아야 하면 이름이 거짓이 된다.
+   */
+  today: '/today',
   settings: '/settings',
   appInfo: '/settings/app',
   privacy: '/settings/privacy',

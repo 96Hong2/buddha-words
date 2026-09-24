@@ -169,6 +169,13 @@ export const EVENTS = {
   purchase_start:      { params: ['sku'] as const },
   purchase_complete:   { params: ['sku', 'amount_krw'] as const },
   purchase_fail:       { params: ['sku', 'error_code'] as const },
+  // ── 미니앱 상세의 「주요 기능」으로 들어온 사람 ────────────────────────────
+  /*
+    콘솔에 등록한 주요 기능은 홈을 거치지 않고 그 화면으로 바로 보낸다. 이름만 보고 누르는
+    자리라 **어느 이름이 실제로 눌리는지**가 곧 그 이름이 맞았는지에 대한 답이다.
+    홈으로 오는 길은 여기서 안 센다. 검색·공유·아이콘과 구분이 안 되기 때문이다.
+  */
+  main_feature_open:   { params: ['feature'] as const },                                  // feature: today. 주요 기능 전용 경로로 들어온 것만 센다
   // 리텐션
   daily_quote_impression:{ params: ['quote_id', 'surface'] as const },                     // surface: entry_card | home_card
   daily_quote_open:    { params: ['quote_id', 'surface'] as const },

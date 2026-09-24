@@ -85,7 +85,7 @@ interface HomeNavState {
 
 export function HomeRoute() {
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const bridge = useBridge();
   const { beginSubmit, sent, setResponse } = useSession();
   const api = useApiClient();
@@ -102,9 +102,29 @@ export function HomeRoute() {
     () => FLAGS.onboarding === 'two_step' && onboardingPending(),
   );
 
+  /**
+   * 미니앱 상세의 「주요 기능」에서 들어왔다.
+   *
+   * 마운트에 한 번만 센다. 시트를 닫아도 경로는 `/today` 로 남아 있어서, ref 없이 두면
+   * 다시 그릴 때마다 같은 한 사람이 여러 번 센다.
+   */
+  const mainFeatureLogged = useRef(false);
+  useEffect(() => {
+    if (pathname !== ROUTES.today || mainFeatureLogged.current) return;
+    mainFeatureLogged.current = true;
+    analytics.log('main_feature_open', { feature: 'today' }, { kind: 'screen' });
+  }, [analytics, pathname]);
+
   const [quota, setQuota] = useState<QuotaState>(readQuota);
   const [continueOpen, setContinueOpen] = useState(false);
-  const [dailyOpen, setDailyOpen] = useState(false);
+  /**
+   * 오늘의 한마디 시트.
+   *
+   * `/today` 로 들어왔으면 펼친 채로 시작한다. 콘솔 「주요 기능」에서 이름을 보고 누른
+   * 사람이라, 홈에 내려놓고 카드를 한 번 더 찾게 하면 그 이름이 거짓이 된다.
+   * 구절이 아직 안 왔으면 시트 자체가 안 그려지고, 도착하는 순간 열린 채로 올라온다.
+   */
+  const [dailyOpen, setDailyOpen] = useState(pathname === ROUTES.today);
   /**
    * 「어제 적어 드린 그거 해 보셨나요?」로 물어볼 것.
    *

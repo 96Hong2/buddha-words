@@ -17,6 +17,8 @@ export function AppRouter() {
   return (
     <Routes>
       <Route path={ROUTES.home} element={<HomeRoute />} />
+      {/* 홈과 같은 화면이다. 들어온 길이 달라서 오늘의 한마디가 펼쳐진 채로 선다 */}
+      <Route path={ROUTES.today} element={<HomeRoute />} />
       <Route path={ROUTES.loading} element={<LoadingScreen />} />
       <Route path={ROUTES.answer} element={<AnswerRoute />} />
       <Route path={ROUTES.crisis} element={<CrisisScreen />} />
