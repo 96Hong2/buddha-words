@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { elapsedBucket, useAnalytics } from '../../shared/analytics';
 import { ApiFailure, attributionLine, useApiClient, type ApiExtension } from '../../shared/api';
 import { TEST_IDS, testId } from '../../shared/testIds';
-import { LeafAltAdButton, LeafUseButton, Spinner } from '../../shared/ui';
+import { LeafAltAdButton, LeafCollectCta, LeafUseButton, Spinner } from '../../shared/ui';
 import { adLead } from '../ads/placement';
 
 type Phase = 'idle' | 'watching' | 'building' | 'failed' | 'done';
@@ -81,6 +81,14 @@ export interface ExtensionCardProps {
    * 없으면 연꽃 버튼을 아예 그리지 않는다. 다른 두 자리(이어가기 · 간직)와 같은 규칙이다.
    */
   onUseLeaf?: () => boolean;
+  /**
+   * 연꽃 모으기로 보낸다.
+   *
+   * 연꽃을 쓰는 자리는 셋인데 **모으러 가는 길은 시트 둘에만 있었다.** 그래서 연꽃이
+   * 없는 사람이 이 카드에서 보는 것은 광고 버튼 하나뿐이었고, 연꽃이라는 것이 있는
+   * 줄도 모른 채 매번 광고를 봤다. 쓰는 자리에 모으는 길이 같이 있어야 한다.
+   */
+  onCollectLeaf?: () => void;
   /** 지금 가진 연꽃. 한 송이 이상이면 광고 대신 이것을 먼저 권한다 */
   leaves?: number;
   /**
@@ -106,6 +114,7 @@ export function ExtensionCard({
   onWatchAd,
   adReady = true,
   onUseLeaf,
+  onCollectLeaf,
   leaves = 0,
   adSupported = true,
 }: ExtensionCardProps) {
@@ -394,6 +403,24 @@ export function ExtensionCard({
                 </>
               )}
             </button>
+          )}
+
+          {/*
+            연꽃을 모으러 가는 자리. 이어가기 · 간직 시트와 같은 부품이고 같은 순서다:
+            광고 버튼 **아래**에 테두리 한 겹으로만 선다. 지금 답을 읽고 있는 사람에게
+            먼저 권할 일이 아니라 「이번엔 광고를 보고 다음부터는 안 봐도 된다」로 읽혀야 한다.
+
+            가져오는 중이거나 실패한 뒤에는 감춘다. 그 두 자리는 이미 값을 치른 사람이
+            보는 화면이라, 모으러 가라는 말이 「한 번 더 내라」로 읽힌다.
+          */}
+          {onCollectLeaf != null && phase !== 'building' && phase !== 'failed' && (
+            <LeafCollectCta
+              count={leaves}
+              action="봐요"
+              disabled={phase === 'watching'}
+              onClick={onCollectLeaf}
+              testKey="leafCollectExtension"
+            />
           )}
         </>
       )}

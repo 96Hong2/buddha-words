@@ -159,7 +159,17 @@ export interface AdsBridge {
    * `onShown` 은 광고가 실제로 화면에 뜬 순간이다. 누른 순간과 다르다. 불러오는 데만
    * 몇 초가 걸리기도 해서, 광고가 몇 초 떠 있었는지는 이 순간부터 재야 맞다.
    */
-  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult>;
+  showFullScreen(
+    adGroupId: string,
+    hooks?: FullScreenAdHooks,
+    /**
+     * 광고가 **뜬 뒤** 끝 신호를 기다리는 최대 시간. 넘기면 못 띄운 것으로 접는다.
+     *
+     * 자리마다 다르다: 보상형은 끝까지 본 사람을 끊으면 안 되니 길게, 전면형은 닫는
+     * 것이 정상 종료라 짧게. 부르는 쪽이 종류를 알고 있어 여기서 받는다.
+     */
+    showTimeoutMs?: number,
+  ): Promise<FullScreenAdResult>;
 }
 
 /**

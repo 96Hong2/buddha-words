@@ -82,8 +82,14 @@ export function AnswerRoute() {
   const ad = useRewardedAd('extension');
   const saveAd = useRewardedAd('save');
   const leaf = useLeafWallet();
-  /** 간직 시트에서 열어 둔 연꽃 모으기 */
-  const [leafOpen, setLeafOpen] = useState(false);
+  /**
+   * 연꽃 모으기가 열려 있나. 열려 있으면 **어디서 왔는지**를 담는다.
+   *
+   * 닫을 때 돌아갈 자리가 출처마다 다르다. 간직 시트에서 온 사람은 그 시트로 돌아가야
+   * 하던 일을 잇는다. 답변 본문의 다른 관점 카드에서 온 사람은 돌아갈 시트가 없고,
+   * 그 자리에 간직 시트를 띄우면 **열지도 않은 시트가 튀어나온다.**
+   */
+  const [leafOpen, setLeafOpen] = useState<'save' | 'extension' | null>(null);
 
   const [shareOpen, setShareOpen] = useState(false);
   /** 무엇을 보낼지. 기본은 적게 나가는 쪽이다 */
@@ -506,6 +512,7 @@ export function AnswerRoute() {
         onSave={save}
         onWatchAd={watchAd}
         onUseLeaf={spendLeafForExtension}
+        onCollectLeaf={() => setLeafOpen('extension')}
         leaves={leaf.count}
         adReady={ad.ready}
         adSupported={ad.ready && ad.supported}
@@ -558,7 +565,7 @@ export function AnswerRoute() {
           onCollectLeaf={() => {
             // 쌓지 않고 바꿔 끼운다. 닫으면 간직 시트로 돌아온다(홈 쪽과 같은 결)
             setGateOpen(false);
-            setLeafOpen(true);
+            setLeafOpen('save');
           }}
           onClose={() => {
             setGateOpen(false);
@@ -577,10 +584,12 @@ export function AnswerRoute() {
         광고를 안 보려고 연꽃을 모은 사람이 답변 화면에 혼자 서서 간직을 다시 눌러야 한다.
       */}
       <LeafSheet
-        open={leafOpen}
+        open={leafOpen != null}
         onClose={() => {
-          setLeafOpen(false);
-          setGateOpen(true);
+          // 간직 시트에서 온 사람만 그 시트로 돌려보낸다. 다른 관점 카드는 본문에 있어 돌아갈 곳이 없다
+          const from = leafOpen;
+          setLeafOpen(null);
+          if (from === 'save') setGateOpen(true);
         }}
       />
 

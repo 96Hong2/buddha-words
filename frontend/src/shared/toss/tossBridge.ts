@@ -157,7 +157,11 @@ class TossAdsBridge implements AdsBridge {
     });
   }
 
-  showFullScreen(adGroupId: string, hooks?: FullScreenAdHooks): Promise<FullScreenAdResult> {
+  showFullScreen(
+    adGroupId: string,
+    hooks?: FullScreenAdHooks,
+    showTimeoutMs: number = FULL_SCREEN_SHOW_TIMEOUT_MS,
+  ): Promise<FullScreenAdResult> {
     if (!loadFullScreenAd.isSupported() || !showFullScreenAd.isSupported()) {
       return Promise.resolve('noFill');
     }
@@ -227,7 +231,7 @@ class TossAdsBridge implements AdsBridge {
         showTimer = setTimeout(() => {
           hooks?.onStalled?.();
           finish('noFill');
-        }, FULL_SCREEN_SHOW_TIMEOUT_MS);
+        }, showTimeoutMs);
         cancelShow = showFullScreenAd({
           options: { adGroupId },
           onEvent: (event) => {

@@ -86,6 +86,12 @@ export const TEST_IDS = {
   leafUnavailable: 'leaf-unavailable',
   leafNote: 'leaf-note',
   leafCollectCta: 'leaf-collect-cta',
+  /*
+    다른 관점 카드의 모으기 길만 이름을 가른다. 이 카드는 **답변 본문 안에** 있어서
+    간직 시트가 열려 있어도 페이지에 함께 남는다. 시트 쪽과 같은 이름을 쓰면 한 화면에
+    둘이 잡혀 기존 spec 이 무엇을 재는지 알 수 없게 된다(실제로 그렇게 됐다).
+  */
+  leafCollectExtension: 'leaf-collect-extension',
   leafSpendContinue: 'leaf-spend-continue',
   leafSpendExtension: 'leaf-spend-extension',
   leafSpendSave: 'leaf-spend-save',
