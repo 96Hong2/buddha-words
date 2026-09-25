@@ -152,25 +152,47 @@ test('앱 밖으로 나가는 링크에 웹 주소가 없다', async ({ page }) 
   await expect(page.locator('a[href^="http"]')).toHaveCount(0);
 });
 
-test('마들랜: 문자로 열고, 카카오톡 가는 길은 글로 남긴다', async ({ page }) => {
+test('마들랜: 누를 것을 두지 않고 찾아가는 방법을 적는다', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('entry-card-cta').click();
   await page.getByTestId('concern-field').fill('어떻게 하면 죽을 수 있나요');
   await page.getByTestId('submit').click();
   await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
 
-  const sns = page.locator('[data-testid="crisis-channel"][href^="sms:"]');
-  await expect(sns).toHaveCount(1);
-  await expect(sns).toHaveAttribute('href', 'sms:109');
+  const mad = page.getByTestId('crisis-channel').filter({ hasText: '마들랜' });
+  await expect(mad).toHaveCount(1);
 
   /*
-    ⚠ **링크가 죽어도 갈 길이 남아야 한다.** 이 줄이 이번 사고의 진짜 안전망이다.
-    웹 주소 둘이 잇달아 안 열렸고, 그때마다 사람은 아무 데도 못 갔다.
+    ⚠ **누를 것이 없어야 한다.** 이 앱에서 마들랜을 여는 데 세 번 실패했다
+    (기관 홈페이지 · 카카오톡 채널 · `sms:109`). 눌러도 안 열리는 버튼은 위기 화면에서
+    막다른 길이고, 그것이 안내가 없는 것보다 나쁘다.
   */
-  await expect(sns).toContainText('카카오톡');
-  await expect(sns).toContainText('마들랜');
+  expect(await mad.evaluate((el) => el.tagName)).not.toBe('A');
+  await expect(mad).not.toHaveAttribute('href', /.*/);
 
-  // 눌렀을 때 문자 앱으로 간다
-  await sns.click();
-  expect(await openedUrls(page)).toEqual(['sms:109']);
+  // 대신 찾아가는 방법이 글로 있어야 한다
+  await expect(mad).toContainText('카카오톡');
+  await expect(mad).toContainText('마들랜');
+  await expect(mad).toContainText('109');
+
+  // 눌러도 아무 주소로도 나가지 않는다
+  await mad.click();
+  expect(await openedUrls(page)).toEqual([]);
+});
+
+test('위로 답변의 띠에도 마들랜은 누를 것이 없다', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
+  await page
+    .getByTestId('concern-field')
+    .fill('요즘 정말 죽고 싶어요. 아무것도 하기 싫고 매일이 버거워요.');
+  await page.getByTestId('submit').click();
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
+  await page.getByTestId('crisis-continue').click();
+  await expect(page.getByTestId('solace')).toBeVisible({ timeout: 15_000 });
+
+  const mad = page.getByTestId('crisis-channel').filter({ hasText: '마들랜' }).first();
+  expect(await mad.evaluate((el) => el.tagName)).not.toBe('A');
+  // 전화 창구는 그대로 눌린다
+  await expect(page.locator('[data-testid="crisis-channel"][href^="tel:"]').first()).toBeVisible();
 });

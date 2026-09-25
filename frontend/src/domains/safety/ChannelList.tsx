@@ -71,21 +71,8 @@ export function ChannelList({ channels, level }: ChannelListProps) {
       {list.map((key, index) => {
         const channel = CHANNELS[key];
         const lead = index === 0 ? ' sf-line-item--lead' : '';
-        return (
-          <a
-            key={key}
-            className={`sf-line-item${lead}`}
-            href={channel.href}
-            onClick={(event) => {
-              analytics.log(
-                'crisis_exit',
-                { level, exit: exitOf(channel.kind) },
-                { kind: 'click' },
-              );
-              open(event, channel.href);
-            }}
-            {...testId(TEST_IDS.crisisChannel)}
-          >
+        const body = (
+          <>
             <span className="sf-line-ic">
               {channel.kind === 'call' ? <PhoneIcon /> : <ChatIcon />}
             </span>
@@ -94,6 +81,39 @@ export function ChannelList({ channels, level }: ChannelListProps) {
               <span className="sf-line-num">{channel.value}</span>
               {channel.note != null && <span className="sf-line-sub">{channel.note}</span>}
             </span>
+          </>
+        );
+
+        // 주소가 없는 창구는 누를 것이 없는 안내다. `value` 가 찾아가는 방법을 말한다
+        if (channel.href == null) {
+          return (
+            <div
+              key={key}
+              className={`sf-line-item sf-line-item--plain${lead}`}
+              {...testId(TEST_IDS.crisisChannel)}
+            >
+              {body}
+            </div>
+          );
+        }
+
+        const href = channel.href;
+        return (
+          <a
+            key={key}
+            className={`sf-line-item${lead}`}
+            href={href}
+            onClick={(event) => {
+              analytics.log(
+                'crisis_exit',
+                { level, exit: exitOf(channel.kind) },
+                { kind: 'click' },
+              );
+              open(event, href);
+            }}
+            {...testId(TEST_IDS.crisisChannel)}
+          >
+            {body}
           </a>
         );
       })}
@@ -132,29 +152,39 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
     <>
       {channels.map((key) => {
         const channel = CHANNELS[key];
-        const link = (
-          <a
-            href={channel.href}
-            onClick={(event) => {
-              analytics.log(
-                'crisis_exit',
-                { level, exit: exitOf(channel.kind) },
-                { kind: 'click' },
-              );
-              open(event, channel.href);
-            }}
-            {...testId(TEST_IDS.crisisChannel)}
-          >
-            {channel.short}
-          </a>
-        );
+        const href = channel.href;
+        /*
+          주소가 없는 창구는 누르는 자리를 만들지 않는다. 띠에서는 이름만 굵게 남고
+          찾아가는 방법(`value`)이 뒤를 잇는다. 헛걸음을 만드느니 방법을 적는다.
+        */
+        const label =
+          href == null ? (
+            <b {...testId(TEST_IDS.crisisChannel)}>{channel.short}</b>
+          ) : (
+            <a
+              href={href}
+              onClick={(event) => {
+                analytics.log(
+                  'crisis_exit',
+                  { level, exit: exitOf(channel.kind) },
+                  { kind: 'click' },
+                );
+                open(event, href);
+              }}
+              {...testId(TEST_IDS.crisisChannel)}
+            >
+              {channel.short}
+            </a>
+          );
         return (
           <p key={key} className={`sf-sc-band sf-sc-band--${place}`}>
             {channel.kind === 'call' ? <PhoneIcon size={15} /> : <ChatIcon size={15} />}
             {channel.kind === 'call' ? (
-              <span>언제든 {link} 로 연결할 수 있어요</span>
+              <span>언제든 {label} 로 연결할 수 있어요</span>
             ) : (
-              <span>글로 하고 싶다면 {link} 이 있어요</span>
+              <span>
+                글로 하고 싶다면 {label}. {channel.value}
+              </span>
             )}
           </p>
         );
