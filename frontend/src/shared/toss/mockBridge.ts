@@ -51,6 +51,13 @@ export interface MockScenario {
   notification?: NotificationAgreementResult;
   /** 지원하지 않는다고 답할 기능들. */
   unsupported?: BridgeCapability[];
+  /**
+   * 앱 밖으로 나가는 주소가 열리나.
+   *
+   * `fail` 은 전화 앱도 메일 앱도 없는 기기다. 드물지만 있고, **못 열었을 때 화면이
+   * 번호를 남기는지**가 이번 심사 반려의 핵심이라 그 길을 e2e 가 밟을 수 있어야 한다.
+   */
+  openUrl?: 'ok' | 'fail';
   ads?: 'ok' | 'noFill' | 'failed' | 'unsupported';
   /**
    * 전면 광고가 어떻게 끝나나.
@@ -133,6 +140,13 @@ declare global {
     __buddhaShares?: string[];
     /** 리뷰를 몇 번 청했나. e2e 가 「한 번만 청한다」를 이걸로 본다 */
     __buddhaReviews?: number;
+    /**
+     * 앱 밖으로 열려 한 주소 전부. 전화 · 메일 · 웹페이지가 다 여기로 온다.
+     *
+     * e2e 가 여기를 보는 이유: **눌렀는데 아무 일도 안 일어나는 것**이 이번 반려 사유라,
+     * 「눌렀다」가 아니라 「무엇을 열었다」를 재야 한다.
+     */
+    __buddhaOpenedUrls?: string[];
   }
 }
 
@@ -424,6 +438,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
   private backListeners = new Set<() => void>();
   private accessory: NavigationAccessory | null = null;
   private closed = false;
+  private openedUrls: string[] = [];
   private readonly scenario: MockScenario;
 
   constructor(scenario: MockScenario = {}) {
@@ -537,6 +552,23 @@ export class MockMiniAppBridge implements MiniAppBridge {
 
   async closeApp(): Promise<void> {
     this.closed = true;
+  }
+
+  /**
+   * 웹에서는 브라우저가 스킴을 안다. 그대로 넘긴다.
+   *
+   * 연 주소를 남기는 이유는 e2e 가 그것을 재기 때문이다. 브라우저를 실제로 다른 곳으로
+   * 보내면 테스트가 앱 밖으로 나가 버린다. 그래서 **기록만 하고 보내지 않는다.**
+   */
+  async openURL(url: string): Promise<boolean> {
+    this.openedUrls.push(url);
+    (window.__buddhaOpenedUrls ??= []).push(url);
+    return this.scenario.openUrl !== 'fail';
+  }
+
+  /** 어떤 주소를 열었는지 테스트에서 확인한다. 가장 마지막 것이 방금 누른 것이다 */
+  get opened(): readonly string[] {
+    return this.openedUrls;
   }
 
   /** 테스트에서 상단 액세서리 버튼 클릭을 흉내낼 때 쓴다. */

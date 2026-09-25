@@ -71,6 +71,8 @@ export const TEST_IDS = {
   crisisChannel: 'crisis-channel',
   crisisContinue: 'crisis-continue',
   crisisClose: 'crisis-close',
+  /* 창구를 못 열었을 때 번호를 글자로 남기는 자리. 비면 눌러도 아무 일이 없는 판이 된다 */
+  channelFailed: 'channel-failed',
   solace: 'solace',
   solaceOpening: 'solace-opening',
   solaceClosing: 'solace-closing',

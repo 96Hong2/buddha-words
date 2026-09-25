@@ -380,6 +380,18 @@ export interface MiniAppBridge {
   /** 미니앱을 닫는다. 첫 화면에서 뒤로가기를 눌렀을 때 호출한다. */
   closeApp(): Promise<void>;
 
+  /**
+   * 앱 밖으로 나가는 주소를 연다. 전화(`tel:`) · 메일(`mailto:`) · 웹페이지 셋 다 이 길이다.
+   *
+   * ⚠ **`<a href>` 로는 토스 앱 안에서 안 열린다.** 미니앱은 웹뷰 안에서 돌고, 웹뷰는
+   * 자기가 모르는 스킴을 그냥 버린다. 2026-09-25 심사가 이 이유로 반려했다
+   * (「서비스 이용을 위한 외부 링크가 정상적으로 열리지 않아요」).
+   *
+   * 못 열면 `false` 를 준다. 부르는 쪽이 그때 무엇을 할지 정한다(주소를 글자로 보여 준다든지).
+   * **삼켜서 아무 일도 안 일어난 것처럼 두지 않는다.** 그게 이번에 반려된 모양이다.
+   */
+  openURL(url: string): Promise<boolean>;
+
   readonly storage: KeyValueStore;
   readonly ads: AdsBridge;
   readonly purchase: PurchaseBridge;

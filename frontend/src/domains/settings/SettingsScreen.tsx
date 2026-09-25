@@ -20,6 +20,7 @@ import {
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { LotusIcon } from '../../shared/ui';
 import { useAnalytics } from '../../shared/analytics';
+import { readableAddress, useOpenLink } from '../../shared/lib/useOpenLink';
 import { appShareMessage, appShareUrl } from '../share/shareText';
 import { LEAVES_PER_REWARDED_AD } from '../ads/placement';
 import {
@@ -124,6 +125,7 @@ export function SettingsScreen({
   const bridge = useBridge();
   const api = useApiClient();
   const analytics = useAnalytics();
+  const { open: openLink, failed: linkFailed } = useOpenLink();
   const { archivePass, refreshArchivePass } = useSession();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -696,9 +698,10 @@ export function SettingsScreen({
           <a
             className="set-item"
             href={`mailto:${CONTACT_EMAIL}`}
-            onClick={() =>
-              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })
-            }
+            onClick={(event) => {
+              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' });
+              openLink(event, `mailto:${CONTACT_EMAIL}`);
+            }}
           >
             <span className="set-icon" aria-hidden="true">
               <svg
@@ -718,6 +721,13 @@ export function SettingsScreen({
             </span>
             <Chevron />
           </a>
+
+          {/* 메일 앱이 없는 기기가 있다. 눌렀는데 아무 일도 없으면 그게 반려된 판이다 */}
+          {linkFailed != null && (
+            <p className="set-line-failed" {...testId(TEST_IDS.channelFailed)}>
+              메일 앱을 열지 못했어요. <b>{readableAddress(linkFailed)}</b>으로 보내 주세요.
+            </p>
+          )}
 
           <button
             type="button"

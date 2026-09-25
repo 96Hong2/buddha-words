@@ -9,6 +9,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 
 import { CHANNELS, resolveChannels } from './copy';
 import './safety.css';
+import { readableAddress, useOpenLink } from '../../shared/lib/useOpenLink';
 
 function PhoneIcon({ size = 18 }: { size?: number }) {
   return (
@@ -65,6 +66,7 @@ export interface ChannelListProps {
 /** 위기 안내의 창구 카드. 첫 줄이 가장 먼저 걸어야 할 곳이다 */
 export function ChannelList({ channels, level }: ChannelListProps) {
   const analytics = useAnalytics();
+  const { open, failed } = useOpenLink();
   const list = resolveChannels(channels);
 
   return (
@@ -78,12 +80,13 @@ export function ChannelList({ channels, level }: ChannelListProps) {
             className={`sf-line-item${lead}`}
             href={channel.href}
             {...linkProps(channel.kind)}
-            onClick={() => {
+            onClick={(event) => {
               analytics.log(
                 'crisis_exit',
                 { level, exit: exitOf(channel.kind) },
                 { kind: 'click' },
               );
+              open(event, channel.href);
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >
@@ -98,7 +101,23 @@ export function ChannelList({ channels, level }: ChannelListProps) {
           </a>
         );
       })}
+      <FailedNote url={failed} />
     </div>
+  );
+}
+
+/**
+ * 못 열었을 때 번호를 글자로 남긴다.
+ *
+ * ⚠ **이 자리를 비우면 반려된 판과 같아진다**: 눌렀는데 아무 일도 없다. 위기 창구에서는
+ * 그게 사람이 다치는 길이다. 열리지 않아도 걸 수 있는 번호가 눈에 남아야 한다.
+ */
+function FailedNote({ url }: { url: string | null }) {
+  if (url == null) return null;
+  return (
+    <p className="sf-line-failed" {...testId(TEST_IDS.channelFailed)}>
+      바로 연결하지 못했어요. <b>{readableAddress(url)}</b>로 직접 연락해 주세요.
+    </p>
   );
 }
 
@@ -111,6 +130,7 @@ export interface ChannelBandsProps {
 /** 위로 답변의 한 줄 띠. 답변 위와 아래에 같은 목록이 붙는다 */
 export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
   const analytics = useAnalytics();
+  const { open, failed } = useOpenLink();
 
   return (
     <>
@@ -120,12 +140,13 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
           <a
             href={channel.href}
             {...linkProps(channel.kind)}
-            onClick={() => {
+            onClick={(event) => {
               analytics.log(
                 'crisis_exit',
                 { level, exit: exitOf(channel.kind) },
                 { kind: 'click' },
               );
+              open(event, channel.href);
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >
@@ -143,6 +164,7 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
           </p>
         );
       })}
+      <FailedNote url={failed} />
     </>
   );
 }

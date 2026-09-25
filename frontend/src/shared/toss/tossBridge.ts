@@ -688,4 +688,14 @@ export class TossMiniAppBridge implements MiniAppBridge {
   closeApp(): Promise<void> {
     return Screen.close();
   }
+
+  async openURL(url: string): Promise<boolean> {
+    try {
+      await Device.openURL(url);
+      return true;
+    } catch {
+      // 전화를 걸 수 없는 기기이거나 토스 앱이 그 스킴을 모른다. 부르는 쪽이 대신 말한다
+      return false;
+    }
+  }
 }
