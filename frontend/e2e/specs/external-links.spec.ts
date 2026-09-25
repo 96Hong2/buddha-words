@@ -196,3 +196,22 @@ test('위로 답변의 띠에도 마들랜은 누를 것이 없다', async ({ pa
   // 전화 창구는 그대로 눌린다
   await expect(page.locator('[data-testid="crisis-channel"][href^="tel:"]').first()).toBeVisible();
 });
+
+test('도움받을 곳의 마들랜도 위기 화면과 같은 말을 한다', async ({ page }) => {
+  await page.goto('/settings/help');
+  await expect(page.getByTestId('help-lines')).toBeVisible();
+
+  const mad = page.getByTestId('help-lines').locator('.set-line', { hasText: '마들랜' });
+  await expect(mad).toHaveCount(1);
+
+  /*
+    ⚠ 이 화면이 같은 창구를 **따로 적어 두고 있었다.** 위기 화면만 고치니 여기는 옛
+    문구(「문자 · 카카오톡」)가 남아, 어떻게 이야기하는지 알 수 없는 카드가 됐다.
+    두 화면이 한 정본을 쓰는지 여기서 지킨다.
+  */
+  await expect(mad).toContainText('카카오톡에서 「마들랜」 검색');
+  await expect(mad).not.toContainText('문자 · 카카오톡');
+
+  // 누를 것이 없다. 이 앱에서 마들랜을 여는 길이 없다
+  expect(await mad.evaluate((el) => el.tagName)).not.toBe('A');
+});

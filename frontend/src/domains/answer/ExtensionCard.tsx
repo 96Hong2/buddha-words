@@ -358,7 +358,9 @@ export function ExtensionCard({
               */}
               <p role="status">
                 {failure}{' '}
-                {paidWith === 'leaf' ? '연꽃을 다시 쓰지 않아도 돼요.' : '광고를 다시 보지 않아도 돼요.'}
+                {paidWith === 'leaf'
+                  ? '연꽃을 다시 쓰지 않아도 돼요.'
+                  : '광고를 다시 보지 않아도 돼요.'}
               </p>
               <button type="button" className="ad-btn" onClick={() => void build()}>
                 다시 받아보기
@@ -430,7 +432,6 @@ export function ExtensionCard({
           {onCollectLeaf != null && phase !== 'building' && phase !== 'failed' && (
             <LeafCollectCta
               count={leaves}
-              action="한 번 더 봐요"
               disabled={phase === 'watching' || leafFlying}
               onClick={onCollectLeaf}
               testKey="leafCollectExtension"
