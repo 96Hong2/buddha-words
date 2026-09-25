@@ -51,6 +51,13 @@ export interface MockScenario {
   notification?: NotificationAgreementResult;
   /** 지원하지 않는다고 답할 기능들. */
   unsupported?: BridgeCapability[];
+  /**
+   * 앱 밖으로 나가는 주소가 열리나.
+   *
+   * `fail` 은 전화 앱도 메일 앱도 없는 기기다. 드물지만 있고, **못 열었을 때 화면이
+   * 번호를 남기는지**가 이번 심사 반려의 핵심이라 그 길을 e2e 가 밟을 수 있어야 한다.
+   */
+  openUrl?: 'ok' | 'fail';
   ads?: 'ok' | 'noFill' | 'failed' | 'unsupported';
   /**
    * 전면 광고가 어떻게 끝나나.
@@ -556,7 +563,7 @@ export class MockMiniAppBridge implements MiniAppBridge {
   async openURL(url: string): Promise<boolean> {
     this.openedUrls.push(url);
     (window.__buddhaOpenedUrls ??= []).push(url);
-    return true;
+    return this.scenario.openUrl !== 'fail';
   }
 
   /** 어떤 주소를 열었는지 테스트에서 확인한다. 가장 마지막 것이 방금 누른 것이다 */

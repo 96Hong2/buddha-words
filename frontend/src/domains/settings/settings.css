@@ -613,3 +613,15 @@
 .set-item[data-testid='settings-leaf'] .set-icon {
   color: var(--surface);
 }
+
+/* 메일·전화를 못 열었을 때 주소를 남기는 줄. 이유는 safety 의 같은 줄 주석 */
+.set-line-failed {
+  padding: 10px 16px 2px;
+  font-size: var(--t-caption);
+  line-height: var(--lh-caption);
+  color: var(--text-strong);
+}
+
+.set-line-failed b {
+  font-weight: var(--w-semibold);
+}

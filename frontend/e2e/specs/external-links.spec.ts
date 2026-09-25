@@ -12,6 +12,15 @@
  */
 
 import { test, expect, type Page } from '../support/fixtures';
+import type { MockScenario } from '../../src/shared/toss/mockBridge';
+
+/** 전화 앱도 메일 앱도 없는 기기로 만든다 */
+async function withNoLinkApps(page: Page) {
+  const scenario: MockScenario = { openUrl: 'fail' };
+  await page.addInitScript((value) => {
+    window.__buddhaBridge = { ...window.__buddhaBridge, ...value };
+  }, scenario);
+}
 
 /** 앱이 밖으로 열려 한 주소 전부. 목 브릿지가 창에 쌓아 둔다 */
 async function openedUrls(page: Page): Promise<string[]> {
@@ -65,7 +74,9 @@ test('위기 창구: 가장 먼저 걸어야 할 곳이 눌리면 전화가 걸�
 test('위로 답변의 띠: 웹페이지 창구도 같은 길로 나간다', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('entry-card-cta').click();
-  await page.getByTestId('concern-field').fill('요즘 정말 죽고 싶어요. 아무것도 하기 싫고 매일이 버거워요.');
+  await page
+    .getByTestId('concern-field')
+    .fill('요즘 정말 죽고 싶어요. 아무것도 하기 싫고 매일이 버거워요.');
   await page.getByTestId('submit').click();
 
   await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
@@ -82,4 +93,58 @@ test('위로 답변의 띠: 웹페이지 창구도 같은 길로 나간다', asy
 
   await link.click();
   expect(await openedUrls(page)).toEqual([href]);
+});
+
+/*
+  아래 셋이 이번 반려의 진짜 과녁이다.
+
+  주소를 브릿지로 넘기는 것만으로는 부족하다. **기본 동작(`<a href>`)을 막아 놨기 때문에**
+  브릿지가 못 열면 눌러도 아무 일이 없다. 그게 정확히 반려된 판의 증상이다.
+  그래서 못 열었을 때 번호가 글자로 남는지를 잰다.
+*/
+
+test('위기 창구: 전화를 못 걸면 번호를 글자로 남긴다', async ({ page }) => {
+  await withNoLinkApps(page);
+  await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
+  await page.getByTestId('concern-field').fill('어떻게 하면 죽을 수 있나요');
+  await page.getByTestId('submit').click();
+
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId('channel-failed')).toHaveCount(0);
+
+  await page.getByTestId('crisis-channel').first().click();
+
+  const note = page.getByTestId('channel-failed');
+  await expect(note).toBeVisible();
+  // 사람이 손으로 걸 수 있는 번호가 남아야 한다. `tel:` 이 붙은 채로는 못 읽는다
+  await expect(note).toContainText('109');
+  await expect(note).not.toContainText('tel:');
+});
+
+test('도움받을 곳: 전화를 못 걸면 그 줄의 번호가 남는다', async ({ page }) => {
+  await withNoLinkApps(page);
+  await page.goto('/settings/help');
+  await expect(page.getByTestId('help-lines')).toBeVisible();
+
+  const first = page.getByTestId('help-lines').locator('a[href^="tel:"]').first();
+  const href = (await first.getAttribute('href')) ?? '';
+  await first.click();
+
+  const note = page.getByTestId('channel-failed');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText(href.slice(4));
+});
+
+test('설정 문의: 메일 앱이 없으면 주소를 남긴다', async ({ page }) => {
+  await withNoLinkApps(page);
+  await page.goto('/settings');
+  await expect(page.getByTestId('settings')).toBeVisible();
+
+  await page.getByTestId('settings').locator('a[href^="mailto:"]').click();
+
+  const note = page.getByTestId('channel-failed');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('pocket.app.official@gmail.com');
+  await expect(note).not.toContainText('mailto:');
 });

@@ -1,7 +1,7 @@
 import { TEST_IDS, testId } from '../../shared/testIds';
 
 import './settings.css';
-import { useOpenLink } from '../../shared/lib/useOpenLink';
+import { readableAddress, useOpenLink } from '../../shared/lib/useOpenLink';
 
 /**
  * 창구 목록. 정본은 통합 개발 계획 M4 의 창구 표다.
@@ -103,7 +103,7 @@ function LineBody({ line }: { line: Line }) {
 }
 
 function Lines({ items }: { items: Line[] }) {
-  const openLink = useOpenLink();
+  const { open, failed } = useOpenLink();
 
   return (
     <div className="set-list">
@@ -113,7 +113,7 @@ function Lines({ items }: { items: Line[] }) {
             className="set-line"
             key={line.name}
             href={`tel:${line.tel}`}
-            onClick={(event) => openLink(event, `tel:${line.tel}`)}
+            onClick={(event) => open(event, `tel:${line.tel}`)}
           >
             <LineBody line={line} />
           </a>
@@ -122,6 +122,11 @@ function Lines({ items }: { items: Line[] }) {
             <LineBody line={line} />
           </div>
         ),
+      )}
+      {failed != null && (
+        <p className="set-line-failed" {...testId(TEST_IDS.channelFailed)}>
+          바로 연결하지 못했어요. <b>{readableAddress(failed)}</b>로 직접 걸어 주세요.
+        </p>
       )}
     </div>
   );
