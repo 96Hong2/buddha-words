@@ -236,14 +236,6 @@ export function LeafAltAdButton({
 export interface LeafCollectCtaProps {
   /** 지금 가진 연꽃 */
   count: number;
-  /**
-   * 「미리 모아 두면 바로 」 뒤에 붙는 말. 예: `이어가요`
-   *
-   * ⚠ **이어가기 시트에서는 「광고 없이」·「무료」를 쓸 수 없다.** 계획 X25 가 막는
-   * 「베푼 것을 세는 문장」과 한 글자도 안 겹치게 `flows.spec.ts` 가 문자열로 지킨다.
-   * 그래서 이 말은 부르는 쪽이 정한다. 한 자리에 박아 두면 그 규칙이 다시 깨진다.
-   */
-  action: string;
   /** 연꽃 모으기로 간다 */
   onClick: () => void;
   disabled?: boolean;
@@ -273,7 +265,6 @@ export interface LeafCollectCtaProps {
  */
 export function LeafCollectCta({
   count,
-  action,
   onClick,
   disabled = false,
   testKey = 'leafCollectCta',
@@ -292,9 +283,17 @@ export function LeafCollectCta({
         <LotusIcon size={26} className="leaf-get__icon" />
       </span>
       <span className="leaf-get__text">
-        <span className="leaf-get__title">
-          {has ? '연꽃을 더 모아 둘까요?' : `미리 모아 두면 바로 ${action}`}
-        </span>
+        {/*
+          ⚠ **한 줄을 넘기지 않는다.** 전에는 자리마다 다른 말을 이어 붙여
+          「미리 모아 두면 바로 한 번 더 봐요」가 됐고, 실기기에서 두 줄로 접혀
+          「봐요」만 아랫줄에 떨어졌다(2026-09-26 사용자 지적).
+
+          ⚠ 「광고 없이」·「무료」를 쓰지 않는다. 계획 X25 가 막는 「베푼 것을 세는
+          문장」과 한 글자도 안 겹쳐야 하고 `flows.spec.ts` 가 문자열로 지킨다.
+
+          무엇을 하는 자리인지는 오른쪽 「모으기」가 말한다. 여기서 되풀이하지 않는다.
+        */}
+        <span className="leaf-get__title">{has ? '연꽃 더 모아두기' : '연꽃 미리 모아두기'}</span>
         {/*
           ⚠ 여기서 「무료」·「광고 없이 드려요」를 쓰지 않는다. 계획 X25 가 막는
           「베푼 것을 세는 문장」과 겹치지 않게 한다.

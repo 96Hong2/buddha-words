@@ -270,12 +270,7 @@ export function SaveGate({
           미리 모아 두면」이라고 글로만 적었는데, 읽어도 지금 할 수 있는 일이 아니었다.
         */}
         {onCollectLeaf != null && (
-          <LeafCollectCta
-            count={leaves}
-            action="담아요"
-            disabled={pending}
-            onClick={onCollectLeaf}
-          />
+          <LeafCollectCta count={leaves} disabled={pending} onClick={onCollectLeaf} />
         )}
 
         {/* 파는 말은 작게 아래에 둔다. 광고를 보는 쪽이 이 화면의 기본 길이다 */}

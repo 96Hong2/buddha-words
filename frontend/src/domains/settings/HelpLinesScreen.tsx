@@ -2,6 +2,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 
 import './settings.css';
 import { readableAddress, useOpenLink } from '../../shared/lib/useOpenLink';
+import { CHANNELS, type Channel } from '../safety/copy';
 
 /**
  * 창구 목록. 정본은 통합 개발 계획 M4 의 창구 표다.
@@ -19,21 +20,27 @@ interface Line {
   icon: 'call' | 'chat';
 }
 
-const FIRST: Line[] = [
-  {
-    name: '자살예방상담전화',
-    how: '109',
-    desc: '24시간 · 걸면 상담원과 바로 이야기해요',
-    tel: '109',
-    icon: 'call',
-  },
-  {
-    name: '자살예방 SNS 상담 마들랜',
-    how: '문자 · 카카오톡',
-    desc: '말로 하기 어려우면 글로 이야기할 수 있어요',
-    icon: 'chat',
-  },
-];
+/**
+ * 위층 둘은 **위기 화면과 같은 정본을 쓴다**(`safety/copy.ts` 의 `CHANNELS`).
+ *
+ * ⚠ 한때 이 파일이 같은 창구를 따로 적어 두고 있었다. 위기 화면의 마들랜을 고쳤는데
+ * 이 화면은 옛 문구(「문자 · 카카오톡」)가 그대로 남아, 어떻게 이야기하는지 알 수 없는
+ * 카드가 됐다(2026-09-26 사용자 지적). **같은 창구를 두 곳에 적지 않는다.**
+ *
+ * 아래층(역할별 전화)은 이 화면에만 있는 설명을 달고 있어 여기 그대로 둔다.
+ */
+function fromChannel(key: Channel): Line {
+  const channel = CHANNELS[key];
+  return {
+    name: channel.name,
+    how: channel.value,
+    desc: channel.note ?? '',
+    tel: channel.href?.startsWith('tel:') ? channel.href.slice(4) : undefined,
+    icon: channel.kind === 'call' ? 'call' : 'chat',
+  };
+}
+
+const FIRST: Line[] = [fromChannel('109'), fromChannel('madeleine')];
 
 const BY_ROLE: Line[] = [
   {

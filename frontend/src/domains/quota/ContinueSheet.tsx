@@ -347,7 +347,6 @@ export function ContinueSheet({
         {onCollectLeaf != null && (
           <LeafCollectCta
             count={leaves}
-            action="이어가요"
             disabled={ad.showing || checking}
             onClick={onCollectLeaf}
           />
