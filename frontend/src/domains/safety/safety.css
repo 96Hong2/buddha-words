@@ -486,3 +486,13 @@
 .sf-line-failed b {
   font-weight: var(--w-semibold);
 }
+
+/*
+  누를 것이 없는 창구 카드.
+
+  마들랜처럼 이 앱에서 여는 길이 없는 자리다. 카드 모양은 그대로 두되 눌리는 느낌을
+  주지 않는다. 눌러도 안 열리는 버튼은 위기 화면에서 막다른 길이라 아예 만들지 않는다.
+*/
+.sf-line-item--plain {
+  cursor: default;
+}
