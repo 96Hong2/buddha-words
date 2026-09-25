@@ -50,9 +50,6 @@ function ChatIcon({ size = 18 }: { size?: number }) {
 }
 
 /** SNS 창구는 앱 밖으로 나가므로 새 창으로 연다 */
-function linkProps(kind: 'call' | 'sns') {
-  return kind === 'sns' ? { target: '_blank' as const, rel: 'noreferrer' } : {};
-}
 
 function exitOf(kind: 'call' | 'sns'): 'channel_call' | 'channel_sns' {
   return kind === 'call' ? 'channel_call' : 'channel_sns';
@@ -79,7 +76,6 @@ export function ChannelList({ channels, level }: ChannelListProps) {
             key={key}
             className={`sf-line-item${lead}`}
             href={channel.href}
-            {...linkProps(channel.kind)}
             onClick={(event) => {
               analytics.log(
                 'crisis_exit',
@@ -139,7 +135,6 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
         const link = (
           <a
             href={channel.href}
-            {...linkProps(channel.kind)}
             onClick={(event) => {
               analytics.log(
                 'crisis_exit',

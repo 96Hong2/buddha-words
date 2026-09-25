@@ -71,38 +71,6 @@ test('위기 창구: 가장 먼저 걸어야 할 곳이 눌리면 전화가 걸�
   expect(await openedUrls(page)).toEqual([href]);
 });
 
-test('위로 답변의 띠: 웹페이지 창구도 같은 길로 나간다', async ({ page }) => {
-  await page.goto('/');
-  await page.getByTestId('entry-card-cta').click();
-  await page
-    .getByTestId('concern-field')
-    .fill('요즘 정말 죽고 싶어요. 아무것도 하기 싫고 매일이 버거워요.');
-  await page.getByTestId('submit').click();
-
-  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
-  await page.getByTestId('crisis-continue').click();
-  await expect(page.getByTestId('solace')).toBeVisible({ timeout: 15_000 });
-
-  /*
-    띠에는 전화와 웹페이지가 섞여 있다. 웹페이지 쪽을 굳이 고르는 이유: 이 자리만
-    `target="_blank"` 를 달고 있었고, 웹뷰에서 새 창은 전화보다 더 잘 막힌다.
-  */
-  const link = page.locator('[data-testid="crisis-channel"][href^="https://"]').first();
-  const href = await link.getAttribute('href');
-  expect(href).toMatch(/^https:\/\//);
-
-  await link.click();
-  expect(await openedUrls(page)).toEqual([href]);
-});
-
-/*
-  아래 셋이 이번 반려의 진짜 과녁이다.
-
-  주소를 브릿지로 넘기는 것만으로는 부족하다. **기본 동작(`<a href>`)을 막아 놨기 때문에**
-  브릿지가 못 열면 눌러도 아무 일이 없다. 그게 정확히 반려된 판의 증상이다.
-  그래서 못 열었을 때 번호가 글자로 남는지를 잰다.
-*/
-
 test('위기 창구: 전화를 못 걸면 번호를 글자로 남긴다', async ({ page }) => {
   await withNoLinkApps(page);
   await page.goto('/');
@@ -150,25 +118,59 @@ test('설정 문의: 메일 앱이 없으면 주소를 남긴다', async ({ page
 });
 
 /*
-  마들랜은 글로 이야기하려는 사람이 가는 자리다. **상담이 열리는 곳으로 보내야 한다.**
+  ⚠ **토스 앱 웹뷰는 임의 웹사이트를 못 연다.** 2026-09-25 실기기에서 두 번 확인했다:
+  운영 기관 홈페이지도, 공식 카카오톡 채널 주소도 눌러도 아무 일이 없었다.
+  같은 화면의 `tel:` 과 `mailto:` 는 열린다. **기기 앱이 받는 스킴만 열린다**는 뜻이다.
 
-  한때 운영 기관 홈페이지(`www.kfsp.or.kr`)를 걸어 두었다. 주소는 살아 있었지만 기관
-  소개 페이지라 상담으로 가는 길이 아니었고, 실기기에서는 열리지도 않았다.
-  응답 코드가 200 이라는 것과 사람이 갈 곳이라는 것은 다르다.
+  그래서 이 앱은 `https://` 링크를 걸지 않는다. 아래 자리가 그 약속을 지킨다.
 */
 
-test('마들랜: 기관 홈페이지가 아니라 상담 창구로 보낸다', async ({ page }) => {
+test('앱 밖으로 나가는 링크에 웹 주소가 없다', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
+  await page
+    .getByTestId('concern-field')
+    .fill('요즘 정말 죽고 싶어요. 아무것도 하기 싫고 매일이 버거워요.');
+  await page.getByTestId('submit').click();
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
+
+  // 위기 화면
+  await expect(page.locator('a[href^="http"]')).toHaveCount(0);
+
+  // 위로 답변의 띠
+  await page.getByTestId('crisis-continue').click();
+  await expect(page.getByTestId('solace')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('a[href^="http"]')).toHaveCount(0);
+
+  // 설정 쪽 둘도 같다
+  await page.goto('/settings');
+  await expect(page.getByTestId('settings')).toBeVisible();
+  await expect(page.locator('a[href^="http"]')).toHaveCount(0);
+
+  await page.goto('/settings/help');
+  await expect(page.getByTestId('help-lines')).toBeVisible();
+  await expect(page.locator('a[href^="http"]')).toHaveCount(0);
+});
+
+test('마들랜: 문자로 열고, 카카오톡 가는 길은 글로 남긴다', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('entry-card-cta').click();
   await page.getByTestId('concern-field').fill('어떻게 하면 죽을 수 있나요');
   await page.getByTestId('submit').click();
   await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
 
-  const sns = page.locator('[data-testid="crisis-channel"][href^="https://"]').first();
-  await expect(sns).toHaveAttribute('href', 'https://pf.kakao.com/_DAxbYG');
-  // 기관 홈페이지로 되돌아가면 이 자리가 잡는다
-  await expect(sns).not.toHaveAttribute('href', /kfsp\.or\.kr/);
+  const sns = page.locator('[data-testid="crisis-channel"][href^="sms:"]');
+  await expect(sns).toHaveCount(1);
+  await expect(sns).toHaveAttribute('href', 'sms:109');
 
-  // 링크가 안 열리는 기기에서도 갈 길이 글자로 남아 있어야 한다
+  /*
+    ⚠ **링크가 죽어도 갈 길이 남아야 한다.** 이 줄이 이번 사고의 진짜 안전망이다.
+    웹 주소 둘이 잇달아 안 열렸고, 그때마다 사람은 아무 데도 못 갔다.
+  */
+  await expect(sns).toContainText('카카오톡');
   await expect(sns).toContainText('마들랜');
+
+  // 눌렀을 때 문자 앱으로 간다
+  await sns.click();
+  expect(await openedUrls(page)).toEqual(['sms:109']);
 });
