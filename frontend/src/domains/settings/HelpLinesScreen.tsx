@@ -1,6 +1,7 @@
 import { TEST_IDS, testId } from '../../shared/testIds';
 
 import './settings.css';
+import { useOpenLink } from '../../shared/lib/useOpenLink';
 
 /**
  * 창구 목록. 정본은 통합 개발 계획 M4 의 창구 표다.
@@ -102,11 +103,18 @@ function LineBody({ line }: { line: Line }) {
 }
 
 function Lines({ items }: { items: Line[] }) {
+  const openLink = useOpenLink();
+
   return (
     <div className="set-list">
       {items.map((line) =>
         line.tel != null ? (
-          <a className="set-line" key={line.name} href={`tel:${line.tel}`}>
+          <a
+            className="set-line"
+            key={line.name}
+            href={`tel:${line.tel}`}
+            onClick={(event) => openLink(event, `tel:${line.tel}`)}
+          >
             <LineBody line={line} />
           </a>
         ) : (

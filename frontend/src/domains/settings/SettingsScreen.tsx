@@ -20,6 +20,7 @@ import {
 import { TEST_IDS, testId } from '../../shared/testIds';
 import { LotusIcon } from '../../shared/ui';
 import { useAnalytics } from '../../shared/analytics';
+import { useOpenLink } from '../../shared/lib/useOpenLink';
 import { appShareMessage, appShareUrl } from '../share/shareText';
 import { LEAVES_PER_REWARDED_AD } from '../ads/placement';
 import {
@@ -124,6 +125,7 @@ export function SettingsScreen({
   const bridge = useBridge();
   const api = useApiClient();
   const analytics = useAnalytics();
+  const openLink = useOpenLink();
   const { archivePass, refreshArchivePass } = useSession();
   const [checking, setChecking] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -696,9 +698,10 @@ export function SettingsScreen({
           <a
             className="set-item"
             href={`mailto:${CONTACT_EMAIL}`}
-            onClick={() =>
-              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' })
-            }
+            onClick={(event) => {
+              analytics.log('settings_row_click', { row: 'contact' }, { kind: 'click' });
+              openLink(event, `mailto:${CONTACT_EMAIL}`);
+            }}
           >
             <span className="set-icon" aria-hidden="true">
               <svg

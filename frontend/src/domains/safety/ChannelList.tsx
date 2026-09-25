@@ -9,6 +9,7 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 
 import { CHANNELS, resolveChannels } from './copy';
 import './safety.css';
+import { useOpenLink } from '../../shared/lib/useOpenLink';
 
 function PhoneIcon({ size = 18 }: { size?: number }) {
   return (
@@ -65,6 +66,7 @@ export interface ChannelListProps {
 /** 위기 안내의 창구 카드. 첫 줄이 가장 먼저 걸어야 할 곳이다 */
 export function ChannelList({ channels, level }: ChannelListProps) {
   const analytics = useAnalytics();
+  const openLink = useOpenLink();
   const list = resolveChannels(channels);
 
   return (
@@ -78,12 +80,13 @@ export function ChannelList({ channels, level }: ChannelListProps) {
             className={`sf-line-item${lead}`}
             href={channel.href}
             {...linkProps(channel.kind)}
-            onClick={() => {
+            onClick={(event) => {
               analytics.log(
                 'crisis_exit',
                 { level, exit: exitOf(channel.kind) },
                 { kind: 'click' },
               );
+              openLink(event, channel.href);
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >
@@ -111,6 +114,7 @@ export interface ChannelBandsProps {
 /** 위로 답변의 한 줄 띠. 답변 위와 아래에 같은 목록이 붙는다 */
 export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
   const analytics = useAnalytics();
+  const openLink = useOpenLink();
 
   return (
     <>
@@ -120,12 +124,13 @@ export function ChannelBands({ channels, level, place }: ChannelBandsProps) {
           <a
             href={channel.href}
             {...linkProps(channel.kind)}
-            onClick={() => {
+            onClick={(event) => {
               analytics.log(
                 'crisis_exit',
                 { level, exit: exitOf(channel.kind) },
                 { kind: 'click' },
               );
+              openLink(event, channel.href);
             }}
             {...testId(TEST_IDS.crisisChannel)}
           >
