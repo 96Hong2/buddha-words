@@ -2,7 +2,8 @@ import { TEST_IDS, testId } from '../../shared/testIds';
 
 import './settings.css';
 import { readableAddress, useOpenLink } from '../../shared/lib/useOpenLink';
-import { CHANNELS, type Channel } from '../safety/copy';
+import type { Channel } from '../../shared/api';
+import { CHANNELS } from '../safety/copy';
 
 /**
  * 창구 목록. 정본은 통합 개발 계획 M4 의 창구 표다.
