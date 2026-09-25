@@ -148,3 +148,27 @@ test('설정 문의: 메일 앱이 없으면 주소를 남긴다', async ({ page
   await expect(note).toContainText('pocket.app.official@gmail.com');
   await expect(note).not.toContainText('mailto:');
 });
+
+/*
+  마들랜은 글로 이야기하려는 사람이 가는 자리다. **상담이 열리는 곳으로 보내야 한다.**
+
+  한때 운영 기관 홈페이지(`www.kfsp.or.kr`)를 걸어 두었다. 주소는 살아 있었지만 기관
+  소개 페이지라 상담으로 가는 길이 아니었고, 실기기에서는 열리지도 않았다.
+  응답 코드가 200 이라는 것과 사람이 갈 곳이라는 것은 다르다.
+*/
+
+test('마들랜: 기관 홈페이지가 아니라 상담 창구로 보낸다', async ({ page }) => {
+  await page.goto('/');
+  await page.getByTestId('entry-card-cta').click();
+  await page.getByTestId('concern-field').fill('어떻게 하면 죽을 수 있나요');
+  await page.getByTestId('submit').click();
+  await expect(page.getByTestId('crisis')).toBeVisible({ timeout: 15_000 });
+
+  const sns = page.locator('[data-testid="crisis-channel"][href^="https://"]').first();
+  await expect(sns).toHaveAttribute('href', 'https://pf.kakao.com/_DAxbYG');
+  // 기관 홈페이지로 되돌아가면 이 자리가 잡는다
+  await expect(sns).not.toHaveAttribute('href', /kfsp\.or\.kr/);
+
+  // 링크가 안 열리는 기기에서도 갈 길이 글자로 남아 있어야 한다
+  await expect(sns).toContainText('마들랜');
+});
