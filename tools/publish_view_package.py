@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """워크트리의 산출물을 「사람이 보는 묶음」으로 내린다.
 
+⚠ 2026-09-26 부터 기본으로 멈춘다. 보는 자리를 손으로 다시 짜서 아래 표들이 개발 전(09-15) 구조를 가리킨다.
+
     python3 tools/inline_assets.py        # 먼저 이걸 돌려 design-inline/ 을 새로 만든다
     python3 tools/publish_view_package.py # 그다음 이것
 
@@ -98,6 +100,10 @@ def clear(rel):
 
 
 def main():
+    # 2026-09-26 에 보는 자리를 손으로 다시 짰다. 이 표들은 그 전(09-15) 구조라 돌리면 옛 폴더가 새 구조 옆에 다시 생긴다
+    if os.environ.get("BUDDHA_PUBLISH_LEGACY") != "1":
+        sys.exit("이 스크립트는 개발 전(2026-09-15) 구조로 내린다. 보는 자리는 2026-09-26 에 새로 짰으니 돌리지 않는다.\n"
+                 f"지도: {DST}/00 먼저 읽기/폴더 안내.md  (옛 구조가 꼭 필요하면 BUDDHA_PUBLISH_LEGACY=1)")
     if not os.path.isdir(INLINE):
         sys.exit("design-inline/ 이 없다. python3 tools/inline_assets.py 를 먼저 돌린다.")
 
